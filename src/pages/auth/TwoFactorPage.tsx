@@ -36,6 +36,11 @@ export function TwoFactorPage() {
         newCode[index] = value.slice(-1);
         setCode(newCode);
         if (value && index < 5) inputRefs.current[index + 1]?.focus();
+
+        // Auto-submit when all 6 digits are filled
+        if (newCode.every((d) => d !== '')) {
+            setTimeout(() => autoSubmit(newCode), 80);
+        }
     }
 
     function handleKeyDown(index: number, e: React.KeyboardEvent) {
@@ -51,6 +56,19 @@ export function TwoFactorPage() {
         for (let i = 0; i < pasted.length; i++) newCode[i] = pasted[i];
         setCode(newCode);
         inputRefs.current[Math.min(pasted.length, 5)]?.focus();
+
+        // Auto-submit when pasted code fills all 6 digits
+        if (newCode.every((d) => d !== '')) {
+            setTimeout(() => autoSubmit(newCode), 80);
+        }
+    }
+
+    /** Fires verification automatically once all digits are present */
+    async function autoSubmit(digits: string[]) {
+        const fullCode = digits.join('');
+        if (fullCode.length !== 6 || isLoading) return;
+        clearError();
+        await verify2FA({ code: fullCode, sessionId });
     }
 
     const handleSubmit = useCallback(async () => {
