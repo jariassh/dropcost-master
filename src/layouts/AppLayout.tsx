@@ -20,6 +20,7 @@ import {
     PanelLeftClose,
     PanelLeftOpen,
     UserCircle,
+    Gift,
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
@@ -28,14 +29,15 @@ const SIDEBAR_OPEN = 240;
 const SIDEBAR_COLLAPSED = 72;
 
 const navItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/', icon: LayoutDashboard, label: 'Dashboard', disabled: true },
     { to: '/simulador', icon: Calculator, label: 'Simulador' },
-    { to: '/analisis-regional', icon: Map, label: 'Análisis Regional' },
-    { to: '/configuracion', icon: Settings, label: 'Configuración' },
+    { to: '/ofertas', icon: Gift, label: 'Ofertas Irresistibles' },
+    { to: '/analisis-regional', icon: Map, label: 'Análisis Regional', disabled: true },
+    { to: '/configuracion', icon: Settings, label: 'Configuración', disabled: true },
 ];
 
 const adminNavItems = [
-    { to: '/admin', icon: ShieldAlert, label: 'Administración' },
+    { to: '/admin', icon: ShieldAlert, label: 'Administración', disabled: true },
 ];
 
 export function AppLayout() {
@@ -406,6 +408,7 @@ function SidebarNavItem({
     collapsed,
     end,
     onClick,
+    disabled,
 }: {
     to: string;
     icon: React.ComponentType<{ size: number; style?: React.CSSProperties }>;
@@ -413,8 +416,39 @@ function SidebarNavItem({
     collapsed: boolean;
     end?: boolean;
     onClick?: () => void;
+    disabled?: boolean;
 }) {
     const [hovered, setHovered] = useState(false);
+
+    if (disabled) {
+        return (
+            <div
+                title={collapsed ? `${label} — Próximamente` : 'Próximamente'}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: collapsed ? 'center' : 'flex-start',
+                    gap: '12px',
+                    padding: collapsed ? '12px' : '10px 14px',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    cursor: 'not-allowed',
+                    opacity: hovered ? 0.5 : 0.35,
+                    color: 'var(--sidebar-text)',
+                    transition: 'opacity 150ms ease',
+                    position: 'relative',
+                }}
+            >
+                <Icon size={18} style={{ flexShrink: 0 }} />
+                {!collapsed && label}
+            </div>
+        );
+    }
 
     return (
         <NavLink

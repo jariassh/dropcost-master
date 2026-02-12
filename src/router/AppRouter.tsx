@@ -11,6 +11,10 @@ import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage';
 import { TwoFactorPage } from '@/pages/auth/TwoFactorPage';
 import { PasswordResetPage } from '@/pages/auth/PasswordResetPage';
 import { DashboardPage } from '@/pages/app/DashboardPage';
+import { SimuladorPage } from '@/pages/app/simulador/SimuladorPage';
+import { MisCosteos } from '@/pages/app/simulador/MisCosteos';
+import { OfertasPage } from '@/pages/app/ofertas/OfertasPage';
+import { OfertaWizard } from '@/pages/app/ofertas/OfertaWizard';
 import { useAuthStore } from '@/store/authStore';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -61,7 +65,10 @@ export function AppRouter() {
                     }
                 >
                     <Route path="/" element={<DashboardPage />} />
-                    <Route path="/simulador" element={<DashboardPage />} />
+                    <Route path="/simulador" element={<SimuladorPage />} />
+                    <Route path="/simulador/mis-costeos" element={<MisCosteos />} />
+                    <Route path="/ofertas" element={<OfertasPage />} />
+                    <Route path="/ofertas/crear" element={<OfertaWizard />} />
                     <Route path="/analisis-regional" element={<DashboardPage />} />
                     <Route path="/configuracion" element={<DashboardPage />} />
                     <Route path="/admin" element={<DashboardPage />} />
