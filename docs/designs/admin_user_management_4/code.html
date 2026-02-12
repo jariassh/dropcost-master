@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Promo Codes Management - DropCost Master</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0066FF",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0F172A", // Slate 900 per request
+                        "slate-800": "#1E293B", // Sidebar/Header style
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #334155;
+            border-radius: 20px;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }.sidebar-item-active {
+            @apply bg-primary/10 text-primary;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display h-screen overflow-hidden flex">
+<aside class="w-20 lg:w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700/50 flex-shrink-0 flex flex-col justify-between z-10">
+<div>
+<div class="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-700/50">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center text-white font-bold text-xl">D</div>
+<span class="hidden lg:block font-bold text-lg text-slate-900 dark:text-white">DropCost</span>
+</div>
+</div>
+<nav class="p-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">dashboard</span>
+<span class="hidden lg:block font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">people</span>
+<span class="hidden lg:block font-medium">Usuarios</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">layers</span>
+<span class="hidden lg:block font-medium">Planes</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 sidebar-item-active rounded-lg transition-colors" href="#">
+<span class="material-icons-round text-2xl">confirmation_number</span>
+<span class="hidden lg:block font-medium">Promociones</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">settings</span>
+<span class="hidden lg:block font-medium">Configuración</span>
+</a>
+</nav>
+</div>
+<div class="p-4 border-t border-slate-200 dark:border-slate-700/50">
+<div class="flex items-center gap-3 px-3 py-2">
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden border border-slate-200 dark:border-slate-600">
+<img alt="Admin Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6NH5ib0g_yX1ZoTy1O3u99cfT5yUcuKRs9zK0mEr4MXniUjeMum0Obl_bftCvtk5J2xvx1y8liaRF5bdj3a5mYxH00lguuFCALfUmN0ELOwAEi83BiPAaRU_mEjmvGGLNK1WkfAvRFGsnOfWZMBZG4AvXPzHcOHEqnbcYvkgasy1-9Ege8UnoIHIh-Hv80tai6TQEO_5jtpUu2r2zEZrtY2HfIzIOwidZG6sB1ZbTxfZPiTpdU_lRDMU3PFa4jJbqWqSUDMLisx8"/>
+</div>
+<div class="hidden lg:block overflow-hidden">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">Admin User</p>
+<p class="text-xs text-slate-500 dark:text-slate-400 truncate">admin@dropcost.com</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700/50 px-6 flex items-center justify-between flex-shrink-0">
+<h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Códigos Promocionales</h2>
+<div class="flex items-center gap-4">
+<button class="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+<span class="material-icons-round text-lg">add</span>
+                    Nuevo Código
+                </button>
+</div>
+</header>
+<div class="flex-1 flex flex-col min-w-0 bg-background-light dark:bg-background-dark overflow-auto custom-scrollbar p-6">
+<div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden shadow-sm">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700/50">
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Código</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Descuento</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Planes</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Límite de Usos</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Usos Actuales</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Vencimiento</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Estado</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm font-bold text-primary bg-primary/5 px-2.5 py-1 rounded-md border border-primary/20">BLACKFRIDAY20</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-200 font-semibold">
+                                20% OFF
+                            </td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2.5 py-0.5 bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-full uppercase border border-blue-200 dark:border-blue-500/30">Pro</span>
+<span class="px-2.5 py-0.5 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold rounded-full uppercase border border-indigo-200 dark:border-indigo-500/30">Basic</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400 text-center font-medium">500</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white text-center font-bold">124</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+<div class="flex items-center gap-2">
+<span class="material-icons-round text-base opacity-70">calendar_today</span>
+                                    30 Nov, 2024
+                                </div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-center">
+<label class="relative inline-flex items-center cursor-pointer group">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-300 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500 group-hover:ring-4 group-hover:ring-green-500/10"></div>
+</label>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<div class="flex justify-end gap-2">
+<button class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all" title="Editar">
+<span class="material-icons-round text-lg">edit</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all" title="Eliminar">
+<span class="material-icons-round text-lg">delete_outline</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm font-bold text-primary bg-primary/5 px-2.5 py-1 rounded-md border border-primary/20">WELCOME50</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-200 font-semibold">
+                                50% OFF
+                            </td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2.5 py-0.5 bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 text-[10px] font-bold rounded-full uppercase border border-purple-200 dark:border-purple-500/30">Enterprise</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400 text-center font-medium">100</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white text-center font-bold">98</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+<div class="flex items-center gap-2">
+<span class="material-icons-round text-base opacity-70">calendar_today</span>
+                                    31 Dic, 2024
+                                </div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-center">
+<label class="relative inline-flex items-center cursor-pointer group">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-300 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500 group-hover:ring-4 group-hover:ring-green-500/10"></div>
+</label>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<div class="flex justify-end gap-2">
+<button class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all">
+<span class="material-icons-round text-lg">edit</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all">
+<span class="material-icons-round text-lg">delete_outline</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm font-bold text-primary bg-primary/5 px-2.5 py-1 rounded-md border border-primary/20">SUMMER24</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-200 font-semibold">
+                                15% OFF
+                            </td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2.5 py-0.5 bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-full uppercase border border-blue-200 dark:border-blue-500/30">Pro</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400 text-center font-medium">Ilimitado</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white text-center font-bold">452</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+<div class="flex items-center gap-2 text-red-500/80">
+<span class="material-icons-round text-base">event_busy</span>
+                                    Expirado
+                                </div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-center">
+<label class="relative inline-flex items-center cursor-pointer group">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-300 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500 group-hover:ring-4 group-hover:ring-green-500/10"></div>
+</label>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<div class="flex justify-end gap-2">
+<button class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all">
+<span class="material-icons-round text-lg">edit</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all">
+<span class="material-icons-round text-lg">delete_outline</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="px-6 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-700/50 flex items-center justify-between">
+<span class="text-sm text-slate-500 dark:text-slate-400">Mostrando <span class="font-semibold text-slate-900 dark:text-white">3</span> de <span class="font-semibold text-slate-900 dark:text-white">12</span> códigos</span>
+<div class="flex gap-2">
+<button class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Anterior</button>
+<button class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Siguiente</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>

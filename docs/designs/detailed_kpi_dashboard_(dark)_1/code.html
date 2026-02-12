@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Executive KPI Dashboard | DropCost Master</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "success": "#10B981",
+                        "warning": "#F59E0B",
+                        "danger": "#EF4444",
+                        "surface-dark": "#1e293b",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .glow-success { box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); border-top: 3px solid #10B981; }
+        .glow-primary { box-shadow: 0 0 15px rgba(19, 127, 236, 0.2); border-top: 3px solid #137fec; }
+        .chart-gradient-revenue { background: linear-gradient(180deg, rgba(19, 127, 236, 0.2) 0%, rgba(19, 127, 236, 0) 100%); }
+        .sidebar-collapsed { width: 64px; }
+        .progress-ring-circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-[#F1F5F9] font-display antialiased overflow-hidden h-screen flex">
+<!-- Collapsed Sidebar -->
+<aside class="sidebar-collapsed h-full bg-white dark:bg-[#0F172A] border-r border-slate-200 dark:border-slate-800 flex flex-col items-center py-6 flex-shrink-0 z-50">
+<div class="mb-10 text-primary">
+<span class="material-icons text-3xl">bolt</span>
+</div>
+<nav class="flex flex-col gap-6 flex-1">
+<a class="p-2 rounded-lg bg-primary/10 text-primary" href="#" title="Dashboard">
+<span class="material-icons">dashboard</span>
+</a>
+<a class="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#" title="Reports">
+<span class="material-icons">bar_chart</span>
+</a>
+<a class="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#" title="Inventory">
+<span class="material-icons">inventory_2</span>
+</a>
+<a class="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#" title="Campaigns">
+<span class="material-icons">campaign</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-6">
+<a class="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#" title="Settings">
+<span class="material-icons">settings</span>
+</a>
+<img class="w-8 h-8 rounded-full border-2 border-primary/20" data-alt="User profile avatar portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZmSg4X73jLYhy6AU5uQjEZUfNC6bGH1mdvvevHn9vDPat323yfwjCuGtFHBTNUsMPRw2c25Cv5-GgUBIdVudqGmt3B-V0Mp-CGqr38g5jDMHOO0L2oE6IgoC4vn-h7vE2QFkVU7vorhBB9iGP9Ba8la-rMv363LrD6XtYYVtXfzN_9FKDpUuwPCo-wvHAMJsIheLSAmZRgwX6G73ag8avb9kMM1OWaeaQyYZsapUXTXVOJXuiSCVbR89Ca_rFqw5B18R1oWRTm5Q"/>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col h-full relative overflow-hidden">
+<!-- Top Header -->
+<header class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F172A] px-6 flex items-center justify-between z-40">
+<div class="flex items-center gap-4">
+<h1 class="text-lg font-semibold dark:text-white">Executive Dashboard</h1>
+<div class="h-4 w-px bg-slate-700 mx-2"></div>
+<!-- Store Switcher -->
+<div class="relative group">
+<button class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span class="material-icons text-sm text-primary">store</span>
+                        Global Electronics Store
+                        <span class="material-icons text-sm">expand_more</span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<button class="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative">
+<span class="material-icons">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-danger rounded-full ring-2 ring-white dark:ring-[#0F172A]"></span>
+</button>
+<!-- Notification Panel Active -->
+<div class="absolute right-0 mt-2 w-80 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
+<div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+<span class="font-semibold text-sm">Notifications</span>
+<span class="text-xs text-primary cursor-pointer">Mark all as read</span>
+</div>
+<div class="max-h-96 overflow-y-auto custom-scrollbar">
+<div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-primary/5">
+<p class="text-xs font-medium text-primary mb-1">New Peak Performance</p>
+<p class="text-sm">Revenue exceeded $12k in the last 4 hours.</p>
+<p class="text-[10px] text-slate-500 mt-2 uppercase">2 minutes ago</p>
+</div>
+<div class="p-4 border-b border-slate-200 dark:border-slate-700">
+<p class="text-xs font-medium text-warning mb-1">CPA Warning</p>
+<p class="text-sm">Facebook Ads CPA rose by 14% on "Summer Glow" campaign.</p>
+<p class="text-[10px] text-slate-500 mt-2 uppercase">1 hour ago</p>
+</div>
+<div class="p-4">
+<p class="text-xs font-medium text-slate-400 mb-1">System Update</p>
+<p class="text-sm">New inventory synchronization module is now live.</p>
+<p class="text-[10px] text-slate-500 mt-2 uppercase">4 hours ago</p>
+</div>
+</div>
+<div class="p-3 bg-slate-50 dark:bg-slate-800/50 text-center border-t border-slate-200 dark:border-slate-700">
+<button class="text-xs font-semibold text-primary">View All Activity</button>
+</div>
+</div>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+<span class="material-icons text-sm">download</span>
+                    Export Report
+                </button>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-background-light dark:bg-background-dark">
+<!-- KPI Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Net Profit -->
+<div class="bg-white dark:bg-[#1e293b] p-5 rounded-lg border border-slate-200 dark:border-slate-800 glow-success flex flex-col">
+<div class="flex justify-between items-start mb-4">
+<span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Net Profit</span>
+<span class="bg-success/10 text-success text-[10px] px-2 py-0.5 rounded-full font-bold">+12.4%</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-bold dark:text-[#F1F5F9]">$42,508</span>
+<span class="text-xs text-slate-500">MTD</span>
+</div>
+<div class="mt-4 flex items-center gap-1 text-[11px] text-success">
+<span class="material-icons text-sm">trending_up</span>
+                        Above targets for Q3
+                    </div>
+</div>
+<!-- ROAS -->
+<div class="bg-white dark:bg-[#1e293b] p-5 rounded-lg border border-slate-200 dark:border-slate-800 glow-primary">
+<div class="flex justify-between items-start mb-4">
+<span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Avg. ROAS</span>
+<span class="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold">Stable</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-bold dark:text-[#F1F5F9]">4.82x</span>
+</div>
+<div class="mt-4 w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[85%] rounded-full"></div>
+</div>
+</div>
+<!-- Factor Markup with Progress Ring -->
+<div class="bg-white dark:bg-[#1e293b] p-5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+<div>
+<span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Factor Markup</span>
+<span class="text-3xl font-bold dark:text-[#F1F5F9]">3.2x</span>
+<p class="text-[11px] text-slate-500 mt-1">Target: 3.5x</p>
+</div>
+<div class="relative w-16 h-16 flex items-center justify-center">
+<svg class="w-full h-full">
+<circle class="text-slate-200 dark:text-slate-700" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-width="4"></circle>
+<circle class="text-primary" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-dasharray="176" stroke-dashoffset="35" stroke-linecap="round" stroke-width="4" style="transform: rotate(-90deg); transform-origin: center;"></circle>
+</svg>
+<span class="absolute text-[10px] font-bold text-primary">91%</span>
+</div>
+</div>
+<!-- CAC -->
+<div class="bg-white dark:bg-[#1e293b] p-5 rounded-lg border border-slate-200 dark:border-slate-800">
+<div class="flex justify-between items-start mb-4">
+<span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Avg. CAC</span>
+<span class="bg-danger/10 text-danger text-[10px] px-2 py-0.5 rounded-full font-bold">+5.2%</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-bold dark:text-[#F1F5F9]">$18.40</span>
+</div>
+<div class="mt-4 flex items-center gap-1 text-[11px] text-danger">
+<span class="material-icons text-sm">priority_high</span>
+                        Optimization required
+                    </div>
+</div>
+</div>
+<!-- Primary Chart Area -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+<!-- Large Area Chart (Spend vs Revenue) -->
+<div class="xl:col-span-2 bg-white dark:bg-[#1e293b] rounded-lg border border-slate-200 dark:border-slate-800 p-6">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h2 class="text-lg font-bold dark:text-white">Performance Overview</h2>
+<p class="text-sm text-slate-500">Spend vs Revenue with CPA Correlation</p>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+<span class="text-xs text-slate-400">Revenue</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-slate-500"></span>
+<span class="text-xs text-slate-400">Ad Spend</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-warning"></span>
+<span class="text-xs text-slate-400">CPA</span>
+</div>
+</div>
+</div>
+<!-- Placeholder for the sophisticated chart -->
+<div class="relative h-[400px] w-full mt-4 flex items-end justify-between px-2">
+<!-- Simulated Background Grid -->
+<div class="absolute inset-0 flex flex-col justify-between py-2">
+<div class="border-b border-slate-100 dark:border-slate-800/50 w-full h-0"></div>
+<div class="border-b border-slate-100 dark:border-slate-800/50 w-full h-0"></div>
+<div class="border-b border-slate-100 dark:border-slate-800/50 w-full h-0"></div>
+<div class="border-b border-slate-100 dark:border-slate-800/50 w-full h-0"></div>
+<div class="border-b border-slate-100 dark:border-slate-800/50 w-full h-0"></div>
+</div>
+<!-- Data Points Visualization (Abstract Shapes) -->
+<svg class="absolute inset-0 w-full h-full" preserveaspectratio="none" viewbox="0 0 800 400">
+<!-- Revenue Area -->
+<path d="M0,400 L0,320 C100,280 200,350 300,200 C400,100 500,150 600,80 C700,50 800,20 800,20 L800,400 Z" fill="url(#revGrad)"></path>
+<!-- Revenue Line -->
+<path d="M0,320 C100,280 200,350 300,200 C400,100 500,150 600,80 C700,50 800,20 800,20" fill="none" stroke="#137fec" stroke-width="3"></path>
+<!-- Spend Line -->
+<path d="M0,380 C100,360 200,370 300,340 C400,300 500,310 600,280 C700,270 800,250 800,250" fill="none" stroke="#64748b" stroke-dasharray="5,5" stroke-width="2"></path>
+<!-- CPA Trend Line -->
+<path d="M0,150 C100,160 200,140 300,170 C400,155 500,180 600,160 C700,150 800,145 800,145" fill="none" stroke="#F59E0B" stroke-width="2"></path>
+<defs>
+<lineargradient id="revGrad" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#137fec;stop-opacity:0.2"></stop>
+<stop offset="100%" style="stop-color:#137fec;stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+<!-- Tooltip Pointer -->
+<circle cx="600" cy="80" fill="#137fec" r="4" stroke="white" stroke-width="2"></circle>
+</svg>
+<!-- Tooltip -->
+<div class="absolute top-[20px] left-[550px] bg-[#0F172A] border border-slate-700 p-3 rounded-lg shadow-xl z-10 w-44">
+<p class="text-[10px] text-slate-500 font-bold mb-2 uppercase">Sep 18, 2023</p>
+<div class="space-y-1.5">
+<div class="flex justify-between text-xs">
+<span class="text-slate-400">Revenue:</span>
+<span class="font-bold text-white">$4,821</span>
+</div>
+<div class="flex justify-between text-xs">
+<span class="text-slate-400">Ad Spend:</span>
+<span class="font-bold text-white">$1,102</span>
+</div>
+<div class="flex justify-between text-xs border-t border-slate-800 pt-1.5 mt-1.5">
+<span class="text-warning font-semibold">CPA:</span>
+<span class="font-bold text-warning">$12.44</span>
+</div>
+</div>
+</div>
+<!-- X Axis Labels -->
+<div class="absolute bottom-[-25px] left-0 w-full flex justify-between text-[10px] text-slate-500 font-medium px-2">
+<span>SEP 12</span>
+<span>SEP 13</span>
+<span>SEP 14</span>
+<span>SEP 15</span>
+<span>SEP 16</span>
+<span>SEP 17</span>
+<span>SEP 18</span>
+</div>
+</div>
+</div>
+<!-- Side Data Panel -->
+<div class="flex flex-col gap-6">
+<!-- Top Products Widget -->
+<div class="bg-white dark:bg-[#1e293b] rounded-lg border border-slate-200 dark:border-slate-800 p-6 flex-1">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-bold text-sm">Top Performing Products</h3>
+<button class="text-primary text-[11px] font-bold hover:underline">Full List</button>
+</div>
+<div class="space-y-4">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-lg object-cover" data-alt="Modern minimalist wrist watch product photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAk5wcwvK-KIOI_ifgqa9d0XAP0WYu1InydrwvGiVFVlC8VQN84U69yXm80k6WZWgq3LYW9rp4752GeVj_RgBecnKnN8yYxzAUSvHKJGtNcZs0XHwTbOD9eD93jbxmW6_8Po91xby83QFrAO39BlcAvhtzvaODlEjnMPzIfs1owJ09LkLAwbavKj9mB-WNQLnus2aAeqkXk8qY62IfYzBCTZwzSKvfAAEfbm_NGus9r5RKL74bTtx7jvs1qkcrrWvAvoJKIFeakdng"/>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-semibold truncate">Elite Series Smartwatch</p>
+<p class="text-[10px] text-slate-500">1,240 Sales • 4.2x ROAS</p>
+</div>
+<div class="text-right">
+<p class="text-xs font-bold">$34,120</p>
+<p class="text-[10px] text-success">+14%</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-lg object-cover" data-alt="High-end wireless headphones product shot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhFn4BLT3EE6jq0QZZ3Ms9HfSPZ6hkbyQzfUTWuuz6Zj0_DGKJ4y_2DyyoYWEulzSgcpqgwZx8B9gh8TW0FUA7i-w5LJ1LZY3rKfF9VHiTkr-1f4ZjEyPz_3IPxSP4-YJFXA7BrvEpqRSnX8aNuG-dKfCY-qY45nuuxADI6aYIshSVZCrN3yToDdjx7S7DpakO-0njYl80KMFUgxlmsS_-W4tS8I8fNoa38yYYKngePi273ZhGEtcnMalKZ5V-uRV3Ucosbt0lABI"/>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-semibold truncate">Pro-Bass Wireless Headphones</p>
+<p class="text-[10px] text-slate-500">980 Sales • 3.8x ROAS</p>
+</div>
+<div class="text-right">
+<p class="text-xs font-bold">$28,450</p>
+<p class="text-[10px] text-success">+8%</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-lg object-cover" data-alt="Retro polaroid camera product photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_BQpRCZPIMZXN1Dw3UinBfIVjHfc38QmgEYN429hBuYhsXl-mbbw51JXb2-uKbOwMwPDStunxXJyaf2wRD66c4xyGR3KYMDgBzdGwLp5y0AaXpCGG2wMcsP7IByb133immZD2btosZbHrVU97VHhD5534ld7mm80XAKZni1TTv3Vq9e9Zjsd3sI1jO3ehMxOhYvlS4tPVXeFtaRPPrIswS0SarX5mgigOO-iXLw9Ln2ySeSISx0yu0hADolmP-LWa81UgqI8D4lg"/>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-semibold truncate">Instant Film Retro Camera</p>
+<p class="text-[10px] text-slate-500">854 Sales • 3.1x ROAS</p>
+</div>
+<div class="text-right">
+<p class="text-xs font-bold">$21,200</p>
+<p class="text-[10px] text-warning">-2%</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Channel Breakdown -->
+<div class="bg-white dark:bg-[#1e293b] rounded-lg border border-slate-200 dark:border-slate-800 p-6">
+<h3 class="font-bold text-sm mb-6">Channel Attribution</h3>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-[11px] mb-1.5">
+<span class="text-slate-400">Meta Ads</span>
+<span class="font-bold">48%</span>
+</div>
+<div class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full">
+<div class="h-full bg-primary w-[48%] rounded-full"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[11px] mb-1.5">
+<span class="text-slate-400">Google Search</span>
+<span class="font-bold">32%</span>
+</div>
+<div class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full">
+<div class="h-full bg-success w-[32%] rounded-full"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[11px] mb-1.5">
+<span class="text-slate-400">TikTok Shop</span>
+<span class="font-bold">20%</span>
+</div>
+<div class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full">
+<div class="h-full bg-warning w-[20%] rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Detailed Data Table Section -->
+<div class="bg-white dark:bg-[#1e293b] rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+<h2 class="font-bold">Campaign Deep-Dive</h2>
+<div class="flex gap-2">
+<div class="relative">
+<span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">search</span>
+<input class="bg-slate-100 dark:bg-slate-800 border-none rounded-lg pl-9 pr-4 py-1.5 text-xs w-64 focus:ring-1 focus:ring-primary" placeholder="Search campaigns..." type="text"/>
+</div>
+<button class="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-400">
+<span class="material-icons text-sm">filter_list</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/30 text-[10px] font-bold uppercase tracking-widest text-slate-500 border-b border-slate-200 dark:border-slate-800">
+<th class="px-6 py-4">Campaign Name</th>
+<th class="px-6 py-4 text-right">Budget</th>
+<th class="px-6 py-4 text-right">Spend</th>
+<th class="px-6 py-4 text-right">Orders</th>
+<th class="px-6 py-4 text-right">Revenue</th>
+<th class="px-6 py-4 text-right">ROAS</th>
+<th class="px-6 py-4 text-center">Status</th>
+</tr>
+</thead>
+<tbody class="text-sm">
+<tr class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
+<td class="px-6 py-4 font-medium">Summer Electronics Blowout</td>
+<td class="px-6 py-4 text-right">$5,000.00</td>
+<td class="px-6 py-4 text-right">$3,421.20</td>
+<td class="px-6 py-4 text-right">412</td>
+<td class="px-6 py-4 text-right font-bold text-success">$16,244.00</td>
+<td class="px-6 py-4 text-right">4.75x</td>
+<td class="px-6 py-4">
+<div class="flex justify-center">
+<span class="w-2 h-2 rounded-full bg-success"></span>
+</div>
+</td>
+</tr>
+<tr class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
+<td class="px-6 py-4 font-medium">Flash Sale - Retargeting</td>
+<td class="px-6 py-4 text-right">$2,500.00</td>
+<td class="px-6 py-4 text-right">$1,980.50</td>
+<td class="px-6 py-4 text-right">208</td>
+<td class="px-6 py-4 text-right font-bold text-success">$9,442.00</td>
+<td class="px-6 py-4 text-right">4.77x</td>
+<td class="px-6 py-4">
+<div class="flex justify-center">
+<span class="w-2 h-2 rounded-full bg-success"></span>
+</div>
+</td>
+</tr>
+<tr class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
+<td class="px-6 py-4 font-medium">New Arrival - Cold Traffic</td>
+<td class="px-6 py-4 text-right">$10,000.00</td>
+<td class="px-6 py-4 text-right">$8,210.00</td>
+<td class="px-6 py-4 text-right">512</td>
+<td class="px-6 py-4 text-right font-bold text-warning">$18,400.00</td>
+<td class="px-6 py-4 text-right">2.24x</td>
+<td class="px-6 py-4">
+<div class="flex justify-center">
+<span class="w-2 h-2 rounded-full bg-warning"></span>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 bg-slate-50 dark:bg-slate-800/30 flex justify-between items-center text-xs text-slate-500">
+<span>Showing 3 of 12 active campaigns</span>
+<div class="flex gap-2">
+<button class="px-3 py-1 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800">Previous</button>
+<button class="px-3 py-1 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800">Next</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

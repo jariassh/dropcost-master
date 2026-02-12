@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Verifica tu correo - DropCost Master</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0066FF",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0F172A", // Slate 900
+                        "slate": {
+                            50: "#f8fafc",
+                            100: "#f1f5f9",
+                            200: "#e2e8f0",
+                            300: "#cbd5e1",
+                            400: "#94a3b8",
+                            500: "#64748b",
+                            600: "#475569",
+                            700: "#334155",
+                            800: "#1E293B", // Card Color
+                            900: "#0F172A", // Background Color
+                        }
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "8px",
+                        "lg": "8px",
+                        "xl": "12px",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-slate-900 font-display antialiased text-slate-200;
+            }
+        }input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        .otp-input:focus {
+            @apply border-primary ring-1 ring-primary/50 bg-slate-800/80;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+<div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
+<div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]"></div>
+</div>
+<div class="w-full max-w-md">
+<div class="bg-slate-800 border border-slate-700/50 shadow-2xl rounded-xl p-8 sm:p-10">
+<div class="flex flex-col items-center text-center mb-8">
+<div class="relative mb-6">
+<div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-5xl">mark_email_read</span>
+</div>
+<div class="absolute -top-1 -right-1 w-6 h-6 bg-primary border-4 border-slate-800 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-white font-bold">check</span>
+</div>
+</div>
+<h2 class="text-2xl font-bold text-white mb-2">Verifica tu correo</h2>
+<p class="text-slate-400 text-sm leading-relaxed">
+                    Hemos enviado un link a <span class="text-slate-200 font-medium">tu_email@example.com</span>
+</p>
+</div>
+<form action="#" class="space-y-8" method="POST">
+<div class="flex justify-between gap-2 sm:gap-3">
+<input class="otp-input w-full h-12 sm:h-14 text-center text-xl font-bold bg-slate-900 border border-slate-700 rounded-lg transition-all text-white focus:outline-none" maxlength="1" required="" type="text"/>
+<input class="otp-input w-full h-12 sm:h-14 text-center text-xl font-bold bg-slate-900 border border-slate-700 rounded-lg transition-all text-white focus:outline-none" maxlength="1" required="" type="text"/>
+<input class="otp-input w-full h-12 sm:h-14 text-center text-xl font-bold bg-slate-900 border border-slate-700 rounded-lg transition-all text-white focus:outline-none" maxlength="1" required="" type="text"/>
+<input class="otp-input w-full h-12 sm:h-14 text-center text-xl font-bold bg-slate-900 border border-slate-700 rounded-lg transition-all text-white focus:outline-none" maxlength="1" required="" type="text"/>
+<input class="otp-input w-full h-12 sm:h-14 text-center text-xl font-bold bg-slate-900 border border-slate-700 rounded-lg transition-all text-white focus:outline-none" maxlength="1" required="" type="text"/>
+<input class="otp-input w-full h-12 sm:h-14 text-center text-xl font-bold bg-slate-900 border border-slate-700 rounded-lg transition-all text-white focus:outline-none" maxlength="1" required="" type="text"/>
+</div>
+<div class="space-y-4">
+<button class="w-full bg-primary hover:bg-blue-600 text-white font-semibold py-3.5 rounded-lg transition-all duration-200 shadow-lg shadow-primary/25 active:transform active:scale-[0.98]" type="submit">
+                        Verificar
+                    </button>
+<button class="w-full flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 text-sm font-medium py-2 transition-colors" type="button">
+                        Reenviar código <span class="text-slate-500 font-normal">(60s)</span>
+</button>
+</div>
+</form>
+</div>
+<div class="mt-8 text-center">
+<p class="text-slate-500 text-sm">
+                ¿Cambiaste de email? 
+                <a class="text-primary hover:underline font-medium ml-1" href="#">Cambiar</a>
+</p>
+</div>
+<p class="mt-12 text-center text-xs text-slate-600">
+            © 2023 DropCost Master. Todos los derechos reservados.
+        </p>
+</div>
+
+</body></html>

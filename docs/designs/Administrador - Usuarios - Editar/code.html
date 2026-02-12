@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin User Management - DropCost Master</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+            extend: {
+                colors: {
+                "primary": "#0d69f2",
+                "background-light": "#f5f7f8",
+                "background-dark": "#101722",
+                },
+                fontFamily: {
+                "display": ["Inter", "sans-serif"]
+                },
+                borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for the table body if needed */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #334155;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-display h-screen overflow-hidden flex">
+<!-- Sidebar (Minimal) -->
+<aside class="w-20 lg:w-64 bg-white dark:bg-[#151e2e] border-r border-slate-200 dark:border-slate-800 flex-shrink-0 flex flex-col justify-between">
+<div>
+<div class="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center text-white font-bold text-xl">D</div>
+<span class="hidden lg:block font-bold text-lg text-slate-900 dark:text-white">DropCost</span>
+</div>
+</div>
+<nav class="p-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">dashboard</span>
+<span class="hidden lg:block font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg transition-colors" href="#">
+<span class="material-icons-round text-2xl">people</span>
+<span class="hidden lg:block font-medium">Users</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">credit_card</span>
+<span class="hidden lg:block font-medium">Subscriptions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">settings</span>
+<span class="hidden lg:block font-medium">Settings</span>
+</a>
+</nav>
+</div>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 px-3 py-2">
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+<img alt="Admin Profile" class="w-full h-full object-cover" data-alt="Admin user profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6NH5ib0g_yX1ZoTy1O3u99cfT5yUcuKRs9zK0mEr4MXniUjeMum0Obl_bftCvtk5J2xvx1y8liaRF5bdj3a5mYxH00lguuFCALfUmN0ELOwAEi83BiPAaRU_mEjmvGGLNK1WkfAvRFGsnOfWZMBZG4AvXPzHcOHEqnbcYvkgasy1-9Ege8UnoIHIh-Hv80tai6TQEO_5jtpUu2r2zEZrtY2HfIzIOwidZG6sB1ZbTxfZPiTpdU_lRDMU3PFa4jJbqWqSUDMLisx8"/>
+</div>
+<div class="hidden lg:block overflow-hidden">
+<p class="text-sm font-medium text-slate-900 dark:text-white truncate">Admin User</p>
+<p class="text-xs text-slate-500 dark:text-slate-400 truncate">admin@dropcost.com</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<!-- Header -->
+<header class="h-16 bg-white dark:bg-[#151e2e] border-b border-slate-200 dark:border-slate-800 px-6 flex items-center justify-between flex-shrink-0">
+<h1 class="text-xl font-semibold text-slate-900 dark:text-white">User Management</h1>
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center w-8 h-8 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-icons-round text-xl">notifications</span>
+</button>
+<button class="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+<span class="material-icons-round text-lg">add</span>
+                    Add User
+                </button>
+</div>
+</header>
+<!-- Filters & Table Area -->
+<div class="flex-1 flex flex-row overflow-hidden">
+<!-- Table Section -->
+<div class="flex-1 flex flex-col min-w-0 bg-background-light dark:bg-background-dark">
+<!-- Toolbar -->
+<div class="p-4 flex flex-wrap items-center gap-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151e2e]">
+<div class="relative flex-1 min-w-[200px] max-w-md">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-icons-round text-slate-400 dark:text-slate-500 text-xl">search</span>
+</span>
+<input class="block w-full pl-10 pr-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg leading-5 bg-white dark:bg-[#101722] text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm" placeholder="Search by name, email..." type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<div class="relative">
+<select class="appearance-none pl-3 pr-8 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#101722] text-slate-700 dark:text-slate-300 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+<option>All Plans</option>
+<option>Basic</option>
+<option>Pro</option>
+<option>Enterprise</option>
+</select>
+<span class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+<span class="material-icons-round text-slate-400 text-lg">expand_more</span>
+</span>
+</div>
+<div class="relative">
+<select class="appearance-none pl-3 pr-8 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#101722] text-slate-700 dark:text-slate-300 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+<option>All Status</option>
+<option>Active</option>
+<option>Suspended</option>
+<option>Pending</option>
+</select>
+<span class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+<span class="material-icons-round text-slate-400 text-lg">expand_more</span>
+</span>
+</div>
+</div>
+<div class="ml-auto flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+<span>Showing 1-10 of 248</span>
+<div class="flex gap-1">
+<button class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 disabled:opacity-50">
+<span class="material-icons-round text-lg">chevron_left</span>
+</button>
+<button class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-icons-round text-lg">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Table Content -->
+<div class="flex-1 overflow-auto custom-scrollbar">
+<table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+<thead class="bg-slate-50 dark:bg-[#1a2536] sticky top-0 z-10">
+<tr>
+<th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider" scope="col">
+<div class="flex items-center gap-1 cursor-pointer hover:text-primary">
+                                        User
+                                        <span class="material-icons-round text-sm">arrow_downward</span>
+</div>
+</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider" scope="col">
+                                    Role
+                                </th>
+<th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider" scope="col">
+                                    Plan
+                                </th>
+<th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider" scope="col">
+                                    Status
+                                </th>
+<th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider" scope="col">
+                                    Last Activity
+                                </th>
+<th class="relative px-6 py-3" scope="col">
+<span class="sr-only">Edit</span>
+</th>
+</tr>
+</thead>
+<tbody class="bg-white dark:bg-[#151e2e] divide-y divide-slate-200 dark:divide-slate-800">
+<!-- Selected Row -->
+<tr class="bg-primary/5 dark:bg-primary/10 border-l-4 border-primary">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center">
+<div class="flex-shrink-0 h-10 w-10">
+<img alt="Sarah Connor" class="h-10 w-10 rounded-full object-cover" data-alt="Portrait of Sarah Connor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIpKsFXZ3088hIgaEdOYlfa_Zq8Yv8hMgVnLPhIU6mdEEycrM-CyJy3xE3y51YdK6BQSlmySb2VNCN_VmsdtkujgniFTKdYNwThUfKbSWh8Jntfpf6TZJTWKueManS4TSGCylO_tBYYQYCjyeZV9ISKkeRZXbxuKY5JZBPbdRcc_mRdCYs4WY7UvLBFO5kXP-UljkXMF3wPYdK5U7QX5gGgbOqT9MycBDuSgPixljxFsqswgk26sS5bizTwqGRmG1ExNilYe368Io"/>
+</div>
+<div class="ml-4">
+<div class="text-sm font-medium text-slate-900 dark:text-white">Sarah Connor</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">sarah.c@skynet.com</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="text-sm text-slate-900 dark:text-slate-300">Admin</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                                        Enterprise
+                                    </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800">
+                                        Active
+                                    </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-500 dark:text-slate-400">
+                                    2 mins ago
+                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<button class="text-primary hover:text-blue-400">
+<span class="material-icons-round">chevron_right</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-l-4 border-transparent">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center">
+<div class="flex-shrink-0 h-10 w-10">
+<div class="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold">MK</div>
+</div>
+<div class="ml-4">
+<div class="text-sm font-medium text-slate-900 dark:text-white">Michael Kyle</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">m.kyle@example.com</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="text-sm text-slate-900 dark:text-slate-300">Editor</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary/20 dark:bg-primary/30 text-primary dark:text-blue-300 border border-blue-200 dark:border-blue-900">
+                                        Pro
+                                    </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800">
+                                        Suspended
+                                    </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-500 dark:text-slate-400">
+                                    3 days ago
+                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<button class="text-slate-400 hover:text-primary">
+<span class="material-icons-round">chevron_right</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-l-4 border-transparent">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center">
+<div class="flex-shrink-0 h-10 w-10">
+<img alt="Ted Mosby" class="h-10 w-10 rounded-full object-cover" data-alt="Portrait of Ted Mosby" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdMJuUGQCNL_YGKzv5u1jKvsFFQxbXbtFeryT6t1plJvBP90rdaU9xtMRhUNlqYmnFifBETEHoj7qESA4GjbIYeCo2y08eDzbZpIkH4qSgEypgeHJs6Byy1fY_42CtOcU_DWbMjaKJW2WBu2w4kvRgFFqNcDv_93mpb8pczH_XkkF5XMmAFVgXEY8eTXxHCsunZjwVeewJyf2WImDI99Nq5FFxuN_8-9Uw6UaoppLdjXLeAIiQ-qNApb4YqLqGXd4AQsA51N2G960"/>
+</div>
+<div class="ml-4">
+<div class="text-sm font-medium text-slate-900 dark:text-white">Ted Mosby</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">architect@ted.com</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="text-sm text-slate-900 dark:text-slate-300">Viewer</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                                        Basic
+                                    </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800">
+                                        Active
+                                    </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-500 dark:text-slate-400">
+                                    1 week ago
+                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<button class="text-slate-400 hover:text-primary">
+<span class="material-icons-round">chevron_right</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-l-4 border-transparent">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center">
+<div class="flex-shrink-0 h-10 w-10">
+<img alt="Samantha Jones" class="h-10 w-10 rounded-full object-cover" data-alt="Portrait of Samantha Jones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeHjn4tPbDDs3sohpnD4wGmAAI78t1n7LfqMIZ7FYl90gtRqgFGAgcVp6jexrYQxsW7DSdoTPZzowS2HZl8CN3ywkdh67lACq5D5UcTG5km0arZVPcKX_35nsOM9w4-spyEVOfwFMKlBFb_TcZJxO-UsYxYqe9fsDdjBr2nUTbkRUEHlj2e5kdBJZlhigPPC1YFznQKR4k8S4iI8Hixw6DulkdNM2d1Z7SE8U5yER7PEw1ro_QyVr6iX_0i7ldJ2Q7xecn-49q-og"/>
+</div>
+<div class="ml-4">
+<div class="text-sm font-medium text-slate-900 dark:text-white">Samantha Jones</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">sam.j@pr.com</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="text-sm text-slate-900 dark:text-slate-300">Editor</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary/20 dark:bg-primary/30 text-primary dark:text-blue-300 border border-blue-200 dark:border-blue-900">
+                                        Pro
+                                    </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800">
+                                        Pending
+                                    </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-500 dark:text-slate-400">
+                                    Just now
+                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<button class="text-slate-400 hover:text-primary">
+<span class="material-icons-round">chevron_right</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Detail Panel (Right Side Drawer) -->
+<div class="w-96 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151e2e] flex flex-col shadow-xl z-20">
+<!-- Panel Header -->
+<div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-start">
+<div class="flex items-start gap-4">
+<div class="relative">
+<img alt="Sarah Connor Large" class="h-14 w-14 rounded-xl object-cover ring-2 ring-white dark:ring-slate-800" data-alt="Detailed portrait of Sarah Connor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBf4-yxzM_eYTa6VjSRBXLUDeG1S5qARzA01zkF87QB2sysPuZBnQ8aNWJfuEEKUyM51fBF0vQIRxdFy5G5jnKmpUpS7mkXBR7dG3d3XaKHaQAvlhTkPDkUlq5H9W53P429TlEyRCBWWp1mx5-_uuUpJW2iqL-t6jdJjY7moH0-NYZm4q2xSEOsptJB3M7QYM2uBuIzy0bpnE0BA1WDvPL6av2zW2IBEhv5veKII0cfsXlexvGk723gDam_roR57hODdVYk4KKXX0M"/>
+<span class="absolute -bottom-1 -right-1 block h-3.5 w-3.5 rounded-full bg-green-400 ring-2 ring-white dark:ring-[#151e2e]"></span>
+</div>
+<div>
+<h2 class="text-lg font-bold text-slate-900 dark:text-white">Sarah Connor</h2>
+<p class="text-sm text-slate-500 dark:text-slate-400">sarah.c@skynet.com</p>
+<div class="mt-2 flex gap-2">
+<span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wide bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">ID: #84932</span>
+<div class="flex items-center text-xs text-slate-500">
+<span class="material-icons-round text-xs mr-1">location_on</span>
+                                     USA
+                                 </div>
+</div>
+</div>
+</div>
+<button class="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300">
+<span class="material-icons-round">close</span>
+</button>
+</div>
+<!-- Panel Body -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+<!-- Stats Grid -->
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-slate-50 dark:bg-background-dark p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+<div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Lifetime Value</div>
+<div class="text-lg font-semibold text-slate-900 dark:text-white">$2,450.00</div>
+</div>
+<div class="bg-slate-50 dark:bg-background-dark p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+<div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Total Projects</div>
+<div class="text-lg font-semibold text-slate-900 dark:text-white">15</div>
+</div>
+<div class="bg-slate-50 dark:bg-background-dark p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+<div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Logins</div>
+<div class="text-lg font-semibold text-slate-900 dark:text-white">432</div>
+</div>
+<div class="bg-slate-50 dark:bg-background-dark p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+<div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Joined</div>
+<div class="text-lg font-semibold text-slate-900 dark:text-white">Sep 2023</div>
+</div>
+</div>
+<!-- Subscription Section -->
+<div class="space-y-3">
+<h3 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+<span class="material-icons-round text-primary text-base">verified</span>
+                            Current Subscription
+                        </h3>
+<div class="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 border border-indigo-100 dark:border-indigo-500/30 rounded-lg p-4">
+<div class="flex justify-between items-start mb-2">
+<div>
+<span class="block text-indigo-700 dark:text-indigo-300 font-bold text-sm">Enterprise Tier</span>
+<span class="text-xs text-indigo-600/70 dark:text-indigo-300/60">$299/month</span>
+</div>
+<span class="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Active</span>
+</div>
+<div class="w-full bg-white/50 dark:bg-black/20 rounded-full h-1.5 mb-2">
+<div class="bg-indigo-500 h-1.5 rounded-full" style="width: 75%"></div>
+</div>
+<div class="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+<span>Cycle usage: 75%</span>
+<span>Renews Oct 24, 2024</span>
+</div>
+</div>
+</div>
+<!-- Contact Info -->
+<div class="space-y-3">
+<h3 class="text-sm font-semibold text-slate-900 dark:text-white">Contact Information</h3>
+<div class="space-y-2">
+<div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-icons-round text-slate-400 text-base">email</span>
+                                sarah.c@skynet.com
+                            </div>
+<div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-icons-round text-slate-400 text-base">phone</span>
+                                +1 (555) 000-8492
+                            </div>
+<div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-icons-round text-slate-400 text-base">business</span>
+                                Cyberdyne Systems
+                            </div>
+</div>
+</div>
+<!-- Recent Logs -->
+<div class="space-y-3">
+<h3 class="text-sm font-semibold text-slate-900 dark:text-white">Recent Activity</h3>
+<ul class="border-l-2 border-slate-200 dark:border-slate-700 ml-1 space-y-4 py-1">
+<li class="pl-4 relative">
+<div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600 ring-2 ring-white dark:ring-[#151e2e]"></div>
+<p class="text-sm text-slate-900 dark:text-white">Exported Monthly Report</p>
+<p class="text-xs text-slate-500">2 minutes ago</p>
+</li>
+<li class="pl-4 relative">
+<div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600 ring-2 ring-white dark:ring-[#151e2e]"></div>
+<p class="text-sm text-slate-900 dark:text-white">Updated Billing Info</p>
+<p class="text-xs text-slate-500">Yesterday at 4:30 PM</p>
+</li>
+<li class="pl-4 relative">
+<div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600 ring-2 ring-white dark:ring-[#151e2e]"></div>
+<p class="text-sm text-slate-900 dark:text-white">Logged in from New Device</p>
+<p class="text-xs text-slate-500">Oct 12, 2024</p>
+</li>
+</ul>
+</div>
+</div>
+<!-- Panel Footer (Actions) -->
+<div class="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#1a2536]">
+<div class="grid grid-cols-2 gap-3">
+<button class="col-span-2 w-full py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-sm font-medium text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
+                            Reset Password
+                        </button>
+<button class="w-full py-2 bg-primary hover:bg-blue-600 text-white rounded text-sm font-medium transition-colors shadow-sm shadow-blue-500/20">
+                            Change Plan
+                        </button>
+<button class="w-full py-2 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded text-sm font-medium transition-colors flex items-center justify-center gap-1 group">
+<span class="material-icons-round text-base group-hover:animate-pulse">block</span>
+                            Suspend
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

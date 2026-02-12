@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DropCost Master - Configuración</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#3b82f6",
+                        "background-light": "#f8fafc",
+                        "background-dark": "#0f172a",
+                        "card-dark": "#1e293b",
+                        "border-dark": "#334155",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                    },
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar-item-active {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0) 100%);
+            border-left: 3px solid #3b82f6;
+        }
+        .tab-active {
+            border-bottom: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="flex h-screen overflow-hidden">
+<aside class="w-64 border-r border-slate-200 dark:border-border-dark flex flex-col bg-white dark:bg-background-dark hidden md:flex">
+<div class="p-6 flex items-center gap-3">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-icons-round text-white text-xl">insights</span>
+</div>
+<h1 class="text-lg font-bold tracking-tight">DropCost<span class="text-primary">Master</span></h1>
+</div>
+<nav class="flex-1 px-4 py-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-card-dark rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-[20px]">calculate</span>
+<span class="text-sm font-medium">Analizador de Utilidad</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-card-dark rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-[20px]">grid_view</span>
+<span class="text-sm font-medium">Vista Ejecutiva</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-card-dark rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-[20px]">public</span>
+<span class="text-sm font-medium">Benchmarks Regionales</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-card-dark rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-[20px]">local_shipping</span>
+<span class="text-sm font-medium">Centro Logístico</span>
+</a>
+<a class="sidebar-item-active flex items-center gap-3 px-3 py-2.5 text-primary rounded-lg group" href="#">
+<span class="material-icons-round text-[20px]">settings</span>
+<span class="text-sm font-medium">Configuración</span>
+</a>
+</nav>
+<div class="p-4 mt-auto">
+<div class="flex items-center gap-3 p-3 rounded-xl bg-slate-100 dark:bg-card-dark border border-slate-200 dark:border-border-dark">
+<div class="relative">
+<img alt="Rodrigo Ramirez Avatar" class="w-10 h-10 rounded-full border-2 border-primary/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQdNT2Cr-UpzkwwsHkJnldEJKQOexgMee35fryfAQ87hB2_SomPUEPmO6FGQRB9EVkY382Spovy3E1lX12maeLUUcORvbDVhLhw8Eubfe-KE223HOAH1odLDdmJvA_lSAFjp_eabz4oQCaHaSqeYTKQqbQmtkppLVTQKpvma1-AyR_W-lRKVyNG-n48tci5JVl9JIGQSUdkGb6hoev8Gb9rVliN2XKdmprJUI_vPt-sBRjGEHY0bFIG-3K865jeBx1NWfeob83LnI"/>
+<div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-card-dark rounded-full"></div>
+</div>
+<div class="overflow-hidden">
+<p class="text-sm font-semibold truncate">Rodrigo R.</p>
+<p class="text-[10px] text-primary font-bold tracking-wider uppercase">Plan Pro</p>
+</div>
+<span class="material-icons-round text-slate-400 ml-auto cursor-pointer">unfold_more</span>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col overflow-hidden">
+<header class="h-16 border-b border-slate-200 dark:border-border-dark flex items-center justify-between px-8 bg-white dark:bg-background-dark">
+<div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+<span>DropCost Master</span>
+<span class="material-icons-round text-sm">chevron_right</span>
+<span class="text-primary font-medium">Configuración</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-500 rounded-full border border-green-500/20">
+<div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+<span class="text-[10px] font-bold tracking-wider uppercase">Mercado en Tiempo Real</span>
+</div>
+<button class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-icons-round">notifications</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-icons-round">settings</span>
+</button>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-8 bg-slate-50 dark:bg-background-dark/50">
+<div class="max-w-4xl mx-auto space-y-8">
+<div class="space-y-1">
+<h2 class="text-3xl font-bold tracking-tight">Configuración</h2>
+<p class="text-slate-500 dark:text-slate-400">Gestiona tu identidad, fuentes de datos y membresía.</p>
+</div>
+<div class="flex gap-8 border-b border-slate-200 dark:border-border-dark">
+<button class="tab-active flex items-center gap-2 pb-4 px-1 text-sm font-semibold">
+<span class="material-icons-round text-lg">person</span>
+                            Mi Perfil
+                        </button>
+<button class="flex items-center gap-2 pb-4 px-1 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+<span class="material-icons-round text-lg">storefront</span>
+                            Tiendas
+                        </button>
+<button class="flex items-center gap-2 pb-4 px-1 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+<span class="material-icons-round text-lg">workspace_premium</span>
+                            Membresía
+                        </button>
+</div>
+<div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-200 dark:border-border-dark shadow-sm overflow-hidden">
+<div class="p-8 space-y-8">
+<div class="flex items-center gap-6">
+<div class="relative group">
+<img alt="Rodrigo Ramirez Profile" class="w-24 h-24 rounded-2xl object-cover shadow-lg border-2 border-slate-100 dark:border-slate-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANESRhCOzO-t06ITviJS7LFDDn0mIOKXAA6wMztP3VD4CmnY8cQ3IFu6UhOPPM_HEWkeIhT4lfviH3McrM8jL_uhzuYvTrSB2ilGjtDUjQxQTa5SQJJuYllDCMWEDBbHu3Jz-hpO2K4QE9sTrqE5ziY3WzNwlInrQ9tbJU3xHXzn9r29czgugS-TwTCiigG8LVzCw-hBL667bl4ROOFiwiyxHf5AxkXdi7BeUv6RHcvN0FAvO-WAvlJlb1lcxRGiRj9d-ZrfZsn2Q"/>
+<button class="absolute -bottom-2 -right-2 p-1.5 bg-primary text-white rounded-lg shadow-lg hover:scale-105 transition-transform">
+<span class="material-icons-round text-sm">edit</span>
+</button>
+</div>
+<div class="space-y-1">
+<h3 class="text-2xl font-bold">Rodrigo Ramirez</h3>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold uppercase rounded border border-primary/20">Plan Pro</span>
+<span class="text-slate-400 text-sm">•</span>
+<span class="text-slate-400 text-sm">soporte@mail.com</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="text-[11px] font-bold uppercase tracking-wider text-slate-400 ml-1">Nombres</label>
+<input class="w-full bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" type="text" value="Rodrigo"/>
+</div>
+<div class="space-y-2">
+<label class="text-[11px] font-bold uppercase tracking-wider text-slate-400 ml-1">Apellidos</label>
+<input class="w-full bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" type="text" value="Ramirez"/>
+</div>
+<div class="space-y-2">
+<label class="text-[11px] font-bold uppercase tracking-wider text-slate-400 ml-1">Correo Electrónico</label>
+<input class="w-full bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" type="email" value="soporte@mail.com"/>
+</div>
+<div class="space-y-2">
+<label class="text-[11px] font-bold uppercase tracking-wider text-slate-400 ml-1">Teléfono Móvil</label>
+<div class="flex">
+<div class="flex items-center px-4 bg-slate-100 dark:bg-slate-800 border-y border-l border-slate-200 dark:border-border-dark rounded-l-xl text-sm font-medium text-slate-500">
+                                            MX +52
+                                        </div>
+<input class="w-full bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-r-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" type="tel" value="3160972107"/>
+</div>
+</div>
+</div>
+<div class="flex justify-end pt-4">
+<button class="bg-primary hover:bg-blue-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95">
+                                    Guardar Cambios
+                                </button>
+</div>
+</div>
+</div>
+<div class="bg-primary/5 dark:bg-card-dark rounded-2xl border border-primary/20 dark:border-border-dark p-6 flex flex-col md:flex-row items-center gap-6">
+<div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
+<span class="material-icons-round text-primary text-2xl">lightbulb</span>
+</div>
+<div class="flex-1 text-center md:text-left">
+<h4 class="font-bold text-lg">Guía de Optimización Logística</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                                Nuestra IA analiza cuellos de botella en transportadoras de Colombia (Servientrega, Envía, etc.). Optimizamos basándonos en el <span class="text-primary font-semibold">Margen Neto Real</span> después de devoluciones y latencia regional.
+                            </p>
+</div>
+<button class="bg-primary text-white text-sm font-semibold py-2 px-6 rounded-lg whitespace-nowrap hover:bg-blue-600 transition-colors">
+                            Ver Guía Completa
+                        </button>
+</div>
+</div>
+</div>
+</main>
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform active:scale-95">
+<span class="material-icons-round">chat_bubble</span>
+</button>
+</div>
+<script>
+        // Placeholder for any interaction scripts
+        console.log("Unified Settings Module Loaded");
+    </script>
+
+</body></html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Executive Dashboard | DropCost Master</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0066FF",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0F172A", // Slate 900 per request
+                        "slate-card": "#1E293B",      // Slate 800 per request
+                        "success": "#10B981",
+                        "warning": "#F59E0B",
+                        "danger": "#EF4444",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .glow-success { box-shadow: 0 0 15px rgba(16, 185, 129, 0.1); border-top: 2px solid #10B981; }
+        .glow-primary { box-shadow: 0 0 15px rgba(0, 102, 255, 0.1); border-top: 2px solid #0066FF; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-[#F1F5F9] font-display antialiased flex h-screen overflow-hidden">
+<aside class="w-64 h-full bg-white dark:bg-[#0F172A] border-r border-slate-200 dark:border-slate-800 flex flex-col flex-shrink-0 z-50 transition-all duration-300">
+<div class="px-6 py-8 flex items-center gap-3">
+<div class="bg-primary p-1.5 rounded-lg text-white">
+<span class="material-icons text-2xl">bolt</span>
+</div>
+<span class="text-xl font-bold tracking-tight dark:text-white">DropCost</span>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary font-medium transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">calculate</span>
+<span>Simulador</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">public</span>
+<span>Análisis Regional</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Configuración</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+<img alt="User avatar" class="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZmSg4X73jLYhy6AU5uQjEZUfNC6bGH1mdvvevHn9vDPat323yfwjCuGtFHBTNUsMPRw2c25Cv5-GgUBIdVudqGmt3B-V0Mp-CGqr38g5jDMHOO0L2oE6IgoC4vn-h7vE2QFkVU7vorhBB9iGP9Ba8la-rMv363LrD6XtYYVtXfzN_9FKDpUuwPCo-wvHAMJsIheLSAmZRgwX6G73ag8avb9kMM1OWaeaQyYZsapUXTXVOJXuiSCVbR89Ca_rFqw5B18R1oWRTm5Q"/>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-semibold truncate">Alex Rivera</p>
+<p class="text-[11px] text-slate-500 truncate uppercase">Admin Level</p>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+<span class="material-symbols-outlined text-xl">logout</span>
+</button>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full relative overflow-hidden bg-background-light dark:bg-background-dark">
+<header class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F172A] px-8 flex items-center justify-between z-40">
+<div class="flex items-center gap-6">
+<h1 class="text-lg font-bold dark:text-white">Executive Dashboard</h1>
+<div class="relative group">
+<button class="flex items-center gap-3 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined text-primary text-xl">store</span>
+<span>Global Electronics Store</span>
+<span class="material-symbols-outlined text-lg">expand_more</span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2.5 right-2.5 w-2 h-2 bg-danger rounded-full ring-2 ring-white dark:ring-[#0F172A]"></span>
+</button>
+<button class="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined text-lg">download</span>
+                    Export Report
+                </button>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-white dark:bg-slate-card p-6 rounded-xl border border-slate-200 dark:border-slate-700 glow-success flex flex-col">
+<div class="flex justify-between items-start mb-4">
+<span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Net Profit</span>
+<span class="bg-success/10 text-success text-xs px-2 py-0.5 rounded-full font-bold">+12.4%</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-bold dark:text-white tracking-tight">$42,508.00</span>
+</div>
+<div class="mt-4 flex items-center gap-2 text-xs text-slate-500">
+<span class="material-symbols-outlined text-success text-sm">trending_up</span>
+<span>MTD Growth trajectory: Excellent</span>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-card p-6 rounded-xl border border-slate-200 dark:border-slate-700 glow-primary">
+<div class="flex justify-between items-start mb-4">
+<span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Avg. ROAS</span>
+<span class="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full font-bold">Optimal</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-bold dark:text-white tracking-tight">4.82x</span>
+</div>
+<div class="mt-5 w-full h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[85%] rounded-full"></div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-card p-6 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between relative overflow-hidden">
+<div class="relative z-10">
+<span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest block mb-4">Factor Markup</span>
+<span class="text-3xl font-bold dark:text-white tracking-tight">3.2x</span>
+<p class="text-xs text-slate-500 mt-2 italic font-medium">Target: 3.5x</p>
+</div>
+<div class="relative w-20 h-20 flex items-center justify-center">
+<svg class="w-full h-full -rotate-90">
+<circle class="text-slate-100 dark:text-slate-700" cx="40" cy="40" fill="transparent" r="34" stroke="currentColor" stroke-width="6"></circle>
+<circle class="text-primary" cx="40" cy="40" fill="transparent" r="34" stroke="currentColor" stroke-dasharray="213" stroke-dashoffset="19" stroke-linecap="round" stroke-width="6"></circle>
+</svg>
+<span class="absolute text-xs font-bold text-primary">91%</span>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-card rounded-xl border border-slate-200 dark:border-slate-700 p-8">
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
+<div>
+<h2 class="text-xl font-bold dark:text-white">Performance Overview</h2>
+<p class="text-sm text-slate-500 mt-1">Daily monitoring of Spend vs Revenue trends</p>
+</div>
+<div class="flex flex-wrap gap-5">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-primary shadow-[0_0_8px_rgba(0,102,255,0.4)]"></span>
+<span class="text-xs font-medium text-slate-500">Revenue</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-slate-400"></span>
+<span class="text-xs font-medium text-slate-500">Ad Spend</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-warning"></span>
+<span class="text-xs font-medium text-slate-500">CPA Trend</span>
+</div>
+</div>
+</div>
+<div class="relative h-[320px] w-full">
+<div class="absolute inset-0 flex flex-col justify-between py-1">
+<div class="border-b border-slate-100 dark:border-slate-800 w-full h-0"></div>
+<div class="border-b border-slate-100 dark:border-slate-800 w-full h-0"></div>
+<div class="border-b border-slate-100 dark:border-slate-800 w-full h-0"></div>
+<div class="border-b border-slate-100 dark:border-slate-800 w-full h-0"></div>
+<div class="border-b border-slate-100 dark:border-slate-800 w-full h-0"></div>
+</div>
+<svg class="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 320">
+<defs>
+<linearGradient id="primaryGrad" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#0066FF;stop-opacity:0.25"></stop>
+<stop offset="100%" style="stop-color:#0066FF;stop-opacity:0"></stop>
+</linearGradient>
+</defs>
+<path d="M0,320 L0,220 C150,180 250,280 400,120 C550,60 700,180 850,40 L1000,20 L1000,320 Z" fill="url(#primaryGrad)"></path>
+<path d="M0,220 C150,180 250,280 400,120 C550,60 700,180 850,40 L1000,20" fill="none" stroke="#0066FF" stroke-linecap="round" stroke-width="4"></path>
+<path d="M0,280 C150,260 250,300 400,240 C550,220 700,260 850,200 L1000,190" fill="none" stroke="#64748b" stroke-dasharray="6,4" stroke-width="2"></path>
+<path d="M0,140 C150,150 250,130 400,160 C550,145 700,170 850,140 L1000,135" fill="none" stroke="#F59E0B" stroke-width="2"></path>
+<circle cx="850" cy="40" fill="#0066FF" r="5" stroke="white" stroke-width="2"></circle>
+</svg>
+<div class="absolute top-4 right-[10%] bg-slate-card border border-slate-700 p-4 rounded-xl shadow-2xl z-20 w-48">
+<p class="text-[10px] text-slate-500 font-bold uppercase mb-3 flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                            SEP 24, 2023
+                        </p>
+<div class="space-y-2">
+<div class="flex justify-between items-center text-sm font-medium">
+<span class="text-slate-400">Revenue</span>
+<span class="text-white">$14,281</span>
+</div>
+<div class="flex justify-between items-center text-sm font-medium">
+<span class="text-slate-400">Spend</span>
+<span class="text-white">$3,402</span>
+</div>
+<div class="pt-2 border-t border-slate-700 flex justify-between items-center text-sm font-bold">
+<span class="text-warning">CPA</span>
+<span class="text-warning">$11.84</span>
+</div>
+</div>
+</div>
+<div class="absolute -bottom-7 w-full flex justify-between px-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+<span>Mon</span>
+<span>Tue</span>
+<span>Wed</span>
+<span>Thu</span>
+<span>Fri</span>
+<span>Sat</span>
+<span>Sun</span>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-card rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+<div class="px-8 py-6 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div>
+<h2 class="text-lg font-bold dark:text-white">Campaign Deep-Dive</h2>
+<p class="text-xs text-slate-500">Individual performance metrics per active campaign</p>
+</div>
+<div class="flex gap-2">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-lg text-slate-500">search</span>
+<input class="bg-slate-50 dark:bg-slate-900 border-none rounded-lg pl-10 pr-4 py-2 text-xs w-64 focus:ring-2 focus:ring-primary/50 text-slate-700 dark:text-white" placeholder="Search campaign..." type="text"/>
+</div>
+<button class="px-4 py-2 bg-slate-50 dark:bg-slate-900 text-slate-500 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-700 hover:border-primary transition-colors">
+                            Filters
+                        </button>
+</div>
+</div>
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-slate-50/50 dark:bg-slate-900/30 text-[11px] font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 dark:border-slate-800">
+<th class="px-8 py-5">Campaign Name</th>
+<th class="px-6 py-5 text-right">Budget</th>
+<th class="px-6 py-5 text-right">Spend</th>
+<th class="px-6 py-5 text-right">Orders</th>
+<th class="px-6 py-5 text-right">Revenue</th>
+<th class="px-6 py-5 text-right">ROAS</th>
+<th class="px-8 py-5 text-center">Status</th>
+</tr>
+</thead>
+<tbody class="text-sm divide-y divide-slate-100 dark:divide-slate-800">
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-sm">ads_click</span>
+</div>
+<span class="font-semibold dark:text-slate-200">Summer Electronics Blowout</span>
+</div>
+</td>
+<td class="px-6 py-5 text-right font-medium">$5,000.00</td>
+<td class="px-6 py-5 text-right font-medium">$3,421.20</td>
+<td class="px-6 py-5 text-right font-medium">412</td>
+<td class="px-6 py-5 text-right">
+<span class="font-bold text-success">$16,244.00</span>
+</td>
+<td class="px-6 py-5 text-right">
+<span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">4.75x</span>
+</td>
+<td class="px-8 py-5">
+<div class="flex justify-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20">
+                                            ACTIVE
+                                        </span>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-sm">rebase_edit</span>
+</div>
+<span class="font-semibold dark:text-slate-200">Flash Sale - Retargeting</span>
+</div>
+</td>
+<td class="px-6 py-5 text-right font-medium">$2,500.00</td>
+<td class="px-6 py-5 text-right font-medium">$1,980.50</td>
+<td class="px-6 py-5 text-right font-medium">208</td>
+<td class="px-6 py-5 text-right">
+<span class="font-bold text-success">$9,442.00</span>
+</td>
+<td class="px-6 py-5 text-right">
+<span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">4.77x</span>
+</td>
+<td class="px-8 py-5">
+<div class="flex justify-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20">
+                                            ACTIVE
+                                        </span>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+</div>
+<span class="font-semibold dark:text-slate-200">New Arrival - Cold Traffic</span>
+</div>
+</td>
+<td class="px-6 py-5 text-right font-medium">$10,000.00</td>
+<td class="px-6 py-5 text-right font-medium">$8,210.00</td>
+<td class="px-6 py-5 text-right font-medium">512</td>
+<td class="px-6 py-5 text-right">
+<span class="font-bold text-warning">$18,400.00</span>
+</td>
+<td class="px-6 py-5 text-right">
+<span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">2.24x</span>
+</td>
+<td class="px-8 py-5">
+<div class="flex justify-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-warning/10 text-warning border border-warning/20">
+                                            OPTIMIZE
+                                        </span>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-8 py-4 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center text-xs text-slate-500 font-medium border-t border-slate-100 dark:border-slate-800">
+<p>Showing 3 of 12 active campaigns</p>
+<div class="flex items-center gap-1">
+<button class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-lg">chevron_left</span>
+</button>
+<span class="px-3">Page 1 of 4</span>
+<button class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-lg">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>
