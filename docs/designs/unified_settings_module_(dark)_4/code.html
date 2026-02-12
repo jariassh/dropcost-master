@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DropCost Master - Gestionar Tienda con CSV</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0066FF",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0f1723",
+                        "card-dark": "#1e293b",
+                        "border-dark": "#334155",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        };
+    </script>
+<style type="text/tailwindcss">
+        body {
+            @apply font-display;
+        }
+        .sidebar-item-active {
+            background: linear-gradient(90deg, rgba(0, 102, 255, 0.1) 0%, rgba(0, 102, 255, 0) 100%);
+            border-left: 3px solid #0066FF;
+        }
+        .tab-active {
+            border-bottom: 2px solid #0066FF;
+            @apply text-primary;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="flex h-screen overflow-hidden">
+<aside class="w-64 border-r border-slate-200 dark:border-border-dark flex flex-col bg-white dark:bg-background-dark hidden md:flex shrink-0">
+<div class="p-6 flex items-center gap-3">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-xl">insights</span>
+</div>
+<h1 class="text-lg font-bold tracking-tight">DropCost<span class="text-primary">Master</span></h1>
+</div>
+<nav class="flex-1 px-4 py-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-card-dark rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px]">calculate</span>
+<span class="text-sm font-medium">Analizador de Utilidad</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-card-dark rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px]">grid_view</span>
+<span class="text-sm font-medium">Vista Ejecutiva</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-card-dark rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px]">public</span>
+<span class="text-sm font-medium">Benchmarks Regionales</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-card-dark rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px]">local_shipping</span>
+<span class="text-sm font-medium">Centro Logístico</span>
+</a>
+<a class="sidebar-item-active flex items-center gap-3 px-3 py-2.5 text-primary rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-sm font-medium">Configuración</span>
+</a>
+</nav>
+<div class="p-4 mt-auto border-t border-slate-200 dark:border-border-dark">
+<div class="flex items-center gap-3 p-3 rounded-xl bg-slate-100 dark:bg-card-dark border border-slate-200 dark:border-border-dark">
+<div class="relative">
+<img alt="Rodrigo Ramirez Avatar" class="w-10 h-10 rounded-full border-2 border-primary/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQdNT2Cr-UpzkwwsHkJnldEJKQOexgMee35fryfAQ87hB2_SomPUEPmO6FGQRB9EVkY382Spovy3E1lX12maeLUUcORvbDVhLhw8Eubfe-KE223HOAH1odLDdmJvA_lSAFjp_eabz4oQCaHaSqeYTKQqbQmtkppLVTQKpvma1-AyR_W-lRKVyNG-n48tci5JVl9JIGQSUdkGb6hoev8Gb9rVliN2XKdmprJUI_vPt-sBRjGEHY0bFIG-3K865jeBx1NWfeob83LnI"/>
+<div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-card-dark rounded-full"></div>
+</div>
+<div class="overflow-hidden">
+<p class="text-sm font-semibold truncate">Rodrigo R.</p>
+<p class="text-[10px] text-primary font-bold tracking-wider uppercase">Plan Pro</p>
+</div>
+<span class="material-symbols-outlined text-slate-400 ml-auto cursor-pointer">unfold_more</span>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col overflow-hidden relative">
+<header class="h-16 border-b border-slate-200 dark:border-border-dark flex items-center justify-between px-8 bg-white dark:bg-background-dark shrink-0">
+<div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+<span>DropCost Master</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-primary font-medium">Configuración</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-500 rounded-full border border-green-500/20">
+<div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+<span class="text-[10px] font-bold tracking-wider uppercase">Mercado en Tiempo Real</span>
+</div>
+<button class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-8 bg-slate-50 dark:bg-background-dark/50 no-scrollbar">
+<div class="max-w-6xl mx-auto space-y-6">
+<div class="flex gap-8 border-b border-slate-200 dark:border-border-dark">
+<button class="flex items-center gap-2 pb-4 px-1 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+<span class="material-symbols-outlined text-[20px]">person</span>
+                        Mi Perfil
+                    </button>
+<button class="tab-active flex items-center gap-2 pb-4 px-1 text-sm font-semibold">
+<span class="material-symbols-outlined text-[20px]">storefront</span>
+                        Tiendas
+                    </button>
+<button class="flex items-center gap-2 pb-4 px-1 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+<span class="material-symbols-outlined text-[20px]">workspace_premium</span>
+                        Membresía
+                    </button>
+</div>
+<a class="flex items-center gap-2 text-[11px] font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-widest" href="#">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+                    Volver a mis tiendas
+                </a>
+<div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-200 dark:border-border-dark p-8 flex items-center gap-8 relative group">
+<div class="relative">
+<div class="w-24 h-24 rounded-2xl bg-slate-100 dark:bg-background-dark flex items-center justify-center overflow-hidden border border-slate-200 dark:border-border-dark">
+<img alt="Store Logo" class="w-16 h-16 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCC5mg63ZZyta56QQiHTf1YKCN4CrCDj5KXcV581vVLJJrmNH76zFMYsVxZILODJ7sQIUpLgr4RQnk9I1nUlYnT5OxoZGiSm1fXdxRqo65Qe_JwEwZ2kckh6wdOAF20Ep9XpBxNd7TnfQUIP8F7nBhijuckO2GkXfU7yIMVFoE6mzQXDj2_EvLlZnnQ9Ud0WdDxdor0J4LCGG4cxi5PBmL1I3chfhjPHgcFuinzvg_uS49X3AUruHOTj_VwtOMiYpyAMtlTg6UcSeM"/>
+</div>
+<button class="absolute -bottom-2 -right-2 bg-primary text-white p-1.5 rounded-lg shadow-lg">
+<span class="material-symbols-outlined text-sm">edit</span>
+</button>
+</div>
+<div class="flex-1 space-y-4">
+<div>
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Nombre Comercial</label>
+<input class="w-full max-w-md bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-lg px-4 py-2.5 text-sm focus:ring-primary focus:border-primary" type="text" value="Moda Express"/>
+</div>
+<div class="flex items-center gap-6">
+<div>
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">País</label>
+<div class="flex items-center gap-2 bg-slate-100 dark:bg-background-dark/50 border border-slate-200 dark:border-border-dark rounded-lg px-4 py-2.5 opacity-60 cursor-not-allowed">
+<span class="material-symbols-outlined text-sm">public</span>
+<span class="text-sm">Colombia</span>
+<span class="material-symbols-outlined text-xs ml-2" title="No se puede modificar">lock</span>
+</div>
+<p class="text-[10px] text-slate-500 mt-1">El país no puede ser modificado después de la creación.</p>
+</div>
+</div>
+</div>
+<button class="absolute top-6 right-6 text-slate-500 hover:text-red-500">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+<div class="space-y-4">
+<h3 class="text-sm font-bold uppercase tracking-widest text-slate-400">Integraciones</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="bg-white dark:bg-card-dark rounded-2xl border-t-4 border-t-lime-400 border border-slate-200 dark:border-border-dark p-6 space-y-4 flex flex-col">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-lime-400/10 flex items-center justify-center">
+<img alt="Shopify" class="w-6 h-6 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBu5S4N7F0jHFz8jVkym6Dk82xDknGUm6t7EdvNNJ9OI7RZ05TmVigRLtYZks5_RASJdv2ZfO_jKblxzx4iaBR3VXusnw7Avo5WsAbUGYsCDygEZqaw4VDay09YJIGbX4d1oNtUI-na-IM6Bg8c9NxzbOBBPpM4wvGljWwVCPRg75_5U_jSujEnOwcAFyT1aVFfVThveCiO5JvHc6yIbt4T3yjfDrh_74W7qujqVxCXWgw8ImNf49betTJIcuKjK9RnatjB57Nt5BY"/>
+</div>
+<div>
+<h4 class="font-bold text-sm">Shopify</h4>
+<p class="text-[10px] text-slate-500 uppercase font-bold">Ventas y SKUs</p>
+</div>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed min-h-[40px]">
+                                Vincula esta fuente para automatizar la extracción de datos de pedidos reales.
+                            </p>
+<div class="space-y-2 pt-2">
+<button class="w-full py-2.5 bg-lime-400 hover:bg-lime-500 text-black font-bold text-xs rounded-lg transition-colors uppercase tracking-wider">
+                                    Conectar Shopify
+                                </button>
+<button class="w-full py-2.5 border border-slate-700 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-lg transition-colors uppercase tracking-wider flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">cloud_upload</span>
+                                    Cargar CSV
+                                </button>
+</div>
+</div>
+<div class="bg-white dark:bg-card-dark rounded-2xl border-t-4 border-t-blue-500 border border-slate-200 dark:border-border-dark p-6 space-y-4 flex flex-col">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-blue-500">local_shipping</span>
+</div>
+<div>
+<h4 class="font-bold text-sm">Dropi</h4>
+<p class="text-[10px] text-slate-500 uppercase font-bold">Logística COD</p>
+</div>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed min-h-[40px]">
+                                Vincula esta fuente para automatizar la extracción de datos de logística reales.
+                            </p>
+<div class="space-y-2 pt-2">
+<button class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-colors uppercase tracking-wider">
+                                    Vincular API
+                                </button>
+<button class="w-full py-2.5 border border-slate-700 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-lg transition-colors uppercase tracking-wider flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">cloud_upload</span>
+                                    Cargar CSV
+                                </button>
+</div>
+</div>
+<div class="bg-white dark:bg-card-dark rounded-2xl border-t-4 border-t-blue-400 border border-slate-200 dark:border-border-dark p-6 space-y-4 flex flex-col">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-blue-400/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-blue-400">ads_click</span>
+</div>
+<div>
+<h4 class="font-bold text-sm">Meta Ads</h4>
+<p class="text-[10px] text-slate-500 uppercase font-bold">Marketing &amp; CPA</p>
+</div>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed min-h-[40px]">
+                                Vincula esta fuente para automatizar la extracción de datos de pauta reales.
+                            </p>
+<div class="space-y-2 pt-2">
+<button class="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs rounded-lg transition-colors uppercase tracking-wider">
+                                    Conectar Ads
+                                </button>
+<button class="w-full py-2.5 border border-slate-700 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-lg transition-colors uppercase tracking-wider flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">cloud_upload</span>
+                                    Cargar CSV
+                                </button>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-200 dark:border-border-dark overflow-hidden">
+<div class="p-6 border-b border-slate-200 dark:border-border-dark flex items-center justify-between">
+<h3 class="font-bold">Estadísticas de Costeos</h3>
+<div class="flex items-center gap-2">
+<button class="p-2 text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">download</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full">
+<thead>
+<tr class="text-left bg-slate-50 dark:bg-background-dark/50 border-b border-slate-200 dark:border-border-dark">
+<th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Fecha Costeo</th>
+<th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Producto</th>
+<th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">ID Campaña</th>
+<th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Costeo</th>
+<th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Ventas</th>
+<th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">Cant. Artículos</th>
+<th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-right">Rentabilidad</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+<td class="px-6 py-4 text-sm">12 Oct 2023</td>
+<td class="px-6 py-4 text-sm font-medium">Serum Rejuvenecedor v2</td>
+<td class="px-6 py-4 text-xs font-mono text-slate-500">CAMP-9402</td>
+<td class="px-6 py-4 text-sm">$12.50</td>
+<td class="px-6 py-4 text-sm">$45.00</td>
+<td class="px-6 py-4 text-sm text-center">124</td>
+<td class="px-6 py-4 text-sm text-right text-green-500 font-bold">32.4%</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+<td class="px-6 py-4 text-sm">11 Oct 2023</td>
+<td class="px-6 py-4 text-sm font-medium">Limpiador Ultrasónico</td>
+<td class="px-6 py-4 text-xs font-mono text-slate-500">CAMP-8812</td>
+<td class="px-6 py-4 text-sm">$24.00</td>
+<td class="px-6 py-4 text-sm">$68.00</td>
+<td class="px-6 py-4 text-sm text-center">86</td>
+<td class="px-6 py-4 text-sm text-right text-green-500 font-bold">28.1%</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+<td class="px-6 py-4 text-sm">10 Oct 2023</td>
+<td class="px-6 py-4 text-sm font-medium">Kit Maquillaje Pro</td>
+<td class="px-6 py-4 text-xs font-mono text-slate-500">CAMP-7231</td>
+<td class="px-6 py-4 text-sm">$45.20</td>
+<td class="px-6 py-4 text-sm">$89.00</td>
+<td class="px-6 py-4 text-sm text-center">42</td>
+<td class="px-6 py-4 text-sm text-right text-red-500 font-bold">14.2%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform active:scale-95 z-20">
+<span class="material-symbols-outlined">chat_bubble</span>
+</button>
+</div>
+
+</body></html>

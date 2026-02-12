@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Payment Gateways - DropCost Master</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0066FF",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0F172A", // Slate 900
+                        "slate-800": "#1E293B", 
+                        "slate-900": "#0F172A",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #334155;
+            border-radius: 20px;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .sidebar-item-active {
+            @apply bg-primary/10 text-primary;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-50 font-display h-screen overflow-hidden flex">
+<aside class="w-20 lg:w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700/50 flex-shrink-0 flex flex-col justify-between z-10">
+<div>
+<div class="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-700/50">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center text-white font-bold text-xl">D</div>
+<span class="hidden lg:block font-bold text-lg text-slate-900 dark:text-white tracking-tight">DropCost</span>
+</div>
+</div>
+<nav class="p-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">dashboard</span>
+<span class="hidden lg:block font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">people</span>
+<span class="hidden lg:block font-medium">Usuarios</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">layers</span>
+<span class="hidden lg:block font-medium">Planes</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">confirmation_number</span>
+<span class="hidden lg:block font-medium">Promociones</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 sidebar-item-active rounded-lg transition-colors" href="#">
+<span class="material-icons-round text-2xl">account_balance_wallet</span>
+<span class="hidden lg:block font-medium">Pasarelas</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">settings</span>
+<span class="hidden lg:block font-medium">Configuración</span>
+</a>
+</nav>
+</div>
+<div class="p-4 border-t border-slate-200 dark:border-slate-700/50">
+<div class="flex items-center gap-3 px-3 py-2">
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden border border-slate-200 dark:border-slate-600">
+<img alt="Admin Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5_m7UJAyBJcEoPOjKnsUoj3WA7aA7HofibuYInYKoOTSWRi4ugMXOtQy0fruq5sLsatFzuMunmcvJT8y1gS53sJLvAZnCsBBqtXbWo8NXWljrONwoame4iDE0vvM4Yr_h13EOvz-SpGr5HHFqz-23jpsdIAkO2-wd5PgCL9prmOKM_YTGuiKb0RmnrVJedEgCzeID6gEMpOJWCr-04eGDFW6SNMeeG5Cr_y-IXB8aqjubgUXKR5-I5cNczy1PyeB5uQbx211Kx7w"/>
+</div>
+<div class="hidden lg:block overflow-hidden">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">Admin User</p>
+<p class="text-xs text-slate-500 dark:text-slate-400 truncate">admin@dropcost.com</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700/50 px-6 flex items-center justify-between flex-shrink-0">
+<h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Pasarelas de Pago</h2>
+<div class="flex items-center gap-4">
+<span class="text-xs font-medium text-slate-400 uppercase tracking-widest hidden sm:block">Status: Operational</span>
+<div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto custom-scrollbar p-6 bg-background-light dark:bg-background-dark">
+<div class="max-w-7xl mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+<div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl overflow-hidden shadow-sm flex flex-col">
+<div class="p-6">
+<div class="flex justify-between items-start mb-6">
+<div class="w-12 h-12 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center p-2">
+<img alt="Mercado Pago" class="w-full h-auto object-contain grayscale dark:invert opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZgyd-ss8B4RG3eohg3rYKOGqwiukgdFDSHIrrtxBthYdX_NR_BXgwfpfMhjBX6m6j-pgb7ijfzRoNmzYZGmCuqNeAmwmqG85x0cWFi4dezVFnUUXX0ynxZSnX9y9iy9mt9Iq9RYArHJ9Ycfx9W7_FB1UbUx-wAFyqLFtXZZE72bNc9av4-E9TRJkLzGu7iAjFudGLHoe_NdlTM5_JBvKZXoyY4sgQaMoe7G5UHPGA0uEeDFCn6UdtPJUankkkUIg-_5Bx1ugUN28"/>
+</div>
+<span class="px-3 py-1 bg-green-100 dark:bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-bold rounded-full border border-green-200 dark:border-green-500/20 flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                    Conectado
+                                </span>
+</div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-50 mb-1">Mercado Pago</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Pasarela regional para Latinoamérica con soporte para múltiples monedas.</p>
+<div class="space-y-4">
+<div class="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700/30">
+<p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">API Key</p>
+<p class="text-sm font-mono text-slate-600 dark:text-slate-300">••••••••••••••••</p>
+</div>
+<a class="text-primary hover:underline text-sm font-medium flex items-center gap-1 w-fit" href="#">
+                                    Ver transacciones
+                                    <span class="material-icons-round text-sm">arrow_forward</span>
+</a>
+</div>
+</div>
+<div class="mt-auto p-6 pt-0 border-t border-slate-50 dark:border-slate-700/30 pt-4 mt-4">
+<button class="w-full py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-semibold transition-all">
+                                Desconectar
+                            </button>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl overflow-hidden shadow-sm flex flex-col">
+<div class="p-6">
+<div class="flex justify-between items-start mb-6">
+<div class="w-12 h-12 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center p-2">
+<span class="material-icons-round text-blue-600 dark:text-blue-400 text-3xl">payments</span>
+</div>
+<span class="px-3 py-1 bg-green-100 dark:bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-bold rounded-full border border-green-200 dark:border-green-500/20 flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                    Conectado
+                                </span>
+</div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-50 mb-1">PayPal</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Estándar global para pagos en línea y suscripciones recurrentes.</p>
+<div class="space-y-4">
+<div class="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700/30">
+<p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">API Key</p>
+<p class="text-sm font-mono text-slate-600 dark:text-slate-300">••••••••••••••••</p>
+</div>
+<a class="text-primary hover:underline text-sm font-medium flex items-center gap-1 w-fit" href="#">
+                                    Ver transacciones
+                                    <span class="material-icons-round text-sm">arrow_forward</span>
+</a>
+</div>
+</div>
+<div class="mt-auto p-6 pt-0 border-t border-slate-50 dark:border-slate-700/30 pt-4 mt-4">
+<button class="w-full py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-semibold transition-all">
+                                Desconectar
+                            </button>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl overflow-hidden shadow-sm flex flex-col">
+<div class="p-6">
+<div class="flex justify-between items-start mb-6">
+<div class="w-12 h-12 rounded-lg bg-slate-50 dark:bg-slate-900/30 flex items-center justify-center p-2">
+<span class="material-symbols-outlined text-slate-400 text-3xl">account_balance</span>
+</div>
+<span class="px-3 py-1 bg-slate-100 dark:bg-slate-900/50 text-slate-400 dark:text-slate-500 text-xs font-bold rounded-full border border-slate-200 dark:border-slate-700/50">
+                                    Desconectado
+                                </span>
+</div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-50 mb-1">Stripe</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Infraestructura financiera completa para internet con la mejor experiencia de usuario.</p>
+<div class="p-4 bg-slate-50/50 dark:bg-slate-900/20 rounded-lg border border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center py-8">
+<span class="material-icons-round text-slate-300 dark:text-slate-600 text-4xl mb-2">link_off</span>
+<p class="text-xs text-slate-400 dark:text-slate-500">Sin configuración activa</p>
+</div>
+</div>
+<div class="mt-auto p-6 pt-0">
+<button class="w-full py-2.5 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+<span class="material-icons-round text-lg">add</span>
+                                Conectar
+                            </button>
+</div>
+</div>
+</div>
+<div class="mt-12 p-6 bg-primary/5 border border-primary/20 rounded-xl flex items-start gap-4">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+<span class="material-icons-round text-primary">info</span>
+</div>
+<div>
+<h4 class="text-slate-900 dark:text-slate-50 font-bold mb-1">Guía de integración</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                            Asegúrate de configurar los Webhooks correctamente en el panel de control de cada pasarela para recibir notificaciones de pagos en tiempo real. 
+                            Las claves API deben ser las de producción (Live Keys) para procesar cobros reales.
+                        </p>
+<button class="mt-3 text-sm font-bold text-primary hover:underline">Leer documentación completa</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>

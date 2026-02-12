@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Connect Gateway Modal - DropCost Master</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0066FF",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0f1723",
+                        "slate-800": "#1E293B",
+                        "slate-900": "#0F172A",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #334155;
+            border-radius: 20px;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .sidebar-item-active {
+            @apply bg-primary/10 text-primary;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display h-screen overflow-hidden flex">
+<aside class="w-20 lg:w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700/50 flex-shrink-0 flex flex-col justify-between z-10">
+<div>
+<div class="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-700/50">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center text-white font-bold text-xl">D</div>
+<span class="hidden lg:block font-bold text-lg text-slate-900 dark:text-white">DropCost</span>
+</div>
+</div>
+<nav class="p-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">dashboard</span>
+<span class="hidden lg:block font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">people</span>
+<span class="hidden lg:block font-medium">Usuarios</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">layers</span>
+<span class="hidden lg:block font-medium">Planes</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 sidebar-item-active rounded-lg transition-colors" href="#">
+<span class="material-icons-round text-2xl">payments</span>
+<span class="hidden lg:block font-medium">Pasarelas de Pago</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">settings</span>
+<span class="hidden lg:block font-medium">Configuración</span>
+</a>
+</nav>
+</div>
+<div class="p-4 border-t border-slate-200 dark:border-slate-700/50">
+<div class="flex items-center gap-3 px-3 py-2">
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden border border-slate-200 dark:border-slate-600">
+<img alt="Admin Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6NH5ib0g_yX1ZoTy1O3u99cfT5yUcuKRs9zK0mEr4MXniUjeMum0Obl_bftCvtk5J2xvx1y8liaRF5bdj3a5mYxH00lguuFCALfUmN0ELOwAEi83BiPAaRU_mEjmvGGLNK1WkfAvRFGsnOfWZMBZG4AvXPzHcOHEqnbcYvkgasy1-9Ege8UnoIHIh-Hv80tai6TQEO_5jtpUu2r2zEZrtY2HfIzIOwidZG6sB1ZbTxfZPiTpdU_lRDMU3PFa4jJbqWqSUDMLisx8"/>
+</div>
+<div class="hidden lg:block overflow-hidden">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">Admin User</p>
+<p class="text-xs text-slate-500 dark:text-slate-400 truncate">admin@dropcost.com</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700/50 px-6 flex items-center justify-between flex-shrink-0">
+<h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Pasarelas de Pago</h2>
+<div class="flex items-center gap-4">
+<button class="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+<span class="material-icons-round text-lg">add</span>
+                Nueva Pasarela
+            </button>
+</div>
+</header>
+<div class="flex-1 p-6 bg-background-light dark:bg-background-dark overflow-auto custom-scrollbar">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-40">
+<div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">
+<div class="flex justify-between items-start mb-6">
+<div class="w-12 h-12 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center">
+<span class="material-icons-round text-2xl text-slate-400">account_balance_wallet</span>
+</div>
+<span class="px-2 py-1 bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 text-[10px] font-bold rounded uppercase">Activo</span>
+</div>
+<h3 class="font-bold text-lg mb-1">Stripe</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Pagos con tarjeta globales</p>
+<div class="pt-4 border-t border-slate-100 dark:border-slate-700/50 flex justify-end">
+<button class="text-primary text-sm font-semibold">Configurar</button>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">
+<div class="flex justify-between items-start mb-6">
+<div class="w-12 h-12 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center">
+<span class="material-icons-round text-2xl text-slate-400">payments</span>
+</div>
+<span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-[10px] font-bold rounded uppercase">Desconectado</span>
+</div>
+<h3 class="font-bold text-lg mb-1">PayPal</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Integración estándar Express Checkout</p>
+<div class="pt-4 border-t border-slate-100 dark:border-slate-700/50 flex justify-end">
+<button class="text-primary text-sm font-semibold">Conectar</button>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-slate-950/70 backdrop-blur-sm">
+<div class="bg-slate-800 w-full max-w-lg rounded-xl shadow-2xl border border-slate-700/50 overflow-hidden">
+<div class="p-6 border-b border-slate-700/50 flex items-center justify-between">
+<div>
+<h3 class="text-xl font-bold text-white">Conectar Pasarela</h3>
+<p class="text-sm text-slate-400 mt-1">Configura las credenciales de tu proveedor.</p>
+</div>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-icons-round">close</span>
+</button>
+</div>
+<div class="px-6 py-4 bg-slate-900/30 border-b border-slate-700/50">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold">1</div>
+<span class="text-xs font-semibold text-white">Selección</span>
+</div>
+<div class="h-px w-8 bg-slate-700"></div>
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-primary/20 border border-primary/50 text-primary text-xs flex items-center justify-center font-bold">2</div>
+<span class="text-xs font-semibold text-slate-300">Credenciales</span>
+</div>
+<div class="h-px w-8 bg-slate-700"></div>
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-slate-700 text-slate-500 text-xs flex items-center justify-center font-bold">3</div>
+<span class="text-xs font-semibold text-slate-500">Confirmación</span>
+</div>
+</div>
+</div>
+<div class="p-6 space-y-5">
+<div class="space-y-2">
+<label class="block text-sm font-medium text-slate-300" for="api-key">API Key</label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xl group-focus-within:text-primary transition-colors">key</span>
+<input class="w-full bg-slate-900/50 border-slate-700 text-white pl-10 pr-4 py-2.5 rounded-lg focus:ring-primary focus:border-primary transition-all placeholder:text-slate-600" id="api-key" placeholder="sk_test_..." type="text"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="block text-sm font-medium text-slate-300" for="secret-key">Secret Key</label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xl group-focus-within:text-primary transition-colors">lock</span>
+<input class="w-full bg-slate-900/50 border-slate-700 text-white pl-10 pr-4 py-2.5 rounded-lg focus:ring-primary focus:border-primary transition-all placeholder:text-slate-600" id="secret-key" placeholder="••••••••••••••••" type="password"/>
+</div>
+</div>
+<div class="pt-2">
+<button class="w-full py-2.5 px-4 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-semibold transition-all flex items-center justify-center gap-2 border border-slate-600/50">
+<span class="material-icons-round text-lg">sync</span>
+                        Probar Conexión
+                    </button>
+<p class="text-[10px] text-slate-500 mt-2 text-center uppercase tracking-wider font-medium">Esta acción verificará tus credenciales de forma segura</p>
+</div>
+</div>
+<div class="p-6 bg-slate-900/50 border-t border-slate-700/50 flex items-center justify-end gap-3">
+<button class="px-5 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg text-sm font-semibold transition-all">
+                    Cancelar
+                </button>
+<button class="px-6 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-bold shadow-lg shadow-primary/20 transition-all">
+                    Guardar Pasarela
+                </button>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>

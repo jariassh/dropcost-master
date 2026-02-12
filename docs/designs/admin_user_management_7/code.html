@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Plan Management - DropCost Master</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0066FF",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0f1723",
+                        "card-dark": "#1E293B",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #334155;
+            border-radius: 20px;
+        }
+        .modal-backdrop {
+            backdrop-filter: blur(8px);
+            background-color: rgba(15, 23, 35, 0.7);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-display h-screen overflow-hidden flex">
+<aside class="w-20 lg:w-64 bg-white dark:bg-card-dark border-r border-slate-200 dark:border-slate-800 flex-shrink-0 flex flex-col justify-between">
+<div>
+<div class="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center text-white font-bold text-xl">D</div>
+<span class="hidden lg:block font-bold text-lg text-slate-900 dark:text-white">DropCost</span>
+</div>
+</div>
+<nav class="p-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">dashboard</span>
+<span class="hidden lg:block font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">people</span>
+<span class="hidden lg:block font-medium">Usuarios</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg transition-colors" href="#">
+<span class="material-icons-round text-2xl">layers</span>
+<span class="hidden lg:block font-medium">Planes</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">settings</span>
+<span class="hidden lg:block font-medium">Configuración</span>
+</a>
+</nav>
+</div>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 px-3 py-2">
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+<img alt="Admin Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChpLq2L63VjSA60NAA2eRbwzGoj4TuUu3TA6tNGDBNxJ80DJ3bfMxQb8r-DmoRYOySiArT1786I50Xn7TrVaEYURMD_nritg8z1iozxQG2Kx_EW4dJ3oqvM_Tnxf9zgILYTA1us1BCbouopBvk1q8yq63Tz8b7EuLCT9aQWYoohmiJr39IEvRgb6pt5r6-wmOcPqIng42gt0JWBtDE-SR1FV7E2KAZFXj9mvXFlvjFMFFvWYObiLBYae3UnJP1G7ncDqXDDeHRvjk"/>
+</div>
+<div class="hidden lg:block overflow-hidden">
+<p class="text-sm font-medium text-slate-900 dark:text-white truncate">Admin User</p>
+<p class="text-xs text-slate-500 dark:text-slate-400 truncate">admin@dropcost.com</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<header class="h-16 bg-white dark:bg-card-dark border-b border-slate-200 dark:border-slate-800 px-6 flex items-center justify-between flex-shrink-0">
+<h2 class="text-xl font-semibold text-slate-900 dark:text-white font-display">Gestión de Planes</h2>
+<div class="flex items-center gap-4">
+<button class="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+<span class="material-icons-round text-lg">add</span>
+                Nuevo Plan
+            </button>
+</div>
+</header>
+<div class="flex-1 flex flex-row overflow-hidden bg-background-light dark:bg-background-dark">
+<div class="flex-1 overflow-auto custom-scrollbar">
+<table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+<thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
+<tr>
+<th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nombre</th>
+<th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Precio Mensual</th>
+<th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Precio Anual</th>
+<th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Usuarios</th>
+<th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estado</th>
+<th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="text-sm font-semibold text-slate-900 dark:text-white">Plan Pro</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">Para equipos en crecimiento</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-300 font-medium">$49.00</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-300 font-medium">$490.00</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-300">124</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<button class="text-slate-400 hover:text-primary"><span class="material-icons-round">edit</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+<div class="w-full max-w-2xl bg-card-dark rounded-xl shadow-2xl border border-slate-700/50 flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+<div class="px-6 py-5 border-b border-slate-700/50 flex items-center justify-between">
+<div>
+<h3 class="text-xl font-bold text-white">Nuevo Plan</h3>
+<p class="text-sm text-slate-400">Configura los detalles del nuevo plan de suscripción.</p>
+</div>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-icons-round">close</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-4 md:col-span-2">
+<div>
+<label class="block text-sm font-medium text-slate-300 mb-1.5">Nombre del Plan</label>
+<input class="w-full px-4 py-2.5 bg-background-dark border border-slate-700 rounded-lg text-sm text-white focus:ring-2 focus:ring-primary focus:border-transparent placeholder-slate-500 transition-all" placeholder="Ej. Plan Pro, Enterprise..." type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-slate-300 mb-1.5">Descripción</label>
+<textarea class="w-full px-4 py-2.5 bg-background-dark border border-slate-700 rounded-lg text-sm text-white focus:ring-2 focus:ring-primary focus:border-transparent placeholder-slate-500 transition-all" placeholder="Describe brevemente los beneficios del plan..." rows="2"></textarea>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-slate-300 mb-1.5">Precio Mensual ($)</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+<input class="w-full pl-8 pr-4 py-2.5 bg-background-dark border border-slate-700 rounded-lg text-sm text-white focus:ring-2 focus:ring-primary focus:border-transparent placeholder-slate-500 transition-all" placeholder="0.00" type="number"/>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-slate-300 mb-1.5">Precio Anual ($)</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+<input class="w-full pl-8 pr-4 py-2.5 bg-background-dark border border-slate-700 rounded-lg text-sm text-white focus:ring-2 focus:ring-primary focus:border-transparent placeholder-slate-500 transition-all" placeholder="0.00" type="number"/>
+</div>
+</div>
+<div class="md:col-span-2 space-y-3">
+<label class="block text-sm font-medium text-slate-300">Características del Plan</label>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<label class="flex items-center gap-3 p-3 bg-background-dark/50 border border-slate-700 rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+<input class="w-5 h-5 text-primary rounded border-slate-700 bg-slate-800 focus:ring-primary focus:ring-offset-0" type="checkbox"/>
+<span class="text-sm text-slate-300">Costeos ilimitados</span>
+</label>
+<label class="flex items-center gap-3 p-3 bg-background-dark/50 border border-slate-700 rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+<input class="w-5 h-5 text-primary rounded border-slate-700 bg-slate-800 focus:ring-primary focus:ring-offset-0" type="checkbox"/>
+<span class="text-sm text-slate-300">Integraciones</span>
+</label>
+<label class="flex items-center gap-3 p-3 bg-background-dark/50 border border-slate-700 rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+<input class="w-5 h-5 text-primary rounded border-slate-700 bg-slate-800 focus:ring-primary focus:ring-offset-0" type="checkbox"/>
+<span class="text-sm text-slate-300">Dashboard de Análisis</span>
+</label>
+<label class="flex items-center gap-3 p-3 bg-background-dark/50 border border-slate-700 rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+<input class="w-5 h-5 text-primary rounded border-slate-700 bg-slate-800 focus:ring-primary focus:ring-offset-0" type="checkbox"/>
+<span class="text-sm text-slate-300">Análisis Regional</span>
+</label>
+<label class="flex items-center gap-3 p-3 bg-background-dark/50 border border-slate-700 rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+<input class="w-5 h-5 text-primary rounded border-slate-700 bg-slate-800 focus:ring-primary focus:ring-offset-0" type="checkbox"/>
+<span class="text-sm text-slate-300">Soporte Prioritario</span>
+</label>
+<label class="flex items-center gap-3 p-3 bg-background-dark/50 border border-slate-700 rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+<input class="w-5 h-5 text-primary rounded border-slate-700 bg-slate-800 focus:ring-primary focus:ring-offset-0" type="checkbox"/>
+<span class="text-sm text-slate-300">Exportación de Datos</span>
+</label>
+</div>
+</div>
+<div class="md:col-span-2 flex items-center justify-between p-4 bg-background-dark/30 border border-dashed border-slate-700 rounded-xl">
+<div>
+<p class="text-sm font-semibold text-white">Estado del Plan</p>
+<p class="text-xs text-slate-500">Activa o desactiva la visibilidad del plan para nuevos usuarios.</p>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-xs font-medium text-slate-400">Inactivo</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+<span class="text-xs font-medium text-primary">Activo</span>
+</div>
+</div>
+</div>
+</div>
+<div class="px-6 py-5 border-t border-slate-700/50 bg-slate-800/30">
+<div class="flex items-center justify-end gap-3">
+<button class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-sm font-semibold transition-colors">
+                        Cancelar
+                    </button>
+<button class="px-5 py-2.5 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-primary/20">
+                        Crear Plan
+                    </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>

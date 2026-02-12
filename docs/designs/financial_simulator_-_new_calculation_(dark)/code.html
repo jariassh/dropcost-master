@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Financial Simulator - DropCost Master</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#0066FF",
+                        "background-light": "#F8FAFC",
+                        "background-dark": "#0F172A",
+                        "card-dark": "#1E293B",
+                        "input-dark": "#0F172A",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.75rem",
+                    },
+                },
+            },
+        };
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200">
+<aside class="fixed left-0 top-0 h-full w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-50 hidden lg:flex flex-col">
+<div class="p-6 flex items-center space-x-3">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
+<span class="material-icons-round text-white text-xl">bar_chart</span>
+</div>
+<span class="text-xl font-bold tracking-tight">DropCost<span class="text-primary">Master</span></span>
+</div>
+<nav class="flex-1 px-4 space-y-1 mt-4">
+<a class="flex items-center space-x-3 p-3 rounded-xl bg-primary/10 text-primary font-medium" href="#">
+<span class="material-icons-round">calculate</span>
+<span>Analizador de Utilidad</span>
+</a>
+<a class="flex items-center space-x-3 p-3 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" href="#">
+<span class="material-icons-round">dashboard</span>
+<span>Vista Ejecutiva</span>
+</a>
+<a class="flex items-center space-x-3 p-3 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" href="#">
+<span class="material-icons-round">public</span>
+<span>Benchmarks Regionales</span>
+</a>
+<a class="flex items-center space-x-3 p-3 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" href="#">
+<span class="material-icons-round">local_shipping</span>
+<span>Centro Logístico</span>
+</a>
+<a class="flex items-center space-x-3 p-3 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" href="#">
+<span class="material-icons-round">settings</span>
+<span>Configuración</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl flex items-center space-x-3 border border-slate-200 dark:border-slate-800">
+<img alt="User Avatar" class="w-10 h-10 rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdo8kiqbiHm4whVLCgB9PZbjK_3ViHmSpRw4FvnE2pe2eYlargvYEucO5geZDwHFpFmBzRytgJjQeGo666QRJien-kiDhku60Fd6f6WOt6rGCLVyQ1ixSGqpY9rEzdAiUb9RYk10O5HutrxmkNHruGmJfn81cAA8d6z0SG0uE8ofrq8N-IlP9WGcccRurSTF3XpyTc53DVn9Qp7arbBdKLNz_yRqE4BBiNDqlbPMMbziPbH0j05iFAZC6yoz0JafBOYdRp9UjeivQ"/>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-semibold truncate">Rodrigo R.</p>
+<p class="text-xs text-green-500 font-medium">PLAN PRO</p>
+</div>
+<span class="material-icons-round text-slate-400 text-sm">unfold_more</span>
+</div>
+</div>
+</aside>
+<main class="lg:ml-64 min-h-screen">
+<header class="h-16 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
+<nav class="flex items-center space-x-2 text-sm">
+<span class="text-slate-400">DropCost Master</span>
+<span class="material-icons-round text-sm text-slate-400">chevron_right</span>
+<span class="text-primary font-medium">Simulador Financiero</span>
+</nav>
+<div class="flex items-center space-x-4">
+<div class="hidden md:flex items-center space-x-2 px-3 py-1.5 bg-green-500/10 text-green-500 rounded-full text-xs font-bold uppercase tracking-wider">
+<span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+<span>Mercado en Tiempo Real</span>
+</div>
+<button class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+<span class="material-icons-round">notifications</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+<span class="material-icons-round">settings</span>
+</button>
+</div>
+</header>
+<div class="p-8 max-w-[1440px] mx-auto">
+<div class="mb-8">
+<h1 class="text-3xl font-bold mb-2">Simulador Financiero COD</h1>
+<p class="text-slate-500 dark:text-slate-400">Calculamos el precio ideal basándonos en tu margen deseado y las fugas operativas.</p>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+<div class="xl:col-span-7 space-y-6">
+<section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+<div class="flex items-center space-x-2 mb-6">
+<span class="material-icons-round text-primary">analytics</span>
+<h2 class="text-sm font-bold uppercase tracking-wider text-primary">Meta y Producto</h2>
+</div>
+<div class="grid md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Margen Neto Deseado (%)</label>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-primary focus:border-primary transition-all" type="number" value="25"/>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Costo Producto</label>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-primary focus:border-primary transition-all" type="number" value="35000"/>
+</div>
+</div>
+</section>
+<section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+<div class="flex items-center space-x-2 mb-6">
+<span class="material-icons-round text-yellow-500">local_shipping</span>
+<h2 class="text-sm font-bold uppercase tracking-wider text-yellow-500">Logística y Recaudo</h2>
+</div>
+<div class="grid md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Flete Base</label>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-primary focus:border-primary transition-all" type="number" value="14500"/>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Comisión Recaudo (%)</label>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-primary focus:border-primary transition-all" type="number" value="3"/>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Tasa Devolución (%)</label>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-primary focus:border-primary transition-all" type="number" value="20"/>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Otros (Empaque/Plat)</label>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-primary focus:border-primary transition-all" type="number" value="2500"/>
+</div>
+</div>
+</section>
+<section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+<div class="flex items-center space-x-2 mb-6">
+<span class="material-icons-round text-rose-500">ads_click</span>
+<h2 class="text-sm font-bold uppercase tracking-wider text-rose-500">Publicidad (Meta Ads)</h2>
+</div>
+<div class="grid md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">CPA por Pedido</label>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-primary focus:border-primary transition-all" type="number" value="18000"/>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Cancelación Pre-Envío (%)</label>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-primary focus:border-primary transition-all" type="number" value="15"/>
+</div>
+</div>
+</section>
+</div>
+<div class="xl:col-span-5 space-y-6">
+<div class="sticky top-24 space-y-6">
+<div class="bg-primary rounded-3xl p-8 text-white shadow-2xl shadow-primary/20 relative overflow-hidden">
+<div class="relative z-10">
+<p class="text-center text-xs font-bold uppercase tracking-[0.2em] mb-4 opacity-90">Precio de Venta Sugerido</p>
+<h3 class="text-center text-5xl md:text-6xl font-black mb-8">$125.836</h3>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 text-center">
+<p class="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-80">Utilidad Neta / Venta</p>
+<p class="text-xl font-bold">$31.459</p>
+</div>
+<div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 text-center">
+<p class="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-80">Efectividad Final</p>
+<p class="text-xl font-bold">68.0%</p>
+</div>
+</div>
+</div>
+<div class="absolute -right-12 -top-12 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+<div class="absolute -left-12 -bottom-12 w-48 h-48 bg-black/10 rounded-full blur-3xl"></div>
+</div>
+<div class="grid md:grid-cols-2 gap-4">
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 border-l-4 border-l-yellow-500">
+<h4 class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">Costos Logísticos Reales</h4>
+<div class="space-y-3">
+<div class="flex justify-between items-center">
+<span class="text-sm">Flete + Seguro + Recaudo</span>
+<span class="text-sm font-semibold">$19.475</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm text-rose-500 font-medium">Pérdida por Devolución</span>
+<span class="text-sm text-rose-500 font-semibold">-$21.750</span>
+</div>
+</div>
+<p class="text-[10px] text-slate-400 mt-4 italic">*Costo promedio de logística por cada pedido enviado exitosamente.</p>
+</div>
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 border-l-4 border-l-primary">
+<h4 class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">Embudo de Efectividad</h4>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-[10px] font-bold uppercase mb-1.5">
+<span>Confirmación <span class="text-slate-400">(No Cancelados)</span></span>
+<span>85%</span>
+</div>
+<div class="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-yellow-500 rounded-full" style="width: 85%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[10px] font-bold uppercase mb-1.5">
+<span>Entrega Final <span class="text-slate-400">(No Devueltos)</span></span>
+<span>68.0%</span>
+</div>
+<div class="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-emerald-500 rounded-full" style="width: 68%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+<h4 class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-6 text-center">Desglose del Precio de Venta (%)</h4>
+<div class="flex h-12 rounded-xl overflow-hidden mb-6">
+<div class="bg-primary flex items-center justify-center text-[10px] font-bold text-white" style="width: 28%">Source</div>
+<div class="bg-rose-500 flex items-center justify-center text-[10px] font-bold text-white" style="width: 21%">Ads</div>
+<div class="bg-yellow-500 flex items-center justify-center text-[10px] font-bold text-white" style="width: 24%">Log</div>
+<div class="bg-slate-400 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-white" style="width: 2%">Op</div>
+<div class="bg-emerald-500 flex items-center justify-center text-[10px] font-bold text-white" style="width: 25%">Net</div>
+</div>
+<div class="grid grid-cols-5 gap-2 text-center">
+<div>
+<p class="text-[9px] font-bold text-slate-400 uppercase">Producto</p>
+<p class="text-xs font-bold text-primary">28%</p>
+</div>
+<div>
+<p class="text-[9px] font-bold text-slate-400 uppercase">Marketing</p>
+<p class="text-xs font-bold text-rose-500">21%</p>
+</div>
+<div>
+<p class="text-[9px] font-bold text-slate-400 uppercase">Logística</p>
+<p class="text-xs font-bold text-yellow-500">24%</p>
+</div>
+<div>
+<p class="text-[9px] font-bold text-slate-400 uppercase">Operación</p>
+<p class="text-xs font-bold text-slate-500">2%</p>
+</div>
+<div>
+<p class="text-[9px] font-bold text-slate-400 uppercase">Neto</p>
+<p class="text-xs font-bold text-emerald-500">25%</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
+<div class="flex items-center space-x-6 z-10">
+<div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+<span class="material-icons-round text-primary text-3xl">lightbulb</span>
+</div>
+<div>
+<h3 class="text-xl font-bold mb-1">Guía de Optimización Logística</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm max-w-xl">Nuestra IA analiza cuellos de botella en transportadoras de Colombia (Servientrega, Envía, etc.). Optimizamos basándonos en el <span class="font-bold text-slate-700 dark:text-slate-200">Margen Neto Real</span> después de devoluciones y latencia regional.</p>
+</div>
+</div>
+<button class="bg-primary hover:bg-blue-600 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-primary/20 z-10 whitespace-nowrap">
+                    Ver Guía Completa
+                </button>
+<div class="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-primary/5 to-transparent pointer-events-none"></div>
+</div>
+</div>
+</main>
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+<span class="material-icons-round">forum</span>
+</button>
+
+</body></html>

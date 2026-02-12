@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Email Templates Editor - DropCost Master</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0066FF",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0F172A",
+                        "slate-800": "#1E293B", 
+                        "slate-900": "#0F172A",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "Menlo", "monospace"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #334155;
+            border-radius: 20px;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .sidebar-item-active {
+            @apply bg-primary/10 text-primary;
+        }
+        .code-syntax-tag { @apply text-pink-400; }
+        .code-syntax-attr { @apply text-sky-400; }
+        .code-syntax-string { @apply text-emerald-400; }
+        .code-syntax-comment { @apply text-slate-500; }
+        .code-syntax-variable { @apply text-amber-400 font-bold; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-50 font-display h-screen overflow-hidden flex">
+<aside class="w-20 lg:w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700/50 flex-shrink-0 flex flex-col justify-between z-10">
+<div>
+<div class="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-700/50">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center text-white font-bold text-xl">D</div>
+<span class="hidden lg:block font-bold text-lg text-slate-900 dark:text-white tracking-tight">DropCost</span>
+</div>
+</div>
+<nav class="p-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">dashboard</span>
+<span class="hidden lg:block font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">people</span>
+<span class="hidden lg:block font-medium">Usuarios</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 sidebar-item-active rounded-lg transition-colors" href="#">
+<span class="material-icons-round text-2xl">email</span>
+<span class="hidden lg:block font-medium">Templates</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">confirmation_number</span>
+<span class="hidden lg:block font-medium">Promociones</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">account_balance_wallet</span>
+<span class="hidden lg:block font-medium">Pasarelas</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors group" href="#">
+<span class="material-icons-round text-2xl group-hover:text-primary">settings</span>
+<span class="hidden lg:block font-medium">Configuración</span>
+</a>
+</nav>
+</div>
+<div class="p-4 border-t border-slate-200 dark:border-slate-700/50">
+<div class="flex items-center gap-3 px-3 py-2">
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden border border-slate-200 dark:border-slate-600">
+<img alt="Admin Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2iOzVqKcBCPxBBBMsEUUqzPZcdvMd_jnLiisIPLj2dG1U7F-39O_S1zkWCbHDMBxsOgHPIJplo_oN03x3dXoHXriDiwXbJv7wNuKc_LQN4fSZ8cMULbNVrEJuRdql4ry0jGmSQmKkIhNJPGesM26nNPbgwvB6aWecZ5WpjaLaqQHRarfnA10H1HWP5XkDAPBAhkxXQWaIkmiRUuu4KHPxNXVFGkxEEMhoKApqSOmd5BPF7MN_4gIdFtlfw2Cq-2O-cbzc1WfiAOk"/>
+</div>
+<div class="hidden lg:block overflow-hidden">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">Admin User</p>
+<p class="text-xs text-slate-500 dark:text-slate-400 truncate">admin@dropcost.com</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700/50 px-6 flex items-center justify-between flex-shrink-0">
+<div class="flex items-center gap-6">
+<h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Templates de Email</h2>
+<div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
+<div class="flex items-center gap-3">
+<label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider" for="template-type">Tipo de template</label>
+<select class="bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-sm rounded-lg focus:ring-primary focus:border-primary px-3 py-1.5 min-w-[180px]" id="template-type">
+<option value="welcome">Bienvenida</option>
+<option value="2fa">2FA (Doble Factor)</option>
+<option value="invoice">Factura de Compra</option>
+<option value="reset">Recuperar Contraseña</option>
+</select>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-xs font-medium text-slate-400 uppercase tracking-widest hidden sm:block">Editor Status: Live</span>
+<div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+</div>
+</header>
+<div class="flex-1 flex overflow-hidden">
+<div class="flex-1 flex flex-col border-r border-slate-200 dark:border-slate-700/50">
+<div class="h-10 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700/50 px-4 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-icons-round text-sm text-slate-400">code</span>
+<span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">index.html</span>
+</div>
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-icons-round text-sm">content_copy</span>
+</button>
+</div>
+<div class="flex-1 bg-slate-900 p-6 font-mono text-sm overflow-y-auto custom-scrollbar">
+<div class="flex gap-4">
+<div class="text-slate-600 text-right select-none pr-2 border-r border-slate-800 min-w-[32px]">
+                        1<br/>2<br/>3<br/>4<br/>5<br/>6<br/>7<br/>8<br/>9<br/>10<br/>11<br/>12<br/>13<br/>14<br/>15<br/>16<br/>17<br/>18
+                    </div>
+<div class="flex-1 whitespace-pre">
+<span class="code-syntax-comment">&lt;!-- Email de Bienvenida --&gt;</span>
+<span class="code-syntax-tag">&lt;div</span> <span class="code-syntax-attr">style</span>=<span class="code-syntax-string">"font-family: Arial, sans-serif; max-width: 600px;"</span><span class="code-syntax-tag">&gt;</span>
+<span class="code-syntax-tag">&lt;h1&gt;</span>¡Hola, <span class="code-syntax-variable">{{nombre_usuario}}</span>!<span class="code-syntax-tag">&lt;/h1&gt;</span>
+<span class="code-syntax-tag">&lt;p&gt;</span>Gracias por unirte a <span class="code-syntax-tag">&lt;b&gt;</span>DropCost Master<span class="code-syntax-tag">&lt;/b&gt;</span>.<span class="code-syntax-tag">&lt;/p&gt;</span>
+<span class="code-syntax-tag">&lt;div</span> <span class="code-syntax-attr">class</span>=<span class="code-syntax-string">"content-box"</span><span class="code-syntax-tag">&gt;</span>
+<span class="code-syntax-tag">&lt;p&gt;</span>Tu cuenta registrada es: <span class="code-syntax-variable">{{email}}</span><span class="code-syntax-tag">&lt;/p&gt;</span>
+<span class="code-syntax-tag">&lt;a</span> <span class="code-syntax-attr">href</span>=<span class="code-syntax-string">"#"</span> <span class="code-syntax-attr">class</span>=<span class="code-syntax-string">"btn-primary"</span><span class="code-syntax-tag">&gt;</span>Confirmar Email<span class="code-syntax-tag">&lt;/a&gt;</span>
+<span class="code-syntax-tag">&lt;/div&gt;</span>
+<span class="code-syntax-tag">&lt;hr /&gt;</span>
+<span class="code-syntax-tag">&lt;footer&gt;</span>
+<span class="code-syntax-tag">&lt;p</span> <span class="code-syntax-attr">style</span>=<span class="code-syntax-string">"font-size: 12px; color: #666;"</span><span class="code-syntax-tag">&gt;</span>
+            Recibiste este email porque te registraste en nuestra plataforma.
+        <span class="code-syntax-tag">&lt;/p&gt;</span>
+<span class="code-syntax-tag">&lt;/footer&gt;</span>
+<span class="code-syntax-tag">&lt;/div&gt;</span></div>
+</div>
+</div>
+</div>
+<div class="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900">
+<div class="h-10 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700/50 px-4 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-icons-round text-sm text-slate-400">visibility</span>
+<span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Vista Previa</span>
+</div>
+<div class="flex gap-2">
+<button class="w-6 h-6 rounded flex items-center justify-center bg-white dark:bg-slate-700 shadow-sm"><span class="material-icons-round text-xs">desktop_windows</span></button>
+<button class="w-6 h-6 rounded flex items-center justify-center hover:bg-white dark:hover:bg-slate-700"><span class="material-icons-round text-xs">smartphone</span></button>
+</div>
+</div>
+<div class="flex-1 p-8 overflow-y-auto custom-scrollbar flex justify-center">
+<div class="bg-white text-slate-900 w-full max-w-[600px] h-fit rounded-lg shadow-xl overflow-hidden border border-slate-200">
+<div class="bg-primary p-8 text-white text-center">
+<div class="w-12 h-12 bg-white/20 rounded-lg mx-auto flex items-center justify-center mb-4">
+<span class="material-icons-round text-2xl">verified</span>
+</div>
+<h1 class="text-2xl font-bold">¡Hola, John Doe!</h1>
+</div>
+<div class="p-8">
+<p class="text-slate-600 mb-6 leading-relaxed">Gracias por unirte a <b>DropCost Master</b>. Estamos encantados de tenerte con nosotros y ayudarte a escalar tu negocio.</p>
+<div class="bg-slate-50 rounded-xl p-6 border border-slate-100 mb-6 text-center">
+<p class="text-sm text-slate-500 mb-4">Tu cuenta registrada es: <span class="font-semibold text-slate-900">john.doe@example.com</span></p>
+<a class="inline-block px-8 py-3 bg-primary text-white font-bold rounded-lg shadow-lg shadow-primary/20 hover:bg-blue-600 transition-colors" href="#">
+                                Confirmar Email
+                            </a>
+</div>
+<div class="border-t border-slate-100 pt-6">
+<p class="text-[11px] text-slate-400 text-center leading-relaxed uppercase tracking-wider">
+                                Recibiste este email porque te registraste en nuestra plataforma.
+                                <br/>© 2024 DropCost Master Inc.
+                            </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="w-64 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700/50 p-4 flex flex-col gap-4">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-icons-round text-primary text-xl">token</span>
+<h3 class="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-tight">Variables</h3>
+</div>
+<div class="space-y-3">
+<div class="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700/50 group cursor-pointer hover:border-primary/50 transition-colors">
+<p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Nombre Usuario</p>
+<code class="text-xs text-primary font-bold">{{nombre_usuario}}</code>
+</div>
+<div class="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700/50 group cursor-pointer hover:border-primary/50 transition-colors">
+<p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Email</p>
+<code class="text-xs text-primary font-bold">{{email}}</code>
+</div>
+<div class="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700/50 group cursor-pointer hover:border-primary/50 transition-colors">
+<p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Código 2FA</p>
+<code class="text-xs text-primary font-bold">{{codigo_2fa}}</code>
+</div>
+<div class="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700/50 group cursor-pointer hover:border-primary/50 transition-colors">
+<p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Total Factura</p>
+<code class="text-xs text-primary font-bold">{{total_invoice}}</code>
+</div>
+<div class="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700/50 group cursor-pointer hover:border-primary/50 transition-colors">
+<p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Link de Reset</p>
+<code class="text-xs text-primary font-bold">{{reset_link}}</code>
+</div>
+</div>
+<div class="mt-auto p-4 bg-primary/5 rounded-xl border border-primary/20">
+<p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                    Haz clic en una variable para copiarla al portapapeles.
+                </p>
+</div>
+</div>
+</div>
+<footer class="h-20 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700/50 px-8 flex items-center justify-between flex-shrink-0">
+<div class="flex items-center gap-4 text-slate-400 text-xs">
+<span class="flex items-center gap-1"><span class="material-icons-round text-sm">schedule</span> Último guardado: 2 mins ago</span>
+<span class="w-1 h-1 rounded-full bg-slate-600"></span>
+<span class="flex items-center gap-1"><span class="material-icons-round text-sm">history</span> v2.4.0</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-5 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-2 border border-slate-200 dark:border-slate-700">
+<span class="material-icons-round text-lg">visibility</span>
+                Vista Previa Full
+            </button>
+<button class="px-5 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-2 border border-slate-200 dark:border-slate-700">
+<span class="material-icons-round text-lg">send</span>
+                Probar envío
+            </button>
+<button class="px-8 py-2.5 bg-primary hover:bg-blue-600 text-white text-sm font-bold rounded-lg transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+<span class="material-icons-round text-lg">save</span>
+                Guardar Template
+            </button>
+</div>
+</footer>
+</main>
+
+</body></html>
