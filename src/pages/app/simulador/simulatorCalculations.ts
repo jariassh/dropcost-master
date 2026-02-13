@@ -40,20 +40,28 @@ export function calculateSuggestedPrice(inputs: SimulatorInputs): SimulatorResul
     const commissionRate = collectionCommissionPercent / 100;
     const marginRate = desiredMarginPercent / 100;
 
-    const denominator = 1 - commissionRate - marginRate;
-
-    if (effectivenessRate <= 0 || denominator <= 0) {
-        return buildEmptyResults();
-    }
-
     // ─── Per-delivery multipliers ───
     const ordersPerDelivery = 1 / effectivenessRate;
     const shippedPerDelivery = 1 / deliveryRate;
     const returnsPerDelivery = (returnRatePercent / 100) / deliveryRate;
 
-    // ─── Fixed costs per effective sale ───
+    // ─── Re-derived Denominator (Protocol Step 3) ───
+    // P = CF / (Entregados * (1 - Margen) - Enviados * Comisión)
+    // Dividing by Entregados:
+    // P = (CF / Entregados) / ((1 - Margen) - (Enviados/Entregados) * Comisión)
+    // P = totalFixedCost / ((1 - marginRate) - (shippedPerDelivery * commissionRate))
+
+    // Note: commissionRate applies to the shipped amount (guías generadas), 
+    // effectively imposing a higher burden per effective sale.
+    const denominator = (1 - marginRate) - (shippedPerDelivery * commissionRate);
+
+    if (effectivenessRate <= 0 || denominator <= 0) {
+        return buildEmptyResults();
+    }
+
+    // ─── Fixed costs per effective sale (Protocol Step 2) ───
     const cpaCostPerSale = roundCurrency(averageCpa * ordersPerDelivery);
-    const productCostPerSale = roundCurrency(productCost); // solo unidades entregadas
+    const productCostPerSale = roundCurrency(productCost); // only delivered units
     const freightCostPerSale = roundCurrency(shippingCost * shippedPerDelivery);
     const otherCostPerSale = roundCurrency(otherExpenses * shippedPerDelivery);
     const returnLossPerSale = roundCurrency(shippingCost * 1.5 * returnsPerDelivery);
@@ -63,7 +71,10 @@ export function calculateSuggestedPrice(inputs: SimulatorInputs): SimulatorResul
     // ─── Price & profit ───
     const suggestedPrice = roundCurrency(totalFixedCost / denominator);
     const netProfitPerSale = roundCurrency(suggestedPrice * marginRate);
-    const commissionPerSale = roundCurrency(suggestedPrice * commissionRate);
+
+    // Commission is paid on ALL shipped orders, amortized per effective sale
+    // cost = Price * CommissionRate * (Shipped / Delivered)
+    const commissionPerSale = roundCurrency(suggestedPrice * commissionRate * shippedPerDelivery);
 
     // ─── Cost breakdown (per effective sale) ───
     const costBreakdown: CostBreakdown = {

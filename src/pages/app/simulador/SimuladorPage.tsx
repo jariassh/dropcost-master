@@ -204,6 +204,8 @@ export function SimuladorPage() {
                     results={results}
                     shippingCost={inputs.shippingCost}
                     collectionCommissionPercent={inputs.collectionCommissionPercent}
+                    volumeStrategy={volumeStrategy}
+                    maxUnits={maxUnits}
                 />
             </div>
 
