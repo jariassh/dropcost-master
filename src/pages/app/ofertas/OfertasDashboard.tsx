@@ -4,8 +4,8 @@
  */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Badge, EmptyState, useToast } from '@/components/common';
-import { Modal } from '@/components/common';
+import { Badge, EmptyState, useToast, ConfirmDialog } from '@/components/common';
+import { OfertaDetailPanel } from './components/OfertaDetailPanel';
 import type { Oferta, StrategyType, OfertaStatus } from '@/types/ofertas';
 import { STRATEGIES } from '@/types/ofertas';
 import { Plus, Eye, Pause, Play, Trash2, Gift, Filter } from 'lucide-react';
@@ -168,8 +168,8 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                                             {formatCurrency(o.estimatedProfit)}
                                         </td>
                                         <td style={{ padding: '14px 16px' }}>
-                                            <Badge variant={o.status === 'activa' ? 'success' : 'warning'}>
-                                                {o.status === 'activa' ? '🟢 Activa' : '⏸️ Pausada'}
+                                            <Badge variant={o.status === 'activa' ? 'modern-success' : 'modern-warning'}>
+                                                {o.status === 'activa' ? 'Activa' : 'Pausada'}
                                             </Badge>
                                         </td>
                                         <td style={{ padding: '14px 16px' }}>
@@ -197,108 +197,30 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                 </div>
             )}
 
-            {/* Detail modal */}
+            {/* Detail Panel */}
             {detailOferta && (
-                <Modal
-                    isOpen={true}
+                <OfertaDetailPanel
+                    oferta={detailOferta}
                     onClose={() => setDetailOferta(null)}
-                    title={`Detalle: ${detailOferta.productName}`}
-                >
-                    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                            <InfoItem label="Estrategia" value={`${getStrategyInfo(detailOferta.strategyType).icon} ${getStrategyInfo(detailOferta.strategyType).label}`} />
-                            <InfoItem label="Estado" value={detailOferta.status === 'activa' ? '🟢 Activa' : '⏸️ Pausada'} />
-                            <InfoItem label="Ganancia estimada" value={formatCurrency(detailOferta.estimatedProfit)} />
-                            <InfoItem label="Margen estimado" value={`${detailOferta.estimatedMarginPercent}%`} />
-                            <InfoItem label="Creada" value={new Date(detailOferta.createdAt).toLocaleDateString('es-CO')} />
-                            <InfoItem label="Activada" value={new Date(detailOferta.activatedAt).toLocaleDateString('es-CO')} />
-                        </div>
-
-                        {detailOferta.discountConfig && (
-                            <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)' }}>
-                                <p style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>Descuento aplicado</p>
-                                <p style={{ fontSize: '14px' }}>
-                                    {detailOferta.discountConfig.discountPercent}% → Precio: {formatCurrency(detailOferta.discountConfig.offerPrice)}
-                                </p>
-                            </div>
-                        )}
-
-                        {detailOferta.bundleConfig && (
-                            <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)' }}>
-                                <p style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>Bundle configurado</p>
-                                <p style={{ fontSize: '14px' }}>
-                                    Hasta {detailOferta.bundleConfig.quantity} uds · {detailOferta.bundleConfig.marginPercent}% margen 2+
-                                </p>
-                            </div>
-                        )}
-
-                        {detailOferta.giftConfig && (
-                            <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)' }}>
-                                <p style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>Obsequio</p>
-                                <p style={{ fontSize: '14px' }}>
-                                    {detailOferta.giftConfig.description || detailOferta.giftConfig.giftType} · Costo: {formatCurrency(detailOferta.giftConfig.giftCost)}
-                                </p>
-                            </div>
-                        )}
-
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '8px' }}>
-                            <button
-                                onClick={() => { handleToggleStatus(detailOferta.id); setDetailOferta(null); }}
-                                style={{
-                                    padding: '10px 16px', fontSize: '13px', fontWeight: 600,
-                                    color: 'var(--text-primary)', backgroundColor: 'var(--bg-secondary)',
-                                    border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer',
-                                }}
-                            >
-                                {detailOferta.status === 'activa' ? '⏸️ Pausar' : '▶️ Reanudar'}
-                            </button>
-                            <button
-                                onClick={() => { setDeleteConfirm(detailOferta.id); setDetailOferta(null); }}
-                                style={{
-                                    padding: '10px 16px', fontSize: '13px', fontWeight: 600,
-                                    color: 'var(--color-error)', backgroundColor: 'rgba(239,68,68,0.08)',
-                                    border: '1px solid rgba(239,68,68,0.2)', borderRadius: '8px', cursor: 'pointer',
-                                }}
-                            >
-                                🗑️ Eliminar
-                            </button>
-                        </div>
-                    </div>
-                </Modal>
+                    onToggleStatus={handleToggleStatus}
+                    onDelete={(id: string) => {
+                        setDetailOferta(null);
+                        setDeleteConfirm(id);
+                    }}
+                />
             )}
 
             {/* Delete confirmation modal */}
-            {deleteConfirm && (
-                <Modal isOpen={true} onClose={() => setDeleteConfirm(null)} title="Eliminar oferta">
-                    <div style={{ padding: '16px' }}>
-                        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-                            ¿Estás seguro de eliminar esta oferta? Esta acción no se puede deshacer.
-                        </p>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                            <button
-                                onClick={() => setDeleteConfirm(null)}
-                                style={{
-                                    padding: '10px 16px', fontSize: '13px', fontWeight: 600,
-                                    color: 'var(--text-primary)', backgroundColor: 'var(--bg-secondary)',
-                                    border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer',
-                                }}
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={() => handleDelete(deleteConfirm)}
-                                style={{
-                                    padding: '10px 16px', fontSize: '13px', fontWeight: 600,
-                                    color: '#fff', backgroundColor: 'var(--color-error)',
-                                    border: 'none', borderRadius: '8px', cursor: 'pointer',
-                                }}
-                            >
-                                Sí, eliminar
-                            </button>
-                        </div>
-                    </div>
-                </Modal>
-            )}
+            <ConfirmDialog
+                isOpen={!!deleteConfirm}
+                title="Eliminar oferta"
+                description="¿Estás seguro de eliminar esta oferta? Esta acción no se puede deshacer."
+                confirmLabel="Sí, eliminar"
+                variant="danger"
+                onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
+                onCancel={() => setDeleteConfirm(null)}
+            />
+
         </div>
     );
 }

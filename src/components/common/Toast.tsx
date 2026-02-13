@@ -76,25 +76,25 @@ function ToastItem({ toast }: { toast: ToastMessage }) {
 
     return (
         <div
-            className="flex items-start gap-3 min-w-[320px] max-w-[400px] p-4 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg shadow-[var(--shadow-lg)] border-l-4"
+            className="flex items-center gap-3 min-w-[340px] max-w-[420px] p-4 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-[var(--border-color)] bg-[var(--card-bg)] backdrop-blur-md"
             style={{
-                borderLeftColor: colorMap[toast.type],
-                animation: 'slideUp 200ms ease-out',
+                borderLeft: `4px solid ${colorMap[toast.type]}`,
+                animation: 'slideDown 300ms cubic-bezier(0.2, 0.8, 0.2, 1)',
             }}
         >
-            <Icon size={20} style={{ color: colorMap[toast.type], flexShrink: 0, marginTop: 1 }} />
+            <Icon size={22} style={{ color: colorMap[toast.type], flexShrink: 0 }} />
             <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[var(--text-primary)]">{toast.title}</p>
+                <p className="text-sm font-bold text-[var(--text-primary)] leading-tight">{toast.title}</p>
                 {toast.description && (
-                    <p className="text-xs text-[var(--text-secondary)] mt-1">{toast.description}</p>
+                    <p className="text-xs text-[var(--text-secondary)] mt-1 font-medium">{toast.description}</p>
                 )}
             </div>
             <button
                 onClick={() => removeToast(toast.id)}
-                className="p-1 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer flex-shrink-0"
+                className="p-1.5 rounded-full hover:bg-[var(--bg-secondary)] text-[var(--text-tertiary)] transition-colors cursor-pointer flex-shrink-0"
                 aria-label="Cerrar notificación"
             >
-                <X size={14} />
+                <X size={16} />
             </button>
         </div>
     );
@@ -107,10 +107,15 @@ export function ToastContainer() {
     if (toasts.length === 0) return null;
 
     return (
-        <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-3" aria-live="polite">
-            {toasts.map((toast) => (
-                <ToastItem key={toast.id} toast={toast} />
-            ))}
+        <div
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-3 items-center pointer-events-none"
+            aria-live="polite"
+        >
+            <div className="pointer-events-auto flex flex-col gap-3">
+                {toasts.map((toast) => (
+                    <ToastItem key={toast.id} toast={toast} />
+                ))}
+            </div>
         </div>
     );
 }

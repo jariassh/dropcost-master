@@ -7,10 +7,15 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-    success: 'bg-[#D1FAE5] text-[#065F46]',
-    warning: 'bg-[#FEF3C7] text-[#92400E]',
-    error: 'bg-[#FEE2E2] text-[#991B1B]',
-    info: 'bg-[#E0E7FF] text-[#3730A3]',
+    success: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    warning: 'bg-amber-50 text-amber-700 border border-amber-200',
+    error: 'bg-red-50 text-red-700 border border-red-200',
+    info: 'bg-blue-50 text-blue-700 border border-blue-200',
+    'modern-success': 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm',
+    'modern-warning': 'bg-amber-50 text-amber-700 border border-amber-200 shadow-sm',
+    'modern-error': 'bg-red-50 text-red-700 border border-red-200 shadow-sm',
+    'modern-info': 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm',
+
 };
 
 export function Badge({ variant = 'info', children, className = '' }: BadgeProps) {
