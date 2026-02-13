@@ -14,3 +14,5 @@ export type { SelectOption } from './Select';
 export { StepIndicator } from './StepIndicator';
 export { EmptyState } from './EmptyState';
 export { Toggle } from './Toggle';
+export { ConfirmDialog } from './ConfirmDialog';
+

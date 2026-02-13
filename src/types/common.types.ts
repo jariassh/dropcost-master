@@ -3,7 +3,7 @@
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 export type AlertType = 'success' | 'error' | 'warning' | 'info';
-export type BadgeVariant = 'success' | 'warning' | 'error' | 'info';
+export type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'modern-success' | 'modern-warning' | 'modern-error' | 'modern-info';
 export type SpinnerSize = 'sm' | 'md' | 'lg';
 export type ModalSize = 'sm' | 'md' | 'lg';
 
