@@ -1,17 +1,21 @@
 /**
  * SimuladorResults - Panel sticky de resultados.
- * Layout: Price card → Costos + Embudo → Desglose bar.
+ * Layout: Price card (+ volume overlay) → Costos + Embudo → Desglose bar.
  * Shows RAW per-event values (not amortized) for display clarity.
+ * When volume strategy is active, a secondary block shows bundle pricing.
  */
-import type { SimulatorResults as Results } from '@/types/simulator';
+import type { SimulatorResults as Results, VolumeStrategy } from '@/types/simulator';
+import { Package } from 'lucide-react';
 
 interface SimuladorResultsProps {
     results: Results | null;
     shippingCost: number;
     collectionCommissionPercent: number;
+    volumeStrategy: VolumeStrategy;
+    maxUnits: number;
 }
 
-export function SimuladorResults({ results, shippingCost, collectionCommissionPercent }: SimuladorResultsProps) {
+export function SimuladorResults({ results, shippingCost, collectionCommissionPercent, volumeStrategy, maxUnits }: SimuladorResultsProps) {
     const formatCurrency = (val: number) =>
         '$' + Math.round(val).toLocaleString('es-CO');
 
@@ -43,6 +47,12 @@ export function SimuladorResults({ results, shippingCost, collectionCommissionPe
         ? (effectivenessFunnel.afterPreCancellation / effectivenessFunnel.totalOrders) * 100
         : 0;
 
+    // Volume row for the selected quantity
+    const volumeActive = volumeStrategy.enabled && suggestedPrice > 0;
+    const volumeRow = volumeActive
+        ? volumeStrategy.priceTable.find((row) => row.quantity === maxUnits)
+        : null;
+
     return (
         <div
             style={{
@@ -53,7 +63,7 @@ export function SimuladorResults({ results, shippingCost, collectionCommissionPe
                 gap: '16px',
             }}
         >
-            {/* ─── Precio de Venta Sugerido ─── */}
+            {/* ─── Precio de Venta Sugerido (1 unidad base) ─── */}
             <div
                 style={{
                     flex: 1,
@@ -109,6 +119,78 @@ export function SimuladorResults({ results, shippingCost, collectionCommissionPe
                     </div>
                 </div>
             </div>
+
+            {/* ─── Volume Strategy Block (conditional) ─── */}
+            {volumeActive && volumeRow && (
+                <div
+                    style={{
+                        padding: '18px 20px',
+                        borderRadius: '14px',
+                        background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                        boxShadow: '0 6px 20px rgba(5,150,105,0.25)',
+                        textAlign: 'center',
+                    }}
+                >
+                    {/* Header */}
+                    <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                        marginBottom: '10px',
+                    }}>
+                        <Package size={14} color="rgba(255,255,255,0.7)" />
+                        <p style={{
+                            fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.7)',
+                            textTransform: 'uppercase', letterSpacing: '0.12em',
+                        }}>
+                            Precio por {maxUnits} unidades
+                        </p>
+                    </div>
+
+                    {/* Total price */}
+                    <h3 style={{
+                        fontSize: '32px', fontWeight: 700, color: '#fff',
+                        letterSpacing: '-0.5px', lineHeight: 1, marginBottom: '14px',
+                    }}>
+                        {formatCurrency(volumeRow.totalPrice)}
+                    </h3>
+
+                    {/* Stats row */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                        <div style={{
+                            padding: '10px 8px', borderRadius: '8px',
+                            backgroundColor: 'rgba(255,255,255,0.12)',
+                        }}>
+                            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', marginBottom: '3px' }}>
+                                Por unidad
+                            </p>
+                            <p style={{ fontSize: '15px', fontWeight: 700, color: '#fff' }}>
+                                {formatCurrency(volumeRow.pricePerUnit)}
+                            </p>
+                        </div>
+                        <div style={{
+                            padding: '10px 8px', borderRadius: '8px',
+                            backgroundColor: 'rgba(255,255,255,0.12)',
+                        }}>
+                            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', marginBottom: '3px' }}>
+                                Ahorro total
+                            </p>
+                            <p style={{ fontSize: '15px', fontWeight: 700, color: '#A7F3D0' }}>
+                                {formatCurrency(volumeRow.savingsPerUnit * maxUnits)}
+                            </p>
+                        </div>
+                        <div style={{
+                            padding: '10px 8px', borderRadius: '8px',
+                            backgroundColor: 'rgba(255,255,255,0.12)',
+                        }}>
+                            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', marginBottom: '3px' }}>
+                                Rentabilidad
+                            </p>
+                            <p style={{ fontSize: '15px', fontWeight: 700, color: '#A7F3D0' }}>
+                                {formatCurrency(volumeRow.totalProfit)}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ─── Costos Logísticos + Embudo ─── */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
