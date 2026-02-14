@@ -150,11 +150,13 @@ export function WizardStep3Builder({
                         borderRadius: '12px',
                         border: '1px solid var(--border-color)',
                         overflow: 'hidden',
+                        overflowY: 'auto',
+                        maxHeight: '190px',
                     }}
                 >
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                         <thead>
-                            <tr style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                            <tr>
                                 {['Uds', 'Total', 'P/U', 'Ahorro/U', 'Tu Ganancia'].map((h) => (
                                     <th
                                         key={h}
@@ -166,6 +168,10 @@ export function WizardStep3Builder({
                                             color: 'var(--text-secondary)',
                                             textTransform: 'uppercase',
                                             borderBottom: '1px solid var(--border-color)',
+                                            position: 'sticky',
+                                            top: 0,
+                                            zIndex: 10,
+                                            backgroundColor: 'var(--bg-secondary)',
                                         }}
                                     >
                                         {h}
