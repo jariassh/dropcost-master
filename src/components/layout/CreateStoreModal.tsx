@@ -5,9 +5,11 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Store, Banknote } from 'lucide-react';
-import { Modal, Button, Input, Select } from '@/components/common';
+import { Modal, Button, Input, Select, CountrySelect } from '@/components/common';
 import { useStoreStore } from '@/store/useStoreStore';
 import { useAuthStore } from '@/store/authStore';
+import { useEffect, useState } from 'react';
+import { obtenerPaisPorCodigo, cargarPaises, Pais } from '@/services/paisesService';
 
 const storeSchema = z.object({
     nombre: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
@@ -22,36 +24,43 @@ interface CreateStoreModalProps {
     onClose: () => void;
 }
 
-const PAISES = [
-    { value: 'CO', label: 'Colombia' },
-    { value: 'MX', label: 'México' },
-    { value: 'EC', label: 'Ecuador' },
-    { value: 'PE', label: 'Perú' },
-    { value: 'CL', label: 'Chile' },
-];
 
-const MONEDAS = [
-    { value: 'COP', label: 'Peso Colombiano (COP)' },
-    { value: 'MXN', label: 'Peso Mexicano (MXN)' },
-    { value: 'USD', label: 'Dólar Estadounidense (USD)' },
-    { value: 'PEN', label: 'Sol Peruano (PEN)' },
-    { value: 'CLP', label: 'Peso Chileno (CLP)' },
-];
 
 export function CreateStoreModal({ isOpen, onClose }: CreateStoreModalProps) {
     const { crearTienda, isLoading } = useStoreStore();
     const { user } = useAuthStore();
+    const [allCountries, setAllCountries] = useState<Pais[]>([]);
 
     const {
         register,
         handleSubmit,
         reset,
         control,
+        watch,
+        setValue,
         formState: { errors },
     } = useForm<StoreFormData>({
         resolver: zodResolver(storeSchema),
         defaultValues: { nombre: '', pais: 'CO', moneda: 'COP' },
     });
+
+    useEffect(() => {
+        cargarPaises().then(setAllCountries);
+    }, []);
+
+    const selectedPais = watch('pais');
+
+    useEffect(() => {
+        const syncMoneda = async () => {
+            if (selectedPais) {
+                const p = await obtenerPaisPorCodigo(selectedPais);
+                if (p) {
+                    setValue('moneda', p.moneda_codigo);
+                }
+            }
+        };
+        syncMoneda();
+    }, [selectedPais, setValue]);
 
     async function onSubmit(data: StoreFormData) {
         if (!user?.id) return;
@@ -94,9 +103,8 @@ export function CreateStoreModal({ isOpen, onClose }: CreateStoreModalProps) {
                         name="pais"
                         control={control}
                         render={({ field }) => (
-                            <Select
+                            <CountrySelect
                                 label="País de Operación"
-                                options={PAISES}
                                 value={field.value}
                                 onChange={field.onChange}
                                 error={errors.pais?.message}
@@ -104,18 +112,11 @@ export function CreateStoreModal({ isOpen, onClose }: CreateStoreModalProps) {
                         )}
                     />
 
-                    <Controller
-                        name="moneda"
-                        control={control}
-                        render={({ field }) => (
-                            <Select
-                                label="Moneda Local"
-                                options={MONEDAS}
-                                value={field.value}
-                                onChange={field.onChange}
-                                error={errors.moneda?.message}
-                            />
-                        )}
+                    <Input
+                        label="Moneda Local"
+                        disabled
+                        value={watch('moneda') ? `${allCountries.find(p => p.moneda_codigo === watch('moneda'))?.moneda_nombre || ''} (${watch('moneda')})` : ''}
+                        leftIcon={<Banknote size={18} />}
                     />
                 </div>
 

@@ -41,6 +41,7 @@ import { SmartPhoneInput } from '@/components/common/SmartPhoneInput';
 import { useToast, Modal, ConfirmDialog, Button, Badge } from '@/components/common';
 import { CreateStoreModal } from '@/components/layout/CreateStoreModal';
 import type { Tienda } from '@/types/store.types';
+import { cargarPaises, Pais } from '@/services/paisesService';
 
 type TabType = 'perfil' | 'seguridad' | 'sesiones' | 'tiendas';
 
@@ -186,6 +187,12 @@ export function ConfiguracionPage() {
 
         setDeleteTiendaConfirm(id);
     };
+
+    const [allCountries, setAllCountries] = useState<Pais[]>([]);
+
+    useEffect(() => {
+        cargarPaises().then(setAllCountries);
+    }, []);
 
     const executeDeleteTienda = async () => {
         if (!deleteTiendaConfirm) return;
@@ -806,9 +813,17 @@ export function ConfiguracionPage() {
                                         </div>
                                         <div>
                                             <h4 style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>{tienda.nombre}</h4>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                                                <Globe size={12} style={{ color: 'var(--text-tertiary)' }} />
-                                                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{tienda.pais}</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                                <img
+                                                    src={`https://flagcdn.com/w40/${tienda.pais.toLowerCase()}.png`}
+                                                    alt={tienda.pais}
+                                                    style={{ width: '18px', borderRadius: '2px' }}
+                                                />
+                                                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
+                                                    {allCountries.find(p => p.codigo_iso_2.toUpperCase() === tienda.pais.toUpperCase())?.nombre_es || tienda.pais}
+                                                    <span style={{ margin: '0 4px', opacity: 0.5 }}>•</span>
+                                                    <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{tienda.moneda}</span>
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -906,7 +921,22 @@ export function ConfiguracionPage() {
                 title="Editar Tienda"
                 size="sm"
             >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                        <div style={{
+                            width: '80px', height: '80px', borderRadius: '16px',
+                            backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            overflow: 'hidden', border: '2px dashed var(--border-color)'
+                        }}>
+                            {editingTienda?.logo_url ? (
+                                <img src={editingTienda.logo_url} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                <Building2 size={32} style={{ color: 'var(--color-primary)' }} />
+                            )}
+                        </div>
+                    </div>
+
                     <InputGroup label="Nombre de la Tienda">
                         <input
                             className="dc-input"
@@ -914,15 +944,31 @@ export function ConfiguracionPage() {
                             onChange={(e) => setEditingTienda(prev => prev ? { ...prev, nombre: e.target.value } : null)}
                         />
                     </InputGroup>
+
+                    <InputGroup label="URL del Logo (Opcional)">
+                        <input
+                            className="dc-input"
+                            placeholder="https://ejemplo.com/logo.png"
+                            value={editingTienda?.logo_url || ''}
+                            onChange={(e) => setEditingTienda(prev => prev ? { ...prev, logo_url: e.target.value } : null)}
+                        />
+                        <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                            Pega la URL de una imagen para usarla como logo de tu tienda.
+                        </p>
+                    </InputGroup>
+
                     <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
                         <Button variant="secondary" fullWidth onClick={() => setEditingTienda(null)}>Cancelar</Button>
                         <Button variant="primary" fullWidth onClick={async () => {
                             if (editingTienda) {
-                                await actualizarTienda(editingTienda.id, { nombre: editingTienda.nombre });
+                                await actualizarTienda(editingTienda.id, {
+                                    nombre: editingTienda.nombre,
+                                    logo_url: editingTienda.logo_url
+                                });
                                 setEditingTienda(null);
                                 toast.success('Tienda actualizada');
                             }
-                        }}>Guardar</Button>
+                        }}>Guardar Cambios</Button>
                     </div>
                 </div>
             </Modal>
@@ -1038,7 +1084,7 @@ export function ConfiguracionPage() {
                     height: 32px;
                     display: flex;
                     align-items: center;
-                    justifyContent: center;
+                    justify-content: center;
                     border: 1px solid var(--border-color);
                     border-radius: 8px;
                     background: var(--card-bg);

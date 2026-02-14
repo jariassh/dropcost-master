@@ -1,36 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Search, ChevronDown, Phone } from 'lucide-react';
-
-export interface Country {
-    name: string;
-    code: string;
-    iso: string;
-    flag: string;
-}
-
-const COUNTRIES: Country[] = [
-    { name: 'Colombia', code: '57', iso: 'CO', flag: '🇨🇴' },
-    { name: 'México', code: '52', iso: 'MX', flag: '🇲🇽' },
-    { name: 'Ecuador', code: '593', iso: 'EC', flag: '🇪🇨' },
-    { name: 'Perú', code: '51', iso: 'PE', flag: '🇵🇪' },
-    { name: 'Chile', code: '56', iso: 'CL', flag: '🇨🇱' },
-    { name: 'Argentina', code: '54', iso: 'AR', flag: '🇦🇷' },
-    { name: 'Estados Unidos', code: '1', iso: 'US', flag: '🇺🇸' },
-    { name: 'España', code: '34', iso: 'ES', flag: '🇪🇸' },
-    { name: 'Venezuela', code: '58', iso: 'VE', flag: '🇻🇪' },
-    { name: 'Panamá', code: '507', iso: 'PA', flag: '🇵🇦' },
-    { name: 'Costa Rica', code: '506', iso: 'CR', flag: '🇨🇷' },
-    { name: 'República Dominicana', code: '1', iso: 'DO', flag: '🇩🇴' },
-    { name: 'Bolivia', code: '591', iso: 'BO', flag: '🇧🇴' },
-    { name: 'Uruguay', code: '598', iso: 'UY', flag: '🇺🇾' },
-    { name: 'Paraguay', code: '595', iso: 'PY', flag: '🇵🇾' },
-    { name: 'Guatemala', code: '502', iso: 'GT', flag: '🇬🇹' },
-    { name: 'Honduras', code: '504', iso: 'HN', flag: '🇭🇳' },
-    { name: 'El Salvador', code: '503', iso: 'SV', flag: '🇸🇻' },
-    { name: 'Nicaragua', code: '505', iso: 'NI', flag: '🇳🇮' },
-    { name: 'Brasil', code: '55', iso: 'BR', flag: '🇧🇷' },
-    { name: 'Puerto Rico', code: '1', iso: 'PR', flag: '🇵🇷' },
-];
+import { cargarPaises, Pais } from '@/services/paisesService';
 
 interface SmartPhoneInputProps {
     value: string;
@@ -40,37 +10,46 @@ interface SmartPhoneInputProps {
 }
 
 export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInputProps) {
-    const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]);
+    const [allPaises, setAllPaises] = useState<Pais[]>([]);
+    const [selectedCountry, setSelectedCountry] = useState<Pais | null>(null);
     const [phoneNumber, setPhoneNumber] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Inicializar si ya viene un valor (ej. +57310...)
+    // Load countries on mount
     useEffect(() => {
-        if (value.startsWith('+')) {
-            // Intentar detectar país por el código
-            for (let i = 4; i >= 1; i--) {
-                const prefix = value.substring(1, 1 + i);
-                const country = COUNTRIES.find(c => c.code === prefix);
-                if (country) {
-                    setSelectedCountry(country);
-                    setPhoneNumber(value.substring(1 + i));
-                    break;
+        cargarPaises().then(data => {
+            setAllPaises(data);
+
+            // Set default (Colombia)
+            const co = data.find(p => p.codigo_iso_2 === 'CO') || data[0];
+            setSelectedCountry(co);
+
+            // If initial value exists (+57...), try to set country
+            if (value && value.startsWith('+')) {
+                for (let i = 4; i >= 1; i--) {
+                    const prefix = '+' + value.substring(1, 1 + i);
+                    const country = data.find(p => p.codigo_telefonico === prefix);
+                    if (country) {
+                        setSelectedCountry(country);
+                        setPhoneNumber(value.substring(1 + i));
+                        break;
+                    }
                 }
             }
-        }
+        });
     }, []);
 
     const filteredCountries = useMemo(() => {
         const s = search.toLowerCase();
-        return COUNTRIES.filter(c =>
-            c.name.toLowerCase().includes(s) ||
-            c.code.includes(s) ||
-            c.iso.toLowerCase().includes(s)
+        return allPaises.filter(c =>
+            c.nombre_es.toLowerCase().includes(s) ||
+            c.codigo_telefonico.includes(s) ||
+            c.codigo_iso_2.toLowerCase().includes(s)
         );
-    }, [search]);
+    }, [allPaises, search]);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -96,12 +75,12 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
             const numericPart = val.substring(1).replace(/\D/g, '');
 
             // Buscar coincidencia de código más larga primero (1 a 3 dígitos)
-            let bestMatch: Country | null = null;
+            let bestMatch: Pais | null = null;
             let codeFound = "";
 
             for (let i = Math.min(numericPart.length, 3); i >= 1; i--) {
-                const sub = numericPart.substring(0, i);
-                const found = COUNTRIES.find(c => c.code === sub);
+                const sub = '+' + numericPart.substring(0, i);
+                const found = allPaises.find(c => c.codigo_telefonico === sub);
                 if (found) {
                     bestMatch = found;
                     codeFound = sub;
@@ -112,9 +91,9 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
             if (bestMatch) {
                 // ¡Encontrado! Cambiamos el selector y dejamos solo el resto en el input
                 setSelectedCountry(bestMatch);
-                const rest = numericPart.substring(codeFound.length);
+                const rest = numericPart.substring(codeFound.length - 1);
                 setPhoneNumber(rest);
-                onChange(`+${bestMatch.code}${rest}`, bestMatch.iso);
+                onChange(`${bestMatch.codigo_telefonico}${rest}`, bestMatch.codigo_iso_2);
             } else {
                 // Aún no hay match (ej: escribió +5), dejamos que siga escribiendo con el +
                 setPhoneNumber('+' + numericPart.substring(0, 12)); // Limitar longitud
@@ -125,14 +104,16 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
         // 3. Comportamiento normal (solo números)
         const numeric = val.replace(/\D/g, '').substring(0, 12); // Máximo 12 dígitos para el número local
         setPhoneNumber(numeric);
-        onChange(`+${selectedCountry.code}${numeric}`, selectedCountry.iso);
+        if (selectedCountry) {
+            onChange(`${selectedCountry.codigo_telefonico}${numeric}`, selectedCountry.codigo_iso_2);
+        }
     };
 
-    const selectCountry = (c: Country) => {
+    const selectCountry = (c: Pais) => {
         setSelectedCountry(c);
         setIsOpen(false);
         setSearch('');
-        onChange(`+${c.code}${phoneNumber}`, c.iso);
+        onChange(`${c.codigo_telefonico}${phoneNumber}`, c.codigo_iso_2);
     };
 
     return (
@@ -171,12 +152,18 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                         minWidth: '95px'
                     }}
                 >
-                    <img
-                        src={`https://flagcdn.com/w40/${selectedCountry.iso.toLowerCase()}.png`}
-                        alt={selectedCountry.name}
-                        style={{ width: '20px', borderRadius: '2px' }}
-                    />
-                    <span style={{ fontSize: '14px', fontWeight: 600 }}>+{selectedCountry.code}</span>
+                    {selectedCountry ? (
+                        <>
+                            <img
+                                src={`https://flagcdn.com/w40/${selectedCountry.codigo_iso_2.toLowerCase()}.png`}
+                                alt={selectedCountry.nombre_es}
+                                style={{ width: '20px', borderRadius: '2px' }}
+                            />
+                            <span style={{ fontSize: '14px', fontWeight: 600 }}>{selectedCountry.codigo_telefonico}</span>
+                        </>
+                    ) : (
+                        <span style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>...</span>
+                    )}
                     <ChevronDown size={14} style={{ color: 'var(--text-tertiary)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }} />
                 </button>
 
@@ -249,7 +236,7 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                         <div style={{ maxHeight: '240px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                             {filteredCountries.map((c) => (
                                 <button
-                                    key={`${c.iso}-${c.code}`}
+                                    key={`${c.codigo_iso_2}-${c.codigo_telefonico}`}
                                     onClick={() => selectCountry(c)}
                                     style={{
                                         width: '100%',
@@ -259,24 +246,24 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                                         padding: '10px',
                                         borderRadius: '8px',
                                         border: 'none',
-                                        backgroundColor: selectedCountry.iso === c.iso && selectedCountry.code === c.code ? 'var(--color-primary-light)' : 'transparent',
+                                        backgroundColor: selectedCountry?.codigo_iso_2 === c.codigo_iso_2 ? 'var(--color-primary-light)' : 'transparent',
                                         cursor: 'pointer',
                                         textAlign: 'left',
                                         transition: 'background-color 150ms'
                                     }}
                                     onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-secondary)')}
-                                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = selectedCountry.iso === c.iso && selectedCountry.code === c.code ? 'var(--color-primary-light)' : 'transparent')}
+                                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = selectedCountry?.codigo_iso_2 === c.codigo_iso_2 ? 'var(--color-primary-light)' : 'transparent')}
                                 >
                                     <img
-                                        src={`https://flagcdn.com/w40/${c.iso.toLowerCase()}.png`}
-                                        alt={c.name}
+                                        src={`https://flagcdn.com/w40/${c.codigo_iso_2.toLowerCase()}.png`}
+                                        alt={c.nombre_es}
                                         style={{ width: '20px', borderRadius: '2px' }}
                                     />
                                     <span style={{ flex: 1, fontSize: '13px', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                        {c.name}
+                                        {c.nombre_es}
                                     </span>
                                     <span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
-                                        +{c.code}
+                                        {c.codigo_telefonico}
                                     </span>
                                 </button>
                             ))}
