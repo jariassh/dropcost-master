@@ -9,7 +9,7 @@ import { Spinner } from '@/components/common/Spinner';
 
 export default function App() {
   const initialize = useAuthStore((state) => state.initialize);
-  const isLoading = useAuthStore((state) => state.isLoading);
+  const isInitializing = useAuthStore((state) => state.isInitializing);
 
   // Inicializa tema
   useTheme();
@@ -19,7 +19,7 @@ export default function App() {
     initialize();
   }, [initialize]);
 
-  if (isLoading) {
+  if (isInitializing) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
         <Spinner size="lg" />

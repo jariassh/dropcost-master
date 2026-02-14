@@ -148,23 +148,20 @@ export async function getCurrentUser(): Promise<User | null> {
 }
 
 export async function requestPasswordReset(data: PasswordResetRequest): Promise<AuthResponse> {
-    // 1. Verificar si el usuario existe en nuestra tabla pública primero
-    // Esto mejora la UX al avisar si el correo no está registrado.
-    const { data: userExist, error: searchError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('email', data.email)
-        .maybeSingle();
-
-    // Si hay un error (ej. RLS) o no hay datos, tratamos ambos casos como "No encontrado"
-    // para no mostrar mensajes técnicos de "Error" al usuario.
-    if (searchError || !userExist) {
-        return { success: false, error: 'No se encontró ninguna cuenta vinculada a este correo electrónico o el correo es inválido.' };
-    }
-
-    // 2. Si existe, enviar el correo de recuperación
+    // Llamar directamente a Supabase Auth. 
+    // No hacemos pre-check en public.users porque RLS bloquea a usuarios anónimos 
+    // y por seguridad (evitar enumeración de correos).
     const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
         redirectTo: `${window.location.origin}/actualizar-contrasena`,
+    });
+
+    if (error) return { success: false, error: translateError(error.message) };
+    return { success: true };
+}
+
+export async function updatePassword(newPassword: string): Promise<AuthResponse> {
+    const { error } = await supabase.auth.updateUser({
+        password: newPassword
     });
 
     if (error) return { success: false, error: translateError(error.message) };

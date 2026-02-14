@@ -13,6 +13,9 @@ const ERROR_MAP: Record<string, string> = {
     'Invalid OTP': 'El código de verificación es inválido o ha expirado.',
     'New password should be different from the old password': 'La nueva contraseña debe ser diferente a la anterior.',
     'Too many requests': 'Demasiadas solicitudes. Por favor, intenta de nuevo más tarde.',
+    'Auth session missing': 'Tu sesión ha expirado o el enlace ya no es válido. Por favor, solicita uno nuevo.',
+    'Token has expired': 'El enlace de recuperación ha caducado. Intenta solicitar uno nuevo.',
+    'Invalid recovery token': 'El enlace de recuperación es inválido o ya fue utilizado.',
 };
 
 export function translateError(errorMsg: string): string {

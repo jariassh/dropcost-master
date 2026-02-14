@@ -22,6 +22,7 @@ export function PasswordResetPage() {
     const { requestPasswordReset, isLoading, error, clearError } = useAuthStore();
 
     useEffect(() => {
+        // Limpiamos errores al entrar a la página
         clearError();
     }, [clearError]);
 
@@ -53,14 +54,13 @@ export function PasswordResetPage() {
                     <Mail size={32} color="#10B981" />
                 </div>
                 <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                    ¡Correo enviado!
+                    Instrucciones enviadas
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '15px', lineHeight: '1.6' }}>
-                    Hemos enviado instrucciones para restablecer tu contraseña a{' '}
-                    <strong style={{ color: 'var(--text-primary)' }}>{getValues('email')}</strong>
+                    Si existe una cuenta registrada con el correo <strong style={{ color: 'var(--text-primary)' }}>{getValues('email')}</strong>, recibirás un enlace para restablecer tu contraseña en unos minutos.
                 </p>
                 <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '24px' }}>
-                    Si no recibes el correo en unos minutos, revisa tu carpeta de spam.
+                    Si no recibes nada, verifica que el correo sea correcto y revisa tu carpeta de spam.
                 </p>
                 <Link to="/login">
                     <Button variant="secondary" fullWidth>
