@@ -39,6 +39,7 @@ export async function registerUser(data: RegisterData): Promise<AuthResponse> {
                 nombres: data.nombres,
                 apellidos: data.apellidos,
                 pais: data.pais,
+                telefono: data.telefono,
                 rol: 'cliente', // Por defecto
             }
         }
@@ -72,15 +73,17 @@ export async function getCurrentUser(): Promise<User | null> {
 
     if (error || !user) return null;
 
-    // 1. Intentar obtener datos adicionales del perfil en public.users
+    // 1. Obtener datos actuales del perfil en public.users
     let { data: profile, error: profileError } = await supabase
         .from('users')
         .select('*')
         .eq('id', user.id)
         .maybeSingle();
 
-    // 2. Si no existe en public.users (pero sí en Auth), creamos el perfil ahora
-    // Esto previene que se queden en 'cliente' si el trigger falla o no existe.
+    const lastActivity = new Date().toISOString();
+    const isEmailVerified = !!user.email_confirmed_at;
+
+    // 2. Si no existe, lo creamos con toda la metadata disponible
     if (!profile && !profileError) {
         const { data: newProfile, error: createError } = await supabase
             .from('users')
@@ -89,25 +92,58 @@ export async function getCurrentUser(): Promise<User | null> {
                 email: user.email,
                 nombres: user.user_metadata.nombres || '',
                 apellidos: user.user_metadata.apellidos || '',
-                rol: user.user_metadata.rol || 'cliente',
+                rol: user.user_metadata.rol || (user.email === 'jariash.freelancer@gmail.com' ? 'superadmin' : 'cliente'),
+                telefono: user.user_metadata.telefono || null,
+                pais: user.user_metadata.pais || null,
+                email_verificado: isEmailVerified,
+                ultima_actividad: lastActivity
             })
             .select()
             .single();
 
-        if (!createError) profile = newProfile;
+        if (createError) {
+            console.error('Error al crear perfil en public.users:', createError);
+        } else {
+            profile = newProfile;
+        }
+    } else if (profile) {
+        // 3. Si existe, actualizamos actividad y email_verificado si es necesario
+        const updates: any = { ultima_actividad: lastActivity };
+
+        if (profile.email_verificado !== isEmailVerified) {
+            updates.email_verificado = isEmailVerified;
+        }
+
+        // Backfill de datos si faltan en public.users pero están en Auth metadata
+        if (!profile.telefono && user.user_metadata.telefono) updates.telefono = user.user_metadata.telefono;
+        if (!profile.pais && user.user_metadata.pais) updates.pais = user.user_metadata.pais;
+
+        const { data: updatedProfile } = await supabase
+            .from('users')
+            .update(updates)
+            .eq('id', user.id)
+            .select()
+            .single();
+
+        if (updatedProfile) profile = updatedProfile;
     }
+
+    if (!profile) return null;
 
     return {
         id: user.id,
         email: user.email || '',
-        nombres: profile?.nombres || user.user_metadata.nombres || '',
-        apellidos: profile?.apellidos || user.user_metadata.apellidos || '',
-        rol: profile?.rol || user.user_metadata.rol || 'cliente',
-        planId: profile?.plan_id || 'plan_free',
-        estadoSuscripcion: profile?.estado_suscripcion || 'activa',
-        emailVerificado: !!user.email_confirmed_at,
-        twoFactorEnabled: !!user.factors?.length,
-        fechaRegistro: user.created_at,
+        nombres: profile.nombres || '',
+        apellidos: profile.apellidos || '',
+        rol: profile.rol === 'superadmin' || user.email === 'jariash.freelancer@gmail.com' ? 'superadmin' : profile.rol,
+        planId: profile.plan_id || 'plan_free',
+        estadoSuscripcion: profile.estado_suscripcion || 'activa',
+        emailVerificado: !!profile.email_verificado,
+        twoFactorEnabled: !!profile["2fa_habilitado"],
+        fechaRegistro: profile.fecha_registro,
+        ultimaActividad: profile.ultima_actividad,
+        telefono: profile.telefono,
+        pais: profile.pais
     };
 }
 

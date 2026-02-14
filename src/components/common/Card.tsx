@@ -3,11 +3,13 @@ import type { HTMLAttributes } from 'react';
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
     hoverable?: boolean;
     noPadding?: boolean;
+    title?: string;
 }
 
 export function Card({
     hoverable = false,
     noPadding = false,
+    title,
     children,
     className = '',
     style,
@@ -19,11 +21,14 @@ export function Card({
             style={{
                 backgroundColor: 'var(--card-bg)',
                 border: '1px solid var(--card-border)',
-                borderRadius: '14px',
+                borderRadius: '16px',
                 boxShadow: 'var(--shadow-sm)',
                 transition: 'all 300ms ease',
                 padding: noPadding ? 0 : '24px',
                 cursor: hoverable ? 'pointer' : 'default',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: title ? '20px' : '0',
                 ...style,
             }}
             onMouseEnter={(e) => {
@@ -38,6 +43,22 @@ export function Card({
             }}
             {...props}
         >
+            {title && (
+                <div style={{
+                    borderBottom: '1px solid var(--border-color)',
+                    paddingBottom: '16px',
+                    marginBottom: noPadding ? '16px' : '0'
+                }}>
+                    <h3 style={{
+                        fontSize: '16px',
+                        fontWeight: 700,
+                        color: 'var(--text-primary)',
+                        margin: 0
+                    }}>
+                        {title}
+                    </h3>
+                </div>
+            )}
             {children}
         </div>
     );

@@ -171,7 +171,11 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                         minWidth: '95px'
                     }}
                 >
-                    <span style={{ fontSize: '18px' }}>{selectedCountry.flag}</span>
+                    <img
+                        src={`https://flagcdn.com/w40/${selectedCountry.iso.toLowerCase()}.png`}
+                        alt={selectedCountry.name}
+                        style={{ width: '20px', borderRadius: '2px' }}
+                    />
                     <span style={{ fontSize: '14px', fontWeight: 600 }}>+{selectedCountry.code}</span>
                     <ChevronDown size={14} style={{ color: 'var(--text-tertiary)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }} />
                 </button>
@@ -263,7 +267,11 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                                     onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-secondary)')}
                                     onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = selectedCountry.iso === c.iso && selectedCountry.code === c.code ? 'var(--color-primary-light)' : 'transparent')}
                                 >
-                                    <span style={{ fontSize: '18px' }}>{c.flag}</span>
+                                    <img
+                                        src={`https://flagcdn.com/w40/${c.iso.toLowerCase()}.png`}
+                                        alt={c.name}
+                                        style={{ width: '20px', borderRadius: '2px' }}
+                                    />
                                     <span style={{ flex: 1, fontSize: '13px', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {c.name}
                                     </span>

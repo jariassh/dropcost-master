@@ -1,81 +1,186 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/common/Card';
 import { Users, CreditCard, Ticket, ShieldAlert } from 'lucide-react';
+import { adminService, AdminStats } from '@/services/adminService';
+import { Spinner } from '@/components/common/Spinner';
+
+import { supabase } from '@/lib/supabase';
 
 export const AdminDashboard: React.FC = () => {
-    const stats = [
-        { label: 'Usuarios Totales', value: '1,250', icon: Users, color: '#3B82F6' },
-        { label: 'Suscripciones Activas', value: '850', icon: CreditCard, color: '#10B981' },
-        { label: 'Cupones Activos', value: '12', icon: Ticket, color: '#F59E0B' },
-        { label: 'Alertas Sistema', value: '0', icon: ShieldAlert, color: '#6B7280' },
+    const [stats, setStats] = useState<AdminStats | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [metaStatus, setMetaStatus] = useState<'operativo' | 'pendiente' | 'error'>('pendiente');
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            const data = await adminService.getDashboardStats();
+            setStats(data);
+
+            // Simular verificación de Meta Ads (en el futuro será una query real)
+            const { data: metaTokens } = await supabase.from('integraciones').select('id').eq('tipo', 'meta_ads').limit(1);
+            setMetaStatus(metaTokens && metaTokens.length > 0 ? 'operativo' : 'pendiente');
+
+            setLoading(false);
+        };
+        fetchStats();
+    }, []);
+
+    const statCards = [
+        { label: 'Usuarios Totales', value: stats?.totalUsers.toString() || '0', icon: Users, color: '#3B82F6' },
+        { label: 'Suscripciones Activas', value: stats?.activeSubscriptions.toString() || '0', icon: CreditCard, color: '#10B981' },
+        { label: 'Cupones Activos', value: stats?.activeCoupons.toString() || '0', icon: Ticket, color: '#F59E0B' },
+        { label: 'Alertas Sistema', value: stats?.systemAlerts.toString() || '0', icon: ShieldAlert, color: '#6B7280' },
     ];
 
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <Spinner size="lg" />
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-8">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+            {/* Header Section */}
             <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Panel de Administración</h1>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+                    Panel de Administración
+                </h1>
+                <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                     Resumen global del estado de DropCost Master y herramientas de gestión.
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((stat) => (
-                    <Card key={stat.label}>
-                        <div className="flex items-center gap-4">
+            {/* Stats Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' }}>
+                {statCards.map((stat) => (
+                    <Card key={stat.label} hoverable>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <div
-                                style={{ backgroundColor: `${stat.color}15`, color: stat.color }}
-                                className="p-3 rounded-xl"
+                                style={{
+                                    backgroundColor: `${stat.color}15`,
+                                    color: stat.color,
+                                    padding: '12px',
+                                    borderRadius: '14px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
                             >
-                                <stat.icon size={24} />
+                                <stat.icon size={24} strokeWidth={2.5} />
                             </div>
-                            <div>
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.label}</p>
-                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+                                    {stat.label}
+                                </p>
+                                <p style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0 0 0' }}>
+                                    {stat.value}
+                                </p>
                             </div>
                         </div>
                     </Card>
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Secondary Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }} className="max-lg:grid-cols-1">
                 <Card title="Usuarios Recientes">
-                    <div className="space-y-4">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800 last:border-0 last:pb-0">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold">
-                                        U{i}
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-white">Usuario Demo {i}</p>
-                                        <p className="text-xs text-gray-500">plan_pro • Hace {i * 10} min</p>
-                                    </div>
-                                </div>
-                                <span className="text-xs px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full font-medium">Activo</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {!stats || stats.recentUsers.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-tertiary)' }}>
+                                <Users size={32} style={{ opacity: 0.2, marginBottom: '12px' }} />
+                                <p style={{ fontSize: '14px' }}>No hay usuarios recientes.</p>
                             </div>
-                        ))}
+                        ) : (
+                            stats.recentUsers.map((user: any) => (
+                                <div key={user.id} style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '14px',
+                                    backgroundColor: 'var(--bg-tertiary)',
+                                    borderRadius: '12px',
+                                    border: '1px solid var(--border-color)'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{
+                                            width: '40px',
+                                            height: '40px',
+                                            borderRadius: '10px',
+                                            background: 'linear-gradient(135deg, var(--color-primary), #6366f1)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: '#fff',
+                                            fontSize: '14px',
+                                            fontWeight: 700
+                                        }}>
+                                            {user.nombres?.[0] || 'U'}
+                                        </div>
+                                        <div>
+                                            <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                                                {user.nombres} {user.apellidos}
+                                            </p>
+                                            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: '2px 0 0 0' }}>
+                                                {user.plan_id || 'plan_free'} • {new Date(user.fecha_registro).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span style={{
+                                        fontSize: '10px',
+                                        fontWeight: 800,
+                                        padding: '4px 10px',
+                                        borderRadius: '20px',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.05em',
+                                        backgroundColor: user.estado_suscripcion === 'activa' ? 'var(--color-success-light)' : 'var(--bg-secondary)',
+                                        color: user.estado_suscripcion === 'activa' ? 'var(--color-success)' : 'var(--text-tertiary)',
+                                        border: `1px solid ${user.estado_suscripcion === 'activa' ? 'var(--color-success)33' : 'var(--border-color)'}`
+                                    }}>
+                                        {user.estado_suscripcion || 'Inactivo'}
+                                    </span>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </Card>
 
                 <Card title="Estado del Sistema">
-                    <div className="space-y-6">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">API Gateway</span>
-                            <span className="text-sm font-medium text-green-600">Operativo</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Database (PostgreSQL)</span>
-                            <span className="text-sm font-medium text-green-600">Operativo</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Integración Meta Ads</span>
-                            <span className="text-sm font-medium text-green-600">Sincronizado</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Supabase Edge Functions</span>
-                            <span className="text-sm font-medium text-green-600">Operativo</span>
-                        </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        {[
+                            { name: 'API Gateway (Edge)', status: 'Operativo', type: 'success' },
+                            { name: 'Database (PostgreSQL)', status: 'Conectado', type: 'success' },
+                            { name: 'Integración Meta Ads', status: metaStatus === 'operativo' ? 'Sincronizado' : 'Pendiente', type: metaStatus === 'operativo' ? 'success' : 'warning' },
+                            { name: 'Storage (Assets)', status: 'Operativo', type: 'success' },
+                        ].map((item) => (
+                            <div key={item.name} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '16px',
+                                borderRadius: '14px',
+                                backgroundColor: 'var(--bg-tertiary)',
+                                border: '1px solid var(--border-color)'
+                            }}>
+                                <span style={{ flex: 1, fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>{item.name}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{
+                                        width: '8px',
+                                        height: '8px',
+                                        borderRadius: '50%',
+                                        backgroundColor: item.type === 'success' ? 'var(--color-success)' : 'var(--color-warning)'
+                                    }} />
+                                    <span style={{
+                                        fontSize: '13px',
+                                        fontWeight: 700,
+                                        color: item.type === 'success' ? 'var(--color-success)' : 'var(--color-warning)'
+                                    }}>
+                                        {item.status}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </Card>
             </div>
