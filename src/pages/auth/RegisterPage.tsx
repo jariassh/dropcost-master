@@ -217,7 +217,9 @@ export function RegisterPage() {
                                 generatePassword();
                             }
                         }}
-                        {...register('password')}
+                        {...register('password', {
+                            onBlur: () => setTimeout(() => setSuggestedPassword(''), 200)
+                        })}
                     />
 
                     {/* Popover de Sugerencia Flotante */}

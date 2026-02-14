@@ -3,7 +3,9 @@
  * Sidebar colapsable (íconos / íconos+labels) que EMPUJA el contenido.
  * Header con toggle tema, notificaciones y dropdown usuario premium.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNotificationStore } from '@/store/notificationStore';
+import { NotificationPanel } from '@/components/layout/NotificationPanel';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
     BarChart3,
@@ -37,14 +39,15 @@ const SIDEBAR_OPEN = 240;
 const SIDEBAR_COLLAPSED = 72;
 
 const navItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Dashboard', active: true },
+    { to: '/', icon: LayoutDashboard, label: 'Dashboard', active: false }, // Próximamente
     { to: '/simulador', icon: Calculator, label: 'Simulador', active: true },
     { to: '/ofertas', icon: Gift, label: 'Ofertas Irresistibles', active: true },
+    { to: '/referidos', icon: Share2, label: 'Sistema de Referidos', active: true },
+    { to: '/billetera', icon: Wallet, label: 'Billetera / Wallet', active: true },
+    { to: '/configuracion', icon: Settings, label: 'Configuración', active: true },
     { to: '/analisis-regional', icon: Map, label: 'Análisis Regional', active: false },
-    { to: '/referidos', icon: Share2, label: 'Sistema de Referidos', active: false },
-    { to: '/capacitacion', icon: GraduationCap, label: 'Centro de Capacitación', active: false },
-    { to: '/billetera', icon: Wallet, label: 'Billetera / Wallet', active: false },
-    { to: '/configuracion', icon: Settings, label: 'Configuración', active: false },
+    { to: '/acortador', icon: Link2, label: 'Acortador URL', active: false },
+    { to: '/capacitacion', icon: GraduationCap, label: 'Capacitación', active: false },
 ];
 
 const adminLink = { to: '/admin', icon: ShieldAlert, label: 'Panel Administración' };
@@ -54,10 +57,16 @@ export function AppLayout() {
     const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [notificationsOpen, setNotificationsOpen] = useState(false);
     const { isDark, toggleTheme } = useTheme();
     const { user, logout } = useAuthStore();
+    const { unreadCount, fetchNotifications } = useNotificationStore();
     const { tiendaActual } = useStoreStore();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        fetchNotifications();
+    }, [fetchNotifications]);
 
     const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_OPEN;
 
@@ -250,17 +259,29 @@ export function AppLayout() {
                         </HeaderButton>
 
                         {/* Notificaciones */}
-                        <HeaderButton label="Notificaciones">
-                            <Bell size={18} />
-                            <span
-                                style={{
-                                    position: 'absolute', top: '6px', right: '6px',
-                                    width: '8px', height: '8px',
-                                    backgroundColor: 'var(--color-error)',
-                                    borderRadius: '50%',
-                                }}
-                            />
-                        </HeaderButton>
+                        <div style={{ position: 'relative' }}>
+                            <HeaderButton
+                                onClick={() => setNotificationsOpen(v => !v)}
+                                label="Notificaciones"
+                            >
+                                <Bell size={18} />
+                                {unreadCount > 0 && (
+                                    <span
+                                        style={{
+                                            position: 'absolute', top: '6px', right: '6px',
+                                            width: '8px', height: '8px',
+                                            backgroundColor: 'var(--color-error)',
+                                            borderRadius: '50%',
+                                            border: '2px solid var(--bg-primary)',
+                                        }}
+                                    />
+                                )}
+                            </HeaderButton>
+
+                            {notificationsOpen && (
+                                <NotificationPanel onClose={() => setNotificationsOpen(false)} />
+                            )}
+                        </div>
 
                         {/* Avatar / menú usuario */}
                         <div style={{ position: 'relative', marginLeft: '4px' }}>
@@ -358,9 +379,14 @@ export function AppLayout() {
                                         {/* Acciones */}
                                         <div style={{ padding: '8px', borderTop: '1px solid var(--border-color)' }}>
                                             <DropdownItem
-                                                icon={<UserCircle size={17} />}
-                                                label="Mi Perfil"
-                                                onClick={() => { setUserMenuOpen(false); navigate('/perfil'); }}
+                                                icon={<Settings size={17} />}
+                                                label="Configuración"
+                                                onClick={() => { setUserMenuOpen(false); navigate('/configuracion'); }}
+                                            />
+                                            <DropdownItem
+                                                icon={<Wallet size={17} />}
+                                                label="Mi Billetera"
+                                                onClick={() => { setUserMenuOpen(false); navigate('/billetera'); }}
                                             />
                                             <DropdownItem
                                                 icon={<LogOut size={17} />}

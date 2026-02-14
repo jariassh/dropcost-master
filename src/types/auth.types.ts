@@ -14,6 +14,7 @@ export interface User {
     rol?: 'cliente' | 'admin' | 'superadmin';
     fechaRegistro: string;
     ultimaActividad?: string;
+    codigoReferido?: string;
 }
 
 export interface LoginCredentials {
@@ -79,6 +80,12 @@ export interface AuthState {
     verify2FA: (data: TwoFactorData) => Promise<void>;
     requestPasswordReset: (data: PasswordResetRequest) => Promise<boolean>;
     updatePassword: (newPassword: string) => Promise<boolean>;
+    updateEmail: (newEmail: string) => Promise<boolean>;
+    updateProfile: (userData: Partial<User>) => Promise<boolean>;
+    request2FA: () => Promise<{ success: boolean; error?: string }>;
+    resend2FACode: () => Promise<boolean>;
+    confirm2FA: (code: string) => Promise<boolean>;
+    disable2FA: () => Promise<boolean>;
     logout: () => Promise<void>;
     initialize: () => Promise<void>;
     clearError: () => void;

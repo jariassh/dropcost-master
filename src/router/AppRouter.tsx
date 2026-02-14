@@ -12,6 +12,9 @@ import { SimuladorPage } from '@/pages/app/simulador/SimuladorPage';
 import { MisCosteos } from '@/pages/app/simulador/MisCosteos';
 import { OfertasPage } from '@/pages/app/ofertas/OfertasPage';
 import { OfertaWizard } from '@/pages/app/ofertas/OfertaWizard';
+import { ConfiguracionPage } from '@/pages/app/ConfiguracionPage';
+import { ReferidosPage } from '@/pages/app/ReferidosPage';
+import { WalletPage } from '@/pages/app/WalletPage';
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
 import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { AdminLayout } from '@/layouts/AdminLayout';
@@ -31,7 +34,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
     if (isAuthenticated) {
-        return <Navigate to="/" replace />;
+        return <Navigate to="/simulador" replace />;
     }
 
     return <>{children}</>;
@@ -69,14 +72,15 @@ export function AppRouter() {
                     </ProtectedRoute>
                 }
             >
-                <Route path="/" element={<DashboardPage />} />
+                <Route path="/" element={<Navigate to="/simulador" replace />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/simulador" element={<SimuladorPage />} />
                 <Route path="/simulador/mis-costeos" element={<MisCosteos />} />
                 <Route path="/ofertas" element={<OfertasPage />} />
                 <Route path="/analisis-regional" element={<DashboardPage />} />
-                <Route path="/configuracion" element={<DashboardPage />} />
-                <Route path="/referidos" element={<DashboardPage />} />
-                <Route path="/billetera" element={<DashboardPage />} />
+                <Route path="/configuracion" element={<ConfiguracionPage />} />
+                <Route path="/referidos" element={<ReferidosPage />} />
+                <Route path="/billetera" element={<WalletPage />} />
             </Route>
 
             {/* Rutas de Administración (Independientes) */}

@@ -11,7 +11,10 @@ import { calculateSuggestedPrice, calculateVolumeTable } from './simulatorCalcul
 import { useToast } from '@/components/common';
 import type { SimulatorInputs, SimulatorResults as Results, VolumeStrategy, SavedCosteo } from '@/types/simulator';
 import { useNavigate } from 'react-router-dom';
-import { Calculator, History, Save } from 'lucide-react';
+import { Calculator, History, Save, Store, PlusCircle } from 'lucide-react';
+import { useStoreStore } from '@/store/useStoreStore'; // Import store
+import { CreateStoreModal } from '@/components/layout/CreateStoreModal'; // Import modal
+import { Spinner } from '@/components/common/Spinner'; // Import Spinner
 
 const DEFAULT_INPUTS: SimulatorInputs = {
     productName: '',
@@ -34,6 +37,15 @@ const DEFAULT_VOLUME: VolumeStrategy = {
 export function SimuladorPage() {
     const navigate = useNavigate();
     const toast = useToast();
+    const { tiendas, isLoading: storesLoading, fetchTiendas } = useStoreStore(); // Get store state
+    const [isCreateStoreOpen, setCreateStoreOpen] = useState(false); // Modal state
+
+    // Fetch stores if empty on mount (safety check)
+    useEffect(() => {
+        if (tiendas.length === 0) {
+            fetchTiendas();
+        }
+    }, [fetchTiendas, tiendas.length]);
 
     const [inputs, setInputs] = useState<SimulatorInputs>(DEFAULT_INPUTS);
     const [results, setResults] = useState<Results | null>(null);
@@ -91,6 +103,51 @@ export function SimuladorPage() {
     }, [inputs, results, volumeStrategy, toast]);
 
     const isActive = results != null && results.suggestedPrice > 0;
+
+    // ─── EMPTY STATE: NO STORES ───
+    if (storesLoading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}>
+                <Spinner size="lg" />
+            </div>
+        );
+    }
+
+    if (tiendas.length === 0) {
+        return (
+            <div style={{
+                maxWidth: '600px', margin: '40px auto', textAlign: 'center',
+                padding: '40px', backgroundColor: 'var(--card-bg)', borderRadius: '20px',
+                border: '1px solid var(--border-color)', boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
+            }}>
+                <div style={{
+                    width: '80px', height: '80px', borderRadius: '50%',
+                    backgroundColor: 'rgba(0,102,255,0.1)', color: 'var(--color-primary)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px'
+                }}>
+                    <Store size={40} />
+                </div>
+                <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '12px' }}>¡Bienvenido a DropCost Master!</h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', lineHeight: 1.6 }}>
+                    Para comenzar a simular precios y calcular márgenes con precisión, primero necesitamos configurar tu tienda.
+                    Esto nos permitirá guardar tu historial y personalizar los cálculos.
+                </p>
+                <button
+                    onClick={() => setCreateStoreOpen(true)}
+                    className="dc-button-primary"
+                    style={{ padding: '14px 28px', fontSize: '16px', margin: '0 auto' }}
+                >
+                    <PlusCircle size={20} />
+                    Crear mi Primera Tienda
+                </button>
+
+                <CreateStoreModal
+                    isOpen={isCreateStoreOpen}
+                    onClose={() => setCreateStoreOpen(false)}
+                />
+            </div>
+        );
+    }
 
     return (
         <div>

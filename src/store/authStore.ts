@@ -4,7 +4,7 @@
  * La lógica de negocio vive aquí, los componentes solo consumen estado.
  */
 import { create } from 'zustand';
-import type { AuthState, LoginCredentials, RegisterData, VerifyEmailData, TwoFactorData, PasswordResetRequest } from '@/types/auth.types';
+import type { AuthState, LoginCredentials, RegisterData, VerifyEmailData, TwoFactorData, PasswordResetRequest, User } from '@/types/auth.types';
 import * as authService from '@/services/authService';
 
 // MODO DESARROLLO: Cambiar a true para deshabilitar login obligatorio
@@ -29,6 +29,27 @@ export const useAuthStore = create<AuthState>((set) => ({
             }
 
             const user = await authService.getCurrentUser();
+            
+            // Check 2FA
+            if (user?.twoFactorEnabled) {
+                // Solicitar código
+                const faResponse = await authService.request2FALogin();
+                
+                if (!faResponse.success) {
+                    set({ isLoading: false, error: 'Error al enviar código 2FA: ' + faResponse.error });
+                    return false;
+                }
+
+                set({ 
+                    isLoading: false, 
+                    user, // Usuario cargado pero no autenticado
+                    isAuthenticated: false,
+                    requiresOTP: true,
+                    sessionId: user.id 
+                });
+                return true;
+            }
+
             set({ isLoading: false, user, isAuthenticated: true });
             return true;
         } catch (err) {
@@ -74,10 +95,47 @@ export const useAuthStore = create<AuthState>((set) => ({
     verify2FA: async (data: TwoFactorData) => {
         set({ isLoading: true, error: null });
         try {
-            set({ isLoading: false, error: '2FA no implementado en esta versión funcional' });
+            // Verificar código
+            const response = await authService.verify2FALogin(data.code);
+            
+            if (!response.success) {
+                set({ isLoading: false, error: response.error || 'Código inválido' });
+                return;
+            }
+
+            // Éxito - Persistir validación 2FA (30 días)
+            const user = await authService.getCurrentUser();
+            if (user) {
+                localStorage.setItem(`2fa_verified_${user.id}`, Date.now().toString());
+            }
+
+            set({ 
+                isLoading: false, 
+                user,
+                isAuthenticated: true, 
+                requiresOTP: false,
+                sessionId: null
+            });
+
         } catch (err) {
             console.error('Verify2FA error:', err);
             set({ isLoading: false, error: 'Error de conexión. Intenta de nuevo.' });
+        }
+    },
+
+    resend2FACode: async () => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await authService.request2FALogin();
+            if (!response.success) {
+                set({ isLoading: false, error: 'Error al reenviar código: ' + response.error });
+                return false;
+            }
+            set({ isLoading: false });
+            return true;
+        } catch (err) {
+            set({ isLoading: false, error: 'Error al reenviar código' });
+            return false;
         }
     },
 
@@ -115,8 +173,102 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
     },
 
+    updateEmail: async (newEmail: string) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await authService.updateEmail(newEmail);
+            if (!response.success) {
+                set({ isLoading: false, error: response.error || 'Error al actualizar email' });
+                return false;
+            }
+            set({ isLoading: false });
+            return true;
+        } catch (err) {
+            console.error('Update email error:', err);
+            set({ isLoading: false, error: 'Error de conexión. Intenta de nuevo.' });
+            return false;
+        }
+    },
+
+    updateProfile: async (userData: Partial<User>) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await authService.updateUserProfile(userData);
+            if (!response.success) {
+                set({ isLoading: false, error: response.error || 'Error al actualizar perfil' });
+                return false;
+            }
+
+            // Refrescar datos locales del usuario
+            const user = await authService.getCurrentUser();
+            set({ isLoading: false, user });
+            return true;
+        } catch (err) {
+            console.error('Update profile error:', err);
+            set({ isLoading: false, error: 'Error de conexión. Intenta de nuevo.' });
+            return false;
+        }
+    },
+
+    request2FA: async () => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await authService.request2FAActivation();
+            if (!response.success) {
+                const errorMsg = response.error || 'Error al solicitar 2FA';
+                set({ isLoading: false, error: errorMsg });
+                return { success: false, error: errorMsg };
+            }
+            set({ isLoading: false });
+            return { success: true };
+        } catch (err) {
+            const errorMsg = 'Error al solicitar 2FA';
+            set({ isLoading: false, error: errorMsg });
+            return { success: false, error: errorMsg };
+        }
+    },
+
+    confirm2FA: async (code: string) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await authService.confirm2FAActivation(code);
+            if (!response.success) {
+                set({ isLoading: false, error: response.error });
+                return false;
+            }
+            const user = await authService.getCurrentUser();
+            set({ isLoading: false, user });
+            return true;
+        } catch (err) {
+            set({ isLoading: false, error: 'Error al confirmar 2FA' });
+            return false;
+        }
+    },
+
+    disable2FA: async () => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await authService.disable2FA();
+            if (response.success) {
+                const user = await authService.getCurrentUser();
+                set({ user });
+            }
+            set({ isLoading: false });
+            return response.success;
+        } catch (err) {
+            set({ isLoading: false, error: 'Error al desactivar 2FA' });
+            return false;
+        }
+    },
+
     logout: async () => {
         await authService.logoutUser();
+        // Limpiar persistencia de 2FA al hacer logout explícito
+        const user = useAuthStore.getState().user;
+        if (user) {
+            localStorage.removeItem(`2fa_verified_${user.id}`);
+        }
+
         set({
             user: null,
             isAuthenticated: false,
@@ -131,7 +283,29 @@ export const useAuthStore = create<AuthState>((set) => ({
     initialize: async () => {
         try {
             const user = await authService.getCurrentUser();
-            set({ user, isAuthenticated: !!user, isInitializing: false, isLoading: false });
+            
+            if (!user) {
+                set({ user: null, isAuthenticated: false, isInitializing: false, isLoading: false });
+                return;
+            }
+
+            let isAuthenticated = true;
+            let requiresOTP = false;
+
+            // Verificar persistencia 2FA
+            if (user.twoFactorEnabled) {
+                const storageKey = `2fa_verified_${user.id}`;
+                const verifiedAt = localStorage.getItem(storageKey);
+                // 30 días de validez
+                const isValid = verifiedAt && (Date.now() - parseInt(verifiedAt) < 30 * 24 * 60 * 60 * 1000); 
+                
+                if (!isValid) {
+                    isAuthenticated = false;
+                    requiresOTP = true;
+                }
+            }
+
+            set({ user, isAuthenticated, requiresOTP, isInitializing: false, isLoading: false });
         } catch (err) {
             console.error('Initialization error:', err);
             set({ isInitializing: false, isLoading: false });
