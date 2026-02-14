@@ -8,25 +8,12 @@ import type { AuthState, LoginCredentials, RegisterData, VerifyEmailData, TwoFac
 import * as authService from '@/services/authService';
 
 // MODO DESARROLLO: Cambiar a true para deshabilitar login obligatorio
-const DEV_MODE = true;
+const DEV_MODE = false;
 
 export const useAuthStore = create<AuthState>((set) => ({
-    user: DEV_MODE ? {
-        id: 'usr_mock_001',
-        email: 'dev@dropcostmaster.com',
-        nombres: 'Arquitecto',
-        apellidos: 'Master',
-        telefono: '+57 300 000 0000',
-        pais: 'CO',
-        planId: 'plan_pro',
-        estadoSuscripcion: 'activa',
-        rol: 'admin',
-        emailVerificado: true,
-        twoFactorEnabled: false,
-        fechaRegistro: new Date().toISOString(),
-    } : null,
-    isAuthenticated: DEV_MODE,
-    isLoading: false,
+    user: null,
+    isAuthenticated: false,
+    isLoading: true, // Empezamos en loading para checkAuth
     requiresOTP: false,
     sessionId: null,
     error: null,
@@ -40,16 +27,7 @@ export const useAuthStore = create<AuthState>((set) => ({
                 return;
             }
 
-            if (response.data?.requiresOTP) {
-                set({
-                    isLoading: false,
-                    requiresOTP: true,
-                    sessionId: response.data.sessionId || null,
-                });
-                return;
-            }
-
-            // Login directo sin 2FA
+            // En Supabase, si no hay 2FA configurado, el login es directo
             const user = await authService.getCurrentUser();
             set({ isLoading: false, user, isAuthenticated: true });
         } catch {
@@ -79,7 +57,9 @@ export const useAuthStore = create<AuthState>((set) => ({
                 set({ isLoading: false, error: response.error || 'Código inválido' });
                 return;
             }
-            set({ isLoading: false });
+            // Después de verificar email, usualmente el usuario ya está autenticado en Supabase
+            const user = await authService.getCurrentUser();
+            set({ isLoading: false, user, isAuthenticated: true });
         } catch {
             set({ isLoading: false, error: 'Error de conexión. Intenta de nuevo.' });
         }
@@ -88,28 +68,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     verify2FA: async (data: TwoFactorData) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await authService.verify2FA(data);
-            if (!response.success) {
-                set({ isLoading: false, error: response.error || 'Código 2FA inválido' });
-                return;
-            }
-
-            // Guardar tokens
-            if (response.data?.accessToken) {
-                localStorage.setItem('dropcost-access-token', response.data.accessToken);
-            }
-            if (response.data?.refreshToken) {
-                localStorage.setItem('dropcost-refresh-token', response.data.refreshToken);
-            }
-
-            const user = await authService.getCurrentUser();
-            set({
-                isLoading: false,
-                user,
-                isAuthenticated: true,
-                requiresOTP: false,
-                sessionId: null,
-            });
+            // Placeholder para futura implementación de 2FA real con Supabase Factors
+            set({ isLoading: false, error: '2FA no implementado en esta versión funcional' });
         } catch {
             set({ isLoading: false, error: 'Error de conexión. Intenta de nuevo.' });
         }
@@ -121,16 +81,18 @@ export const useAuthStore = create<AuthState>((set) => ({
             const response = await authService.requestPasswordReset(data);
             if (!response.success) {
                 set({ isLoading: false, error: response.error || 'Error al enviar recuperación' });
-                return;
+                return false;
             }
             set({ isLoading: false });
+            return true;
         } catch {
             set({ isLoading: false, error: 'Error de conexión. Intenta de nuevo.' });
+            return false;
         }
     },
 
-    logout: () => {
-        authService.logoutUser();
+    logout: async () => {
+        await authService.logoutUser();
         set({
             user: null,
             isAuthenticated: false,
@@ -141,4 +103,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     clearError: () => set({ error: null }),
+
+    // Nueva acción para inicializar la sesión
+    initialize: async () => {
+        try {
+            const user = await authService.getCurrentUser();
+            set({ user, isAuthenticated: !!user, isLoading: false });
+        } catch {
+            set({ isLoading: false });
+        }
+    }
 }));
