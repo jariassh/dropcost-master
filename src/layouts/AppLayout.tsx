@@ -21,24 +21,32 @@ import {
     PanelLeftOpen,
     UserCircle,
     Gift,
+    Share2,
+    Wallet,
+    Link2,
+    PieChart,
+    GraduationCap,
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
+import { Tooltip } from '@/components/common/Tooltip';
 
 const SIDEBAR_OPEN = 240;
 const SIDEBAR_COLLAPSED = 72;
 
 const navItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Dashboard', disabled: true },
-    { to: '/simulador', icon: Calculator, label: 'Simulador' },
-    { to: '/ofertas', icon: Gift, label: 'Ofertas Irresistibles' },
-    { to: '/analisis-regional', icon: Map, label: 'Análisis Regional', disabled: true },
-    { to: '/configuracion', icon: Settings, label: 'Configuración', disabled: true },
+    { to: '/', icon: LayoutDashboard, label: 'Dashboard', active: true },
+    { to: '/simulador', icon: Calculator, label: 'Simulador', active: true },
+    { to: '/ofertas', icon: Gift, label: 'Ofertas Irresistibles', active: true },
+    { to: '/analisis-regional', icon: Map, label: 'Análisis Regional', active: false },
+    { to: '/referidos', icon: Share2, label: 'Sistema de Referidos', active: false },
+    { to: '/capacitacion', icon: GraduationCap, label: 'Centro de Capacitación', active: false },
+    { to: '/billetera', icon: Wallet, label: 'Billetera / Wallet', active: false },
+    { to: '/configuracion', icon: Settings, label: 'Configuración', active: false },
 ];
 
-const adminNavItems = [
-    { to: '/admin', icon: ShieldAlert, label: 'Administración', disabled: true },
-];
+const adminLink = { to: '/admin', icon: ShieldAlert, label: 'Panel Administración' };
+
 
 export function AppLayout() {
     const [collapsed, setCollapsed] = useState(false);
@@ -127,16 +135,39 @@ export function AppLayout() {
 
                 {/* Navegación */}
                 <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', padding: collapsed ? '12px 8px' : '16px 12px' }}>
-                    {navItems.map((item) => (
-                        <SidebarNavItem key={item.to} {...item} collapsed={collapsed} end={item.to === '/'} onClick={() => setMobileOpen(false)} />
-                    ))}
-
-                    {/* Admin section */}
-                    <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                        {adminNavItems.map((item) => (
-                            <SidebarNavItem key={item.to} {...item} collapsed={collapsed} onClick={() => setMobileOpen(false)} />
+                    {/* Módulos Activos */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {navItems.filter(i => i.active).map((item) => (
+                            <SidebarNavItem key={item.to} {...item} collapsed={collapsed} end={item.to === '/'} onClick={() => setMobileOpen(false)} />
                         ))}
                     </div>
+
+                    {/* Módulos Próximamente */}
+                    <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {!collapsed && (
+                            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '14px', marginBottom: '8px' }}>
+                                Próximamente
+                            </span>
+                        )}
+                        {navItems.filter(i => !i.active).map((item) => (
+                            <SidebarNavItem key={item.to} {...item} collapsed={collapsed} disabled onClick={() => setMobileOpen(false)} />
+                        ))}
+                    </div>
+
+                    {/* Admin section - Solo si es admin */}
+                    {(user?.rol === 'admin' || user?.rol === 'superadmin') && (
+                        <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                            <SidebarNavItem
+                                {...adminLink}
+                                collapsed={collapsed}
+                                onClick={() => setMobileOpen(false)}
+                                style={{
+                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                    color: '#EF4444'
+                                }}
+                            />
+                        </div>
+                    )}
                 </nav>
             </aside>
 
@@ -401,6 +432,17 @@ function DropdownItem({
     );
 }
 
+interface SidebarNavItemProps {
+    to: string;
+    icon: React.ComponentType<{ size: number; style?: React.CSSProperties }>;
+    label: string;
+    collapsed: boolean;
+    end?: boolean;
+    onClick?: () => void;
+    disabled?: boolean;
+    style?: React.CSSProperties;
+}
+
 function SidebarNavItem({
     to,
     icon: Icon,
@@ -409,44 +451,39 @@ function SidebarNavItem({
     end,
     onClick,
     disabled,
-}: {
-    to: string;
-    icon: React.ComponentType<{ size: number; style?: React.CSSProperties }>;
-    label: string;
-    collapsed: boolean;
-    end?: boolean;
-    onClick?: () => void;
-    disabled?: boolean;
-}) {
+    style: customStyle,
+}: SidebarNavItemProps) {
     const [hovered, setHovered] = useState(false);
 
     if (disabled) {
         return (
-            <div
-                title={collapsed ? `${label} — Próximamente` : 'Próximamente'}
-                onMouseEnter={() => setHovered(true)}
-                onMouseLeave={() => setHovered(false)}
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: collapsed ? 'center' : 'flex-start',
-                    gap: '12px',
-                    padding: collapsed ? '12px' : '10px 14px',
-                    borderRadius: '10px',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    cursor: 'not-allowed',
-                    opacity: hovered ? 0.5 : 0.35,
-                    color: 'var(--sidebar-text)',
-                    transition: 'opacity 150ms ease',
-                    position: 'relative',
-                }}
-            >
-                <Icon size={18} style={{ flexShrink: 0 }} />
-                {!collapsed && label}
-            </div>
+            <Tooltip content="Próximamente disponible" position="right" delay={100}>
+                <div
+                    onMouseEnter={() => setHovered(true)}
+                    onMouseLeave={() => setHovered(false)}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: collapsed ? 'center' : 'flex-start',
+                        gap: '12px',
+                        padding: collapsed ? '12px' : '10px 14px',
+                        borderRadius: '10px',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        cursor: 'not-allowed',
+                        opacity: 0.4,
+                        color: 'var(--sidebar-text)',
+                        transition: 'all 150ms ease',
+                        position: 'relative',
+                        ...customStyle
+                    }}
+                >
+                    <Icon size={18} style={{ flexShrink: 0 }} />
+                    {!collapsed && label}
+                </div>
+            </Tooltip>
         );
     }
 
@@ -478,6 +515,7 @@ function SidebarNavItem({
                         : 'transparent',
                 color: isActive ? '#fff' : hovered ? '#fff' : 'var(--sidebar-text)',
                 transform: hovered && !isActive ? 'translateX(2px)' : 'none',
+                ...customStyle
             })}
         >
             <Icon size={18} style={{ flexShrink: 0 }} />

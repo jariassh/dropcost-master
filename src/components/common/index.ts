@@ -15,4 +15,5 @@ export { StepIndicator } from './StepIndicator';
 export { EmptyState } from './EmptyState';
 export { Toggle } from './Toggle';
 export { ConfirmDialog } from './ConfirmDialog';
+export { Tooltip } from './Tooltip';
 
