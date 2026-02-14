@@ -1,0 +1,247 @@
+{
+    "paises": [
+        {
+            "nombre_es": "Colombia",
+            "codigo_iso_2": "CO",
+            "codigo_telefonico": "+57",
+            "bandera": "🇨🇴",
+            "moneda_codigo": "COP",
+            "moneda_nombre": "Peso Colombiano",
+            "moneda_simbolo": "$"
+        },
+        {
+            "nombre_es": "México",
+            "codigo_iso_2": "MX",
+            "codigo_telefonico": "+52",
+            "bandera": "🇲🇽",
+            "moneda_codigo": "MXN",
+            "moneda_nombre": "Peso Mexicano",
+            "moneda_simbolo": "$"
+        },
+        {
+            "nombre_es": "Ecuador",
+            "codigo_iso_2": "EC",
+            "codigo_telefonico": "+593",
+            "bandera": "🇪🇨",
+            "moneda_codigo": "USD",
+            "moneda_nombre": "Dólar Estadounidense",
+            "moneda_simbolo": "$"
+        },
+        {
+            "nombre_es": "Perú",
+            "codigo_iso_2": "PE",
+            "codigo_telefonico": "+51",
+            "bandera": "🇵🇪",
+            "moneda_codigo": "PEN",
+            "moneda_nombre": "Sol Peruano",
+            "moneda_simbolo": "S/"
+        },
+        {
+            "nombre_es": "Chile",
+            "codigo_iso_2": "CL",
+            "codigo_telefonico": "+56",
+            "bandera": "🇨🇱",
+            "moneda_codigo": "CLP",
+            "moneda_nombre": "Peso Chileno",
+            "moneda_simbolo": "$"
+        },
+        {
+            "nombre_es": "Argentina",
+            "codigo_iso_2": "AR",
+            "codigo_telefonico": "+54",
+            "bandera": "🇦🇷",
+            "moneda_codigo": "ARS",
+            "moneda_nombre": "Peso Argentino",
+            "moneda_simbolo": "$"
+        },
+        {
+            "nombre_es": "Panamá",
+            "codigo_iso_2": "PA",
+            "codigo_telefonico": "+507",
+            "bandera": "🇵🇦",
+            "moneda_codigo": "USD",
+            "moneda_nombre": "Dólar Estadounidense",
+            "moneda_simbolo": "$"
+        },
+        {
+            "nombre_es": "Costa Rica",
+            "codigo_iso_2": "CR",
+            "codigo_telefonico": "+506",
+            "bandera": "🇨🇷",
+            "moneda_codigo": "CRC",
+            "moneda_nombre": "Colón Costarricense",
+            "moneda_simbolo": "₡"
+        },
+        {
+            "nombre_es": "República Dominicana",
+            "codigo_iso_2": "DO",
+            "codigo_telefonico": "+1",
+            "bandera": "🇩🇴",
+            "moneda_codigo": "DOP",
+            "moneda_nombre": "Peso Dominicano",
+            "moneda_simbolo": "RD$"
+        },
+        {
+            "nombre_es": "Bolivia",
+            "codigo_iso_2": "BO",
+            "codigo_telefonico": "+591",
+            "bandera": "🇧🇴",
+            "moneda_codigo": "BOB",
+            "moneda_nombre": "Boliviano",
+            "moneda_simbolo": "Bs."
+        },
+        {
+            "nombre_es": "Uruguay",
+            "codigo_iso_2": "UY",
+            "codigo_telefonico": "+598",
+            "bandera": "🇺🇾",
+            "moneda_codigo": "UYU",
+            "moneda_nombre": "Peso Uruguayo",
+            "moneda_simbolo": "$U"
+        },
+        {
+            "nombre_es": "Paraguay",
+            "codigo_iso_2": "PY",
+            "codigo_telefonico": "+595",
+            "bandera": "🇵🇾",
+            "moneda_codigo": "PYG",
+            "moneda_nombre": "Guaraní",
+            "moneda_simbolo": "₲"
+        },
+        {
+            "nombre_es": "Guatemala",
+            "codigo_iso_2": "GT",
+            "codigo_telefonico": "+502",
+            "bandera": "🇬🇹",
+            "moneda_codigo": "GTQ",
+            "moneda_nombre": "Quetzal",
+            "moneda_simbolo": "Q"
+        },
+        {
+            "nombre_es": "Honduras",
+            "codigo_iso_2": "HN",
+            "codigo_telefonico": "+504",
+            "bandera": "🇭🇳",
+            "moneda_codigo": "HNL",
+            "moneda_nombre": "Lempira",
+            "moneda_simbolo": "L"
+        },
+        {
+            "nombre_es": "El Salvador",
+            "codigo_iso_2": "SV",
+            "codigo_telefonico": "+503",
+            "bandera": "🇸🇻",
+            "moneda_codigo": "USD",
+            "moneda_nombre": "Dólar Estadounidense",
+            "moneda_simbolo": "$"
+        },
+        {
+            "nombre_es": "Nicaragua",
+            "codigo_iso_2": "NI",
+            "codigo_telefonico": "+505",
+            "bandera": "🇳🇮",
+            "moneda_codigo": "NIO",
+            "moneda_nombre": "Córdoba",
+            "moneda_simbolo": "C$"
+        },
+        {
+            "nombre_es": "Venezuela",
+            "codigo_iso_2": "VE",
+            "codigo_telefonico": "+58",
+            "bandera": "🇻🇪",
+            "moneda_codigo": "VES",
+            "moneda_nombre": "Bolívar Soberano",
+            "moneda_simbolo": "Bs.S"
+        },
+        {
+            "nombre_es": "Brasil",
+            "codigo_iso_2": "BR",
+            "codigo_telefonico": "+55",
+            "bandera": "🇧🇷",
+            "moneda_codigo": "BRL",
+            "moneda_nombre": "Real Brasileño",
+            "moneda_simbolo": "R$"
+        },
+        {
+            "nombre_es": "Estados Unidos",
+            "codigo_iso_2": "US",
+            "codigo_telefonico": "+1",
+            "bandera": "🇺🇸",
+            "moneda_codigo": "USD",
+            "moneda_nombre": "Dólar Estadounidense",
+            "moneda_simbolo": "$"
+        },
+        {
+            "nombre_es": "España",
+            "codigo_iso_2": "ES",
+            "codigo_telefonico": "+34",
+            "bandera": "🇪🇸",
+            "moneda_codigo": "EUR",
+            "moneda_nombre": "Euro",
+            "moneda_simbolo": "€"
+        },
+        {
+            "nombre_es": "Puerto Rico",
+            "codigo_iso_2": "PR",
+            "codigo_telefonico": "+1",
+            "bandera": "🇵🇷",
+            "moneda_codigo": "USD",
+            "moneda_nombre": "Dólar Estadounidense",
+            "moneda_simbolo": "$"
+        },
+        {
+            "nombre_es": "Canadá",
+            "codigo_iso_2": "CA",
+            "codigo_telefonico": "+1",
+            "bandera": "🇨🇦",
+            "moneda_codigo": "CAD",
+            "moneda_nombre": "Dólar Canadiense",
+            "moneda_simbolo": "$"
+        },
+        {
+            "nombre_es": "Reino Unido",
+            "codigo_iso_2": "GB",
+            "codigo_telefonico": "+44",
+            "bandera": "🇬🇧",
+            "moneda_codigo": "GBP",
+            "moneda_nombre": "Libra Esterlina",
+            "moneda_simbolo": "£"
+        },
+        {
+            "nombre_es": "Francia",
+            "codigo_iso_2": "FR",
+            "codigo_telefonico": "+33",
+            "bandera": "🇫🇷",
+            "moneda_codigo": "EUR",
+            "moneda_nombre": "Euro",
+            "moneda_simbolo": "€"
+        },
+        {
+            "nombre_es": "Alemania",
+            "codigo_iso_2": "DE",
+            "codigo_telefonico": "+49",
+            "bandera": "🇩🇪",
+            "moneda_codigo": "EUR",
+            "moneda_nombre": "Euro",
+            "moneda_simbolo": "€"
+        },
+        {
+            "nombre_es": "Italia",
+            "codigo_iso_2": "IT",
+            "codigo_telefonico": "+39",
+            "bandera": "🇮🇹",
+            "moneda_codigo": "EUR",
+            "moneda_nombre": "Euro",
+            "moneda_simbolo": "€"
+        },
+        {
+            "nombre_es": "Portugal",
+            "codigo_iso_2": "PT",
+            "codigo_telefonico": "+351",
+            "bandera": "🇵🇹",
+            "moneda_codigo": "EUR",
+            "moneda_nombre": "Euro",
+            "moneda_simbolo": "€"
+        }
+    ]
+}
