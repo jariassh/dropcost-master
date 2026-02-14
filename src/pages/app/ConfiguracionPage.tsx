@@ -3,6 +3,7 @@
  * Permite editar el perfil, gestionar seguridad (contraseña, 2FA) y sesiones activas.
  */
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     User,
     Shield,
@@ -22,14 +23,26 @@ import {
     Upload,
     Mail,
     RefreshCw,
-    Sparkles
+    Sparkles,
+    Store,
+    LayoutGrid,
+    Plus,
+    Building2,
+    Settings2,
+    MoreVertical,
+    FileText,
+    Search,
+    Pencil
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { useStoreStore } from '@/store/useStoreStore';
 import { Spinner } from '@/components/common/Spinner';
 import { SmartPhoneInput } from '@/components/common/SmartPhoneInput';
-import { useToast, Modal, ConfirmDialog, Button } from '@/components/common';
+import { useToast, Modal, ConfirmDialog, Button, Badge } from '@/components/common';
+import { CreateStoreModal } from '@/components/layout/CreateStoreModal';
+import type { Tienda } from '@/types/store.types';
 
-type TabType = 'perfil' | 'seguridad' | 'sesiones';
+type TabType = 'perfil' | 'seguridad' | 'sesiones' | 'tiendas';
 
 export function ConfiguracionPage() {
     const {
@@ -41,6 +54,16 @@ export function ConfiguracionPage() {
         confirm2FA,
         disable2FA
     } = useAuthStore();
+    const navigate = useNavigate();
+    const {
+        tiendas,
+        isLoading: storesLoading,
+        fetchTiendas,
+        crearTienda,
+        actualizarTienda,
+        eliminarTienda
+    } = useStoreStore();
+
     const toast = useToast();
     const [activeTab, setActiveTab] = useState<TabType>('perfil');
 
@@ -138,6 +161,43 @@ export function ConfiguracionPage() {
     useEffect(() => {
         setIs2FAEnabled(user?.twoFactorEnabled || false);
     }, [user?.twoFactorEnabled]);
+
+    // Tiendas state
+    const [isCreateStoreOpen, setIsCreateStoreOpen] = useState(false);
+    const [editingTienda, setEditingTienda] = useState<Tienda | null>(null);
+    const [deleteTiendaConfirm, setDeleteTiendaConfirm] = useState<string | null>(null);
+    const [storeToDeleteData, setStoreToDeleteData] = useState<{ hasData: boolean; costeoCount: number } | null>(null);
+
+    // Fetch stores on mount/tab change
+    useEffect(() => {
+        fetchTiendas();
+    }, [fetchTiendas]);
+
+    const handleConfirmDeleteTienda = (id: string) => {
+        // Check for associated data in localStorage (dropcost_costeos)
+        const allCosteos = JSON.parse(localStorage.getItem('dropcost_costeos') || '[]');
+        const storeCosteos = allCosteos.filter((c: any) => c.storeId === id);
+
+        if (storeCosteos.length > 0) {
+            setStoreToDeleteData({ hasData: true, costeoCount: storeCosteos.length });
+        } else {
+            setStoreToDeleteData({ hasData: false, costeoCount: 0 });
+        }
+
+        setDeleteTiendaConfirm(id);
+    };
+
+    const executeDeleteTienda = async () => {
+        if (!deleteTiendaConfirm) return;
+
+        const success = await eliminarTienda(deleteTiendaConfirm);
+        if (success) {
+            toast.success('Tienda eliminada', 'La tienda ha sido borrada exitosamente.');
+        } else {
+            toast.error('Error al eliminar', 'No se pudo eliminar la tienda en este momento.');
+        }
+        setDeleteTiendaConfirm(null);
+    };
 
     // Sesiones (Single Session Enforced logic handled by hooks)
 
@@ -256,6 +316,12 @@ export function ConfiguracionPage() {
                     onClick={() => setActiveTab('sesiones')}
                     icon={<Monitor size={18} />}
                     label="Sesiones"
+                />
+                <TabButton
+                    active={activeTab === 'tiendas'}
+                    onClick={() => setActiveTab('tiendas')}
+                    icon={<Store size={18} />}
+                    label="Mis Tiendas"
                 />
             </div>
 
@@ -701,6 +767,166 @@ export function ConfiguracionPage() {
                 </div>
             )}
 
+            {/* Contenido de Mis Tiendas */}
+            {activeTab === 'tiendas' && (
+                <div style={{ animation: 'fadeIn 0.3s' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                        <div>
+                            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Gestión de Tiendas</h3>
+                            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                                Administra tus puntos de venta y sus integraciones
+                            </p>
+                        </div>
+                        <button
+                            className="dc-button-primary"
+                            onClick={() => setIsCreateStoreOpen(true)}
+                            style={{ gap: '8px' }}
+                        >
+                            <Plus size={16} />
+                            Nueva Tienda
+                        </button>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+                        {tiendas.map((tienda) => (
+                            <Card key={tienda.id}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                        <div style={{
+                                            width: '48px', height: '48px', borderRadius: '10px',
+                                            backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            overflow: 'hidden'
+                                        }}>
+                                            {tienda.logo_url ? (
+                                                <img src={tienda.logo_url} alt={tienda.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            ) : (
+                                                <Building2 size={24} style={{ color: 'var(--color-primary)' }} />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <h4 style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>{tienda.nombre}</h4>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                                                <Globe size={12} style={{ color: 'var(--text-tertiary)' }} />
+                                                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{tienda.pais}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                        <button
+                                            className="action-icon-btn"
+                                            onClick={() => setEditingTienda(tienda)}
+                                            title="Editar tienda"
+                                        >
+                                            <Pencil size={14} />
+                                        </button>
+                                        <button
+                                            className="action-icon-btn danger"
+                                            onClick={() => handleConfirmDeleteTienda(tienda.id)}
+                                            title="Eliminar tienda"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <FileText size={14} style={{ color: 'var(--text-tertiary)' }} />
+                                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Costeos Guardados</span>
+                                        </div>
+                                        <span style={{ fontSize: '14px', fontWeight: 700 }}>
+                                            {(JSON.parse(localStorage.getItem('dropcost_costeos') || '[]').filter((c: any) => c.storeId === tienda.id)).length}
+                                        </span>
+                                    </div>
+
+                                    <Button
+                                        variant="secondary"
+                                        fullWidth
+                                        size="sm"
+                                        onClick={() => navigate('/simulador')}
+                                        style={{ fontSize: '12px', height: '36px' }}
+                                    >
+                                        <Settings2 size={14} style={{ marginRight: '6px' }} />
+                                        Gestionar Integraciones
+                                    </Button>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+
+                    {tiendas.length === 0 && !storesLoading && (
+                        <div style={{ textAlign: 'center', padding: '48px', backgroundColor: 'var(--bg-secondary)', borderRadius: '16px', border: '1px dashed var(--border-color)' }}>
+                            <Store size={48} style={{ color: 'var(--text-tertiary)', marginBottom: '16px' }} />
+                            <h4 style={{ margin: '0 0 8px', fontWeight: 700 }}>No tienes tiendas registradas</h4>
+                            <p style={{ margin: '0 0 24px', fontSize: '14px', color: 'var(--text-tertiary)' }}>
+                                Crea tu primera tienda para empezar a costear tus productos
+                            </p>
+                            <Button variant="primary" onClick={() => setIsCreateStoreOpen(true)}>
+                                Crear Primera Tienda
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Modales de Tiendas */}
+            <CreateStoreModal
+                isOpen={isCreateStoreOpen}
+                onClose={() => setIsCreateStoreOpen(false)}
+            />
+
+            <ConfirmDialog
+                isOpen={!!deleteTiendaConfirm}
+                title={storeToDeleteData?.hasData ? 'No se puede eliminar' : 'Eliminar Tienda'}
+                description={
+                    storeToDeleteData?.hasData
+                        ? `Esta tienda tiene ${storeToDeleteData.costeoCount} costeos vinculados. Debes eliminarlos o moverlos antes de poder borrar la tienda por seguridad.`
+                        : '¿Estás seguro de eliminar esta tienda? Esta acción no se puede deshacer y perderás el acceso a sus configuraciones.'
+                }
+                confirmLabel={storeToDeleteData?.hasData ? 'Entendido / Ver Costeos' : 'Sí, eliminar'}
+                cancelLabel="Cancelar"
+                variant={storeToDeleteData?.hasData ? 'info' : 'danger'}
+                onConfirm={() => {
+                    if (storeToDeleteData?.hasData) {
+                        setDeleteTiendaConfirm(null);
+                        navigate('/simulador/costeos');
+                    } else {
+                        executeDeleteTienda();
+                    }
+                }}
+                onCancel={() => setDeleteTiendaConfirm(null)}
+            />
+
+            {/* Modal Editar Tienda (Simplificado para este ejemplo) */}
+            <Modal
+                isOpen={!!editingTienda}
+                onClose={() => setEditingTienda(null)}
+                title="Editar Tienda"
+                size="sm"
+            >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <InputGroup label="Nombre de la Tienda">
+                        <input
+                            className="dc-input"
+                            value={editingTienda?.nombre || ''}
+                            onChange={(e) => setEditingTienda(prev => prev ? { ...prev, nombre: e.target.value } : null)}
+                        />
+                    </InputGroup>
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+                        <Button variant="secondary" fullWidth onClick={() => setEditingTienda(null)}>Cancelar</Button>
+                        <Button variant="primary" fullWidth onClick={async () => {
+                            if (editingTienda) {
+                                await actualizarTienda(editingTienda.id, { nombre: editingTienda.nombre });
+                                setEditingTienda(null);
+                                toast.success('Tienda actualizada');
+                            }
+                        }}>Guardar</Button>
+                    </div>
+                </div>
+            </Modal>
+
             {/* Modales de 2FA */}
             <ConfirmDialog
                 isOpen={showActivationConfirm}
@@ -807,6 +1033,29 @@ export function ConfiguracionPage() {
                 }
                 .dc-button-primary:hover { opacity: 0.9; }
                 .dc-button-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+                .action-icon-btn {
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justifyContent: center;
+                    border: 1px solid var(--border-color);
+                    border-radius: 8px;
+                    background: var(--card-bg);
+                    color: var(--text-tertiary);
+                    cursor: pointer;
+                    transition: all 150ms;
+                }
+                .action-icon-btn:hover {
+                    color: var(--color-primary);
+                    border-color: var(--color-primary);
+                    background: rgba(var(--color-primary-rgb), 0.05);
+                }
+                .action-icon-btn.danger:hover {
+                    color: var(--color-error);
+                    border-color: var(--color-error);
+                    background: rgba(var(--color-error-rgb), 0.1);
+                }
             `}</style>
         </div>
     );

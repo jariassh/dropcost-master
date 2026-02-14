@@ -67,6 +67,7 @@ Para ejecutar este proyecto localmente, sigue estos pasos:
 - **🛡️ Integridad de Datos:** Implementación de restricciones de borrado cruzado; no se pueden eliminar costeos vinculados a ofertas activas sin gestión previa.
 - **✨ UX/UI Refinada:** Rediseño de la tabla de "Mis Costeos" con indicadores visuales de precios manuales vs sugeridos por sistema.
 - **🎯 Exactitud Financiera:** Mejora en la persistencia de precios modificados manualmente y redondeos inteligentes en el simulador.
+- **🏬 Gestión de Tiendas Avanzada:** Módulo completo de creación, edición y borrado de tiendas integrado en Configuración, con sistema de protección de integridad de datos vinculado a costeos operativos.
 
 ---
 
