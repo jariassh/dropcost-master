@@ -27,8 +27,10 @@ export interface SimulatorInputs {
 
 /** Calculated results from the simulator */
 export interface SimulatorResults {
-    /** Suggested selling price */
+    /** Suggested selling price (final used price) */
     suggestedPrice: number;
+    /** Original suggested price calculated by platform */
+    originalSuggestedPrice?: number;
     /** Net profit per sale */
     netProfitPerSale: number;
     /** Final effectiveness percentage */

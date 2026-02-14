@@ -39,10 +39,11 @@ export function SimuladorPage() {
     const [results, setResults] = useState<Results | null>(null);
     const [volumeStrategy, setVolumeStrategy] = useState<VolumeStrategy>(DEFAULT_VOLUME);
     const [maxUnits, setMaxUnits] = useState(5);
+    const [manualPrice, setManualPrice] = useState<number | null>(null);
 
     // ─── Auto-calculate in real time ───
     useEffect(() => {
-        const calc = calculateSuggestedPrice(inputs);
+        const calc = calculateSuggestedPrice(inputs, manualPrice);
         setResults(calc);
 
         if (volumeStrategy.enabled && calc.suggestedPrice > 0) {
@@ -55,7 +56,7 @@ export function SimuladorPage() {
             );
             setVolumeStrategy((prev) => ({ ...prev, priceTable: table }));
         }
-    }, [inputs, volumeStrategy.enabled, volumeStrategy.marginPercent, maxUnits]);
+    }, [inputs, volumeStrategy.enabled, volumeStrategy.marginPercent, maxUnits, manualPrice]);
 
     const handleSave = useCallback(() => {
         if (!results || results.suggestedPrice <= 0) {
@@ -210,6 +211,8 @@ export function SimuladorPage() {
                     collectionCommissionPercent={inputs.collectionCommissionPercent}
                     volumeStrategy={volumeStrategy}
                     maxUnits={maxUnits}
+                    manualPrice={manualPrice}
+                    onManualPriceChange={setManualPrice}
                 />
             </div>
 
