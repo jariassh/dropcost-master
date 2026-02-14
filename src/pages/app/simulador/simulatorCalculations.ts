@@ -21,7 +21,7 @@ export function roundCurrency(value: number): number {
 }
 
 /** Calculate the suggested selling price and all derived metrics. */
-export function calculateSuggestedPrice(inputs: SimulatorInputs): SimulatorResults {
+export function calculateSuggestedPrice(inputs: SimulatorInputs, manualPrice: number | null = null): SimulatorResults {
     const {
         productCost,
         desiredMarginPercent,
@@ -45,21 +45,13 @@ export function calculateSuggestedPrice(inputs: SimulatorInputs): SimulatorResul
     const shippedPerDelivery = 1 / deliveryRate;
     const returnsPerDelivery = (returnRatePercent / 100) / deliveryRate;
 
-    // ─── Re-derived Denominator (Protocol Step 3) ───
-    // P = CF / (Entregados * (1 - Margen) - Enviados * Comisión)
-    // Dividing by Entregados:
-    // P = (CF / Entregados) / ((1 - Margen) - (Enviados/Entregados) * Comisión)
-    // P = totalFixedCost / ((1 - marginRate) - (shippedPerDelivery * commissionRate))
-
-    // Note: commissionRate applies to the shipped amount (guías generadas), 
-    // effectively imposing a higher burden per effective sale.
     const denominator = (1 - marginRate) - (shippedPerDelivery * commissionRate);
 
-    if (effectivenessRate <= 0 || denominator <= 0) {
+    if (effectivenessRate <= 0) {
         return buildEmptyResults();
     }
 
-    // ─── Fixed costs per effective sale (Protocol Step 2) ───
+    // ─── Fixed costs per effective sale ───
     const cpaCostPerSale = roundCurrency(averageCpa * ordersPerDelivery);
     const productCostPerSale = roundCurrency(productCost); // only delivered units
     const freightCostPerSale = roundCurrency(shippingCost * shippedPerDelivery);
@@ -68,13 +60,22 @@ export function calculateSuggestedPrice(inputs: SimulatorInputs): SimulatorResul
 
     const totalFixedCost = cpaCostPerSale + productCostPerSale + freightCostPerSale + otherCostPerSale + returnLossPerSale;
 
-    // ─── Price & profit ───
-    const suggestedPrice = roundCurrency(totalFixedCost / denominator);
-    const netProfitPerSale = roundCurrency(suggestedPrice * marginRate);
+    // ─── Price determination ───
+    let finalPrice: number;
+    let netProfitPerSale: number;
+
+    const suggestedPrice = denominator > 0 ? roundCurrency(totalFixedCost / denominator) : 0;
+
+    if (manualPrice !== null && manualPrice > 0) {
+        finalPrice = manualPrice;
+        netProfitPerSale = roundCurrency(finalPrice * (1 - commissionRate * shippedPerDelivery) - totalFixedCost);
+    } else {
+        finalPrice = suggestedPrice;
+        netProfitPerSale = roundCurrency(finalPrice * marginRate);
+    }
 
     // Commission is paid on ALL shipped orders, amortized per effective sale
-    // cost = Price * CommissionRate * (Shipped / Delivered)
-    const commissionPerSale = roundCurrency(suggestedPrice * commissionRate * shippedPerDelivery);
+    const commissionPerSale = roundCurrency(finalPrice * commissionRate * shippedPerDelivery);
 
     // ─── Cost breakdown (per effective sale) ───
     const costBreakdown: CostBreakdown = {
@@ -85,7 +86,7 @@ export function calculateSuggestedPrice(inputs: SimulatorInputs): SimulatorResul
         otherExpenses: otherCostPerSale,
         cpa: cpaCostPerSale,
         netMargin: netProfitPerSale,
-        totalPrice: suggestedPrice,
+        totalPrice: finalPrice,
     };
 
     // ─── Embudo de efectividad (base 100 pedidos) ───
@@ -101,8 +102,9 @@ export function calculateSuggestedPrice(inputs: SimulatorInputs): SimulatorResul
     };
 
     return {
-        suggestedPrice,
-        netProfitPerSale: netProfitPerSale,
+        suggestedPrice: finalPrice,
+        originalSuggestedPrice: suggestedPrice,
+        netProfitPerSale,
         finalEffectivenessPercent: roundCurrency(effectivenessRate * 100),
         costBreakdown,
         effectivenessFunnel,

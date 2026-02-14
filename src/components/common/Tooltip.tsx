@@ -61,16 +61,21 @@ export const Tooltip: React.FC<TooltipProps> = ({
                 <div
                     style={{
                         position: 'absolute',
-                        zIndex: 1000,
+                        zIndex: 2000,
                         backgroundColor: '#1F2937',
                         color: '#FFFFFF',
-                        padding: '6px 10px',
-                        borderRadius: '6px',
+                        padding: '10px 14px',
+                        borderRadius: '10px',
                         fontSize: '12px',
                         fontWeight: 500,
-                        whiteSpace: 'nowrap',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        lineHeight: '1.5',
+                        width: 'max-content',
+                        maxWidth: '250px',
+                        whiteSpace: 'normal',
+                        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
                         pointerEvents: 'none',
+                        textAlign: 'center',
                         ...getPositionStyles(),
                     }}
                 >
