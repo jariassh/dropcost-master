@@ -77,36 +77,82 @@ function ToastItem({ toast }: { toast: ToastMessage }) {
 
     return (
         <div
-            className="group relative flex gap-4 min-w-[320px] max-w-[420px] p-4 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-[var(--border-color)] bg-[var(--card-bg)] backdrop-blur-xl transition-all duration-300 pointer-events-auto overflow-hidden"
             style={{
-                borderLeft: `3px solid ${color}`,
-                animation: 'scaleIn 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                display: 'flex',
+                gap: '16px',
+                minWidth: '340px',
+                maxWidth: '480px',
+                padding: '18px 24px',
+                borderRadius: '12px',
+                backgroundColor: 'var(--card-bg)',
+                border: '1px solid var(--border-color)',
+                borderLeft: `5px solid ${color}`,
+                boxShadow: '0 12px 40px -8px rgba(0,0,0,0.15)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                position: 'relative',
+                overflow: 'hidden',
+                alignItems: 'start',
+                pointerEvents: 'auto',
+                transition: 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                animation: 'scaleIn 450ms cubic-bezier(0.175, 0.885, 0.32, 1.275)'
             }}
         >
-            {/* Background Glow */}
+            {/* Background Glow Extra Sutil */}
             <div
-                className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                style={{ backgroundColor: color }}
+                style={{
+                    position: 'absolute',
+                    inset: 0,
+                    opacity: 0.03,
+                    backgroundColor: color,
+                    pointerEvents: 'none'
+                }}
             />
 
             {/* Icon Column */}
             <div
-                className="flex items-center justify-center w-10 h-10 min-w-[40px] rounded-full"
                 style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '40px',
+                    height: '40px',
+                    minWidth: '40px',
+                    borderRadius: '50%',
                     backgroundColor: `${color}15`,
-                    color: color
+                    color: color,
+                    marginTop: '2px'
                 }}
             >
                 <Icon size={20} strokeWidth={2.5} />
             </div>
 
             {/* Content Column */}
-            <div className="flex-1 min-w-0 pt-0.5">
-                <p className="text-[14px] font-bold text-[var(--text-primary)] leading-snug tracking-tight">
+            <div style={{ flex: 1, minWidth: 0, paddingRight: '22px' }}>
+                <p
+                    style={{
+                        fontSize: '15px',
+                        fontWeight: 800,
+                        color: 'var(--text-primary)',
+                        lineHeight: '1.4',
+                        letterSpacing: '-0.01em',
+                        margin: 0
+                    }}
+                >
                     {toast.title}
                 </p>
                 {toast.description && (
-                    <p className="text-[12px] text-[var(--text-secondary)] mt-1 font-medium leading-relaxed">
+                    <p
+                        style={{
+                            fontSize: '13px',
+                            color: 'var(--text-secondary)',
+                            marginTop: '6px',
+                            fontWeight: 500,
+                            lineHeight: '1.5',
+                            margin: '6px 0 0 0',
+                            opacity: 0.9
+                        }}
+                    >
                         {toast.description}
                     </p>
                 )}
@@ -115,10 +161,35 @@ function ToastItem({ toast }: { toast: ToastMessage }) {
             {/* Close Button */}
             <button
                 onClick={() => removeToast(toast.id)}
-                className="absolute top-3 right-3 p-1 rounded-md opacity-0 group-hover:opacity-100 bg-transparent hover:bg-[var(--bg-secondary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
+                style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    padding: '6px',
+                    borderRadius: '8px',
+                    backgroundColor: 'transparent',
+                    color: 'var(--text-tertiary)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: 0.6
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                    e.currentTarget.style.opacity = '1';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = 'var(--text-tertiary)';
+                    e.currentTarget.style.opacity = '0.6';
+                }}
                 aria-label="Cerrar notificación"
             >
-                <X size={14} strokeWidth={3} />
+                <X size={16} strokeWidth={2.5} />
             </button>
         </div>
     );
@@ -132,7 +203,17 @@ export function ToastContainer() {
 
     return (
         <div
-            className="fixed top-6 right-6 z-[9999] flex flex-col gap-4 items-end pointer-events-none"
+            style={{
+                position: 'fixed',
+                top: '20px',
+                right: '20px',
+                zIndex: 9999,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                alignItems: 'flex-end',
+                pointerEvents: 'none'
+            }}
             aria-live="polite"
         >
             {toasts.map((toast) => (

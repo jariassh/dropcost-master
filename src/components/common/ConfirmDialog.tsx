@@ -49,8 +49,8 @@ export function ConfirmDialog({
                     style={{
                         marginBottom: '32px',
                         padding: '24px',
-                        borderRadius: 'full',
-                        backgroundColor: `${color}15`,
+                        borderRadius: '50%',
+                        backgroundColor: `${color}20`,
                         color: color,
                         display: 'flex',
                         alignItems: 'center',
@@ -77,7 +77,7 @@ export function ConfirmDialog({
                 <p
                     style={{
                         fontSize: '15px',
-                        color: 'var(--text-tertiary)',
+                        color: 'var(--text-secondary)',
                         lineHeight: '1.6',
                         maxWidth: '280px',
                         margin: '0 auto 40px auto'
