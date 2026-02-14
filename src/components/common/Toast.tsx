@@ -67,6 +67,7 @@ const colorMap: Record<AlertType, string> = {
 function ToastItem({ toast }: { toast: ToastMessage }) {
     const { removeToast } = useToastStore();
     const Icon = iconMap[toast.type];
+    const color = colorMap[toast.type];
 
     useEffect(() => {
         const duration = toast.duration || 5000;
@@ -76,25 +77,48 @@ function ToastItem({ toast }: { toast: ToastMessage }) {
 
     return (
         <div
-            className="flex items-center gap-3 min-w-[340px] max-w-[420px] p-4 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-[var(--border-color)] bg-[var(--card-bg)] backdrop-blur-md"
+            className="group relative flex gap-4 min-w-[320px] max-w-[420px] p-4 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-[var(--border-color)] bg-[var(--card-bg)] backdrop-blur-xl transition-all duration-300 pointer-events-auto overflow-hidden"
             style={{
-                borderLeft: `4px solid ${colorMap[toast.type]}`,
-                animation: 'slideDown 300ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+                borderLeft: `3px solid ${color}`,
+                animation: 'scaleIn 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275)',
             }}
         >
-            <Icon size={22} style={{ color: colorMap[toast.type], flexShrink: 0 }} />
-            <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-[var(--text-primary)] leading-tight">{toast.title}</p>
+            {/* Background Glow */}
+            <div
+                className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                style={{ backgroundColor: color }}
+            />
+
+            {/* Icon Column */}
+            <div
+                className="flex items-center justify-center w-10 h-10 min-w-[40px] rounded-full"
+                style={{
+                    backgroundColor: `${color}15`,
+                    color: color
+                }}
+            >
+                <Icon size={20} strokeWidth={2.5} />
+            </div>
+
+            {/* Content Column */}
+            <div className="flex-1 min-w-0 pt-0.5">
+                <p className="text-[14px] font-bold text-[var(--text-primary)] leading-snug tracking-tight">
+                    {toast.title}
+                </p>
                 {toast.description && (
-                    <p className="text-xs text-[var(--text-secondary)] mt-1 font-medium">{toast.description}</p>
+                    <p className="text-[12px] text-[var(--text-secondary)] mt-1 font-medium leading-relaxed">
+                        {toast.description}
+                    </p>
                 )}
             </div>
+
+            {/* Close Button */}
             <button
                 onClick={() => removeToast(toast.id)}
-                className="p-1.5 rounded-full hover:bg-[var(--bg-secondary)] text-[var(--text-tertiary)] transition-colors cursor-pointer flex-shrink-0"
+                className="absolute top-3 right-3 p-1 rounded-md opacity-0 group-hover:opacity-100 bg-transparent hover:bg-[var(--bg-secondary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
                 aria-label="Cerrar notificación"
             >
-                <X size={16} />
+                <X size={14} strokeWidth={3} />
             </button>
         </div>
     );
@@ -108,14 +132,12 @@ export function ToastContainer() {
 
     return (
         <div
-            className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-3 items-center pointer-events-none"
+            className="fixed top-6 right-6 z-[9999] flex flex-col gap-4 items-end pointer-events-none"
             aria-live="polite"
         >
-            <div className="pointer-events-auto flex flex-col gap-3">
-                {toasts.map((toast) => (
-                    <ToastItem key={toast.id} toast={toast} />
-                ))}
-            </div>
+            {toasts.map((toast) => (
+                <ToastItem key={toast.id} toast={toast} />
+            ))}
         </div>
     );
 }

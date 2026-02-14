@@ -123,7 +123,9 @@ export const AdminDashboard: React.FC = () => {
                                                 {user.nombres} {user.apellidos}
                                             </p>
                                             <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: '2px 0 0 0' }}>
-                                                {user.plan_id || 'plan_free'} • {new Date(user.fecha_registro).toLocaleDateString()}
+                                                {user.plan_id === 'plan_pro' ? 'Plan Pro' :
+                                                    user.plan_id === 'plan_enterprise' ? 'Plan Enterprise' :
+                                                        'Plan Gratis'} • {new Date(user.fecha_registro).toLocaleDateString()}
                                             </p>
                                         </div>
                                     </div>

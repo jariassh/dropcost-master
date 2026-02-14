@@ -83,6 +83,10 @@ export function SimuladorPage() {
         localStorage.setItem('dropcost_costeos', JSON.stringify(existing));
 
         toast.success('Costeo guardado correctamente');
+
+        // Reset form after saving
+        setInputs(DEFAULT_INPUTS);
+        setVolumeStrategy(DEFAULT_VOLUME);
     }, [inputs, results, volumeStrategy, toast]);
 
     const isActive = results != null && results.suggestedPrice > 0;
