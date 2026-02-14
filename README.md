@@ -60,6 +60,16 @@ Para ejecutar este proyecto localmente, sigue estos pasos:
 
 ---
 
+## 📅 Últimas Actualizaciones (Milestones)
+
+### [v1.1.0] - Febrero 2026
+- **🔥 Integración Simulador & Ofertas:** Creación automática de "Ofertas Irresistibles" tipo Bundle al guardar un costeo con estrategia de volumen activa.
+- **🛡️ Integridad de Datos:** Implementación de restricciones de borrado cruzado; no se pueden eliminar costeos vinculados a ofertas activas sin gestión previa.
+- **✨ UX/UI Refinada:** Rediseño de la tabla de "Mis Costeos" con indicadores visuales de precios manuales vs sugeridos por sistema.
+- **🎯 Exactitud Financiera:** Mejora en la persistencia de precios modificados manualmente y redondeos inteligentes en el simulador.
+
+---
+
 ## 📐 Estructura del Proyecto
 
 ```text
