@@ -11,6 +11,7 @@ export interface User {
     estadoSuscripcion?: 'activa' | 'cancelada' | 'suspendida';
     emailVerificado: boolean;
     twoFactorEnabled: boolean;
+    rol?: 'cliente' | 'admin' | 'superadmin';
     fechaRegistro: string;
     ultimaActividad?: string;
 }

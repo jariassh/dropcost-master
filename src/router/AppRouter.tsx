@@ -15,6 +15,9 @@ import { SimuladorPage } from '@/pages/app/simulador/SimuladorPage';
 import { MisCosteos } from '@/pages/app/simulador/MisCosteos';
 import { OfertasPage } from '@/pages/app/ofertas/OfertasPage';
 import { OfertaWizard } from '@/pages/app/ofertas/OfertaWizard';
+import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
+import { AdminDashboard } from '@/pages/admin/AdminDashboard';
+import { AdminLayout } from '@/layouts/AdminLayout';
 import { useAuthStore } from '@/store/authStore';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -71,7 +74,25 @@ export function AppRouter() {
                     <Route path="/ofertas/crear" element={<OfertaWizard />} />
                     <Route path="/analisis-regional" element={<DashboardPage />} />
                     <Route path="/configuracion" element={<DashboardPage />} />
-                    <Route path="/admin" element={<DashboardPage />} />
+                    <Route path="/referidos" element={<DashboardPage />} />
+                    <Route path="/billetera" element={<DashboardPage />} />
+                </Route>
+
+                {/* Rutas de Administración (Independientes) */}
+                <Route
+                    path="/admin"
+                    element={
+                        <ProtectedRoute>
+                            <AdminLayout />
+                        </ProtectedRoute>
+                    }
+                >
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="users" element={<AdminUsersPage />} />
+                    <Route path="plans" element={<AdminDashboard />} />
+                    <Route path="promo-codes" element={<AdminDashboard />} />
+                    <Route path="logs" element={<AdminDashboard />} />
+                    <Route path="settings" element={<AdminDashboard />} />
                 </Route>
 
                 {/* Catch-all */}

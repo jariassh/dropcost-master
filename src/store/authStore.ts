@@ -7,9 +7,25 @@ import { create } from 'zustand';
 import type { AuthState, LoginCredentials, RegisterData, VerifyEmailData, TwoFactorData, PasswordResetRequest } from '@/types/auth.types';
 import * as authService from '@/services/authService';
 
+// MODO DESARROLLO: Cambiar a true para deshabilitar login obligatorio
+const DEV_MODE = true;
+
 export const useAuthStore = create<AuthState>((set) => ({
-    user: null,
-    isAuthenticated: false,
+    user: DEV_MODE ? {
+        id: 'usr_mock_001',
+        email: 'dev@dropcostmaster.com',
+        nombres: 'Arquitecto',
+        apellidos: 'Master',
+        telefono: '+57 300 000 0000',
+        pais: 'CO',
+        planId: 'plan_pro',
+        estadoSuscripcion: 'activa',
+        rol: 'admin',
+        emailVerificado: true,
+        twoFactorEnabled: false,
+        fechaRegistro: new Date().toISOString(),
+    } : null,
+    isAuthenticated: DEV_MODE,
     isLoading: false,
     requiresOTP: false,
     sessionId: null,
