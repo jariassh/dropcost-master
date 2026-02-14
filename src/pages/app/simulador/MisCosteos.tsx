@@ -3,9 +3,9 @@
  */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { EmptyState, useToast, ConfirmDialog } from '@/components/common';
+import { EmptyState, useToast, ConfirmDialog, Tooltip } from '@/components/common';
 import type { SavedCosteo } from '@/types/simulator';
-import { ArrowLeft, Search, Trash2, Copy, Calculator, BarChart3, Check, X, Pencil } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, Copy, Calculator, BarChart3, Check, X, Pencil, Info, Eye } from 'lucide-react';
 
 export function MisCosteos() {
     const navigate = useNavigate();
@@ -20,11 +20,18 @@ export function MisCosteos() {
     // Confirmation state
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+    const [linkedOfferId, setLinkedOfferId] = useState<string | null>(null);
+    const [ofertas, setOfertas] = useState<any[]>([]);
 
     useEffect(() => {
         const stored = localStorage.getItem('dropcost_costeos');
         if (stored) {
             setCosteos(JSON.parse(stored));
+        }
+
+        const storedOfertas = localStorage.getItem('dropcost_ofertas');
+        if (storedOfertas) {
+            setOfertas(JSON.parse(storedOfertas));
         }
     }, []);
 
@@ -53,12 +60,26 @@ export function MisCosteos() {
     }
 
     function confirmDelete(id: string) {
+        const linkedOffer = ofertas.find(o => o.costeoId === id);
+        if (linkedOffer) {
+            setLinkedOfferId(linkedOffer.id);
+        } else {
+            setLinkedOfferId(null);
+        }
         setItemToDelete(id);
         setConfirmOpen(true);
     }
 
     function handleDelete() {
         if (!itemToDelete) return;
+
+        if (linkedOfferId) {
+            // Can't delete, redirect instead
+            setConfirmOpen(false);
+            navigate(`/ofertas?id=${linkedOfferId}`);
+            return;
+        }
+
         const updated = costeos.filter((c) => c.id !== itemToDelete);
         setCosteos(updated);
         localStorage.setItem('dropcost_costeos', JSON.stringify(updated));
@@ -233,6 +254,11 @@ export function MisCosteos() {
                                             </span>
                                             {c.volumeStrategy && (
                                                 <div
+                                                    onClick={() => {
+                                                        const off = ofertas.find(o => o.costeoId === c.id);
+                                                        if (off) navigate(`/ofertas?id=${off.id}`);
+                                                        else navigate('/ofertas');
+                                                    }}
                                                     style={{
                                                         display: 'inline-flex', alignItems: 'center', gap: '4px',
                                                         fontSize: '11px', fontWeight: 600,
@@ -240,7 +266,8 @@ export function MisCosteos() {
                                                         color: '#fff',
                                                         padding: '2px 8px', borderRadius: '12px',
                                                         width: 'fit-content',
-                                                        boxShadow: '0 2px 5px rgba(37,99,235,0.2)'
+                                                        boxShadow: '0 2px 5px rgba(37,99,235,0.2)',
+                                                        cursor: 'pointer'
                                                     }}
                                                 >
                                                     <BarChart3 size={11} />
@@ -331,27 +358,65 @@ export function MisCosteos() {
                                     </td>
 
                                     {/* Precio Sugerido */}
-                                    <td style={{ padding: '14px 16px', fontWeight: 600 }}>
-                                        {formatCurrency(c.results.suggestedPrice)}
+                                    <td style={{ padding: '14px 16px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>
+                                                    {formatCurrency(c.results.suggestedPrice)}
+                                                </span>
+                                                {c.results.originalSuggestedPrice && Math.abs(c.results.originalSuggestedPrice - c.results.suggestedPrice) > 10 && (
+                                                    <Tooltip content={`Sugerido por sistema: ${formatCurrency(c.results.originalSuggestedPrice)}`}>
+                                                        <Info size={14} style={{ color: 'var(--text-tertiary)', cursor: 'help' }} />
+                                                    </Tooltip>
+                                                )}
+                                            </div>
+                                            {c.volumeStrategy && (
+                                                <button
+                                                    onClick={() => {
+                                                        const off = ofertas.find(o => o.costeoId === c.id);
+                                                        if (off) navigate(`/ofertas?id=${off.id}`);
+                                                        else navigate('/ofertas');
+                                                    }}
+                                                    title="Ver detalles de oferta"
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        width: '28px', height: '28px', borderRadius: '6px',
+                                                        border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)',
+                                                        cursor: 'pointer', color: 'var(--color-primary)',
+                                                        transition: 'all 100ms',
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.borderColor = 'var(--color-primary)';
+                                                        e.currentTarget.style.backgroundColor = 'rgba(0,102,255,0.05)';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.borderColor = 'var(--border-color)';
+                                                        e.currentTarget.style.backgroundColor = 'var(--card-bg)';
+                                                    }}
+                                                >
+                                                    <Eye size={14} />
+                                                </button>
+                                            )}
+                                        </div>
                                     </td>
 
                                     {/* Utilidad */}
-                                    <td
-                                        style={{
-                                            padding: '14px 16px',
-                                            fontWeight: 600,
-                                            color:
-                                                c.results.netProfitPerSale > 0
-                                                    ? 'var(--color-success)'
-                                                    : 'var(--color-error)',
-                                        }}
-                                    >
-                                        {formatCurrency(c.results.netProfitPerSale)}
+                                    <td style={{ padding: '14px 16px' }}>
+                                        <span style={{
+                                            fontWeight: 700,
+                                            fontSize: '15px',
+                                            color: c.results.netProfitPerSale > 0 ? 'var(--color-success)' : 'var(--color-error)'
+                                        }}>
+                                            {formatCurrency(c.results.netProfitPerSale)}
+                                        </span>
                                     </td>
 
                                     {/* Efectividad */}
                                     <td style={{ padding: '14px 16px' }}>
-                                        {c.results.finalEffectivenessPercent}%
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{c.results.finalEffectivenessPercent}%</span>
+                                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Entrega Final</span>
+                                        </div>
                                     </td>
 
                                     {/* Fecha */}
@@ -390,10 +455,14 @@ export function MisCosteos() {
 
             <ConfirmDialog
                 isOpen={confirmOpen}
-                title="Eliminar Costeo"
-                description="¿Estás seguro de que deseas eliminar este costeo permanentemente? Esta acción no se puede deshacer."
-                confirmLabel="Sí, eliminar"
-                variant="danger"
+                title={linkedOfferId ? 'Costeo vinculado a oferta' : 'Eliminar Costeo'}
+                description={
+                    linkedOfferId
+                        ? 'Este costeo está vinculado a una oferta activa. Debes eliminar primero la oferta para poder borrar el costeo.'
+                        : '¿Estás seguro de que deseas eliminar este costeo permanentemente? Esta acción no se puede deshacer.'
+                }
+                confirmLabel={linkedOfferId ? 'Ver Oferta' : 'Sí, eliminar'}
+                variant={linkedOfferId ? 'info' : 'danger'}
                 onConfirm={handleDelete}
                 onCancel={() => setConfirmOpen(false)}
             />

@@ -86,13 +86,33 @@ export function SimuladorPage() {
             return;
         }
 
+        let finalVolumeStrategy = volumeStrategy.enabled ? { ...volumeStrategy } : undefined;
+
+        // If there's a manual volume price, we update the table row for maxUnits
+        if (finalVolumeStrategy && manualVolumePrice && manualVolumePrice > 0) {
+            const rowIdx = finalVolumeStrategy.priceTable.findIndex(r => r.quantity === maxUnits);
+            if (rowIdx > -1) {
+                // We update this row with manual values
+                const vResults = calculateVolumeMetrics(inputs, maxUnits, manualVolumePrice);
+                if (vResults) {
+                    finalVolumeStrategy.priceTable[rowIdx] = {
+                        quantity: maxUnits,
+                        totalPrice: vResults.suggestedPrice,
+                        pricePerUnit: vResults.suggestedPrice / maxUnits,
+                        savingsPerUnit: (results.suggestedPrice - (vResults.suggestedPrice / maxUnits)),
+                        totalProfit: vResults.netProfitPerSale
+                    };
+                }
+            }
+        }
+
         const costeo: SavedCosteo = {
             id: crypto.randomUUID(),
             storeId: 'default',
             productName: inputs.productName,
             inputs,
             results,
-            volumeStrategy: volumeStrategy.enabled ? volumeStrategy : undefined,
+            volumeStrategy: finalVolumeStrategy,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         };
@@ -101,12 +121,49 @@ export function SimuladorPage() {
         existing.unshift(costeo);
         localStorage.setItem('dropcost_costeos', JSON.stringify(existing));
 
-        toast.success('Costeo guardado correctamente');
+        // --- NEW: Automatically create an Offer if Volume Strategy is enabled ---
+        if (finalVolumeStrategy) {
+            const newOffer = {
+                id: crypto.randomUUID(),
+                userId: 'user_123', // Placeholder until real auth
+                storeId: 'default',
+                costeoId: costeo.id,
+                productName: costeo.productName,
+                strategyType: 'bundle',
+                bundleConfig: {
+                    quantity: maxUnits,
+                    marginPercent: finalVolumeStrategy.marginPercent,
+                    usePredefinedTable: true,
+                    priceTable: finalVolumeStrategy.priceTable.map(row => ({
+                        quantity: row.quantity,
+                        totalPrice: row.totalPrice,
+                        pricePerUnit: row.pricePerUnit,
+                        savingsPerUnit: row.savingsPerUnit,
+                        totalProfit: row.totalProfit
+                    }))
+                },
+                estimatedProfit: finalVolumeStrategy.priceTable.find(r => r.quantity === maxUnits)?.totalProfit || results.netProfitPerSale,
+                estimatedMarginPercent: inputs.desiredMarginPercent, // approximation
+                status: 'activa',
+                createdAt: new Date().toISOString(),
+                activatedAt: new Date().toISOString()
+            };
+
+            const existingOffers = JSON.parse(localStorage.getItem('dropcost_ofertas') || '[]');
+            existingOffers.unshift(newOffer);
+            localStorage.setItem('dropcost_ofertas', JSON.stringify(existingOffers));
+
+            toast.success(`Costeo y Oferta "${costeo.productName}" guardados`);
+        } else {
+            toast.success('Costeo guardado correctamente');
+        }
 
         // Reset form after saving
         setInputs(DEFAULT_INPUTS);
         setVolumeStrategy(DEFAULT_VOLUME);
-    }, [inputs, results, volumeStrategy, toast]);
+        setManualPrice(null);
+        setManualVolumePrice(null);
+    }, [inputs, results, volumeStrategy, manualPrice, manualVolumePrice, maxUnits, toast]);
 
     const isActive = results != null && results.suggestedPrice > 0;
 
