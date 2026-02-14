@@ -1,73 +1,94 @@
-# React + TypeScript + Vite
+# 📊 DropCost Master
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**DropCost Master** es la plataforma definitiva diseñada para dropshippers de la modalidad **Pago Contra Entrega (COD)** en Latinoamérica. Optimiza tu rentabilidad con un control financiero preciso, métricas en tiempo real y una gestión inteligente de tus costos de operación.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Propósito del Proyecto
 
-## React Compiler
+En el ecosistema del dropshipping COD, la rentabilidad se pierde en los detalles: fletes, porcentajes de devolución y costos de publicidad (CPA). **DropCost Master** resuelve esto mediante un motor de costeo avanzado que permite a los emprendedores saber *exactamente* cuánto están ganando por cada venta antes de que ocurra.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 🌟 Características Principales
 
-## Expanding the ESLint configuration
+-   **🎯 Simulador de Costeo de Alta Precisión:** Calcula el precio ideal de venta considerando margen deseado, fletes por región, CPA proyectado y, lo más importante, el impacto del % de devoluciones.
+-   **📈 Dashboard en Tiempo Real:** Visualiza tus KPIs más importantes: ROAS real, utilidad neta por tienda y rendimiento de campañas.
+-   **🏢 Arquitectura Multi-Tenant:** Gestiona múltiples tiendas de forma totalmente independiente y segura desde una sola cuenta.
+-   **🔗 Integraciones Estratégicas:** Sincronización automática con Meta Ads, plataformas de logística como Dropi y tiendas Shopify (en desarrollo).
+-   **🔒 Seguridad de Grado Empresarial:** Autenticación robusta via Supabase, Row Level Security (RLS) para aislamiento de datos y 2FA opcional.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🛠️ Stack Tecnológico
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+El proyecto está construido con las tecnologías más modernas para garantizar velocidad, escalabilidad y una experiencia de usuario excepcional:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+-   **Frontend:** [React 19](https://react.dev/) + [Vite 7](https://vite.dev/) (HMR ultra rápido)
+-   **Lenguaje:** [TypeScript](https://www.typescriptlang.org/) para un código robusto y tipado.
+-   **Backend & DB:** [Supabase](https://supabase.com/) (PostgreSQL, Auth, Storage, Edge Functions).
+-   **Estilos:** [Tailwind CSS v4](https://tailwindcss.com/) (Diseño atómico y responsivo).
+-   **Estado:** [Zustand](https://zustand-demo.pmnd.rs/) para una gestión de estado ligera y predecible.
+-   **Iconografía:** [Lucide React](https://lucide.dev/).
+
+---
+
+## ⚙️ Instalación y Configuración
+
+Para ejecutar este proyecto localmente, sigue estos pasos:
+
+1.  **Clonar el repositorio:**
+    ```bash
+    git clone https://github.com/jariassh/dropcost-master.git
+    cd dropcost-master
+    ```
+
+2.  **Instalar dependencias:**
+    ```bash
+    npm install
+    ```
+
+3.  **Configurar variables de entorno:**
+    Crea un archivo `.env` en la raíz del proyecto con tus credenciales de Supabase:
+    ```env
+    VITE_SUPABASE_URL=tu_url_de_supabase
+    VITE_SUPABASE_ANON_KEY=tu_anon_key
+    ```
+
+4.  **Iniciar servidor de desarrollo:**
+    ```bash
+    npm run dev
+    ```
+
+---
+
+## 📐 Estructura del Proyecto
+
+```text
+src/
+├── components/     # Componentes UI reutilizables y atómicos
+├── hooks/          # Hooks personalizados de lógica compartida
+├── layouts/        # Estructuras de página (AuthLayout, AppLayout)
+├── lib/            # Utilidades y configuraciones (Supabase, axios)
+├── pages/          # Vistas principales de la aplicación
+├── services/       # Capa de API e interacción con Supabase
+├── store/          # Gestión de estado global (Zustand)
+└── types/          # Definiciones de tipos de TypeScript
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🛡️ Seguridad y Buenas Prácticas
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+DropCost Master sigue los más altos estándares de desarrollo:
+-   **Chesterton's Fence:** Respeto estricto por la lógica arquitectónica previa.
+-   **Clean Code (SOLID):** Funciones de responsabilidad única y código auto-documentado.
+-   **Aislamiento RLS:** Ningún usuario puede ver datos de otra tienda sin autorización explícita a nivel de base de datos.
+-   **Performance Nativ:** Lazy loading de módulos y optimización de bundles (<500KB gzip).
+
+---
+
+## 📄 Licencia
+
+Este proyecto es de propiedad privada para **DropCost Master**. Todos los derechos reservados.
+
+---
+*Impulsando la logística inteligente en Latinoamérica.*
