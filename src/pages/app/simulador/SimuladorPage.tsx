@@ -7,7 +7,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { SimuladorForm } from './SimuladorForm';
 import { SimuladorResults } from './SimuladorResults';
-import { calculateSuggestedPrice, calculateVolumeTable } from './simulatorCalculations';
+import { calculateSuggestedPrice, calculateVolumeTable, calculateVolumeMetrics } from './simulatorCalculations';
 import { useToast } from '@/components/common';
 import type { SimulatorInputs, SimulatorResults as Results, VolumeStrategy, SavedCosteo } from '@/types/simulator';
 import { useNavigate } from 'react-router-dom';
@@ -52,6 +52,7 @@ export function SimuladorPage() {
     const [volumeStrategy, setVolumeStrategy] = useState<VolumeStrategy>(DEFAULT_VOLUME);
     const [maxUnits, setMaxUnits] = useState(5);
     const [manualPrice, setManualPrice] = useState<number | null>(null);
+    const [manualVolumePrice, setManualVolumePrice] = useState<number | null>(null); // New state
 
     // ─── Auto-calculate in real time ───
     useEffect(() => {
@@ -69,6 +70,11 @@ export function SimuladorPage() {
             setVolumeStrategy((prev) => ({ ...prev, priceTable: table }));
         }
     }, [inputs, volumeStrategy.enabled, volumeStrategy.marginPercent, maxUnits, manualPrice]);
+
+    // Reset manual volume price when units change
+    useEffect(() => {
+        setManualVolumePrice(null);
+    }, [maxUnits]);
 
     const handleSave = useCallback(() => {
         if (!results || results.suggestedPrice <= 0) {
@@ -148,6 +154,17 @@ export function SimuladorPage() {
             </div>
         );
     }
+
+    // ─── Calculate Volume Results (for breakdown & manual override) ───
+    const currentVolumePrice = manualVolumePrice ?? (
+        volumeStrategy.enabled
+            ? volumeStrategy.priceTable.find(r => r.quantity === maxUnits)?.totalPrice
+            : null
+    ) ?? null;
+
+    const volumeResults = (volumeStrategy.enabled && maxUnits > 1 && results && results.suggestedPrice > 0 && currentVolumePrice)
+        ? calculateVolumeMetrics(inputs, maxUnits, currentVolumePrice)
+        : null;
 
     return (
         <div>
@@ -264,12 +281,15 @@ export function SimuladorPage() {
 
                 <SimuladorResults
                     results={results}
+                    volumeResults={volumeResults}
                     shippingCost={inputs.shippingCost}
                     collectionCommissionPercent={inputs.collectionCommissionPercent}
                     volumeStrategy={volumeStrategy}
                     maxUnits={maxUnits}
                     manualPrice={manualPrice}
                     onManualPriceChange={setManualPrice}
+                    manualVolumePrice={manualVolumePrice}
+                    onManualVolumePriceChange={setManualVolumePrice}
                 />
             </div>
 
