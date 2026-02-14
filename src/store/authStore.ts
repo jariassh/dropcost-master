@@ -13,7 +13,8 @@ const DEV_MODE = false;
 export const useAuthStore = create<AuthState>((set) => ({
     user: null,
     isAuthenticated: false,
-    isLoading: true, // Empezamos en loading para checkAuth
+    isLoading: false,
+    isInitializing: true,
     requiresOTP: false,
     sessionId: null,
     error: null,
@@ -24,14 +25,16 @@ export const useAuthStore = create<AuthState>((set) => ({
             const response = await authService.loginUser(credentials);
             if (!response.success) {
                 set({ isLoading: false, error: response.error || 'Error al iniciar sesión' });
-                return;
+                return false;
             }
 
-            // En Supabase, si no hay 2FA configurado, el login es directo
             const user = await authService.getCurrentUser();
             set({ isLoading: false, user, isAuthenticated: true });
-        } catch {
+            return true;
+        } catch (err) {
+            console.error('Login error:', err);
             set({ isLoading: false, error: 'Error de conexión. Intenta de nuevo.' });
+            return false;
         }
     },
 
@@ -41,11 +44,14 @@ export const useAuthStore = create<AuthState>((set) => ({
             const response = await authService.registerUser(data);
             if (!response.success) {
                 set({ isLoading: false, error: response.error || 'Error al registrar' });
-                return;
+                return false;
             }
             set({ isLoading: false });
-        } catch {
+            return true;
+        } catch (err) {
+            console.error('Register error:', err);
             set({ isLoading: false, error: 'Error de conexión. Intenta de nuevo.' });
+            return false;
         }
     },
 
@@ -57,10 +63,10 @@ export const useAuthStore = create<AuthState>((set) => ({
                 set({ isLoading: false, error: response.error || 'Código inválido' });
                 return;
             }
-            // Después de verificar email, usualmente el usuario ya está autenticado en Supabase
             const user = await authService.getCurrentUser();
             set({ isLoading: false, user, isAuthenticated: true });
-        } catch {
+        } catch (err) {
+            console.error('VerifyEmail error:', err);
             set({ isLoading: false, error: 'Error de conexión. Intenta de nuevo.' });
         }
     },
@@ -68,9 +74,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     verify2FA: async (data: TwoFactorData) => {
         set({ isLoading: true, error: null });
         try {
-            // Placeholder para futura implementación de 2FA real con Supabase Factors
             set({ isLoading: false, error: '2FA no implementado en esta versión funcional' });
-        } catch {
+        } catch (err) {
+            console.error('Verify2FA error:', err);
             set({ isLoading: false, error: 'Error de conexión. Intenta de nuevo.' });
         }
     },
@@ -85,7 +91,25 @@ export const useAuthStore = create<AuthState>((set) => ({
             }
             set({ isLoading: false });
             return true;
-        } catch {
+        } catch (err) {
+            console.error('Password reset error:', err);
+            set({ isLoading: false, error: 'Error de conexión. Intenta de nuevo.' });
+            return false;
+        }
+    },
+
+    updatePassword: async (newPassword: string) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await authService.updatePassword(newPassword);
+            if (!response.success) {
+                set({ isLoading: false, error: response.error || 'Error al actualizar contraseña' });
+                return false;
+            }
+            set({ isLoading: false });
+            return true;
+        } catch (err) {
+            console.error('Update password error:', err);
             set({ isLoading: false, error: 'Error de conexión. Intenta de nuevo.' });
             return false;
         }
@@ -104,13 +128,13 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     clearError: () => set({ error: null }),
 
-    // Nueva acción para inicializar la sesión
     initialize: async () => {
         try {
             const user = await authService.getCurrentUser();
-            set({ user, isAuthenticated: !!user, isLoading: false });
-        } catch {
-            set({ isLoading: false });
+            set({ user, isAuthenticated: !!user, isInitializing: false, isLoading: false });
+        } catch (err) {
+            console.error('Initialization error:', err);
+            set({ isInitializing: false, isLoading: false });
         }
     }
 }));

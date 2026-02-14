@@ -69,14 +69,16 @@ export interface AuthState {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
+    isInitializing: boolean;
     requiresOTP: boolean;
     sessionId: string | null;
     error: string | null;
-    login: (credentials: LoginCredentials) => Promise<void>;
-    register: (data: RegisterData) => Promise<void>;
+    login: (credentials: LoginCredentials) => Promise<boolean>;
+    register: (data: RegisterData) => Promise<boolean>;
     verifyEmail: (data: VerifyEmailData) => Promise<void>;
     verify2FA: (data: TwoFactorData) => Promise<void>;
     requestPasswordReset: (data: PasswordResetRequest) => Promise<boolean>;
+    updatePassword: (newPassword: string) => Promise<boolean>;
     logout: () => Promise<void>;
     initialize: () => Promise<void>;
     clearError: () => void;

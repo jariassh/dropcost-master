@@ -30,6 +30,7 @@ export function LoginPage() {
     const { login, isLoading, error, requiresOTP, sessionId, clearError } = useAuthStore();
 
     useEffect(() => {
+        // Solo limpiamos errores al montar el componente para evitar ver errores de una sesión anterior
         clearError();
     }, [clearError]);
 

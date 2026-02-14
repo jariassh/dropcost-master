@@ -6,6 +6,7 @@ import { RegisterPage } from '@/pages/auth/RegisterPage';
 import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage';
 import { TwoFactorPage } from '@/pages/auth/TwoFactorPage';
 import { PasswordResetPage } from '@/pages/auth/PasswordResetPage';
+import { UpdatePasswordPage } from '@/pages/auth/UpdatePasswordPage';
 import { DashboardPage } from '@/pages/app/DashboardPage';
 import { SimuladorPage } from '@/pages/app/simulador/SimuladorPage';
 import { MisCosteos } from '@/pages/app/simulador/MisCosteos';
@@ -52,6 +53,12 @@ export function AppRouter() {
                 <Route path="/verificar-email" element={<VerifyEmailPage />} />
                 <Route path="/2fa" element={<TwoFactorPage />} />
                 <Route path="/recuperar-contrasena" element={<PasswordResetPage />} />
+            </Route>
+
+            {/* Caso especial: Actualizar contraseña usa AuthLayout pero NO PublicRoute 
+                porque el enlace de recuperación crea una sesión temporal */}
+            <Route element={<AuthLayout />}>
+                <Route path="/actualizar-contrasena" element={<UpdatePasswordPage />} />
             </Route>
 
             {/* Rutas protegidas de la app */}

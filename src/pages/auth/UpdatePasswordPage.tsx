@@ -1,22 +1,18 @@
 /**
- * Página de registro de usuario.
- * Formulario completo con validación Zod: nombre, apellido, email,
- * contraseña con fortaleza, teléfono, país, términos.
+ * Página para establecer una nueva contraseña.
+ * Se usa después de que el usuario hace clic en el enlace de recuperación.
  */
 import { useState, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Phone, Globe, ChevronDown, Sparkles, RefreshCw, CheckCircle2 } from 'lucide-react';
-import { Button, Input, Alert, SmartPhoneInput } from '@/components/common';
+import { useNavigate } from 'react-router-dom';
+import { Lock, ShieldCheck, CheckCircle2, Sparkles, RefreshCw, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Button, Input, Alert } from '@/components/common';
 import { useAuthStore } from '@/store/authStore';
 
-const registerSchema = z
+const updatePasswordSchema = z
     .object({
-        nombres: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-        apellidos: z.string().min(2, 'El apellido debe tener al menos 2 caracteres'),
-        email: z.string().min(1, 'El correo es requerido').email('Ingresa un correo válido'),
         password: z
             .string()
             .min(8, 'Mínimo 8 caracteres')
@@ -25,25 +21,18 @@ const registerSchema = z
             .regex(/[0-9]/, 'Debe incluir al menos un número')
             .regex(/[^A-Za-z0-9]/, 'Debe incluir al menos un carácter especial'),
         confirmPassword: z.string().min(1, 'Confirma tu contraseña'),
-        telefono: z.string().optional(),
-        pais: z.string().min(1, 'Selecciona un país'),
-        acceptTerms: z.boolean().refine((val) => val === true, {
-            message: 'Debes aceptar los términos y condiciones',
-        }),
     })
     .refine((data) => data.password === data.confirmPassword, {
         message: 'Las contraseñas no coinciden',
         path: ['confirmPassword'],
     });
 
-type RegisterFormData = z.infer<typeof registerSchema>;
+type UpdatePasswordFormData = z.infer<typeof updatePasswordSchema>;
 
-// Eliminamos PAISES ya que SmartPhoneInput lo maneja internamente
-
-export function RegisterPage() {
-    const [registered, setRegistered] = useState(false);
+export function UpdatePasswordPage() {
+    const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
-    const { register: registerUser, isLoading, error, clearError } = useAuthStore();
+    const { updatePassword, logout, isLoading, isInitializing, isAuthenticated, error, clearError } = useAuthStore();
 
     useEffect(() => {
         clearError();
@@ -54,25 +43,14 @@ export function RegisterPage() {
         handleSubmit,
         watch,
         setValue,
-        control,
         formState: { errors },
-    } = useForm<RegisterFormData>({
-        resolver: zodResolver(registerSchema),
-        mode: 'onChange',
-        defaultValues: {
-            nombres: '',
-            apellidos: '',
-            email: '',
-            password: '',
-            confirmPassword: '',
-            telefono: '',
-            pais: 'CO',
-            acceptTerms: false,
-        },
+    } = useForm<UpdatePasswordFormData>({
+        resolver: zodResolver(updatePasswordSchema),
+        defaultValues: { password: '', confirmPassword: '' },
     });
 
+    const password = watch('password', '');
     const [suggestedPassword, setSuggestedPassword] = useState('');
-    const [copied, setCopied] = useState(false);
 
     const generatePassword = () => {
         const length = 14;
@@ -92,9 +70,8 @@ export function RegisterPage() {
         setValue('password', suggestedPassword, { shouldValidate: true });
         setValue('confirmPassword', suggestedPassword, { shouldValidate: true });
         setSuggestedPassword('');
+        clearError(); // Limpiamos errores generales si existían
     };
-
-    const password = watch('password', '');
 
     function getPasswordStrength(pwd: string): { level: number; label: string; color: string } {
         let score = 0;
@@ -112,100 +89,118 @@ export function RegisterPage() {
 
     const strength = getPasswordStrength(password);
 
-    async function onSubmit(data: RegisterFormData) {
+    async function onSubmit(data: UpdatePasswordFormData) {
         clearError();
-        const success = await registerUser({
-            email: data.email,
-            password: data.password,
-            confirmPassword: data.confirmPassword,
-            nombres: data.nombres,
-            apellidos: data.apellidos,
-            telefono: data.telefono,
-            pais: data.pais,
-            acceptTerms: data.acceptTerms,
-        });
-
-        if (success) {
-            setRegistered(true);
-            setTimeout(() => navigate('/verificar-email'), 2000);
+        const ok = await updatePassword(data.password);
+        if (ok) {
+            setSuccess(true);
+            // Cerramos sesión para que el usuario tenga que entrar con su nueva clave
+            setTimeout(async () => {
+                await logout();
+                navigate('/login', { replace: true });
+            }, 3000);
         }
     }
 
-    if (registered) {
+    if (success) {
         return (
             <div style={{ textAlign: 'center', animation: 'fadeIn 300ms ease-out' }}>
                 <div
                     style={{
-                        width: '64px',
-                        height: '64px',
-                        backgroundColor: '#D1FAE5',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        margin: '0 auto 16px',
+                        width: '64px', height: '64px', backgroundColor: '#D1FAE5', borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
                     }}
                 >
-                    <Mail size={32} color="#10B981" />
+                    <CheckCircle2 size={32} color="#10B981" />
                 </div>
                 <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                    ¡Cuenta creada!
+                    ¡Contraseña actualizada!
                 </h2>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
-                    Te hemos enviado un correo de verificación. Revisa tu bandeja de entrada.
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '15px' }}>
+                    Tu contraseña ha sido cambiada exitosamente. Serás redirigido al inicio de sesión en unos segundos.
                 </p>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <div style={{ width: '40px', height: '40px', border: '3px solid var(--color-primary-light)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                </div>
+            </div>
+        );
+    }
+
+    // Si la inicialización terminó y no estamos autenticados, el link es inválido
+    if (!isInitializing && !isAuthenticated) {
+        return (
+            <div style={{ textAlign: 'center', animation: 'fadeIn 300ms ease-out' }}>
+                <div
+                    style={{
+                        width: '64px', height: '64px', backgroundColor: '#FEE2E2', borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
+                    }}
+                >
+                    <AlertCircle size={32} color="#EF4444" />
+                </div>
+                <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                    Enlace inválido o expirado
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '15px', lineHeight: '1.6' }}>
+                    Este enlace de recuperación ya ha sido utilizado o ha caducado por motivos de seguridad.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: (12) as any }}>
+                    <Button fullWidth onClick={() => navigate('/recuperar-contrasena')}>
+                        Solicitar nuevo enlace
+                    </Button>
+                    <Button variant="secondary" fullWidth onClick={() => navigate('/login')}>
+                        Volver al inicio de sesión
+                    </Button>
+                </div>
             </div>
         );
     }
 
     return (
         <div style={{ animation: 'fadeIn 300ms ease-out' }}>
-            <h2 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                Crear cuenta
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '24px' }}>
-                Completa tus datos para comenzar
-            </p>
+            <button
+                type="button"
+                onClick={async () => {
+                    await logout();
+                    navigate('/login');
+                }}
+                style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '14px',
+                    color: 'var(--text-secondary)', textDecoration: 'none', marginBottom: '24px',
+                    background: 'none', border: 'none', cursor: 'pointer', padding: 0
+                }}
+            >
+                <ArrowLeft size={16} />
+                Cancelar y volver
+            </button>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                <div
+                    style={{
+                        width: '64px', height: '64px', backgroundColor: 'var(--color-primary-light)', borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
+                        animation: 'scaleIn 400ms ease-out',
+                    }}
+                >
+                    <ShieldCheck size={32} color="var(--color-primary)" />
+                </div>
+                <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                    Nueva contraseña
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
+                    Crea una contraseña segura para proteger tu cuenta
+                </p>
+            </div>
 
             {error && (
-                <div style={{ marginBottom: '16px' }}>
-                    <Alert type="error" dismissible onDismiss={clearError}>
-                        {error}
-                    </Alert>
+                <div style={{ marginBottom: '20px' }}>
+                    <Alert type="error" dismissible onDismiss={clearError}>{error}</Alert>
                 </div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <Input
-                        label="Nombres"
-                        placeholder="Juan"
-                        leftIcon={<User size={18} />}
-                        error={errors.nombres?.message}
-                        {...register('nombres')}
-                    />
-                    <Input
-                        label="Apellidos"
-                        placeholder="Pérez"
-                        leftIcon={<User size={18} />}
-                        error={errors.apellidos?.message}
-                        {...register('apellidos')}
-                    />
-                </div>
-
-                <Input
-                    label="Correo electrónico"
-                    type="email"
-                    placeholder="nombre@ejemplo.com"
-                    leftIcon={<Mail size={18} />}
-                    error={errors.email?.message}
-                    autoComplete="email"
-                    {...register('email')}
-                />
-
+            <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div style={{ position: 'relative' }}>
                     <Input
-                        label="Contraseña"
+                        label="Nueva contraseña"
                         type="password"
                         placeholder="Mínimo 8 caracteres"
                         leftIcon={<Lock size={18} />}
@@ -320,20 +315,15 @@ export function RegisterPage() {
                                     />
                                 ))}
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <p style={{ fontSize: '12px', color: strength.color, fontWeight: 600, margin: 0 }}>
-                                    Seguridad: {strength.label}
-                                </p>
-                                <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: 0 }}>
-                                    {password.length} caracteres
-                                </p>
-                            </div>
+                            <p style={{ fontSize: '12px', color: strength.color, fontWeight: 600, margin: 0 }}>
+                                Seguridad: {strength.label}
+                            </p>
                         </div>
                     )}
                 </div>
 
                 <Input
-                    label="Confirmar contraseña"
+                    label="Confirmar nueva contraseña"
                     type="password"
                     placeholder="Repite tu contraseña"
                     leftIcon={<Lock size={18} />}
@@ -343,68 +333,10 @@ export function RegisterPage() {
                     {...register('confirmPassword')}
                 />
 
-                <Controller
-                    name="telefono"
-                    control={control}
-                    render={({ field }) => (
-                        <SmartPhoneInput
-                            label="Teléfono Móvil"
-                            value={field.value || ''}
-                            onChange={(fullValue, iso) => {
-                                field.onChange(fullValue);
-                                setValue('pais', iso); // Sincronizamos el país automáticamente
-                            }}
-                            error={errors.telefono?.message}
-                        />
-                    )}
-                />
-
-                {/* Términos */}
-                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
-                    <input
-                        type="checkbox"
-                        {...register('acceptTerms')}
-                        style={{
-                            width: '18px',
-                            height: '18px',
-                            marginTop: '2px',
-                            borderRadius: '4px',
-                            accentColor: 'var(--color-primary)',
-                            cursor: 'pointer',
-                            flexShrink: 0,
-                        }}
-                    />
-                    <span style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                        Acepto los{' '}
-                        <a href="#" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>
-                            Términos y Condiciones
-                        </a>{' '}
-                        y la{' '}
-                        <a href="#" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>
-                            Política de Privacidad
-                        </a>
-                    </span>
-                </label>
-                {errors.acceptTerms && (
-                    <p style={{ fontSize: '12px', color: 'var(--color-error)', margin: 0 }}>
-                        {errors.acceptTerms.message}
-                    </p>
-                )}
-
                 <Button type="submit" fullWidth isLoading={isLoading} size="lg">
-                    Crear cuenta
+                    Cambiar contraseña
                 </Button>
             </form>
-
-            <p style={{ textAlign: 'center', fontSize: '14px', color: 'var(--text-secondary)', marginTop: '24px' }}>
-                ¿Ya tienes una cuenta?{' '}
-                <Link
-                    to="/login"
-                    style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}
-                >
-                    Inicia sesión
-                </Link>
-            </p>
         </div>
     );
 }
