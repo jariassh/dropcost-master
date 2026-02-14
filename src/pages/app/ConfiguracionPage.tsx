@@ -139,12 +139,7 @@ export function ConfiguracionPage() {
         setIs2FAEnabled(user?.twoFactorEnabled || false);
     }, [user?.twoFactorEnabled]);
 
-    // Sesiones
-    const [sessions, setSessions] = useState([
-        { id: '1', device: 'Este dispositivo (Chrome / Windows)', ip: '190.158.xx.xx', lastActive: 'Ahora', active: true },
-        { id: '2', device: 'Xiaomi Poco X3 (App)', ip: '181.12.xx.xx', lastActive: 'Hace 2 horas', active: false },
-        { id: '3', device: 'MacBook Pro (Safari)', ip: '172.67.xx.xx', lastActive: 'Ayer', active: false },
-    ]);
+    // Sesiones (Single Session Enforced logic handled by hooks)
 
     const handleToggle2FA = async () => {
         if (!is2FAEnabled) {
@@ -226,9 +221,7 @@ export function ConfiguracionPage() {
         }
     };
 
-    const handleRevokeSession = (id: string) => {
-        setSessions(sessions.filter(s => s.id !== id));
-    };
+
 
     const suggestedSlug = `${profileData.nombres}${profileData.apellidos}`.toLowerCase().replace(/\s/g, '');
 
@@ -678,68 +671,31 @@ export function ConfiguracionPage() {
             {activeTab === 'sesiones' && (
                 <div style={{ animation: 'fadeIn 0.3s' }}>
                     <Card>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 8px' }}>Dispositivos con Sesión Activa</h3>
-                        <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '24px' }}>
-                            Estas son las sesiones actuales conectadas a tu cuenta de DropCost. Puedes cerrar cualquiera individualmente.
-                        </p>
+                        <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                            <div style={{
+                                width: '64px', height: '64px', borderRadius: '50%', margin: '0 auto 20px',
+                                backgroundColor: 'rgba(0, 102, 255, 0.1)', color: 'var(--color-primary)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}>
+                                <Shield size={32} />
+                            </div>
+                            <h3 style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 12px' }}>Sesión Segura Activa</h3>
+                            <p style={{ maxWidth: '480px', margin: '0 auto 24px', fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                                <strong>DropCost Master</strong> utiliza una política de <strong>Sesión Única</strong> para garantizar la máxima seguridad de tu cuenta.
+                                <br /><br />
+                                Esto significa que al iniciar sesión en un nuevo dispositivo, cualquier sesión anterior se cerrará automáticamente.
+                                Tu cuenta está protegida contra el uso compartido no autorizado.
+                            </p>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: 'var(--border-color)', borderRadius: '12px', overflow: 'hidden' }}>
-                            {sessions.map(sess => (
-                                <div key={sess.id} style={{
-                                    backgroundColor: 'var(--card-bg)',
-                                    padding: '20px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between'
-                                }}>
-                                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                                        <div style={{
-                                            width: '40px', height: '40px', borderRadius: '50%',
-                                            backgroundColor: sess.active ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-secondary)',
-                                            color: sess.active ? 'var(--color-success)' : 'var(--text-tertiary)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                        }}>
-                                            <Monitor size={20} />
-                                        </div>
-                                        <div>
-                                            <h5 style={{ margin: '0 0 4px', fontWeight: 700, fontSize: '14px' }}>
-                                                {sess.device}
-                                                {sess.active && <span style={{ marginLeft: '8px', padding: '2px 6px', fontSize: '10px', backgroundColor: 'var(--color-success)', color: '#fff', borderRadius: '4px' }}>Actual</span>}
-                                            </h5>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-tertiary)' }}>
-                                                <span>{sess.ip}</span>
-                                                <span style={{ width: '3px', height: '3px', borderRadius: '50%', backgroundColor: 'var(--text-tertiary)' }} />
-                                                <span>{sess.lastActive}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {!sess.active && (
-                                        <button
-                                            onClick={() => handleRevokeSession(sess.id)}
-                                            style={{
-                                                background: 'none', border: 'none', color: 'var(--color-error)',
-                                                cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center', gap: '6px'
-                                            }}
-                                        >
-                                            <LogOut size={16} />
-                                            <span style={{ fontSize: '13px', fontWeight: 600 }}>Cerrar Sesión</span>
-                                        </button>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-
-                        <div style={{ marginTop: '24px', textAlign: 'center' }}>
-                            <button
-                                style={{
-                                    background: 'none', border: `1px solid var(--color-error)`, color: 'var(--color-error)',
-                                    padding: '10px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
-                                    cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px'
-                                }}
-                            >
-                                <Trash2 size={16} />
-                                Cerrar todas las demás sesiones
-                            </button>
+                            <div style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '10px',
+                                padding: '12px 20px', borderRadius: '12px',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10B981',
+                                fontSize: '14px', fontWeight: 600
+                            }}>
+                                <CheckCircle2 size={18} />
+                                Dispositivo Actual Verificado
+                            </div>
                         </div>
                     </Card>
                 </div>

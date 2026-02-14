@@ -34,6 +34,7 @@ import { useAuthStore } from '@/store/authStore';
 import { Tooltip } from '@/components/common/Tooltip';
 import { StoreSelector } from '@/components/layout/StoreSelector';
 import { useStoreStore } from '@/store/useStoreStore';
+import { useSessionEnforcer } from '@/hooks/useSessionEnforcer';
 
 const SIDEBAR_OPEN = 240;
 const SIDEBAR_COLLAPSED = 72;
@@ -63,6 +64,9 @@ export function AppLayout() {
     const { unreadCount, fetchNotifications } = useNotificationStore();
     const { tiendaActual } = useStoreStore();
     const navigate = useNavigate();
+
+    // Enforce single session
+    useSessionEnforcer();
 
     useEffect(() => {
         fetchNotifications();
