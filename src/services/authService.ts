@@ -1,8 +1,5 @@
-/**
- * Servicio de autenticación — wrapper sobre la capa de datos.
- * Implementación placeholder que simula comportamiento async.
- * Será reemplazado por Supabase Auth en fase posterior.
- */
+import { supabase } from '@/lib/supabase';
+import { translateError } from '@/lib/errorTranslations';
 import type {
     LoginCredentials,
     RegisterData,
@@ -13,87 +10,131 @@ import type {
     User,
 } from '@/types/auth.types';
 
-// Simula latencia de red
-function simulateDelay(ms = 1000): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-// Usuario mock para desarrollo
-const MOCK_USER: User = {
-    id: 'usr_mock_001',
-    email: 'demo@dropcostmaster.com',
-    nombres: 'Juan',
-    apellidos: 'Pérez',
-    telefono: '+57 300 123 4567',
-    pais: 'CO',
-    planId: 'plan_pro',
-    estadoSuscripcion: 'activa',
-    emailVerificado: true,
-    twoFactorEnabled: true,
-    fechaRegistro: '2026-01-15T10:00:00Z',
-    ultimaActividad: new Date().toISOString(),
-};
-
 export async function loginUser(credentials: LoginCredentials): Promise<AuthResponse> {
-    await simulateDelay();
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+    });
 
-    // Simulación: cualquier email/password pasa, excepto "error@test.com"
-    if (credentials.email === 'error@test.com') {
-        return { success: false, error: 'Credenciales inválidas. Verifica tu correo y contraseña.' };
+    if (error) {
+        return { success: false, error: translateError(error.message) };
     }
 
     return {
         success: true,
         data: {
-            requiresOTP: true,
-            sessionId: `session_${Date.now()}`,
+            userId: data.user?.id,
+            accessToken: data.session?.access_token,
+            refreshToken: data.session?.refresh_token,
         },
     };
 }
 
 export async function registerUser(data: RegisterData): Promise<AuthResponse> {
-    await simulateDelay(1500);
+    const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+            data: {
+                nombres: data.nombres,
+                apellidos: data.apellidos,
+                pais: data.pais,
+                rol: 'cliente', // Por defecto
+            }
+        }
+    });
 
-    if (data.email === 'exists@test.com') {
-        return { success: false, error: 'Este correo ya está registrado.' };
+    if (error) {
+        return { success: false, error: translateError(error.message) };
     }
 
     return {
         success: true,
-        data: { userId: `usr_${Date.now()}` },
+        data: { userId: authData.user?.id },
     };
 }
 
-export async function verifyEmail(_data: VerifyEmailData): Promise<AuthResponse> {
-    await simulateDelay(800);
-    return { success: true };
-}
+export async function verifyEmail(data: VerifyEmailData): Promise<AuthResponse> {
+    // Supabase maneja la verificación via links, 
+    // pero si usamos códigos OTP para email:
+    const { error } = await supabase.auth.verifyOtp({
+        token: data.code,
+        type: 'email',
+        email: '', // Necesitaríamos el email o usaría el del flujo actual
+    });
 
-export async function verify2FA(_data: TwoFactorData): Promise<AuthResponse> {
-    await simulateDelay(800);
-
-    return {
-        success: true,
-        data: {
-            accessToken: `jwt_mock_${Date.now()}`,
-            refreshToken: `refresh_mock_${Date.now()}`,
-        },
-    };
-}
-
-export async function requestPasswordReset(_data: PasswordResetRequest): Promise<AuthResponse> {
-    await simulateDelay();
+    if (error) return { success: false, error: translateError(error.message) };
     return { success: true };
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-    await simulateDelay(500);
-    const token = localStorage.getItem('dropcost-access-token');
-    return token ? MOCK_USER : null;
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) return null;
+
+    // 1. Intentar obtener datos adicionales del perfil en public.users
+    let { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    // 2. Si no existe en public.users (pero sí en Auth), creamos el perfil ahora
+    // Esto previene que se queden en 'cliente' si el trigger falla o no existe.
+    if (!profile && !profileError) {
+        const { data: newProfile, error: createError } = await supabase
+            .from('users')
+            .insert({
+                id: user.id,
+                email: user.email,
+                nombres: user.user_metadata.nombres || '',
+                apellidos: user.user_metadata.apellidos || '',
+                rol: user.user_metadata.rol || 'cliente',
+            })
+            .select()
+            .single();
+
+        if (!createError) profile = newProfile;
+    }
+
+    return {
+        id: user.id,
+        email: user.email || '',
+        nombres: profile?.nombres || user.user_metadata.nombres || '',
+        apellidos: profile?.apellidos || user.user_metadata.apellidos || '',
+        rol: profile?.rol || user.user_metadata.rol || 'cliente',
+        planId: profile?.plan_id || 'plan_free',
+        estadoSuscripcion: profile?.estado_suscripcion || 'activa',
+        emailVerificado: !!user.email_confirmed_at,
+        twoFactorEnabled: !!user.factors?.length,
+        fechaRegistro: user.created_at,
+    };
+}
+
+export async function requestPasswordReset(data: PasswordResetRequest): Promise<AuthResponse> {
+    // 1. Verificar si el usuario existe en nuestra tabla pública primero
+    // Esto mejora la UX al avisar si el correo no está registrado.
+    const { data: userExist, error: searchError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', data.email)
+        .maybeSingle();
+
+    // Si hay un error (ej. RLS) o no hay datos, tratamos ambos casos como "No encontrado"
+    // para no mostrar mensajes técnicos de "Error" al usuario.
+    if (searchError || !userExist) {
+        return { success: false, error: 'No se encontró ninguna cuenta vinculada a este correo electrónico o el correo es inválido.' };
+    }
+
+    // 2. Si existe, enviar el correo de recuperación
+    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/actualizar-contrasena`,
+    });
+
+    if (error) return { success: false, error: translateError(error.message) };
+    return { success: true };
 }
 
 export async function logoutUser(): Promise<void> {
-    await simulateDelay(300);
-    localStorage.removeItem('dropcost-access-token');
-    localStorage.removeItem('dropcost-refresh-token');
+    await supabase.auth.signOut();
 }

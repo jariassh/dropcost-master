@@ -2,7 +2,7 @@
  * Página de recuperación de contraseña.
  * Input email, estado de éxito tras envío.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,6 +21,10 @@ export function PasswordResetPage() {
     const [sent, setSent] = useState(false);
     const { requestPasswordReset, isLoading, error, clearError } = useAuthStore();
 
+    useEffect(() => {
+        clearError();
+    }, [clearError]);
+
     const {
         register,
         handleSubmit,
@@ -33,8 +37,8 @@ export function PasswordResetPage() {
 
     async function onSubmit(data: ResetFormData) {
         clearError();
-        await requestPasswordReset({ email: data.email });
-        if (!error) setSent(true);
+        const success = await requestPasswordReset({ email: data.email });
+        if (success) setSent(true);
     }
 
     if (sent) {
