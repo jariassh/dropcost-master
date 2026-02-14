@@ -76,7 +76,8 @@ export interface AuthState {
     register: (data: RegisterData) => Promise<void>;
     verifyEmail: (data: VerifyEmailData) => Promise<void>;
     verify2FA: (data: TwoFactorData) => Promise<void>;
-    requestPasswordReset: (data: PasswordResetRequest) => Promise<void>;
-    logout: () => void;
+    requestPasswordReset: (data: PasswordResetRequest) => Promise<boolean>;
+    logout: () => Promise<void>;
+    initialize: () => Promise<void>;
     clearError: () => void;
 }
