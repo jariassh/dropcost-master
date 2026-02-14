@@ -52,10 +52,16 @@ export function SlideOver({
                     >
                         <div className="flex h-full flex-col overflow-y-scroll bg-[var(--card-bg)] shadow-xl border-l border-[var(--border-color)]">
                             {/* Header */}
-                            <div className="flex items-center justify-between px-4 py-6 sm:px-6 bg-[var(--bg-secondary)] border-b border-[var(--border-color)]">
-                                <h2 className="text-lg font-semibold leading-6 text-[var(--text-primary)]" id="slide-over-title">
+                            <div className="flex items-center justify-between px-6 py-10 sm:px-8 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] min-h-[90px]">
+                                <h1 style={{
+                                    paddingLeft: '32px',
+                                    fontSize: '22px',
+                                    fontWeight: 800,
+                                    color: 'var(--text-primary)',
+                                    margin: 0
+                                }} id="slide-over-title">
                                     {title}
-                                </h2>
+                                </h1>
                                 <div className="ml-3 flex h-7 items-center">
                                     <button
                                         type="button"
@@ -69,7 +75,7 @@ export function SlideOver({
                             </div>
 
                             {/* Main content */}
-                            <div className="relative mt-6 flex-1 px-4 sm:px-6">
+                            <div className="relative flex-1">
                                 {children}
                             </div>
 

@@ -26,6 +26,7 @@ export interface UserFilters {
     search?: string;
     status?: SubscriptionStatus | 'all';
     role?: UserRole | 'all';
+    plan?: string | 'all';
 }
 
 export interface PaginatedUsersResponse {
