@@ -66,7 +66,6 @@ export function AppRouter() {
                 <Route path="/simulador" element={<SimuladorPage />} />
                 <Route path="/simulador/mis-costeos" element={<MisCosteos />} />
                 <Route path="/ofertas" element={<OfertasPage />} />
-                <Route path="/ofertas/crear" element={<OfertaWizard />} />
                 <Route path="/analisis-regional" element={<DashboardPage />} />
                 <Route path="/configuracion" element={<DashboardPage />} />
                 <Route path="/referidos" element={<DashboardPage />} />

@@ -2,7 +2,7 @@
  * OfertasDashboard - Dashboard "Mis Ofertas" con tabla desktop / cards mobile.
  * Filtros por estrategia y estado.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge, EmptyState, useToast, ConfirmDialog } from '@/components/common';
 import { OfertaDetailPanel } from './components/OfertaDetailPanel';
@@ -209,6 +209,7 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                     }}
                 />
             )}
+
 
             {/* Delete confirmation modal */}
             <ConfirmDialog

@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OfertasEducation } from './OfertasEducation';
 import { OfertasDashboard } from './OfertasDashboard';
+import { OfertaWizard } from './OfertaWizard';
 import { Gift, Plus, HelpCircle } from 'lucide-react';
 
 const EDUCATION_KEY = 'dropcost_ofertas_education_seen';
@@ -14,6 +15,8 @@ export function OfertasPage() {
     const navigate = useNavigate();
     const [showEducation, setShowEducation] = useState(false);
     const [loaded, setLoaded] = useState(false);
+    const [isWizardOpen, setIsWizardOpen] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     useEffect(() => {
         const seen = localStorage.getItem(EDUCATION_KEY);
@@ -29,7 +32,7 @@ export function OfertasPage() {
     }
 
     function handleCreateNew() {
-        navigate('/ofertas/crear');
+        setIsWizardOpen(true);
     }
 
     if (!loaded) return null;
@@ -117,7 +120,15 @@ export function OfertasPage() {
                 </div>
             </div>
 
-            <OfertasDashboard onCreateNew={handleCreateNew} />
+            <OfertasDashboard key={refreshKey} onCreateNew={handleCreateNew} />
+
+            <OfertaWizard
+                isOpen={isWizardOpen}
+                onClose={() => {
+                    setIsWizardOpen(false);
+                    setRefreshKey(p => p + 1);
+                }}
+            />
         </div>
     );
 }

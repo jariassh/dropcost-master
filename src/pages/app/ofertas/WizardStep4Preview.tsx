@@ -33,13 +33,13 @@ export function WizardStep4Preview({
             <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
                 Vista previa de tu oferta
             </h3>
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
                 Revisa los detalles antes de activar
             </p>
 
             <div
                 style={{
-                    padding: '24px',
+                    padding: '16px',
                     borderRadius: '16px',
                     backgroundColor: 'var(--card-bg)',
                     border: '1px solid var(--card-border)',
@@ -47,7 +47,7 @@ export function WizardStep4Preview({
                 }}
             >
                 {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                     <span style={{ fontSize: '28px' }}>{strategy.icon}</span>
                     <div>
                         <p style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -69,7 +69,7 @@ export function WizardStep4Preview({
                     </div>
                 </div>
 
-                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
                     {/* Descuento preview */}
                     {strategyType === 'descuento' && (
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -83,40 +83,45 @@ export function WizardStep4Preview({
                     {/* Bundle preview */}
                     {strategyType === 'bundle' && (
                         <>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
                                 <PreviewItem label="Max unidades" value={`${bundleConfig.quantity}`} />
-                                <PreviewItem label="% margen unidades 2+" value={`${bundleConfig.marginPercent}%`} />
+                                <PreviewItem label="Beneficio cliente" value={`Hasta ${bundleConfig.marginPercent}% OFF 2+ uds`} highlight />
                             </div>
-                            <div
-                                style={{
-                                    borderRadius: '8px',
-                                    border: '1px solid var(--border-color)',
-                                    overflow: 'hidden',
-                                }}
-                            >
-                                {bundleConfig.priceTable.map((row) => (
-                                    <div
-                                        key={row.quantity}
-                                        style={{
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            padding: '10px 14px',
-                                            borderBottom: '1px solid var(--border-color)',
-                                            fontSize: '13px',
-                                        }}
-                                    >
-                                        <span style={{ fontWeight: 600 }}>{row.quantity} ud{row.quantity > 1 ? 's' : ''}</span>
-                                        <span>{formatCurrency(row.totalPrice)}</span>
-                                        {row.savingsPerUnit > 0 && (
-                                            <span style={{ color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                                                <TrendingDown size={10} /> -{formatCurrency(row.savingsPerUnit)}/ud
-                                            </span>
-                                        )}
-                                        <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>
-                                            {formatCurrency(row.totalProfit)}
-                                        </span>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                {/* Min purchase */}
+                                <div style={{ padding: '12px', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)' }}>
+                                    <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px' }}>Compra Mínima (1 ud)</p>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Precio:</span>
+                                            <span style={{ fontSize: '13px', fontWeight: 600 }}>{formatCurrency(price)}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Ganancia:</span>
+                                            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-success)' }}>{formatCurrency(profit)}</span>
+                                        </div>
                                     </div>
-                                ))}
+                                </div>
+
+                                {/* Max purchase */}
+                                <div style={{ padding: '12px', border: '1px solid var(--color-primary)', borderRadius: '8px', backgroundColor: 'rgba(0,102,255,0.03)' }}>
+                                    <p style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>Mejor Oferta ({bundleConfig.quantity} uds)</p>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Precio/u:</span>
+                                            <span style={{ fontSize: '13px', fontWeight: 600 }}>
+                                                {formatCurrency(bundleConfig.priceTable[bundleConfig.priceTable.length - 1]?.pricePerUnit || 0)}
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Ganancia Total:</span>
+                                            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-success)' }}>
+                                                {formatCurrency(bundleConfig.priceTable[bundleConfig.priceTable.length - 1]?.totalProfit || 0)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </>
                     )}
@@ -140,7 +145,7 @@ export function WizardStep4Preview({
                 {/* Summary */}
                 <div
                     style={{
-                        marginTop: '20px',
+                        marginTop: '12px',
                         padding: '14px',
                         borderRadius: '8px',
                         background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02))',
