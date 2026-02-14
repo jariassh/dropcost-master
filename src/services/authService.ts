@@ -143,14 +143,12 @@ export async function getCurrentUser(): Promise<User | null> {
         fechaRegistro: profile.fecha_registro,
         ultimaActividad: profile.ultima_actividad,
         telefono: profile.telefono,
-        pais: profile.pais
+        pais: profile.pais,
+        codigoReferido: profile.codigo_referido_personal
     };
 }
 
 export async function requestPasswordReset(data: PasswordResetRequest): Promise<AuthResponse> {
-    // Llamar directamente a Supabase Auth. 
-    // No hacemos pre-check en public.users porque RLS bloquea a usuarios anónimos 
-    // y por seguridad (evitar enumeración de correos).
     const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
         redirectTo: `${window.location.origin}/actualizar-contrasena`,
     });
@@ -168,6 +166,114 @@ export async function updatePassword(newPassword: string): Promise<AuthResponse>
     return { success: true };
 }
 
+/**
+ * Solicita el cambio de email. Envía verificación al nuevo correo.
+ */
+export async function updateEmail(newEmail: string): Promise<AuthResponse> {
+    const { error } = await supabase.auth.updateUser({
+        email: newEmail
+    });
+
+    if (error) return { success: false, error: translateError(error.message) };
+    return { success: true };
+}
+
+/**
+ * Solicita activación de 2FA. Envía código al email actual vía Edge Function.
+ */
+export async function request2FAActivation(): Promise<AuthResponse> {
+    const { data, error } = await supabase.functions.invoke('auth-2fa', {
+        body: { action: 'request' }
+    });
+
+    if (error) return { success: false, error: translateError(error.message) };
+    return { success: data.success, error: data.error };
+}
+
+/**
+ * Confirma y activa el 2FA vía Edge Function.
+ */
+export async function confirm2FAActivation(code: string): Promise<AuthResponse> {
+    const { data, error } = await supabase.functions.invoke('auth-2fa', {
+        body: { action: 'verify', code }
+    });
+
+    if (error) return { success: false, error: translateError(error.message) };
+    return { success: data.success, error: data.error };
+}
+
+/**
+ * Solicita código 2FA para LOGIN (reusa la acción 'request').
+ */
+export async function request2FALogin(): Promise<AuthResponse> {
+    const { data, error } = await supabase.functions.invoke('auth-2fa', {
+        body: { action: 'request' }
+    });
+
+    if (error) return { success: false, error: translateError(error.message) };
+    return { success: data.success, error: data.error };
+}
+
+/**
+ * Verifica código 2FA para LOGIN (acción 'verify_login').
+ */
+export async function verify2FALogin(code: string): Promise<AuthResponse> {
+    const { data, error } = await supabase.functions.invoke('auth-2fa', {
+        body: { action: 'verify_login', code }
+    });
+
+    if (error) return { success: false, error: translateError(error.message) };
+    return { success: data.success, error: data.error };
+}
+
+/**
+ * Desactiva el 2FA vía Edge Function.
+ */
+export async function disable2FA(): Promise<AuthResponse> {
+    const { data, error } = await supabase.functions.invoke('auth-2fa', {
+        body: { action: 'disable' }
+    });
+
+    if (error) return { success: false, error: translateError(error.message) };
+    return { success: data.success, error: data.error };
+}
+
 export async function logoutUser(): Promise<void> {
     await supabase.auth.signOut();
+}
+
+/**
+ * Actualiza el perfil del usuario (metadatos y tabla public.users).
+ */
+export async function updateUserProfile(userData: Partial<User>): Promise<AuthResponse> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Sesión no encontrada' };
+
+    // 1. Actualizar metadata de Auth
+    const { error: authError } = await supabase.auth.updateUser({
+        data: {
+            nombres: userData.nombres,
+            apellidos: userData.apellidos,
+            telefono: userData.telefono,
+            pais: userData.pais
+        }
+    });
+
+    if (authError) return { success: false, error: translateError(authError.message) };
+
+    // 2. Actualizar tabla public.users
+    const { error: profileError } = await supabase
+        .from('users')
+        .update({
+            nombres: userData.nombres,
+            apellidos: userData.apellidos,
+            telefono: userData.telefono,
+            pais: userData.pais,
+            codigo_referido_personal: userData.codigoReferido
+        })
+        .eq('id', user.id);
+
+    if (profileError) return { success: false, error: translateError(profileError.message) };
+
+    return { success: true };
 }

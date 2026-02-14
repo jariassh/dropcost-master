@@ -172,20 +172,27 @@ ALTER TABLE public.referidos_usuarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- POLICIES: Users
+-- POLICIES: Users
+DROP POLICY IF EXISTS "Users view own profile" ON public.users;
 CREATE POLICY "Users view own profile" ON public.users FOR SELECT USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Admin view all users" ON public.users;
 CREATE POLICY "Admin view all users" ON public.users FOR ALL USING (
   exists (select 1 from public.users where id = auth.uid() and rol in ('admin', 'superadmin'))
 );
 
 -- POLICIES: Tiendas (Multitenancy)
+DROP POLICY IF EXISTS "Users manage own tiendas" ON public.tiendas;
 CREATE POLICY "Users manage own tiendas" ON public.tiendas FOR ALL USING (usuario_id = auth.uid());
 
 -- POLICIES: Costeos (Aislamiento total)
+DROP POLICY IF EXISTS "Users manage own costeos" ON public.costeos;
 CREATE POLICY "Users manage own costeos" ON public.costeos FOR ALL USING (
   EXISTS (SELECT 1 FROM public.tiendas WHERE tiendas.id = costeos.tienda_id AND tiendas.usuario_id = auth.uid())
 );
 
 -- POLICIES: Audit (Solo lectura por admin)
+DROP POLICY IF EXISTS "Admin view logs" ON public.audit_logs;
 CREATE POLICY "Admin view logs" ON public.audit_logs FOR SELECT USING (
   exists (select 1 from public.users where id = auth.uid() and rol in ('admin', 'superadmin'))
 );
