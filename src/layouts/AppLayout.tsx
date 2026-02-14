@@ -30,6 +30,8 @@ import {
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
 import { Tooltip } from '@/components/common/Tooltip';
+import { StoreSelector } from '@/components/layout/StoreSelector';
+import { useStoreStore } from '@/store/useStoreStore';
 
 const SIDEBAR_OPEN = 240;
 const SIDEBAR_COLLAPSED = 72;
@@ -54,6 +56,7 @@ export function AppLayout() {
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const { isDark, toggleTheme } = useTheme();
     const { user, logout } = useAuthStore();
+    const { tiendaActual } = useStoreStore();
     const navigate = useNavigate();
 
     const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_OPEN;
@@ -133,13 +136,30 @@ export function AppLayout() {
                     </button>
                 </div>
 
+                {/* Selector de Tienda */}
+                <div style={{ marginTop: '16px' }}>
+                    <StoreSelector collapsed={collapsed} />
+                </div>
+
                 {/* Navegación */}
-                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', padding: collapsed ? '12px 8px' : '16px 12px' }}>
+                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', padding: collapsed ? '4px 8px 12px' : '0 12px 16px' }}>
                     {/* Módulos Activos */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        {navItems.filter(i => i.active).map((item) => (
-                            <SidebarNavItem key={item.to} {...item} collapsed={collapsed} end={item.to === '/'} onClick={() => setMobileOpen(false)} />
-                        ))}
+                        {navItems.filter(i => i.active).map((item) => {
+                            const isRestricted = !tiendaActual && (item.to === '/simulador' || item.to === '/ofertas');
+
+                            return (
+                                <SidebarNavItem
+                                    key={item.to}
+                                    {...item}
+                                    collapsed={collapsed}
+                                    end={item.to === '/'}
+                                    onClick={() => setMobileOpen(false)}
+                                    disabled={isRestricted}
+                                    tooltip={isRestricted ? "Selecciona o crea una tienda para acceder" : undefined}
+                                />
+                            );
+                        })}
                     </div>
 
                     {/* Módulos Próximamente */}
@@ -440,6 +460,7 @@ interface SidebarNavItemProps {
     end?: boolean;
     onClick?: () => void;
     disabled?: boolean;
+    tooltip?: string;
     style?: React.CSSProperties;
 }
 
@@ -451,13 +472,14 @@ function SidebarNavItem({
     end,
     onClick,
     disabled,
+    tooltip,
     style: customStyle,
 }: SidebarNavItemProps) {
     const [hovered, setHovered] = useState(false);
 
     if (disabled) {
         return (
-            <Tooltip content="Próximamente disponible" position="right" delay={100}>
+            <Tooltip content={tooltip || "Próximamente disponible"} position="right" delay={100}>
                 <div
                     onMouseEnter={() => setHovered(true)}
                     onMouseLeave={() => setHovered(false)}
