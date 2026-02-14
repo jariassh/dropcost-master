@@ -138,8 +138,8 @@ export function SimuladorResults({
             <div
                 style={{
                     flex: 1,
-                    minHeight: '239.5px',
-                    padding: '28px 24px 24px',
+                    minHeight: '220px',
+                    padding: '24px',
                     borderRadius: '16px',
                     background: 'linear-gradient(135deg, #0066FF 0%, #003D99 100%)',
                     textAlign: 'center',
@@ -379,16 +379,24 @@ export function SimuladorResults({
                     <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '14px' }}>
                         Efectividad
                     </p>
-                    <div style={{ marginBottom: '10px' }}>
+                    <div style={{ marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Confirmación</span>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#F59E0B' }}>{confirmationPct.toFixed(0)}%</span>
+                        </div>
                         <div style={{ height: '6px', borderRadius: '3px', backgroundColor: 'var(--bg-secondary)', overflow: 'hidden' }}>
                             <div style={{ height: '100%', width: `${confirmationPct}%`, backgroundColor: '#F59E0B' }} />
                         </div>
-                        <p style={{ fontSize: '10px', marginTop: '4px', color: 'var(--text-tertiary)' }}>Confirmación {confirmationPct.toFixed(0)}%</p>
                     </div>
-                    <div style={{ height: '6px', borderRadius: '3px', backgroundColor: 'var(--bg-secondary)', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${finalEffectivenessPercent}%`, backgroundColor: '#10B981' }} />
+                    <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Entrega Final</span>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#10B981' }}>{finalEffectivenessPercent}%</span>
+                        </div>
+                        <div style={{ height: '6px', borderRadius: '3px', backgroundColor: 'var(--bg-secondary)', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${finalEffectivenessPercent}%`, backgroundColor: '#10B981' }} />
+                        </div>
                     </div>
-                    <p style={{ fontSize: '10px', marginTop: '4px', color: 'var(--text-tertiary)' }}>Entrega Final {finalEffectivenessPercent}%</p>
                 </div>
             </div>
 
@@ -408,11 +416,11 @@ export function SimuladorResults({
                                 key={seg.label}
                                 style={{
                                     width: `${pct}%`, backgroundColor: seg.color,
-                                    fontSize: '9px', fontWeight: 700, color: '#fff',
+                                    fontSize: '11px', fontWeight: 700, color: '#fff',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 }}
                             >
-                                {pct > 15 ? seg.label : ''}
+                                {pct > 18 ? seg.label : ''}
                             </div>
                         );
                     })}
@@ -420,8 +428,8 @@ export function SimuladorResults({
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     {breakdownSegments.map((seg) => (
                         <div key={seg.label}>
-                            <p style={{ fontSize: '10px', fontWeight: 700, color: seg.color }}>{seg.label}</p>
-                            <p style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>{suggestedPrice > 0 ? ((seg.value / suggestedPrice) * 100).toFixed(0) : 0}%</p>
+                            <p style={{ fontSize: '12px', fontWeight: 700, color: seg.color }}>{seg.label}</p>
+                            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{suggestedPrice > 0 ? ((seg.value / suggestedPrice) * 100).toFixed(0) : 0}%</p>
                         </div>
                     ))}
                 </div>

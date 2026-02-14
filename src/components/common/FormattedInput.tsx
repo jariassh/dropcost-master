@@ -19,7 +19,7 @@ export function FormattedInput({ value, onChange, onFocus, onBlur, ...props }: F
     // Initialize display value
     useEffect(() => {
         if (!isFocused) {
-            setDisplayValue(value === 0 ? '' : formatNumber(value));
+            setDisplayValue(formatNumber(value));
         }
     }, [value, isFocused]);
 

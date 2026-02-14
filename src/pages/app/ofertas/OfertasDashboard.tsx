@@ -3,7 +3,7 @@
  * Filtros por estrategia y estado.
  */
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Badge, EmptyState, useToast, ConfirmDialog } from '@/components/common';
 import { OfertaDetailPanel } from './components/OfertaDetailPanel';
 import type { Oferta, StrategyType, OfertaStatus } from '@/types/ofertas';
@@ -18,6 +18,7 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
     const navigate = useNavigate();
     const toast = useToast();
     const [ofertas, setOfertas] = useState<Oferta[]>([]);
+    const [searchParams] = useSearchParams();
     const [filterStrategy, setFilterStrategy] = useState<StrategyType | 'todas'>('todas');
     const [filterStatus, setFilterStatus] = useState<OfertaStatus | 'todas'>('todas');
     const [detailOferta, setDetailOferta] = useState<Oferta | null>(null);
@@ -25,8 +26,18 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
 
     useEffect(() => {
         const stored = localStorage.getItem('dropcost_ofertas');
-        if (stored) setOfertas(JSON.parse(stored));
-    }, []);
+        if (stored) {
+            const parsed = JSON.parse(stored) as Oferta[];
+            setOfertas(parsed);
+
+            // Check for ID in URL to open detail
+            const id = searchParams.get('id');
+            if (id) {
+                const found = parsed.find(o => o.id === id);
+                if (found) setDetailOferta(found);
+            }
+        }
+    }, [searchParams]);
 
     function saveOfertas(updated: Oferta[]) {
         setOfertas(updated);
