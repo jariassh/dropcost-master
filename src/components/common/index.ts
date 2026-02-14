@@ -16,4 +16,5 @@ export { EmptyState } from './EmptyState';
 export { Toggle } from './Toggle';
 export { ConfirmDialog } from './ConfirmDialog';
 export { Tooltip } from './Tooltip';
+export { SmartPhoneInput } from './SmartPhoneInput';
 
