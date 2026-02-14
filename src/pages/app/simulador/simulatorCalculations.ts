@@ -15,7 +15,12 @@
 
 import type { SimulatorInputs, SimulatorResults, CostBreakdown, EffectivenessFunnel, VolumeTableRow } from '@/types/simulator';
 
-/** Banker's rounding (ROUND_HALF_UP) to 2 decimal places. */
+/** Round to nearest 100 COP */
+export function roundTo100(value: number): number {
+    return Math.round(value / 100) * 100;
+}
+
+/** Banker's rounding (ROUND_HALF_UP) to 2 decimal places. Used for internal precision before final round. */
 export function roundCurrency(value: number): number {
     return Math.round((value + Number.EPSILON) * 100) / 100;
 }
@@ -52,11 +57,11 @@ export function calculateSuggestedPrice(inputs: SimulatorInputs, manualPrice: nu
     }
 
     // ─── Fixed costs per effective sale ───
-    const cpaCostPerSale = roundCurrency(averageCpa * ordersPerDelivery);
-    const productCostPerSale = roundCurrency(productCost); // only delivered units
-    const freightCostPerSale = roundCurrency(shippingCost * shippedPerDelivery);
-    const otherCostPerSale = roundCurrency(otherExpenses * shippedPerDelivery);
-    const returnLossPerSale = roundCurrency(shippingCost * 1.5 * returnsPerDelivery);
+    const cpaCostPerSale = averageCpa * ordersPerDelivery;
+    const productCostPerSale = productCost; // only delivered units
+    const freightCostPerSale = shippingCost * shippedPerDelivery;
+    const otherCostPerSale = otherExpenses * shippedPerDelivery;
+    const returnLossPerSale = shippingCost * 1.5 * returnsPerDelivery;
 
     const totalFixedCost = cpaCostPerSale + productCostPerSale + freightCostPerSale + otherCostPerSale + returnLossPerSale;
 
@@ -64,35 +69,41 @@ export function calculateSuggestedPrice(inputs: SimulatorInputs, manualPrice: nu
     let finalPrice: number;
     let netProfitPerSale: number;
 
-    const suggestedPrice = denominator > 0 ? roundCurrency(totalFixedCost / denominator) : 0;
+    const rawSuggestedPrice = denominator > 0 ? totalFixedCost / denominator : 0;
+    const suggestedPrice = roundTo100(rawSuggestedPrice);
 
     if (manualPrice !== null && manualPrice > 0) {
         finalPrice = manualPrice;
-        netProfitPerSale = roundCurrency(finalPrice * (1 - commissionRate * shippedPerDelivery) - totalFixedCost);
+        // Recalculate profit based on manual price
+        // Revenue - (FixedCosts + VariableCommission)
+        const totalCommission = finalPrice * commissionRate * shippedPerDelivery;
+        netProfitPerSale = finalPrice - totalFixedCost - totalCommission;
     } else {
         finalPrice = suggestedPrice;
-        netProfitPerSale = roundCurrency(finalPrice * marginRate);
+        // Calculated profit might slighty vary due to rounding, so we recalc:
+        const totalCommission = finalPrice * commissionRate * shippedPerDelivery;
+        netProfitPerSale = finalPrice - totalFixedCost - totalCommission;
     }
 
     // Commission is paid on ALL shipped orders, amortized per effective sale
-    const commissionPerSale = roundCurrency(finalPrice * commissionRate * shippedPerDelivery);
+    const commissionPerSale = finalPrice * commissionRate * shippedPerDelivery;
 
     // ─── Cost breakdown (per effective sale) ───
     const costBreakdown: CostBreakdown = {
-        productCost: productCostPerSale,
-        shippingCost: freightCostPerSale,
-        collectionCommission: commissionPerSale,
-        returnCost: returnLossPerSale,
-        otherExpenses: otherCostPerSale,
-        cpa: cpaCostPerSale,
-        netMargin: netProfitPerSale,
-        totalPrice: finalPrice,
+        productCost: Math.round(productCostPerSale),
+        shippingCost: Math.round(freightCostPerSale),
+        collectionCommission: Math.round(commissionPerSale),
+        returnCost: Math.round(returnLossPerSale),
+        otherExpenses: Math.round(otherCostPerSale),
+        cpa: Math.round(cpaCostPerSale),
+        netMargin: Math.round(netProfitPerSale),
+        totalPrice: Math.round(finalPrice),
     };
 
     // ─── Embudo de efectividad (base 100 pedidos) ───
     const baseOrders = 100;
-    const afterCancellation = roundCurrency(baseOrders * confirmationRate);
-    const afterReturns = roundCurrency(afterCancellation * deliveryRate);
+    const afterCancellation = Math.round(baseOrders * confirmationRate);
+    const afterReturns = Math.round(afterCancellation * deliveryRate);
 
     const effectivenessFunnel: EffectivenessFunnel = {
         totalOrders: baseOrders,
@@ -104,17 +115,17 @@ export function calculateSuggestedPrice(inputs: SimulatorInputs, manualPrice: nu
     return {
         suggestedPrice: finalPrice,
         originalSuggestedPrice: suggestedPrice,
-        netProfitPerSale,
-        finalEffectivenessPercent: roundCurrency(effectivenessRate * 100),
+        netProfitPerSale: Math.round(netProfitPerSale),
+        finalEffectivenessPercent: Math.round(effectivenessRate * 100),
         costBreakdown,
         effectivenessFunnel,
     };
 }
 
 /**
- * Calculate volume price table for 1-N units.
- * Unit 1 = full original price.
- * Units 2+ = supplierCost + (originalMarginValue × marginPercent / 100).
+ * Calculate volume price table.
+ * Unit 1 = Full Price (from suggested calculation).
+ * Units N = Calculated based on margin reduction.
  */
 export function calculateVolumeTable(
     suggestedPrice: number,
@@ -125,24 +136,41 @@ export function calculateVolumeTable(
 ): VolumeTableRow[] {
     const rows: VolumeTableRow[] = [];
     const unit1Profit = originalMarginValue;
-    const additionalUnitPrice = roundCurrency(supplierCost + (originalMarginValue * marginPercent / 100));
-    const additionalUnitProfit = roundCurrency(originalMarginValue * marginPercent / 100);
+    
+    // Cost of adding one more unit = Supplier Cost + (OriginalProfit * Margin%)
+    // This assumes Shipping/CPA are covered by the first unit's price model.
+    const additionalUnitPrice = supplierCost + (originalMarginValue * marginPercent / 100);
+    const additionalUnitProfit = originalMarginValue * marginPercent / 100;
 
     for (let qty = 1; qty <= maxUnits; qty++) {
         if (qty === 1) {
             rows.push({
                 quantity: 1,
-                totalPrice: roundCurrency(suggestedPrice),
-                pricePerUnit: roundCurrency(suggestedPrice),
+                totalPrice: roundTo100(suggestedPrice),
+                pricePerUnit: roundTo100(suggestedPrice),
                 savingsPerUnit: 0,
-                totalProfit: roundCurrency(unit1Profit),
+                totalProfit: roundTo100(unit1Profit),
             });
         } else {
             const extraUnits = qty - 1;
-            const totalPrice = roundCurrency(suggestedPrice + additionalUnitPrice * extraUnits);
-            const pricePerUnit = roundCurrency(totalPrice / qty);
-            const savingsPerUnit = roundCurrency(suggestedPrice - pricePerUnit);
-            const totalProfit = roundCurrency(unit1Profit + additionalUnitProfit * extraUnits);
+            // Calculations with raw float first
+            const rawTotalPrice = suggestedPrice + additionalUnitPrice * extraUnits;
+            const totalPrice = roundTo100(rawTotalPrice);
+            
+            const pricePerUnit = roundTo100(totalPrice / qty);
+            const savingsPerUnit = roundTo100(suggestedPrice - pricePerUnit);
+            
+            // Profit calculation is tricky when we round the Total Price.
+            // Best to reverse calculate profit from the rounded Total Price.
+            // Profit(N) = TotalPrice(N) - (Cost(1) + SupplierCost*(N-1))? No.
+            // Simplified logic as per original: 
+            // Profit = Unit1Profit + ExtraProfit
+            // But we must respect the new TotalPrice.
+            // CostBase = RawTotal - RawProfit.
+            // NewProfit = RoundedTotal - CostBase.
+            
+            const costBase = rawTotalPrice - (unit1Profit + additionalUnitProfit * extraUnits);
+            const totalProfit = roundTo100(totalPrice - costBase);
 
             rows.push({ quantity: qty, totalPrice, pricePerUnit, savingsPerUnit, totalProfit });
         }
@@ -151,9 +179,37 @@ export function calculateVolumeTable(
     return rows;
 }
 
+/**
+ * Recalculate full results for a specific Volume scenario (Quantity N).
+ * Used when Manual Volume Price is active or to show breakdown.
+ */
+export function calculateVolumeMetrics(
+    inputs: SimulatorInputs,
+    quantity: number,
+    manualTotalPrice: number | null
+): SimulatorResults {
+    // We treat this as a "Single Unit Sale" of a "Bundle Product".
+    // Bundle Product Cost = ProductCost * Qty.
+    // Shipping, CPA, etc. remain per Order.
+    
+    // We can reuse calculateSuggestedPrice but override ProductCost.
+    // However, calculateSuggestedPrice determines the Price.
+    
+    if (!manualTotalPrice) return buildEmptyResults(); // Should ideally not happen or rely on default
+
+    const bundleInputs: SimulatorInputs = {
+        ...inputs,
+        productCost: inputs.productCost * quantity,
+        // Other costs (shipping, CPA) stay the same per order
+    };
+
+    return calculateSuggestedPrice(bundleInputs, manualTotalPrice);
+}
+
 function buildEmptyResults(): SimulatorResults {
     return {
         suggestedPrice: 0,
+        originalSuggestedPrice: 0,
         netProfitPerSale: 0,
         finalEffectivenessPercent: 0,
         costBreakdown: {
@@ -165,3 +221,4 @@ function buildEmptyResults(): SimulatorResults {
         },
     };
 }
+

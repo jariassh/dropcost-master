@@ -6,6 +6,7 @@
  */
 import { useState } from 'react';
 import { Input, Slider, Toggle } from '@/components/common';
+import { FormattedInput } from '@/components/common/FormattedInput';
 import type { SimulatorInputs, VolumeStrategy } from '@/types/simulator';
 import { Package, Truck, Megaphone, Info, TrendingUp, TrendingDown } from 'lucide-react';
 import { calculateVolumeTable } from './simulatorCalculations';
@@ -110,7 +111,7 @@ export function SimuladorForm({
                         <FormInput
                             label="Costo producto ($)"
                             tooltip={TOOLTIPS.productCost}
-                            type="number"
+                            isCurrency
                             value={inputs.productCost}
                             onChange={handleNumericChange('productCost')}
                         />
@@ -129,7 +130,7 @@ export function SimuladorForm({
                         <FormInput
                             label="CPA por pedido ($)"
                             tooltip={TOOLTIPS.averageCpa}
-                            type="number"
+                            isCurrency
                             value={inputs.averageCpa}
                             onChange={handleNumericChange('averageCpa')}
                         />
@@ -150,7 +151,7 @@ export function SimuladorForm({
                     <FormInput
                         label="Flete base ($)"
                         tooltip={TOOLTIPS.shippingCost}
-                        type="number"
+                        isCurrency
                         value={inputs.shippingCost}
                         onChange={handleNumericChange('shippingCost')}
                     />
@@ -173,7 +174,7 @@ export function SimuladorForm({
                     <FormInput
                         label="Otros (Empaque/Plat)"
                         tooltip={TOOLTIPS.otherExpenses}
-                        type="number"
+                        isCurrency
                         value={inputs.otherExpenses}
                         onChange={handleNumericChange('otherExpenses')}
                     />
@@ -297,9 +298,9 @@ function FormSection({ icon, title, color, children }: {
     );
 }
 
-function FormInput({ label, tooltip, ...inputProps }: {
-    label: string; tooltip?: string;
-} & React.InputHTMLAttributes<HTMLInputElement>) {
+function FormInput({ label, tooltip, isCurrency, ...inputProps }: {
+    label: string; tooltip?: string; isCurrency?: boolean;
+} & any) {
     return (
         <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
@@ -308,7 +309,11 @@ function FormInput({ label, tooltip, ...inputProps }: {
                 </span>
                 {tooltip && <InfoTooltip text={tooltip} />}
             </div>
-            <Input {...inputProps} />
+            {isCurrency ? (
+                <FormattedInput {...inputProps} />
+            ) : (
+                <Input {...inputProps} />
+            )}
         </div>
     );
 }
