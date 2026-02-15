@@ -69,6 +69,7 @@ Para ejecutar este proyecto localmente, sigue estos pasos:
 - **🎯 Exactitud Financiera:** Mejora en la persistencia de precios modificados manualmente y redondeos inteligentes en el simulador.
 - **🏬 Gestión de Tiendas Avanzada:** Módulo completo de creación, edición y borrado de tiendas integrado en Configuración, con sistema de protección de integridad de datos vinculado a costeos operativos.
 - **👁️ Auditoría y Seguridad:** Implementación de historial de actividad completo. Registro inmutable de acciones críticas (Login, Creación/Borrado de Tiendas, Cambios de Configuración) con detalles de IP y Agente de Usuario, visible tanto para administradores como para el propio usuario.
+- **🔒 Control de Acceso por Plan (Paywall):** Implementación de restricciones estrictas basadas en el plan de suscripción del usuario. Rutas premium como "Sistema de Referidos" y "Billetera" ahora están protegidas. Validación de límites de creación de tiendas en tiempo real (UI y Lógica de Negocio) para asegurar el cumplimiento de las cuotas del plan.
 
 ---
 
