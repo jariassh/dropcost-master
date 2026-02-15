@@ -20,7 +20,8 @@ export const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({ children }
     }
 
     // 2. Bypass para Administradores
-    if (user?.rol === 'admin' || user?.rol === 'superadmin') {
+    const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+    if (isAdmin) {
         return <>{children}</>;
     }
 
@@ -31,11 +32,11 @@ export const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({ children }
     }
 
     // 4. Verificación de Suscripción
-    // Bloqueamos si el plan es 'free' O si el estado no es 'activa' o 'trial'
-    const planFree = !user?.planId || user.planId === 'plan_free';
-    const noActivo = user?.estadoSuscripcion !== 'activa' && user?.estadoSuscripcion !== 'trial';
+    // El usuario debe tener un planID y su estado debe ser activo o trial
+    const hasNoPlan = !user?.planId || user.planId === 'plan_free';
+    const isSubscriptionInactive = user?.estadoSuscripcion !== 'activa' && user?.estadoSuscripcion !== 'trial';
 
-    if (planFree || noActivo) {
+    if (hasNoPlan || isSubscriptionInactive) {
         // Redirigir a pricing solo si no cumple los requisitos
         return <Navigate to="/pricing" replace />;
     }

@@ -71,3 +71,19 @@ export async function getReferredUsers(): Promise<ReferredUser[]> {
         createdAt: r.fecha_registro
     }));
 }
+
+/**
+ * Busca el nombre completo de un referente por su código.
+ */
+export async function getReferrerNameByCode(code: string): Promise<string | null> {
+    if (!code) return null;
+    
+    const { data, error } = await supabase
+        .from('users')
+        .select('nombres, apellidos')
+        .eq('codigo_referido_personal', code)
+        .maybeSingle();
+
+    if (error || !data) return null;
+    return `${data.nombres} ${data.apellidos}`;
+}
