@@ -57,7 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             auditService.recordLog({
                 accion: 'LOGIN',
                 entidad: 'USER',
-                entidadId: user?.id,
+                entidad_id: user?.id || null,
                 detalles: { email: credentials.email }
             });
 
@@ -131,7 +131,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             auditService.recordLog({
                 accion: 'LOGIN',
                 entidad: 'USER',
-                entidadId: user?.id,
+                entidad_id: user?.id || null,
                 detalles: { method: '2FA' }
             });
 
@@ -225,7 +225,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             auditService.recordLog({
                 accion: 'UPDATE_PROFILE',
                 entidad: 'USER',
-                entidadId: user?.id,
+                entidad_id: user?.id || null,
                 detalles: userData
             });
 
@@ -301,7 +301,8 @@ export const useAuthStore = create<AuthState>((set) => ({
             auditService.recordLog({
                 accion: 'LOGOUT',
                 entidad: 'USER',
-                entidadId: user.id
+                entidad_id: user.id || null,
+                detalles: {}
             });
         }
 

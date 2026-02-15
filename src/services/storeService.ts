@@ -43,7 +43,7 @@ export const storeService = {
             auditService.recordLog({
                 accion: 'CREATE_STORE',
                 entidad: 'STORE',
-                entidadId: data.id,
+                entidad_id: data.id,
                 detalles: { nombre: data.nombre, pais: data.pais_id }
             });
         }
@@ -71,7 +71,7 @@ export const storeService = {
             auditService.recordLog({
                 accion: 'UPDATE_STORE',
                 entidad: 'STORE',
-                entidadId: data.id,
+                entidad_id: data.id,
                 detalles: cambios
             });
         }
@@ -84,6 +84,13 @@ export const storeService = {
      * Según políticas RLS, solo el dueño puede borrar.
      */
     async deleteTienda(id: string): Promise<void> {
+        // 1. Obtener datos antes de borrar para el log
+        const { data: tienda } = await supabase
+            .from('tiendas')
+            .select('nombre') // Solo pedimos nombre para mayor seguridad
+            .eq('id', id)
+            .single();
+
         const { error } = await supabase
             .from('tiendas')
             .delete()
@@ -94,11 +101,16 @@ export const storeService = {
             throw new Error('No se pudo eliminar la tienda');
         }
 
-        // Log Auditoría: Tienda eliminada
+        // Log Auditoría: Tienda eliminada con nombre preservado
         auditService.recordLog({
             accion: 'DELETE_STORE',
             entidad: 'STORE',
-            entidadId: id
+            entidad_id: id,
+            detalles: { 
+                id, 
+                nombre: tienda?.nombre || 'Tienda eliminada (Nombre desconocido)',
+                pais: tienda?.pais_id 
+            }
         });
     }
 };

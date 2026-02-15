@@ -30,6 +30,11 @@ CREATE POLICY "Users can view own audit logs" ON public.audit_logs
     FOR SELECT TO authenticated
     USING (usuario_id = auth.uid());
 
+-- User can insert logs (Critical for audit to work)
+CREATE POLICY "Users can insert audit logs" ON public.audit_logs
+    FOR INSERT TO authenticated
+    WITH CHECK (auth.uid() = usuario_id);
+
 -- Enable Realtime
 ALTER TABLE public.audit_logs REPLICA IDENTITY FULL;
 CREATE PUBLICATION audit_logs_publication FOR TABLE public.audit_logs;

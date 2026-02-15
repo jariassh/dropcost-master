@@ -17,8 +17,10 @@ import { ReferidosPage } from '@/pages/app/ReferidosPage';
 import { WalletPage } from '@/pages/app/WalletPage';
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
 import { AdminDashboard } from '@/pages/admin/AdminDashboard';
+import { AdminAuditLogsPage } from '@/pages/admin/AdminAuditLogsPage';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { useAuthStore } from '@/store/authStore';
+import UserAuditLogsPage from '@/pages/UserAuditLogsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -81,6 +83,7 @@ export function AppRouter() {
                 <Route path="/configuracion" element={<ConfiguracionPage />} />
                 <Route path="/referidos" element={<ReferidosPage />} />
                 <Route path="/billetera" element={<WalletPage />} />
+                <Route path="/historial" element={<UserAuditLogsPage />} />
             </Route>
 
             {/* Rutas de Administración (Independientes) */}
@@ -96,7 +99,7 @@ export function AppRouter() {
                 <Route path="users" element={<AdminUsersPage />} />
                 <Route path="plans" element={<AdminDashboard />} />
                 <Route path="promo-codes" element={<AdminDashboard />} />
-                <Route path="logs" element={<AdminDashboard />} />
+                <Route path="logs" element={<AdminAuditLogsPage />} />
                 <Route path="settings" element={<AdminDashboard />} />
             </Route>
 

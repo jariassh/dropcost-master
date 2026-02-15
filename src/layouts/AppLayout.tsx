@@ -28,6 +28,7 @@ import {
     Link2,
     PieChart,
     GraduationCap,
+    History as HistoryIcon,
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
@@ -49,6 +50,7 @@ const navItems = [
     { to: '/analisis-regional', icon: Map, label: 'Análisis Regional', active: false },
     { to: '/acortador', icon: Link2, label: 'Acortador URL', active: false },
     { to: '/capacitacion', icon: GraduationCap, label: 'Capacitación', active: false },
+    { to: '/historial', icon: HistoryIcon, label: 'Historial de Actividad', active: true },
 ];
 
 const adminLink = { to: '/admin', icon: ShieldAlert, label: 'Panel Administración' };
