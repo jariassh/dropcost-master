@@ -8,9 +8,10 @@ interface PlanCardProps {
     plan: Plan;
     isCurrent?: boolean;
     onSelect?: (plan: Plan) => void;
+    displayedPrice?: string;
 }
 
-export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onSelect }) => {
+export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onSelect, displayedPrice }) => {
 
     // Logic based on slug for styling
     const isEnterprise = plan.slug === 'plan_enterprise';
@@ -79,7 +80,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onS
             {/* Price */}
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
                 <span style={{ fontSize: '36px', fontWeight: 800, color: 'var(--text-primary)' }}>
-                    {formatCurrency(plan.price_monthly).replace(/\s/g, '')}
+                    {displayedPrice ? displayedPrice.replace(/\s/g, '') : formatCurrency(plan.price_monthly).replace(/\s/g, '')}
                 </span>
                 <span style={{ fontSize: '14px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
                     /mes

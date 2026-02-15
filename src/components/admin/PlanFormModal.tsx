@@ -59,7 +59,8 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
         features: [],
         limits: initialLimits,
         is_active: true,
-        is_public: true
+        is_public: true,
+        currency: 'COP'
     });
 
     const [newFeature, setNewFeature] = useState('');
@@ -77,7 +78,8 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                 features: Array.from(new Set(initialData.features || [])),
                 limits: initialData.limits || { stores: 1 },
                 is_active: initialData.is_active ?? true,
-                is_public: initialData.is_public ?? true
+                is_public: initialData.is_public ?? true,
+                currency: initialData.currency || 'COP'
             });
         } else {
             setFormData({
@@ -89,7 +91,8 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                 features: [],
                 limits: { stores: 1 },
                 is_active: true,
-                is_public: true
+                is_public: true,
+                currency: 'COP'
             });
         }
     }, [initialData, isOpen]);
@@ -324,22 +327,49 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                         </div>
 
                         {/* Pricing */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                            <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)' }}>Configuración de Precios</h4>
+
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Precio Mensual ($)</label>
-                                <CurrencyInput
-                                    value={formData.price_monthly}
-                                    onChange={(val) => setFormData({ ...formData, price_monthly: val })}
-                                    style={{ width: '100%' }}
-                                />
+                                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Moneda Base del Plan</label>
+                                <select
+                                    value={formData.currency}
+                                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                                    style={{
+                                        padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)',
+                                        backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '14px',
+                                        width: '100%', cursor: 'pointer'
+                                    }}
+                                >
+                                    <option value="COP">Peso Colombiano (COP)</option>
+                                    <option value="USD">Dólar Estadounidense (USD)</option>
+                                    <option value="MXN">Peso Mexicano (MXN)</option>
+                                    <option value="EUR">Euro (EUR)</option>
+                                </select>
+                                <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: 0 }}>
+                                    Los usuarios verán el precio convertido a su moneda local, calculado desde esta moneda base.
+                                </p>
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Precio Semestral ($)</label>
-                                <CurrencyInput
-                                    value={formData.price_semiannual}
-                                    onChange={(val) => setFormData({ ...formData, price_semiannual: val })}
-                                    style={{ width: '100%' }}
-                                />
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Precio Mensual</label>
+                                    <CurrencyInput
+                                        value={formData.price_monthly}
+                                        onChange={(val) => setFormData({ ...formData, price_monthly: val })}
+                                        style={{ width: '100%' }}
+                                        prefix={formData.currency === 'USD' || formData.currency === 'EUR' ? undefined : '$ '}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Precio Semestral</label>
+                                    <CurrencyInput
+                                        value={formData.price_semiannual}
+                                        onChange={(val) => setFormData({ ...formData, price_semiannual: val })}
+                                        style={{ width: '100%' }}
+                                        prefix={formData.currency === 'USD' || formData.currency === 'EUR' ? undefined : '$ '}
+                                    />
+                                </div>
                             </div>
                         </div>
 

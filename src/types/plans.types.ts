@@ -38,4 +38,5 @@ export interface PlanInput {
     limits: PlanLimits;
     is_active: boolean;
     is_public: boolean;
+    currency: string;
 }
