@@ -25,17 +25,21 @@ export function PaisDisplay({
     };
 
     const flagSizes = {
-        sm: 'text-base',
-        md: 'text-xl',
-        lg: 'text-2xl'
+        sm: 'w-4 h-2.5',
+        md: 'w-5 h-3',
+        lg: 'w-6 h-4'
     };
 
     return (
         <div className={`inline-flex items-center ${sizeClasses[size]} ${className}`}>
             {showFlag && (
-                <span className={`${flagSizes[size]} leading-none`}>
-                    {pais.bandera}
-                </span>
+                <div className={`${flagSizes[size]} flex-shrink-0 overflow-hidden rounded-sm shadow-sm border border-[var(--border-color)] bg-[var(--bg-secondary)]`}>
+                    <img
+                        src={`https://flagcdn.com/w40/${pais.codigo_iso_2.toLowerCase()}.png`}
+                        alt={pais.nombre_es}
+                        className="w-full h-full object-cover"
+                    />
+                </div>
             )}
             <span className="font-medium text-[var(--text-primary)] truncate">
                 {pais.nombre_es}
