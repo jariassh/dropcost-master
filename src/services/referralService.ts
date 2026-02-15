@@ -13,10 +13,15 @@ export interface ReferralStats {
 export interface ReferredUser {
     id: string;
     email: string;
+    nombres?: string;
+    apellidos?: string;
     status: 'pending' | 'completed';
     createdAt: string;
 }
 
+/**
+ * Obtiene las estadísticas de referidos del usuario actual.
+ */
 /**
  * Obtiene las estadísticas de referidos del usuario actual.
  */
@@ -30,20 +35,32 @@ export async function getReferralStats(): Promise<ReferralStats> {
         .select('codigo_referido_personal, wallet_saldo')
         .eq('id', user.id)
         .single();
+    
+    // 2. Obtener estadísticas del líder (clicks, referidos totales)
+    const { data: leaderStats } = await supabase
+        .from('referidos_lideres')
+        .select('total_clicks, total_usuarios_referidos')
+        .eq('user_id', user.id) // Asumiendo que el usuario es el líder
+        .single();
 
-    // 2. Contar referidos completados
-    const { count } = await supabase
-        .from('referidos_usuarios')
-        .select('*', { count: 'exact', head: true })
-        .eq('lider_id', user.id); // Asumiendo que el usuario actúa como su propio lider o ajustando a la lógica de la DB
-
-    // Mock de clicks por ahora ya que no hay tabla de analítica de links de referidos
     return {
-        totalClicks: 124, // Mock
-        totalReferred: count || 0,
+        totalClicks: leaderStats?.total_clicks || 0,
+        totalReferred: leaderStats?.total_usuarios_referidos || 0,
         totalEarned: userData?.wallet_saldo || 0,
         referralCode: userData?.codigo_referido_personal || ''
     };
+}
+
+/**
+ * Incrementa el contador de clicks para un código de referido.
+ */
+export async function incrementReferralClicks(code: string): Promise<void> {
+    if (!code) return;
+    try {
+        await supabase.rpc('increment_referral_clicks', { ref_code: code });
+    } catch (error) {
+        console.error('Error incrementing clicks:', error);
+    }
 }
 
 /**
@@ -53,11 +70,17 @@ export async function getReferredUsers(): Promise<ReferredUser[]> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
 
-    // Esta query asume una relación donde referidos_usuarios mapea al invitado
+    // Obtenemos los usuarios referidos uniéndolos con la tabla de líderes por el user_id actual
     const { data, error } = await supabase
         .from('referidos_usuarios')
-        .select('*, users!usuario_id(email)')
-        .eq('lider_id', user.id);
+        .select(`
+            id,
+            fecha_registro,
+            usuario_id,
+            users:usuario_id (email, nombres, apellidos),
+            referidos_lideres!inner (user_id)
+        `)
+        .eq('referidos_lideres.user_id', user.id);
 
     if (error) {
         console.error('Error fetching referred users:', error);
@@ -67,7 +90,9 @@ export async function getReferredUsers(): Promise<ReferredUser[]> {
     return (data || []).map((r: any) => ({
         id: r.id,
         email: r.users?.email || 'Usuario oculto',
-        status: 'completed', // Si está en esta tabla, está completado
+        nombres: r.users?.nombres,
+        apellidos: r.users?.apellidos,
+        status: 'completed',
         createdAt: r.fecha_registro
     }));
 }
