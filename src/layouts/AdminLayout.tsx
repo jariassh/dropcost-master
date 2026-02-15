@@ -35,7 +35,7 @@ const adminNavItems = [
     { to: '/admin/ads', icon: Megaphone, label: 'Ads & Creatividades', disabled: true },
     { to: '/admin/plans', icon: CreditCard, label: 'Planes y Membresías', disabled: true },
     { to: '/admin/promo-codes', icon: Ticket, label: 'Códigos Promocionales', disabled: true },
-    { to: '/admin/logs', icon: History, label: 'Logs de Auditoría', disabled: true },
+    { to: '/admin/logs', icon: History, label: 'Logs de Auditoría' },
     { to: '/admin/settings', icon: Settings, label: 'Ajustes Globales', disabled: true },
 ];
 
