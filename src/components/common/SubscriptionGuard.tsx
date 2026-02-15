@@ -6,32 +6,40 @@ interface SubscriptionGuardProps {
     children: React.ReactNode;
 }
 
+/**
+ * Guardian de Suscripción: Protege las rutas que requieren un plan activo.
+ * Permite el paso libre a administradores y evita bucles en la página de planes.
+ */
 export const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({ children }) => {
     const { user, isAuthenticated } = useAuthStore();
     const location = useLocation();
 
+    // 1. Si no está logueado, al login
     if (!isAuthenticated) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // 1. Admin Bypass
+    // 2. Bypass para Administradores
     if (user?.rol === 'admin' || user?.rol === 'superadmin') {
         return <>{children}</>;
     }
 
-    // 2. Check Subscription
-    // Logic: Block if plan is 'free' OR subscription is NOT active.
-    // Note: We check against 'plan_free' slug. If we change slugs later, this needs update.
-    // Also handling case where planId might be null/undefined (new users).
+    // 3. Definir rutas que SIEMPRE deben ser accesibles (evitar bucles)
+    const publicAppPaths = ['/pricing', '/configuracion', '/soporte'];
+    if (publicAppPaths.includes(location.pathname)) {
+        return <>{children}</>;
+    }
 
-    const isFreePlan = !user?.planId || user.planId === 'plan_free';
-    const isInactive = user?.estadoSuscripcion !== 'activa' && user?.estadoSuscripcion !== 'trial'; // Allow trial if we add it
+    // 4. Verificación de Suscripción
+    // Bloqueamos si el plan es 'free' O si el estado no es 'activa' o 'trial'
+    const planFree = !user?.planId || user.planId === 'plan_free';
+    const noActivo = user?.estadoSuscripcion !== 'activa' && user?.estadoSuscripcion !== 'trial';
 
-    if (isFreePlan || isInactive) {
-        // User must pay. Redirect to pricing.
+    if (planFree || noActivo) {
+        // Redirigir a pricing solo si no cumple los requisitos
         return <Navigate to="/pricing" replace />;
     }
 
-    // 3. User verifies all checks
+    // 5. Todo en orden, mostrar contenido protegido
     return <>{children}</>;
 };

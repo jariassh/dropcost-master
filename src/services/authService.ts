@@ -56,6 +56,7 @@ export async function registerUser(data: RegisterData): Promise<AuthResponse> {
                 apellidos: data.apellidos,
                 pais: data.pais,
                 telefono: data.telefono,
+                referred_by: data.referredBy,
                 rol: 'cliente',
             }
         }
