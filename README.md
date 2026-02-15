@@ -68,6 +68,7 @@ Para ejecutar este proyecto localmente, sigue estos pasos:
 - **✨ UX/UI Refinada:** Rediseño de la tabla de "Mis Costeos" con indicadores visuales de precios manuales vs sugeridos por sistema.
 - **🎯 Exactitud Financiera:** Mejora en la persistencia de precios modificados manualmente y redondeos inteligentes en el simulador.
 - **🏬 Gestión de Tiendas Avanzada:** Módulo completo de creación, edición y borrado de tiendas integrado en Configuración, con sistema de protección de integridad de datos vinculado a costeos operativos.
+- **👁️ Auditoría y Seguridad:** Implementación de historial de actividad completo. Registro inmutable de acciones críticas (Login, Creación/Borrado de Tiendas, Cambios de Configuración) con detalles de IP y Agente de Usuario, visible tanto para administradores como para el propio usuario.
 
 ---
 
