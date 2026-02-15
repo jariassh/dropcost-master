@@ -22,16 +22,24 @@ import {
     X
 } from 'lucide-react';
 import { Button } from '../common/Button';
+import { AssignPlanModal } from './AssignPlanModal';
+import { obtenerPaisPorCodigo, Pais } from '../../services/paisesService';
+
+import { Plan } from '../../types/plans.types';
 
 interface UserDetailSlideOverProps {
     user: User | null;
     isOpen: boolean;
     onClose: () => void;
+    onUserUpdate?: () => void;
+    plans?: Plan[];
 }
 
-export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, isOpen, onClose }) => {
+export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, isOpen, onClose, onUserUpdate, plans = [] }) => {
     const [activity, setActivity] = useState<AuditLog[]>([]);
     const [loadingActivity, setLoadingActivity] = useState(false);
+    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+    const [countryData, setCountryData] = useState<Pais | null>(null);
 
     const fetchActivity = async () => {
         if (!user) return;
@@ -50,8 +58,13 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
     useEffect(() => {
         if (isOpen && user) {
             fetchActivity();
+            if (user.pais) {
+                obtenerPaisPorCodigo(user.pais).then(setCountryData);
+            } else {
+                setCountryData(null);
+            }
         }
-    }, [isOpen, user?.id]);
+    }, [isOpen, user?.id, user?.pais]);
 
     const getActionColor = (action: string) => {
         if (action === 'LOGIN') return '#3B82F6';
@@ -219,7 +232,7 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                                 <div style={{ display: 'flex', justifyContent: 'between', alignItems: 'center' }}>
                                     <div style={{ flex: 1 }}>
                                         <h5 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-                                            {user.plan_id === 'plan_pro' ? 'Plan Pro' : user.plan_id === 'plan_enterprise' ? 'Plan Enterprise' : 'Plan Gratis'}
+                                            {plans.find(p => p.slug === user.plan_id)?.name || (user.plan_id === 'plan_pro' ? 'Plan Pro' : user.plan_id === 'plan_enterprise' ? 'Plan Enterprise' : 'Plan Gratis')}
                                         </h5>
                                         <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Siguiente cobro: N/A</p>
                                     </div>
@@ -253,22 +266,18 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
                                     <Globe size={18} style={{ color: 'var(--text-tertiary)' }} />
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        {user.pais && user.pais.length === 2 ? (
-                                            <img
-                                                src={`https://flagcdn.com/w40/${user.pais.toLowerCase()}.png`}
-                                                alt={user.pais}
-                                                style={{ width: '22px', borderRadius: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
-                                            />
-                                        ) : null}
-                                        <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
-                                            {user.pais === 'CO' ? 'Colombia' :
-                                                user.pais === 'MX' ? 'México' :
-                                                    user.pais === 'EC' ? 'Ecuador' :
-                                                        user.pais === 'PE' ? 'Perú' :
-                                                            user.pais === 'CL' ? 'Chile' :
-                                                                user.pais === 'ES' ? 'España' :
-                                                                    user.pais || 'No registrado'}
-                                        </span>
+                                        {countryData ? (
+                                            <>
+                                                <span style={{ fontSize: '22px' }}>{countryData.bandera}</span>
+                                                <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
+                                                    {countryData.nombre_es}
+                                                </span>
+                                            </>
+                                        ) : (
+                                            <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
+                                                {user.pais || 'No registrado'}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -382,7 +391,12 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                         <Key size={16} /> Restablecer Contraseña
                     </button>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <Button style={{ borderRadius: '12px', height: '44px' }}>Cambiaro Plan</Button>
+                        <Button
+                            style={{ borderRadius: '12px', height: '44px' }}
+                            onClick={() => setIsAssignModalOpen(true)}
+                        >
+                            Cambiar Plan
+                        </Button>
                         <button style={{
                             padding: '12px',
                             backgroundColor: 'transparent',
@@ -401,6 +415,17 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                         </button>
                     </div>
                 </div>
+
+                <AssignPlanModal
+                    isOpen={isAssignModalOpen}
+                    onClose={() => setIsAssignModalOpen(false)}
+                    user={user}
+                    onSuccess={() => {
+                        // In a real app we would refresh user data or show toast
+                        setIsAssignModalOpen(false);
+                        onUserUpdate?.();
+                    }}
+                />
             </div>
         </SlideOver>
     );

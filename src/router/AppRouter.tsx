@@ -16,11 +16,13 @@ import { ConfiguracionPage } from '@/pages/app/ConfiguracionPage';
 import { ReferidosPage } from '@/pages/app/ReferidosPage';
 import { WalletPage } from '@/pages/app/WalletPage';
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
+import { AdminPlansPage } from '@/pages/admin/AdminPlansPage';
 import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { AdminAuditLogsPage } from '@/pages/admin/AdminAuditLogsPage';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { useAuthStore } from '@/store/authStore';
 import UserAuditLogsPage from '@/pages/UserAuditLogsPage';
+import { SubscriptionGuard } from '@/components/common/SubscriptionGuard';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -75,11 +77,14 @@ export function AppRouter() {
                 }
             >
                 <Route path="/" element={<Navigate to="/simulador" replace />} />
-                <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/simulador" element={<SimuladorPage />} />
                 <Route path="/simulador/mis-costeos" element={<MisCosteos />} />
-                <Route path="/ofertas" element={<OfertasPage />} />
-                <Route path="/analisis-regional" element={<DashboardPage />} />
+
+                {/* Rutas con Paywall (Requieren suscripción activa) */}
+                <Route path="/dashboard" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
+                <Route path="/ofertas" element={<SubscriptionGuard><OfertasPage /></SubscriptionGuard>} />
+                <Route path="/analisis-regional" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
+
                 <Route path="/configuracion" element={<ConfiguracionPage />} />
                 <Route path="/referidos" element={<ReferidosPage />} />
                 <Route path="/billetera" element={<WalletPage />} />
@@ -97,7 +102,7 @@ export function AppRouter() {
             >
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUsersPage />} />
-                <Route path="plans" element={<AdminDashboard />} />
+                <Route path="plans" element={<AdminPlansPage />} />
                 <Route path="promo-codes" element={<AdminDashboard />} />
                 <Route path="logs" element={<AdminAuditLogsPage />} />
                 <Route path="settings" element={<AdminDashboard />} />

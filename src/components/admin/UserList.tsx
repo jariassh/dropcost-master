@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Plus, ChevronRight, User as UserIcon, Globe } from 'lucide-react';
 import { userService } from '../../services/userService';
+import { plansService } from '../../services/plansService';
 import { User, UserFilters, SubscriptionStatus } from '../../types/user.types';
+import { Plan } from '../../types/plans.types';
 import { UserStatusBadge } from './UserStatusBadge';
 import { UserPlanBadge } from './UserPlanBadge';
 import { UserDetailSlideOver } from './UserDetailSlideOver';
@@ -21,6 +23,7 @@ export const UserList: React.FC = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
+    const [plans, setPlans] = useState<Plan[]>([]);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -42,6 +45,20 @@ export const UserList: React.FC = () => {
         }, 300);
         return () => clearTimeout(timeoutId);
     }, [filters, page]);
+
+    useEffect(() => {
+        plansService.getPlans(false).then(setPlans);
+    }, []);
+
+    // Sync selected user when users list is updated (e.g. after plan change)
+    useEffect(() => {
+        if (selectedUser) {
+            const updatedUser = users.find(u => u.id === selectedUser.id);
+            if (updatedUser) {
+                setSelectedUser(updatedUser);
+            }
+        }
+    }, [users]);
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFilters(prev => ({ ...prev, search: e.target.value }));
@@ -246,7 +263,7 @@ export const UserList: React.FC = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '16px 24px' }}>
-                                            <UserPlanBadge planId={user.plan_id || 'plan_free'} />
+                                            <UserPlanBadge planId={user.plan_id || ''} plans={plans} />
                                         </td>
                                         <td style={{ padding: '16px 24px' }}>
                                             <UserStatusBadge status={user.estado_suscripcion} />
@@ -269,6 +286,8 @@ export const UserList: React.FC = () => {
                 user={selectedUser}
                 isOpen={isSlideOverOpen}
                 onClose={() => setIsSlideOverOpen(false)}
+                onUserUpdate={fetchUsers}
+                plans={plans}
             />
         </div>
     );

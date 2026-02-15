@@ -18,4 +18,7 @@ export { ConfirmDialog } from './ConfirmDialog';
 export { Tooltip } from './Tooltip';
 export { SmartPhoneInput } from './SmartPhoneInput';
 export { CountrySelect } from './CountrySelect';
+export { SelectPais } from './SelectPais';
+export { PaisDisplay } from './PaisDisplay';
+export { InputPaisAutocompletado } from './InputPaisAutocompletado';
 
