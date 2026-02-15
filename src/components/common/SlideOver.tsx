@@ -8,6 +8,7 @@ interface SlideOverProps {
     children: React.ReactNode;
     width?: string;
     footer?: React.ReactNode;
+    hideHeader?: boolean;
 }
 
 export function SlideOver({
@@ -17,6 +18,7 @@ export function SlideOver({
     children,
     width = 'max-w-md',
     footer,
+    hideHeader = false,
 }: SlideOverProps) {
     const [isVisible, setIsVisible] = useState(isOpen);
 
@@ -50,32 +52,34 @@ export function SlideOver({
                     <div
                         className={`pointer-events-auto w-screen ${width} transform transition duration-300 ease-in-out sm:duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
                     >
-                        <div className="flex h-full flex-col overflow-y-scroll bg-[var(--card-bg)] shadow-xl border-l border-[var(--border-color)]">
+                        <div className="flex h-full flex-col overflow-hidden bg-[var(--card-bg)] shadow-xl border-l border-[var(--border-color)]">
                             {/* Header */}
-                            <div className="flex items-center justify-between px-6 py-10 sm:px-8 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] min-h-[90px]">
-                                <h1 style={{
-                                    paddingLeft: '32px',
-                                    fontSize: '22px',
-                                    fontWeight: 800,
-                                    color: 'var(--text-primary)',
-                                    margin: 0
-                                }} id="slide-over-title">
-                                    {title}
-                                </h1>
-                                <div className="ml-3 flex h-7 items-center">
-                                    <button
-                                        type="button"
-                                        className="rounded-md bg-transparent text-[var(--text-tertiary)] hover:text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2"
-                                        onClick={onClose}
-                                    >
-                                        <span className="sr-only">Close panel</span>
-                                        <X className="h-6 w-6" aria-hidden="true" />
-                                    </button>
+                            {!hideHeader && (
+                                <div className="flex items-center justify-between px-6 py-10 sm:px-8 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] min-h-[90px]">
+                                    <h1 style={{
+                                        paddingLeft: '32px',
+                                        fontSize: '22px',
+                                        fontWeight: 800,
+                                        color: 'var(--text-primary)',
+                                        margin: 0
+                                    }} id="slide-over-title">
+                                        {title}
+                                    </h1>
+                                    <div className="ml-3 flex h-7 items-center">
+                                        <button
+                                            type="button"
+                                            className="rounded-md bg-transparent text-[var(--text-tertiary)] hover:text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2"
+                                            onClick={onClose}
+                                        >
+                                            <span className="sr-only">Close panel</span>
+                                            <X className="h-6 w-6" aria-hidden="true" />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Main content */}
-                            <div className="relative flex-1">
+                            <div className="relative flex-1 overflow-hidden">
                                 {children}
                             </div>
 
