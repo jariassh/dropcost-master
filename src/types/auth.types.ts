@@ -8,7 +8,7 @@ export interface User {
     telefono?: string;
     pais?: string;
     planId?: string;
-    estadoSuscripcion?: 'activa' | 'cancelada' | 'suspendida';
+    estadoSuscripcion?: 'activa' | 'cancelada' | 'suspendida' | 'trial';
     emailVerificado: boolean;
     twoFactorEnabled: boolean;
     rol?: 'cliente' | 'admin' | 'superadmin';

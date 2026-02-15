@@ -11,6 +11,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, User, Phone, Globe, ChevronDown, Sparkles, RefreshCw, CheckCircle2, UserPlus } from 'lucide-react';
 import { Button, Input, Alert, SmartPhoneInput } from '@/components/common';
 import { useAuthStore } from '@/store/authStore';
+import { getReferrerNameByCode } from '@/services/referralService';
 
 const registerSchema = z
     .object({
@@ -45,7 +46,16 @@ export function RegisterPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const referralCode = searchParams.get('ref') || '';
+    const [referrerName, setReferrerName] = useState<string | null>(null);
     const { register: registerUser, isLoading, error, clearError } = useAuthStore();
+
+    useEffect(() => {
+        if (referralCode) {
+            getReferrerNameByCode(referralCode).then(name => {
+                if (name) setReferrerName(name);
+            });
+        }
+    }, [referralCode]);
 
     useEffect(() => {
         clearError();
@@ -163,30 +173,35 @@ export function RegisterPage() {
 
     return (
         <div style={{ animation: 'fadeIn 300ms ease-out' }}>
+            {referrerName && (
+                <div style={{
+                    marginBottom: '20px',
+                    padding: '16px',
+                    backgroundColor: 'rgba(0, 102, 255, 0.04)',
+                    border: '1px solid rgba(0, 102, 255, 0.15)',
+                    borderRadius: '14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)' }}>
+                        <Sparkles size={16} />
+                        <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            ¡Invitación Especial!
+                        </span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '15px', color: 'var(--text-primary)', lineHeight: '1.4' }}>
+                        <b>{referrerName}</b> te ha invitado a unirte a DropCost. ¡Comienza a escalar tu negocio hoy mismo!
+                    </p>
+                </div>
+            )}
+
             <h2 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
                 Crear cuenta
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '24px' }}>
                 Completa tus datos para comenzar
             </p>
-
-            {referralCode && (
-                <div style={{
-                    marginBottom: '16px',
-                    padding: '12px',
-                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
-                    border: '1px solid rgba(16, 185, 129, 0.2)',
-                    borderRadius: '10px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    color: '#059669',
-                    fontSize: '14px'
-                }}>
-                    <UserPlus size={18} />
-                    <span>Invitación activa: Has sido invitado por <b>{referralCode}</b></span>
-                </div>
-            )}
 
             {error && (
                 <div style={{ marginBottom: '16px' }}>
