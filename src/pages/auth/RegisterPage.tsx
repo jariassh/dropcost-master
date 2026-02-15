@@ -140,7 +140,7 @@ export function RegisterPage() {
 
         if (success) {
             setRegistered(true);
-            setTimeout(() => navigate('/verificar-email'), 2000);
+            setTimeout(() => navigate('/login'), 4000);
         }
     }
 
@@ -164,34 +164,56 @@ export function RegisterPage() {
                 <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     ¡Cuenta creada!
                 </h2>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
-                    Te hemos enviado un correo de verificación. Revisa tu bandeja de entrada.
+                <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '16px' }}>
+                    Te hemos enviado un correo de verificación con un enlace para activar tu cuenta. Revisa tu bandeja de entrada.
                 </p>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)', fontSize: '14px', fontWeight: 600 }}>
+                    <RefreshCw size={14} className="animate-spin" />
+                    Redirigiendo al inicio de sesión...
+                </div>
             </div>
         );
     }
 
     return (
         <div style={{ animation: 'fadeIn 300ms ease-out' }}>
-            {referrerName && (
+            {referralCode && (
                 <div style={{
-                    marginBottom: '20px',
-                    padding: '16px',
+                    marginBottom: '28px',
+                    padding: '18px',
                     backgroundColor: 'rgba(0, 102, 255, 0.04)',
                     border: '1px solid rgba(0, 102, 255, 0.15)',
-                    borderRadius: '14px',
+                    borderRadius: '16px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '4px',
+                    gap: '6px',
+                    position: 'relative',
+                    overflow: 'hidden'
                 }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        right: 0,
+                        width: '40px',
+                        height: '40px',
+                        backgroundColor: 'var(--color-primary)',
+                        opacity: 0.03,
+                        borderRadius: '0 0 0 100%'
+                    }} />
+
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)' }}>
-                        <Sparkles size={16} />
-                        <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            ¡Invitación Especial!
+                        <Sparkles size={16} fill="currentColor" style={{ opacity: 0.5 }} />
+                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            Beneficio DropCost
                         </span>
                     </div>
-                    <p style={{ margin: 0, fontSize: '15px', color: 'var(--text-primary)', lineHeight: '1.4' }}>
-                        <b>{referrerName}</b> te ha invitado a unirte a DropCost. ¡Comienza a escalar tu negocio hoy mismo!
+
+                    <p style={{ margin: 0, fontSize: '15px', color: 'var(--text-primary)', lineHeight: '1.5' }}>
+                        {referrerName ? (
+                            <>¡Genial! <b>{referrerName}</b> te ha invitado. Al registrarte con este link, tendrás soporte prioritario en tu configuración inicial.</>
+                        ) : (
+                            <>Has sido invitado por <b>{referralCode}</b>. ¡Únete a la comunidad de Dropshippers más avanzada y optimiza tus costos hoy!</>
+                        )}
                     </p>
                 </div>
             )}
@@ -260,47 +282,63 @@ export function RegisterPage() {
 
                     {/* Popover de Sugerencia Flotante */}
                     {suggestedPassword && (
-                        <div style={{
-                            position: 'absolute',
-                            top: 'calc(100% - 10px)',
-                            left: '0',
-                            right: '0',
-                            zIndex: 100,
-                            padding: '14px',
-                            backgroundColor: 'var(--card-bg)',
-                            borderRadius: '12px',
-                            border: '1px solid var(--border-color)',
-                            boxShadow: 'var(--shadow-xl)',
-                            animation: 'scaleIn 200ms ease-out',
-                            marginTop: '4px'
-                        }}>
+                        <div
+                            onMouseDown={(e) => e.preventDefault()}
+                            style={{
+                                position: 'absolute',
+                                bottom: 'calc(100% - 10px)',
+                                right: '0',
+                                width: '280px',
+                                zIndex: 100,
+                                padding: '12px',
+                                backgroundColor: 'var(--card-bg)',
+                                borderRadius: '12px',
+                                border: '1.5px solid var(--color-primary-light)',
+                                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                                animation: 'scaleIn 200ms ease-out',
+                            }}
+                        >
+                            {/* Triángulo del tooltip */}
+                            <div style={{
+                                position: 'absolute',
+                                bottom: '-6px',
+                                right: '20px',
+                                width: '12px',
+                                height: '12px',
+                                backgroundColor: 'var(--card-bg)',
+                                borderRight: '1.5px solid var(--color-primary-light)',
+                                borderBottom: '1.5px solid var(--color-primary-light)',
+                                transform: 'rotate(45deg)',
+                                zIndex: -1
+                            }} />
+
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                                 <div style={{
-                                    padding: '6px',
+                                    padding: '5px',
                                     backgroundColor: 'var(--color-primary-light)',
-                                    borderRadius: '8px',
-                                    color: 'var(--color-primary)'
+                                    borderRadius: '6px',
+                                    color: 'var(--color-primary)',
+                                    display: 'flex'
                                 }}>
-                                    <Sparkles size={16} />
+                                    <Sparkles size={14} />
                                 </div>
-                                <p style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 600, margin: 0 }}>
-                                    ¿Usar contraseña segura?
+                                <p style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: 700, margin: 0 }}>
+                                    Contraseña Sugerida
                                 </p>
                             </div>
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
                                 <code style={{
                                     flex: 1,
-                                    padding: '10px 12px',
+                                    padding: '8px',
                                     backgroundColor: 'var(--bg-primary)',
                                     borderRadius: '8px',
-                                    fontSize: '15px',
-                                    wordBreak: 'break-all',
+                                    fontSize: '13px',
                                     color: 'var(--color-primary)',
                                     fontWeight: 700,
                                     textAlign: 'center',
-                                    letterSpacing: '1px',
-                                    border: '1.5px solid var(--color-primary-light)'
+                                    border: '1px solid var(--border-color)',
+                                    letterSpacing: '0.5px'
                                 }}>
                                     {suggestedPassword}
                                 </code>
@@ -310,32 +348,27 @@ export function RegisterPage() {
                                         e.stopPropagation();
                                         generatePassword();
                                     }}
-                                    title="Generar otra"
                                     style={{
-                                        padding: '10px',
+                                        padding: '8px',
                                         backgroundColor: 'var(--bg-secondary)',
                                         border: '1px solid var(--border-color)',
                                         borderRadius: '8px',
                                         color: 'var(--text-secondary)',
                                         cursor: 'pointer',
                                         display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
                                         transition: 'all 200ms'
                                     }}
-                                    onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-primary)')}
-                                    onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
                                 >
-                                    <RefreshCw size={18} />
+                                    <RefreshCw size={14} />
                                 </button>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <Button size="sm" fullWidth onClick={useSuggested}>
-                                    Usar esta
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                                <Button size="sm" fullWidth onClick={useSuggested} style={{ height: '32px', fontSize: '12px' }}>
+                                    Usar
                                 </Button>
-                                <Button size="sm" variant="secondary" fullWidth onClick={() => setSuggestedPassword('')}>
-                                    No, gracias
+                                <Button size="sm" variant="secondary" fullWidth onClick={() => setSuggestedPassword('')} style={{ height: '32px', fontSize: '12px' }}>
+                                    Omitir
                                 </Button>
                             </div>
                         </div>

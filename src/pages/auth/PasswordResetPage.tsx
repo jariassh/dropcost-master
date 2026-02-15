@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, KeyRound } from 'lucide-react';
 import { Button, Input, Alert } from '@/components/common';
 import { useAuthStore } from '@/store/authStore';
+import { translateError } from '@/lib/errorTranslations';
 
 const resetSchema = z.object({
     email: z.string().min(1, 'El correo es requerido').email('Ingresa un correo válido'),
@@ -104,7 +105,9 @@ export function PasswordResetPage() {
 
             {error && (
                 <div style={{ marginBottom: '20px' }}>
-                    <Alert type="error" dismissible onDismiss={clearError}>{error}</Alert>
+                    <Alert type="error" dismissible onDismiss={clearError}>
+                        {translateError(error)}
+                    </Alert>
                 </div>
             )}
 

@@ -20,6 +20,7 @@ import { AdminPlansPage } from '@/pages/admin/AdminPlansPage';
 import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { AdminAuditLogsPage } from '@/pages/admin/AdminAuditLogsPage';
 import { AdminLayout } from '@/layouts/AdminLayout';
+import { PricingPage } from '@/pages/PricingPage';
 import { useAuthStore } from '@/store/authStore';
 import UserAuditLogsPage from '@/pages/UserAuditLogsPage';
 import { SubscriptionGuard } from '@/components/common/SubscriptionGuard';
@@ -77,17 +78,20 @@ export function AppRouter() {
                 }
             >
                 <Route path="/" element={<Navigate to="/simulador" replace />} />
-                <Route path="/simulador" element={<SimuladorPage />} />
-                <Route path="/simulador/mis-costeos" element={<MisCosteos />} />
+
+                {/* Rutas de Planes (Públicas dentro de la App) */}
+                <Route path="/pricing" element={<PricingPage />} />
 
                 {/* Rutas con Paywall (Requieren suscripción activa) */}
+                <Route path="/simulador" element={<SubscriptionGuard><SimuladorPage /></SubscriptionGuard>} />
+                <Route path="/simulador/mis-costeos" element={<SubscriptionGuard><MisCosteos /></SubscriptionGuard>} />
                 <Route path="/dashboard" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
                 <Route path="/ofertas" element={<SubscriptionGuard><OfertasPage /></SubscriptionGuard>} />
                 <Route path="/analisis-regional" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
 
                 <Route path="/configuracion" element={<ConfiguracionPage />} />
-                <Route path="/referidos" element={<ReferidosPage />} />
-                <Route path="/billetera" element={<WalletPage />} />
+                <Route path="/referidos" element={<SubscriptionGuard><ReferidosPage /></SubscriptionGuard>} />
+                <Route path="/billetera" element={<SubscriptionGuard><WalletPage /></SubscriptionGuard>} />
                 <Route path="/historial" element={<UserAuditLogsPage />} />
             </Route>
 

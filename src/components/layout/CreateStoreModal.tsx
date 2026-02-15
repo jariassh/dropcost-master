@@ -4,7 +4,7 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Store, Banknote } from 'lucide-react';
+import { Store, Banknote, AlertCircle } from 'lucide-react';
 import { Modal, Button, Input, Select, SelectPais } from '@/components/common';
 import { useStoreStore } from '@/store/useStoreStore';
 import { useAuthStore } from '@/store/authStore';
@@ -25,7 +25,7 @@ interface CreateStoreModalProps {
 }
 
 export function CreateStoreModal({ isOpen, onClose }: CreateStoreModalProps) {
-    const { crearTienda, isLoading } = useStoreStore();
+    const { crearTienda, isLoading, error: storeError } = useStoreStore();
     const { user } = useAuthStore();
     const [allCountries, setAllCountries] = useState<Pais[]>([]);
 
@@ -81,6 +81,23 @@ export function CreateStoreModal({ isOpen, onClose }: CreateStoreModalProps) {
             size="md"
         >
             <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '10px 0' }}>
+                {storeError && (
+                    <div style={{
+                        padding: '12px 16px',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        color: '#EF4444',
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                    }}>
+                        <AlertCircle size={18} />
+                        {storeError}
+                    </div>
+                )}
+
                 <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '10px' }}>
                     Configura tu nueva tienda para empezar a costear tus productos de manera independiente.
                 </p>

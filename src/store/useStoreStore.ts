@@ -6,6 +6,8 @@ import { persist } from 'zustand/middleware';
 import type { StoreState, Tienda, TiendaInsert, TiendaUpdate } from '@/types/store.types';
 import { storeService } from '@/services/storeService';
 
+import { useAuthStore } from '@/store/authStore';
+
 export const useStoreStore = create<StoreState>()(
     persist(
         (set, get) => ({
@@ -20,8 +22,14 @@ export const useStoreStore = create<StoreState>()(
                     const tiendas = await storeService.getTiendas();
                     set({ tiendas, isLoading: false });
 
-                    // Si no hay tienda seleccionada y hay tiendas disponibles, seleccionar la primera
-                    if (!get().tiendaActual && tiendas.length > 0) {
+                    // Sincronizar tiendaActual
+                    const currentTienda = get().tiendaActual;
+                    
+                    if (tiendas.length === 0) {
+                        // Si no hay tiendas, nada debe estar seleccionado
+                        set({ tiendaActual: null });
+                    } else if (!currentTienda || !tiendas.find(t => t.id === currentTienda.id)) {
+                        // Si no hay seleccionada o la que estaba ya no existe, elegir la primera
                         set({ tiendaActual: tiendas[0] });
                     }
                 } catch (error: any) {
@@ -34,6 +42,17 @@ export const useStoreStore = create<StoreState>()(
             },
 
             crearTienda: async (tienda: TiendaInsert) => {
+                // Validación de límites del plan (Double Check)
+                const { user } = useAuthStore.getState();
+                const currentTiendas = get().tiendas;
+                const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+                const storeLimit = user?.plan?.limits?.stores ?? 0;
+
+                if (!isAdmin && currentTiendas.length >= storeLimit) {
+                    set({ error: `Has alcanzado el límite de ${storeLimit} tiendas de tu plan actual.`, isLoading: false });
+                    return false;
+                }
+
                 set({ isLoading: true, error: null });
                 try {
                     const nuevaTienda = await storeService.createTienda(tienda);
