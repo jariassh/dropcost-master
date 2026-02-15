@@ -33,7 +33,7 @@ const adminNavItems = [
     { to: '/admin/traffic', icon: PieChart, label: 'Análisis de Tráfico', disabled: true },
     { to: '/admin/shortener', icon: Link2, label: 'Acortador de Enlaces', disabled: true },
     { to: '/admin/ads', icon: Megaphone, label: 'Ads & Creatividades', disabled: true },
-    { to: '/admin/plans', icon: CreditCard, label: 'Planes y Membresías', disabled: true },
+    { to: '/admin/plans', icon: CreditCard, label: 'Planes y Membresías' },
     { to: '/admin/promo-codes', icon: Ticket, label: 'Códigos Promocionales', disabled: true },
     { to: '/admin/logs', icon: History, label: 'Logs de Auditoría' },
     { to: '/admin/settings', icon: Settings, label: 'Ajustes Globales', disabled: true },

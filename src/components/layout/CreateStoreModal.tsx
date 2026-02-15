@@ -5,10 +5,10 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Store, Banknote } from 'lucide-react';
-import { Modal, Button, Input, Select, CountrySelect } from '@/components/common';
+import { Modal, Button, Input, Select, SelectPais } from '@/components/common';
 import { useStoreStore } from '@/store/useStoreStore';
 import { useAuthStore } from '@/store/authStore';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { obtenerPaisPorCodigo, cargarPaises, Pais } from '@/services/paisesService';
 
 const storeSchema = z.object({
@@ -23,8 +23,6 @@ interface CreateStoreModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
-
-
 
 export function CreateStoreModal({ isOpen, onClose }: CreateStoreModalProps) {
     const { crearTienda, isLoading } = useStoreStore();
@@ -48,19 +46,16 @@ export function CreateStoreModal({ isOpen, onClose }: CreateStoreModalProps) {
         cargarPaises().then(setAllCountries);
     }, []);
 
-    const selectedPais = watch('pais');
+    const selectedPaisCode = watch('pais');
+    const selectedPaisData = useMemo(() =>
+        allCountries.find(p => p.codigo_iso_2 === selectedPaisCode),
+        [allCountries, selectedPaisCode]);
 
     useEffect(() => {
-        const syncMoneda = async () => {
-            if (selectedPais) {
-                const p = await obtenerPaisPorCodigo(selectedPais);
-                if (p) {
-                    setValue('moneda', p.moneda_codigo);
-                }
-            }
-        };
-        syncMoneda();
-    }, [selectedPais, setValue]);
+        if (selectedPaisData) {
+            setValue('moneda', selectedPaisData.moneda_codigo);
+        }
+    }, [selectedPaisData, setValue]);
 
     async function onSubmit(data: StoreFormData) {
         if (!user?.id) return;
@@ -103,11 +98,12 @@ export function CreateStoreModal({ isOpen, onClose }: CreateStoreModalProps) {
                         name="pais"
                         control={control}
                         render={({ field }) => (
-                            <CountrySelect
+                            <SelectPais
                                 label="País de Operación"
                                 value={field.value}
                                 onChange={field.onChange}
                                 error={errors.pais?.message}
+                                required
                             />
                         )}
                     />
@@ -115,8 +111,9 @@ export function CreateStoreModal({ isOpen, onClose }: CreateStoreModalProps) {
                     <Input
                         label="Moneda Local"
                         disabled
-                        value={watch('moneda') ? `${allCountries.find(p => p.moneda_codigo === watch('moneda'))?.moneda_nombre || ''} (${watch('moneda')})` : ''}
+                        value={selectedPaisData ? `${selectedPaisData.moneda_nombre} (${selectedPaisData.moneda_codigo})` : watch('moneda')}
                         leftIcon={<Banknote size={18} />}
+                        placeholder="Autodetectada por el país"
                     />
                 </div>
 

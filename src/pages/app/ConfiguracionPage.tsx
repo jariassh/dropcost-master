@@ -38,7 +38,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useStoreStore } from '@/store/useStoreStore';
 import { Spinner } from '@/components/common/Spinner';
 import { SmartPhoneInput } from '@/components/common/SmartPhoneInput';
-import { useToast, Modal, ConfirmDialog, Button, Badge } from '@/components/common';
+import { useToast, Modal, ConfirmDialog, Button, Badge, SelectPais } from '@/components/common';
 import { CreateStoreModal } from '@/components/layout/CreateStoreModal';
 import type { Tienda } from '@/types/store.types';
 import { cargarPaises, Pais } from '@/services/paisesService';
@@ -361,6 +361,15 @@ export function ConfiguracionPage() {
                                 onChange={(fullValue, iso) => {
                                     setProfileData({ ...profileData, telefono: fullValue, pais: iso });
                                 }}
+                            />
+                        </div>
+
+                        <div style={{ marginBottom: '20px' }}>
+                            <SelectPais
+                                label="País de Residencia"
+                                value={profileData.pais}
+                                onChange={(iso) => setProfileData({ ...profileData, pais: iso })}
+                                showMoneda={true}
                             />
                         </div>
 

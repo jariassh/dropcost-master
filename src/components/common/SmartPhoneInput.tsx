@@ -149,16 +149,12 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                         cursor: 'pointer',
                         color: 'var(--text-primary)',
                         flexShrink: 0,
-                        minWidth: '95px'
+                        minWidth: '105px'
                     }}
                 >
                     {selectedCountry ? (
                         <>
-                            <img
-                                src={`https://flagcdn.com/w40/${selectedCountry.codigo_iso_2.toLowerCase()}.png`}
-                                alt={selectedCountry.nombre_es}
-                                style={{ width: '20px', borderRadius: '2px' }}
-                            />
+                            <span style={{ fontSize: '20px', lineHeight: 1 }}>{selectedCountry.bandera}</span>
                             <span style={{ fontSize: '14px', fontWeight: 600 }}>{selectedCountry.codigo_telefonico}</span>
                         </>
                     ) : (
@@ -195,7 +191,7 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                             top: '100%',
                             left: 0,
                             marginTop: '8px',
-                            width: '280px',
+                            width: '300px',
                             backgroundColor: 'var(--card-bg)',
                             border: '1px solid var(--border-color)',
                             borderRadius: '12px',
@@ -246,19 +242,15 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                                         padding: '10px',
                                         borderRadius: '8px',
                                         border: 'none',
-                                        backgroundColor: selectedCountry?.codigo_iso_2 === c.codigo_iso_2 ? 'var(--color-primary-light)' : 'transparent',
+                                        backgroundColor: selectedCountry?.codigo_iso_2 === c.codigo_iso_2 ? 'rgba(0, 102, 255, 0.08)' : 'transparent',
                                         cursor: 'pointer',
                                         textAlign: 'left',
                                         transition: 'background-color 150ms'
                                     }}
                                     onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-secondary)')}
-                                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = selectedCountry?.codigo_iso_2 === c.codigo_iso_2 ? 'var(--color-primary-light)' : 'transparent')}
+                                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = selectedCountry?.codigo_iso_2 === c.codigo_iso_2 ? 'rgba(0, 102, 255, 0.08)' : 'transparent')}
                                 >
-                                    <img
-                                        src={`https://flagcdn.com/w40/${c.codigo_iso_2.toLowerCase()}.png`}
-                                        alt={c.nombre_es}
-                                        style={{ width: '20px', borderRadius: '2px' }}
-                                    />
+                                    <span style={{ fontSize: '20px' }}>{c.bandera}</span>
                                     <span style={{ flex: 1, fontSize: '13px', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {c.nombre_es}
                                     </span>
