@@ -268,6 +268,7 @@ export type Database = {
           porcentaje_comision: number
           total_comisiones_generadas: number | null
           total_usuarios_referidos: number | null
+          total_clicks: number | null
           user_id: string | null
         }
         Insert: {
@@ -281,6 +282,7 @@ export type Database = {
           porcentaje_comision: number
           total_comisiones_generadas?: number | null
           total_usuarios_referidos?: number | null
+          total_clicks?: number | null
           user_id?: string | null
         }
         Update: {
@@ -294,6 +296,7 @@ export type Database = {
           porcentaje_comision?: number
           total_comisiones_generadas?: number | null
           total_usuarios_referidos?: number | null
+          total_clicks?: number | null
           user_id?: string | null
         }
         Relationships: [
@@ -451,7 +454,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_referrer_info: {
+        Args: {
+          ref_code: string
+        }
+        Returns: {
+          nombres: string
+          apellidos: string
+        }[]
+      }
+      increment_referral_clicks: {
+        Args: {
+          ref_code: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

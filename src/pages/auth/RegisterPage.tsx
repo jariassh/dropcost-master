@@ -3,7 +3,7 @@
  * Formulario completo con validación Zod: nombre, apellido, email,
  * contraseña con fortaleza, teléfono, país, términos.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,7 +11,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, User, Phone, Globe, ChevronDown, Sparkles, RefreshCw, CheckCircle2, UserPlus } from 'lucide-react';
 import { Button, Input, Alert, SmartPhoneInput } from '@/components/common';
 import { useAuthStore } from '@/store/authStore';
-import { getReferrerNameByCode } from '@/services/referralService';
+import { getReferrerNameByCode, incrementReferralClicks } from '@/services/referralService';
 
 const registerSchema = z
     .object({
@@ -49,11 +49,19 @@ export function RegisterPage() {
     const [referrerName, setReferrerName] = useState<string | null>(null);
     const { register: registerUser, isLoading, error, clearError } = useAuthStore();
 
+    const trackRef = useRef(false);
+
     useEffect(() => {
         if (referralCode) {
             getReferrerNameByCode(referralCode).then(name => {
                 if (name) setReferrerName(name);
             });
+
+            // Evitar conteo doble en desarrollo (StrictMode) sin bloquear recargas manuales
+            if (!trackRef.current) {
+                incrementReferralClicks(referralCode);
+                trackRef.current = true;
+            }
         }
     }, [referralCode]);
 

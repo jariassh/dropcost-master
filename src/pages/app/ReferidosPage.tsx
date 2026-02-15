@@ -220,7 +220,32 @@ export function ReferidosPage() {
                                 referredUsers.map((r) => (
                                     <tr key={r.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                                         <td style={{ padding: '16px 24px' }}>
-                                            <div style={{ fontWeight: 600 }}>{r.email}</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                {/* Avatar simple con iniciales */}
+                                                <div style={{
+                                                    width: '36px',
+                                                    height: '36px',
+                                                    borderRadius: '10px',
+                                                    background: 'linear-gradient(135deg, var(--color-primary), #6366f1)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: 'white',
+                                                    fontWeight: 700,
+                                                    fontSize: '13px',
+                                                    flexShrink: 0
+                                                }}>
+                                                    {(r.nombres?.charAt(0) || '')}{(r.apellidos?.charAt(0) || r.email.charAt(0)).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                                        {r.nombres ? `${r.nombres} ${r.apellidos}` : 'Usuario sin nombre'}
+                                                    </div>
+                                                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                                        {r.email}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td style={{ padding: '16px 24px' }}>
                                             <span style={{
