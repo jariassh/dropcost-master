@@ -8,6 +8,7 @@ export interface PlanLimits {
     access_wallet?: boolean;
     access_referrals?: boolean;
     can_delete_stores?: boolean;
+    view_activity_history?: boolean;
     [key: string]: number | boolean | undefined;
 }
 

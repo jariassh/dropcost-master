@@ -72,7 +72,7 @@ export const auditService = {
       const { data: logs, error, count } = await query;
 
       if (error) throw error;
-
+      
       // Enriquecer logs con datos de usuario manualmente si el JOIN falla
       // Esto es robusto ante falta de FK
       const auditLogs = logs as unknown as AuditLog[];
@@ -95,18 +95,18 @@ export const auditService = {
                     const user = users.find((u: { id: string }) => u.id === log.usuario_id);
                     if (user) {
                         log.usuario = {
-                            nombres: user.nombres,
-                            apellidos: user.apellidos,
-                            email: user.email
+                            nombres: user.nombres || '',
+                            apellidos: user.apellidos || '',
+                            email: user.email || ''
                         };
                     } else {
                         // Intento de fallback por si hay discrepancia de tipos
                         const userSoft = users.find((u: { id: string }) => String(u.id) === String(log.usuario_id));
                         if (userSoft) {
                              log.usuario = {
-                                nombres: userSoft.nombres,
-                                apellidos: userSoft.apellidos,
-                                email: userSoft.email
+                                nombres: userSoft.nombres || '',
+                                apellidos: userSoft.apellidos || '',
+                                email: userSoft.email || ''
                             };
                         }
                     }

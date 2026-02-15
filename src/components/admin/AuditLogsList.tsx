@@ -187,8 +187,13 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
             const response = await auditService.getLogs(filters, page, 15);
             setLogs(response.data);
             setTotalCount(response.count);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching logs:', error);
+            // Mostrar error en UI si es error de permisos o conexión
+            if (error.message) {
+                // Check specifically for RLS policy errors which often come as empty data but sometimes as specific codes
+                console.warn("Posible error de políticas RLS o conexión:", error.message);
+            }
         } finally {
             if (!isSilent) setLoading(false);
         }
@@ -197,6 +202,13 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
     useEffect(() => {
         fetchLogs();
     }, [fetchLogs]);
+
+    // Update filters when userId changes
+    useEffect(() => {
+        if (userId) {
+            setFilters(prev => ({ ...prev, usuario_id: userId }));
+        }
+    }, [userId]);
 
     // Suscripción Realtime
     useEffect(() => {
