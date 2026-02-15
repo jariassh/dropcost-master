@@ -81,7 +81,7 @@ export async function getReferrerNameByCode(code: string): Promise<string | null
     const { data, error } = await supabase
         .from('users')
         .select('nombres, apellidos')
-        .eq('codigo_referido_personal', code)
+        .ilike('codigo_referido_personal', code)
         .maybeSingle();
 
     if (error || !data) return null;

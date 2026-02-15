@@ -8,13 +8,13 @@ import { useState, useCallback, useEffect } from 'react';
 import { SimuladorForm } from './SimuladorForm';
 import { SimuladorResults } from './SimuladorResults';
 import { calculateSuggestedPrice, calculateVolumeTable, calculateVolumeMetrics } from './simulatorCalculations';
-import { useToast } from '@/components/common';
+import { useToast, Spinner } from '@/components/common';
+import { useAuthStore } from '@/store/authStore';
 import type { SimulatorInputs, SimulatorResults as Results, VolumeStrategy, SavedCosteo } from '@/types/simulator';
 import { useNavigate } from 'react-router-dom';
 import { Calculator, History, Save, Store, PlusCircle } from 'lucide-react';
 import { useStoreStore } from '@/store/useStoreStore'; // Import store
 import { CreateStoreModal } from '@/components/layout/CreateStoreModal'; // Import modal
-import { Spinner } from '@/components/common/Spinner'; // Import Spinner
 
 const DEFAULT_INPUTS: SimulatorInputs = {
     productName: '',
@@ -38,14 +38,27 @@ export function SimuladorPage() {
     const navigate = useNavigate();
     const toast = useToast();
     const { tiendas, isLoading: storesLoading, fetchTiendas } = useStoreStore(); // Get store state
+    const { user } = useAuthStore();
     const [isCreateStoreOpen, setCreateStoreOpen] = useState(false); // Modal state
+
+    const handleOpenCreateStore = () => {
+        const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+        const storeLimit = user?.plan?.limits?.stores ?? 0;
+
+        if (!isAdmin && tiendas.length >= storeLimit) {
+            toast.warning(
+                'Límite alcanzado',
+                `Tu plan actual permite un máximo de ${storeLimit} ${storeLimit === 1 ? 'tienda' : 'tiendas'}. Mejora tu plan para agregar más.`
+            );
+            return;
+        }
+        setCreateStoreOpen(true);
+    };
 
     // Fetch stores if empty on mount (safety check)
     useEffect(() => {
-        if (tiendas.length === 0) {
-            fetchTiendas();
-        }
-    }, [fetchTiendas, tiendas.length]);
+        fetchTiendas();
+    }, [fetchTiendas]);
 
     const [inputs, setInputs] = useState<SimulatorInputs>(DEFAULT_INPUTS);
     const [results, setResults] = useState<Results | null>(null);
@@ -179,26 +192,57 @@ export function SimuladorPage() {
     if (tiendas.length === 0) {
         return (
             <div style={{
-                maxWidth: '600px', margin: '40px auto', textAlign: 'center',
-                padding: '40px', backgroundColor: 'var(--card-bg)', borderRadius: '20px',
-                border: '1px solid var(--border-color)', boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
+                maxWidth: '640px', margin: '60px auto', textAlign: 'center',
+                padding: '48px 40px',
+                backgroundColor: 'var(--card-bg)',
+                borderRadius: '24px',
+                border: '1.5px solid var(--border-color)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                animation: 'scaleIn 400ms ease-out'
             }}>
                 <div style={{
-                    width: '80px', height: '80px', borderRadius: '50%',
-                    backgroundColor: 'rgba(0,102,255,0.1)', color: 'var(--color-primary)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px'
+                    width: '96px', height: '96px', borderRadius: '28px',
+                    backgroundColor: 'rgba(0,102,255,0.08)', color: 'var(--color-primary)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto 28px',
+                    border: '1px solid rgba(0,102,255,0.1)'
                 }}>
-                    <Store size={40} />
+                    <Store size={48} />
                 </div>
-                <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '12px' }}>¡Bienvenido a DropCost Master!</h2>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', lineHeight: 1.6 }}>
+                <h2 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '16px', color: 'var(--text-primary)', letterSpacing: '-0.025em' }}>
+                    ¡Bienvenido a DropCost Master!
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '36px', lineHeight: 1.7, fontSize: '16px' }}>
                     Para comenzar a simular precios y calcular márgenes con precisión, primero necesitamos configurar tu tienda.
-                    Esto nos permitirá guardar tu historial y personalizar los cálculos.
+                    Esto nos permitirá guardar tu historial y personalizar los cálculos para tu país.
                 </p>
                 <button
-                    onClick={() => setCreateStoreOpen(true)}
-                    className="dc-button-primary"
-                    style={{ padding: '14px 28px', fontSize: '16px', margin: '0 auto' }}
+                    onClick={handleOpenCreateStore}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '10px',
+                        padding: '14px 32px',
+                        fontSize: '16px',
+                        fontWeight: 700,
+                        color: '#ffffff',
+                        background: 'linear-gradient(135deg, #0066FF 0%, #003D99 100%)',
+                        border: 'none',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        margin: '0 auto',
+                        boxShadow: '0 10px 15px -3px rgba(0, 102, 255, 0.3), 0 4px 6px -2px rgba(0, 102, 255, 0.05)',
+                        transition: 'all 200ms ease',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 102, 255, 0.4), 0 10px 10px -5px rgba(0, 102, 255, 0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 102, 255, 0.3), 0 4px 6px -2px rgba(0, 102, 255, 0.05)';
+                    }}
                 >
                     <PlusCircle size={20} />
                     Crear mi Primera Tienda

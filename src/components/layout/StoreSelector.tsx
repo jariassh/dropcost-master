@@ -4,6 +4,8 @@
 import { useState, useEffect } from 'react';
 import { Store, Plus, ChevronDown, Check } from 'lucide-react';
 import { useStoreStore } from '@/store/useStoreStore';
+import { useAuthStore } from '@/store/authStore';
+import { useToast } from '@/components/common';
 import { CreateStoreModal } from './CreateStoreModal';
 
 interface StoreSelectorProps {
@@ -12,8 +14,25 @@ interface StoreSelectorProps {
 
 export function StoreSelector({ collapsed }: StoreSelectorProps) {
     const { tiendas, tiendaActual, setTiendaActual, fetchTiendas, isLoading } = useStoreStore();
+    const { user } = useAuthStore();
+    const toast = useToast();
     const [isOpen, setIsOpen] = useState(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+    const handleOpenCreate = () => {
+        const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+        const storeLimit = user?.plan?.limits?.stores ?? 0;
+
+        if (!isAdmin && tiendas.length >= storeLimit) {
+            toast.warning(
+                'Límite alcanzado',
+                `Tu plan actual permite un máximo de ${storeLimit} ${storeLimit === 1 ? 'tienda' : 'tiendas'}. Mejora tu plan para agregar más.`
+            );
+            return;
+        }
+        setIsOpen(false);
+        setIsCreateModalOpen(true);
+    };
 
     useEffect(() => {
         fetchTiendas();
@@ -69,7 +88,7 @@ export function StoreSelector({ collapsed }: StoreSelectorProps) {
                             overflow: 'hidden',
                             textOverflow: 'ellipsis'
                         }}>
-                            {tiendaActual?.nombre || 'Seleccionar Tienda'}
+                            {tiendaActual?.nombre || (tiendas.length === 0 ? 'Sin Tiendas' : 'Seleccionar Tienda')}
                         </span>
                     )}
                 </div>
@@ -135,10 +154,7 @@ export function StoreSelector({ collapsed }: StoreSelectorProps) {
 
                         <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                             <button
-                                onClick={() => {
-                                    setIsOpen(false);
-                                    setIsCreateModalOpen(true);
-                                }}
+                                onClick={handleOpenCreate}
                                 style={{
                                     width: '100%',
                                     display: 'flex',

@@ -232,6 +232,20 @@ export function ConfiguracionPage() {
         }
     };
 
+    const handleOpenCreateStore = () => {
+        const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+        const storeLimit = user?.plan?.limits?.stores ?? 0;
+
+        if (!isAdmin && tiendas.length >= storeLimit) {
+            toast.warning(
+                'Límite alcanzado',
+                `Tu plan actual permite un máximo de ${storeLimit} ${storeLimit === 1 ? 'tienda' : 'tiendas'}. Mejora tu plan para agregar más.`
+            );
+            return;
+        }
+        setIsCreateStoreOpen(true);
+    };
+
     const handleVerifyOTP = async () => {
         if (otpCode.length < 6) return;
 
@@ -570,48 +584,65 @@ export function ConfiguracionPage() {
                                         }}
                                     />
 
-                                    {/* Popover de Sugerencia Flotante (Ahora entre label e input) */}
+                                    {/* Popover de Sugerencia Flotante */}
                                     {suggestedPassword && (
-                                        <div style={{
-                                            position: 'absolute',
-                                            bottom: 'calc(100% + 4px)',
-                                            left: '0',
-                                            right: '0',
-                                            zIndex: 100,
-                                            padding: '14px',
-                                            backgroundColor: 'var(--card-bg)',
-                                            borderRadius: '12px',
-                                            border: '1px solid var(--border-color)',
-                                            boxShadow: 'var(--shadow-xl)',
-                                            animation: 'scaleIn 200ms ease-out'
-                                        }}>
+                                        <div
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            style={{
+                                                position: 'absolute',
+                                                bottom: 'calc(100% - 10px)',
+                                                right: '0',
+                                                width: '280px',
+                                                zIndex: 100,
+                                                padding: '12px',
+                                                backgroundColor: 'var(--card-bg)',
+                                                borderRadius: '12px',
+                                                border: '1.5px solid var(--color-primary-light)',
+                                                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                                                animation: 'scaleIn 200ms ease-out',
+                                            }}
+                                        >
+                                            {/* Triángulo del tooltip */}
+                                            <div style={{
+                                                position: 'absolute',
+                                                bottom: '-6px',
+                                                right: '20px',
+                                                width: '12px',
+                                                height: '12px',
+                                                backgroundColor: 'var(--card-bg)',
+                                                borderRight: '1.5px solid var(--color-primary-light)',
+                                                borderBottom: '1.5px solid var(--color-primary-light)',
+                                                transform: 'rotate(45deg)',
+                                                zIndex: -1
+                                            }} />
+
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                                                 <div style={{
-                                                    padding: '6px',
-                                                    backgroundColor: 'rgba(0, 102, 255, 0.1)',
-                                                    borderRadius: '8px',
-                                                    color: 'var(--color-primary)'
+                                                    padding: '5px',
+                                                    backgroundColor: 'var(--color-primary-light)',
+                                                    borderRadius: '6px',
+                                                    color: 'var(--color-primary)',
+                                                    display: 'flex'
                                                 }}>
-                                                    <Sparkles size={16} />
+                                                    <Sparkles size={14} />
                                                 </div>
-                                                <p style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 600, margin: 0 }}>
-                                                    ¿Usar contraseña segura?
+                                                <p style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: 700, margin: 0 }}>
+                                                    Contraseña Sugerida
                                                 </p>
                                             </div>
 
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
                                                 <code style={{
                                                     flex: 1,
-                                                    padding: '10px 12px',
+                                                    padding: '8px',
                                                     backgroundColor: 'var(--bg-primary)',
                                                     borderRadius: '8px',
-                                                    fontSize: '15px',
-                                                    wordBreak: 'break-all',
+                                                    fontSize: '13px',
                                                     color: 'var(--color-primary)',
                                                     fontWeight: 700,
                                                     textAlign: 'center',
-                                                    letterSpacing: '1px',
-                                                    border: '1.5px solid rgba(0, 102, 255, 0.3)'
+                                                    border: '1px solid var(--border-color)',
+                                                    letterSpacing: '0.5px'
                                                 }}>
                                                     {suggestedPassword}
                                                 </code>
@@ -621,43 +652,28 @@ export function ConfiguracionPage() {
                                                         e.stopPropagation();
                                                         generatePassword();
                                                     }}
-                                                    title="Generar otra"
                                                     style={{
-                                                        padding: '10px',
+                                                        padding: '8px',
                                                         backgroundColor: 'var(--bg-secondary)',
                                                         border: '1px solid var(--border-color)',
                                                         borderRadius: '8px',
                                                         color: 'var(--text-secondary)',
                                                         cursor: 'pointer',
                                                         display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
                                                         transition: 'all 200ms'
                                                     }}
                                                 >
-                                                    <RefreshCw size={18} />
+                                                    <RefreshCw size={14} />
                                                 </button>
                                             </div>
 
-                                            <div style={{ display: 'flex', gap: '8px' }}>
-                                                <button
-                                                    className="dc-button-primary"
-                                                    style={{ flex: 1, padding: '8px', fontSize: '13px', justifyContent: 'center' }}
-                                                    onClick={useSuggested}
-                                                >
-                                                    Usar esta
-                                                </button>
-                                                <button
-                                                    className="dc-button-secondary"
-                                                    style={{
-                                                        flex: 1, padding: '8px', fontSize: '13px', justifyContent: 'center',
-                                                        backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
-                                                        borderRadius: '10px', color: 'var(--text-secondary)', cursor: 'pointer'
-                                                    }}
-                                                    onClick={() => setSuggestedPassword('')}
-                                                >
-                                                    No, gracias
-                                                </button>
+                                            <div style={{ display: 'flex', gap: '6px' }}>
+                                                <Button size="sm" fullWidth onClick={useSuggested} style={{ height: '32px', fontSize: '12px' }}>
+                                                    Usar
+                                                </Button>
+                                                <Button size="sm" variant="secondary" fullWidth onClick={() => setSuggestedPassword('')} style={{ height: '32px', fontSize: '12px' }}>
+                                                    Omitir
+                                                </Button>
                                             </div>
                                         </div>
                                     )}
@@ -795,7 +811,7 @@ export function ConfiguracionPage() {
                         </div>
                         <button
                             className="dc-button-primary"
-                            onClick={() => setIsCreateStoreOpen(true)}
+                            onClick={handleOpenCreateStore}
                             style={{ gap: '8px' }}
                         >
                             <Plus size={16} />
@@ -881,15 +897,55 @@ export function ConfiguracionPage() {
                     </div>
 
                     {tiendas.length === 0 && !storesLoading && (
-                        <div style={{ textAlign: 'center', padding: '48px', backgroundColor: 'var(--bg-secondary)', borderRadius: '16px', border: '1px dashed var(--border-color)' }}>
-                            <Store size={48} style={{ color: 'var(--text-tertiary)', marginBottom: '16px' }} />
-                            <h4 style={{ margin: '0 0 8px', fontWeight: 700 }}>No tienes tiendas registradas</h4>
-                            <p style={{ margin: '0 0 24px', fontSize: '14px', color: 'var(--text-tertiary)' }}>
-                                Crea tu primera tienda para empezar a costear tus productos
+                        <div style={{
+                            textAlign: 'center',
+                            padding: '60px 40px',
+                            backgroundColor: 'var(--card-bg)',
+                            borderRadius: '24px',
+                            border: '1.5px dashed var(--border-color)',
+                            marginTop: '20px'
+                        }}>
+                            <div style={{
+                                width: '80px', height: '80px', borderRadius: '20px',
+                                backgroundColor: 'rgba(0,102,255,0.05)', color: 'var(--color-primary)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                margin: '0 auto 24px'
+                            }}>
+                                <Store size={40} />
+                            </div>
+                            <h4 style={{ margin: '0 0 12px', fontWeight: 800, fontSize: '20px' }}>No tienes tiendas registradas</h4>
+                            <p style={{ margin: '0 0 32px', fontSize: '15px', color: 'var(--text-tertiary)', maxWidth: '400px', margin: '0 auto 32px', lineHeight: 1.6 }}>
+                                Crea tu primera tienda para empezar a costear tus productos y habilitar las integraciones automáticas.
                             </p>
-                            <Button variant="primary" onClick={() => setIsCreateStoreOpen(true)}>
+                            <button
+                                onClick={handleOpenCreateStore}
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    padding: '12px 28px',
+                                    fontSize: '15px',
+                                    fontWeight: 700,
+                                    color: '#ffffff',
+                                    background: 'linear-gradient(135deg, #0066FF 0%, #003D99 100%)',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 8px 15px -3px rgba(0, 102, 255, 0.3)',
+                                    transition: 'all 200ms ease',
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                    e.currentTarget.style.boxShadow = '0 12px 20px -5px rgba(0, 102, 255, 0.4)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 8px 15px -3px rgba(0, 102, 255, 0.3)';
+                                }}
+                            >
+                                <Plus size={18} />
                                 Crear Primera Tienda
-                            </Button>
+                            </button>
                         </div>
                     )}
                 </div>

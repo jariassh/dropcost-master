@@ -105,16 +105,18 @@ export async function getCurrentUser(): Promise<User | null> {
         return null;
     }
 
-    // Get public profile
+    // Get public profile with plan details
     const { data: profile, error: profileError } = await supabase
         .from('users')
-        .select('*')
+        .select('*, plans(name, limits)')
         .eq('id', user.id)
         .maybeSingle();
 
     if (profileError) {
         console.error("Error fetching user profile:", profileError);
     }
+
+    const planDetails = profile?.plans;
 
     return {
         id: user.id,
@@ -124,18 +126,22 @@ export async function getCurrentUser(): Promise<User | null> {
         telefono: profile?.telefono || user.user_metadata?.telefono,
         pais: profile?.pais || user.user_metadata?.pais,
         rol: profile?.rol || user.user_metadata?.rol || 'cliente',
-        estadoSuscripcion: profile?.estado_suscripcion || 'activa',
+        estadoSuscripcion: profile?.estado_suscripcion || 'inactiva',
         emailVerificado: !!user.email_confirmed_at,
         twoFactorEnabled: profile?.['2fa_habilitado'] || false,
         fechaRegistro: user.created_at,
         codigoReferido: profile?.codigo_referido_personal,
-        planId: profile?.plan_id
+        planId: profile?.plan_id || 'plan_free',
+        plan: planDetails ? {
+            name: planDetails.name,
+            limits: planDetails.limits
+        } : undefined
     };
 }
 
 export async function requestPasswordReset(data: PasswordResetRequest): Promise<AuthResponse> {
     const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${window.location.origin}/actualizar-contrasena`,
     });
 
     if (error) {
