@@ -6,6 +6,7 @@
 import { create } from 'zustand';
 import type { AuthState, LoginCredentials, RegisterData, VerifyEmailData, TwoFactorData, PasswordResetRequest, User } from '@/types/auth.types';
 import * as authService from '@/services/authService';
+import { auditService } from '@/services/auditService';
 
 // MODO DESARROLLO: Cambiar a true para deshabilitar login obligatorio
 const DEV_MODE = false;
@@ -51,6 +52,15 @@ export const useAuthStore = create<AuthState>((set) => ({
             }
 
             set({ isLoading: false, user, isAuthenticated: true });
+            
+            // Log Auditoría: Login Exitoso
+            auditService.recordLog({
+                accion: 'LOGIN',
+                entidad: 'USER',
+                entidadId: user?.id,
+                detalles: { email: credentials.email }
+            });
+
             return true;
         } catch (err) {
             console.error('Login error:', err);
@@ -115,6 +125,14 @@ export const useAuthStore = create<AuthState>((set) => ({
                 isAuthenticated: true, 
                 requiresOTP: false,
                 sessionId: null
+            });
+
+            // Log Auditoría: Login 2FA Exitoso
+            auditService.recordLog({
+                accion: 'LOGIN',
+                entidad: 'USER',
+                entidadId: user?.id,
+                detalles: { method: '2FA' }
             });
 
         } catch (err) {
@@ -202,6 +220,15 @@ export const useAuthStore = create<AuthState>((set) => ({
             // Refrescar datos locales del usuario
             const user = await authService.getCurrentUser();
             set({ isLoading: false, user });
+
+            // Log Auditoría: Perfil Actualizado
+            auditService.recordLog({
+                accion: 'UPDATE_PROFILE',
+                entidad: 'USER',
+                entidadId: user?.id,
+                detalles: userData
+            });
+
             return true;
         } catch (err) {
             console.error('Update profile error:', err);
@@ -267,6 +294,15 @@ export const useAuthStore = create<AuthState>((set) => ({
         const user = useAuthStore.getState().user;
         if (user) {
             localStorage.removeItem(`2fa_verified_${user.id}`);
+        }
+
+        // Log Auditoría: Logout
+        if (user) {
+            auditService.recordLog({
+                accion: 'LOGOUT',
+                entidad: 'USER',
+                entidadId: user.id
+            });
         }
 
         set({

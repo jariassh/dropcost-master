@@ -3,6 +3,7 @@
  */
 import { supabase } from '@/lib/supabase';
 import type { Tienda, TiendaInsert, TiendaUpdate } from '@/types/store.types';
+import { auditService } from './auditService';
 
 export const storeService = {
     /**
@@ -38,6 +39,15 @@ export const storeService = {
             throw new Error('No se pudo crear la tienda');
         }
 
+        if (data) {
+            auditService.recordLog({
+                accion: 'CREATE_STORE',
+                entidad: 'STORE',
+                entidadId: data.id,
+                detalles: { nombre: data.nombre, pais: data.pais_id }
+            });
+        }
+
         return data;
     },
 
@@ -57,6 +67,15 @@ export const storeService = {
             throw new Error('No se pudo actualizar la tienda');
         }
 
+        if (data) {
+            auditService.recordLog({
+                accion: 'UPDATE_STORE',
+                entidad: 'STORE',
+                entidadId: data.id,
+                detalles: cambios
+            });
+        }
+
         return data;
     },
 
@@ -74,5 +93,12 @@ export const storeService = {
             console.error('Error al eliminar tienda:', error);
             throw new Error('No se pudo eliminar la tienda');
         }
+
+        // Log Auditoría: Tienda eliminada
+        auditService.recordLog({
+            accion: 'DELETE_STORE',
+            entidad: 'STORE',
+            entidadId: id
+        });
     }
 };
