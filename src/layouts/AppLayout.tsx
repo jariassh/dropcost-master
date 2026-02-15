@@ -378,7 +378,7 @@ export function AppLayout() {
                                                     textTransform: 'uppercase',
                                                 }}
                                             >
-                                                Plan Pro
+                                                {user?.plan?.name || (user?.planId === 'plan_free' ? 'Plan Gratis' : user?.planId === 'plan_pro' ? 'Plan Pro' : user?.planId === 'plan_enterprise' ? 'Plan Enterprise' : 'Plan Básico')}
                                             </span>
                                         </div>
 

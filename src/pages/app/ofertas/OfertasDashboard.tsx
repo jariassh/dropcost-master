@@ -9,6 +9,7 @@ import { OfertaDetailPanel } from './components/OfertaDetailPanel';
 import type { Oferta, StrategyType, OfertaStatus } from '@/types/ofertas';
 import { STRATEGIES } from '@/types/ofertas';
 import { Plus, Eye, Pause, Play, Trash2, Gift, Filter } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 
 interface OfertasDashboardProps {
     onCreateNew: () => void;
@@ -17,6 +18,7 @@ interface OfertasDashboardProps {
 export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
     const navigate = useNavigate();
     const toast = useToast();
+    const { user } = useAuthStore();
     const [ofertas, setOfertas] = useState<Oferta[]>([]);
     const [searchParams] = useSearchParams();
     const [filterStrategy, setFilterStrategy] = useState<StrategyType | 'todas'>('todas');
@@ -63,6 +65,15 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
         saveOfertas(updated);
         setDeleteConfirm(null);
         toast.info('Oferta eliminada');
+    }
+
+    function checkDelete(id: string) {
+        const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+        if (!isAdmin && user?.planId !== 'plan_enterprise') {
+            toast.warning('Restricción de Plan', 'Eliminar ofertas está restringido al Plan Enterprise.');
+            return;
+        }
+        setDeleteConfirm(id);
     }
 
     const formatCurrency = (val: number) =>
@@ -191,7 +202,7 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                                                     title={o.status === 'activa' ? 'Pausar' : 'Reanudar'}
                                                     onClick={() => handleToggleStatus(o.id)}
                                                 />
-                                                <ActionBtn icon={<Trash2 size={14} />} title="Eliminar" onClick={() => setDeleteConfirm(o.id)} danger />
+                                                <ActionBtn icon={<Trash2 size={14} />} title="Eliminar" onClick={() => checkDelete(o.id)} danger />
                                             </div>
                                         </td>
                                     </tr>
