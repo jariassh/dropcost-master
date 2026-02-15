@@ -68,11 +68,14 @@ export function SelectPais({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    const borderColor = error ? 'var(--color-error)' : 'var(--border-color)';
+    const focusRingColor = error ? 'rgba(239,68,68,0.15)' : 'rgba(0,102,255,0.15)';
+
     return (
-        <div ref={containerRef} className={`relative flex flex-col gap-1.5 w-full ${className}`}>
+        <div ref={containerRef} className={className} style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', position: 'relative' }}>
             {label && (
-                <label className="text-sm font-medium text-[var(--text-primary)]">
-                    {label} {required && <span className="text-[var(--color-error)]">*</span>}
+                <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>
+                    {label} {required && <span style={{ color: 'var(--color-error)' }}>*</span>}
                 </label>
             )}
 
@@ -80,57 +83,102 @@ export function SelectPais({
                 type="button"
                 disabled={disabled || isLoading}
                 onClick={() => setIsOpen(!isOpen)}
-                className={`
-          flex items-center justify-between w-full px-4 py-3 rounded-xl border transition-all duration-200 text-left
-          ${disabled ? 'bg-[var(--bg-secondary)] cursor-not-allowed opacity-60' : 'bg-[var(--card-bg)] cursor-pointer hover:border-[var(--color-primary)]'}
-          ${error ? 'border-[var(--color-error)]' : isOpen ? 'border-[var(--color-primary)] ring-4 ring-[var(--color-primary)] ring-opacity-10' : 'border-[var(--border-color)]'}
-        `}
+                style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    backgroundColor: disabled ? 'var(--bg-secondary)' : 'var(--bg-primary)',
+                    border: `1.5px solid ${isOpen ? 'var(--color-primary)' : borderColor}`,
+                    borderRadius: '10px',
+                    outline: 'none',
+                    transition: 'all 200ms ease',
+                    cursor: disabled ? 'not-allowed' : 'pointer',
+                    boxShadow: isOpen ? `0 0 0 4px ${focusRingColor}` : 'none',
+                    textAlign: 'left'
+                }}
             >
-                <div className="flex items-center gap-3 overflow-hidden">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, overflow: 'hidden' }}>
                     {paisSeleccionado ? (
                         <>
-                            <span className="text-xl leading-none flex-shrink-0">{paisSeleccionado.bandera}</span>
-                            <span className="text-sm font-medium text-[var(--text-primary)] truncate">
+                            <div style={{ width: '22px', height: '14px', flexShrink: 0, overflow: 'hidden', borderRadius: '2px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                                <img
+                                    src={`https://flagcdn.com/w40/${paisSeleccionado.codigo_iso_2.toLowerCase()}.png`}
+                                    alt={paisSeleccionado.nombre_es}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                            </div>
+                            <span style={{ fontSize: '14px', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {paisSeleccionado.nombre_es}
-                                {showTelefono && <span className="ml-2 text-[var(--text-tertiary)] font-normal">({paisSeleccionado.codigo_telefonico})</span>}
-                                {showMoneda && <span className="ml-2 text-[var(--color-success)] font-normal text-xs uppercase">[{paisSeleccionado.moneda_codigo}]</span>}
+                                {showTelefono && <span style={{ marginLeft: '8px', color: 'var(--text-tertiary)', fontWeight: 400 }}>({paisSeleccionado.codigo_telefonico})</span>}
+                                {showMoneda && <span style={{ marginLeft: '8px', color: 'var(--color-success)', fontWeight: 600, fontSize: '12px' }}>[{paisSeleccionado.moneda_codigo}]</span>}
                             </span>
                         </>
                     ) : (
-                        <span className="text-sm text-[var(--text-tertiary)] truncate">
+                        <span style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>
                             {isLoading ? 'Cargando países...' : placeholder}
                         </span>
                     )}
                 </div>
                 <ChevronDown
-                    size={18}
-                    className={`text-[var(--text-tertiary)] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                    size={14}
+                    style={{
+                        color: 'var(--text-tertiary)',
+                        transform: isOpen ? 'rotate(180deg)' : 'none',
+                        transition: 'transform 200ms',
+                        marginLeft: '8px'
+                    }}
                 />
             </button>
 
             {isOpen && (
-                <div className="absolute top-full left-0 right-0 z-[1000] mt-2 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl shadow-[var(--shadow-xl)] p-2 flex flex-col animate-[scaleIn_150ms_ease-out]">
-                    <div className="relative mb-2">
-                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+                <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    marginTop: '8px',
+                    backgroundColor: 'var(--card-bg)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '12px',
+                    boxShadow: 'var(--shadow-xl)',
+                    zIndex: 1000,
+                    padding: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    animation: 'scaleIn 150ms ease-out'
+                }}>
+                    <div style={{ position: 'relative', marginBottom: '8px' }}>
+                        <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
                         <input
                             autoFocus
                             type="text"
-                            placeholder="Buscar por nombre, código o moneda..."
+                            placeholder="Buscar país..."
                             value={busqueda}
                             onChange={(e) => setBusqueda(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 text-sm bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg outline-none text-[var(--text-primary)]"
+                            style={{
+                                width: '100%',
+                                padding: '8px 32px',
+                                fontSize: '13px',
+                                backgroundColor: 'var(--bg-secondary)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '8px',
+                                outline: 'none',
+                                color: 'var(--text-primary)'
+                            }}
                         />
                         {busqueda && (
                             <button
-                                onClick={() => setBusqueda("")}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                                onClick={(e) => { e.stopPropagation(); setBusqueda(""); }}
+                                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', background: 'none', border: 'none', cursor: 'pointer' }}
                             >
                                 <X size={14} />
                             </button>
                         )}
                     </div>
 
-                    <div className="max-h-60 overflow-y-auto custom-scrollbar flex flex-col gap-0.5">
+                    <div style={{ maxHeight: '240px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }} className="custom-scrollbar">
                         {paisesFiltrados.map((p) => (
                             <button
                                 key={p.codigo_iso_2}
@@ -139,27 +187,52 @@ export function SelectPais({
                                     setIsOpen(false);
                                     setBusqueda("");
                                 }}
-                                className={`
-                  flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left transition-all
-                  ${value === p.codigo_iso_2 ? 'bg-[var(--color-primary)] bg-opacity-10 text-[var(--color-primary)]' : 'hover:bg-[var(--bg-secondary)] text-[var(--text-primary)]'}
-                `}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    padding: '10px',
+                                    borderRadius: '8px',
+                                    border: 'none',
+                                    backgroundColor: value === p.codigo_iso_2 ? 'rgba(0, 102, 255, 0.08)' : 'transparent',
+                                    cursor: 'pointer',
+                                    textAlign: 'left',
+                                    transition: 'background-color 150ms'
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (value !== p.codigo_iso_2) {
+                                        e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = value === p.codigo_iso_2 ? 'rgba(0, 102, 255, 0.08)' : 'transparent';
+                                }}
                             >
-                                <span className="text-xl flex-shrink-0">{p.bandera}</span>
-                                <div className="flex flex-col flex-1 min-w-0">
-                                    <span className={`text-sm ${value === p.codigo_iso_2 ? 'font-semibold' : 'font-medium'} truncate`}>
+                                <div style={{ width: '22px', height: '14px', flexShrink: 0, overflow: 'hidden', borderRadius: '2px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                                    <img
+                                        src={`https://flagcdn.com/w40/${p.codigo_iso_2.toLowerCase()}.png`}
+                                        alt={p.nombre_es}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        loading="lazy"
+                                    />
+                                </div>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                    <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: value === p.codigo_iso_2 ? 600 : 500 }}>
                                         {p.nombre_es}
                                     </span>
-                                    <div className="flex items-center gap-2 text-[11px] text-[var(--text-tertiary)]">
-                                        <span>{p.codigo_iso_2}</span>
-                                        {showTelefono && <span>• {p.codigo_telefonico}</span>}
-                                        {showMoneda && <span>• {p.moneda_codigo} ({p.moneda_simbolo})</span>}
-                                    </div>
+                                    {(showTelefono || showMoneda) && (
+                                        <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', display: 'flex', gap: '8px' }}>
+                                            {showTelefono && <span>{p.codigo_telefonico}</span>}
+                                            {showMoneda && <span>{p.moneda_codigo}</span>}
+                                        </div>
+                                    )}
                                 </div>
-                                {value === p.codigo_iso_2 && <Check size={14} className="text-[var(--color-primary)]" />}
+                                {value === p.codigo_iso_2 && <Check size={14} style={{ color: 'var(--color-primary)' }} />}
                             </button>
                         ))}
                         {paisesFiltrados.length === 0 && (
-                            <div className="py-6 text-center text-[var(--text-tertiary)] text-sm">
+                            <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '13px' }}>
                                 No se encontraron países
                             </div>
                         )}
@@ -168,34 +241,30 @@ export function SelectPais({
             )}
 
             {error && (
-                <p className="text-xs text-[var(--color-error)] mt-1 animate-fadeIn">
+                <p style={{ fontSize: '12px', color: 'var(--color-error)', margin: 0, marginTop: '2px' }}>
                     {error}
                 </p>
             )}
 
             <style>{`
-        @keyframes scaleIn {
-          from { opacity: 0; transform: scale(0.95); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-4px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 5px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: var(--border-color);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: var(--text-tertiary);
-        }
-      `}</style>
+                @keyframes scaleIn {
+                    from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
+                }
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 5px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: var(--border-color);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: var(--text-tertiary);
+                }
+            `}</style>
         </div>
     );
 }

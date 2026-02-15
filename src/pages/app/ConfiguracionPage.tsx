@@ -369,7 +369,7 @@ export function ConfiguracionPage() {
                                 label="País de Residencia"
                                 value={profileData.pais}
                                 onChange={(iso) => setProfileData({ ...profileData, pais: iso })}
-                                showMoneda={true}
+                                showMoneda={false}
                             />
                         </div>
 

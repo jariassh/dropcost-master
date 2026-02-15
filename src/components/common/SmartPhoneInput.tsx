@@ -116,6 +116,10 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
         onChange(`${c.codigo_telefonico}${phoneNumber}`, c.codigo_iso_2);
     };
 
+    const [isFocused, setIsFocused] = useState(false);
+    const borderColor = error ? 'var(--color-error)' : 'var(--border-color)';
+    const focusRingColor = error ? 'rgba(239,68,68,0.15)' : 'rgba(0,102,255,0.15)';
+
     return (
         <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', position: 'relative' }}>
             {label && (
@@ -128,33 +132,42 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                 display: 'flex',
                 alignItems: 'center',
                 backgroundColor: 'var(--bg-primary)',
-                border: `1.5px solid ${error ? 'var(--color-error)' : 'var(--border-color)'}`,
+                border: `1.5px solid ${isFocused || isOpen ? 'var(--color-primary)' : borderColor}`,
                 borderRadius: '10px',
                 overflow: 'visible',
                 transition: 'all 200ms ease',
-                position: 'relative'
+                position: 'relative',
+                boxShadow: isFocused || isOpen ? `0 0 0 4px ${focusRingColor}` : 'none',
             }}>
                 {/* Selector de País */}
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
                     style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '6px',
-                        padding: '12px 14px',
+                        gap: '8px',
+                        padding: '12px 12px 12px 16px',
                         border: 'none',
-                        borderRight: '1.5px solid var(--border-color)',
+                        borderRight: `1.5px solid var(--border-color)`,
                         backgroundColor: 'transparent',
                         cursor: 'pointer',
                         color: 'var(--text-primary)',
                         flexShrink: 0,
-                        minWidth: '105px'
+                        minWidth: '90px',
                     }}
                 >
                     {selectedCountry ? (
                         <>
-                            <span style={{ fontSize: '20px', lineHeight: 1 }}>{selectedCountry.bandera}</span>
+                            <div style={{ width: '22px', height: '14px', flexShrink: 0, overflow: 'hidden', borderRadius: '2px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                                <img
+                                    src={`https://flagcdn.com/w40/${selectedCountry.codigo_iso_2.toLowerCase()}.png`}
+                                    alt={selectedCountry.nombre_es}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                            </div>
                             <span style={{ fontSize: '14px', fontWeight: 600 }}>{selectedCountry.codigo_telefonico}</span>
                         </>
                     ) : (
@@ -170,6 +183,8 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                         value={phoneNumber}
                         onChange={handlePhoneChange}
                         placeholder="300 123 4567"
+                        onFocus={() => setIsFocused(true)}
+                        onBlur={() => setIsFocused(false)}
                         style={{
                             width: '100%',
                             padding: '12px 16px',
@@ -178,6 +193,7 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                             color: 'var(--text-primary)',
                             fontSize: '14px',
                             outline: 'none',
+                            height: '100%'
                         }}
                     />
                 </div>
@@ -229,7 +245,7 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                         </div>
 
                         {/* Lista de Países */}
-                        <div style={{ maxHeight: '240px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <div style={{ maxHeight: '240px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }} className="custom-scrollbar">
                             {filteredCountries.map((c) => (
                                 <button
                                     key={`${c.codigo_iso_2}-${c.codigo_telefonico}`}
@@ -247,10 +263,23 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                                         textAlign: 'left',
                                         transition: 'background-color 150ms'
                                     }}
-                                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-secondary)')}
-                                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = selectedCountry?.codigo_iso_2 === c.codigo_iso_2 ? 'rgba(0, 102, 255, 0.08)' : 'transparent')}
+                                    onMouseEnter={(e) => {
+                                        if (selectedCountry?.codigo_iso_2 !== c.codigo_iso_2) {
+                                            e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = selectedCountry?.codigo_iso_2 === c.codigo_iso_2 ? 'rgba(0, 102, 255, 0.08)' : 'transparent';
+                                    }}
                                 >
-                                    <span style={{ fontSize: '20px' }}>{c.bandera}</span>
+                                    <div style={{ width: '22px', height: '14px', flexShrink: 0, overflow: 'hidden', borderRadius: '2px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                                        <img
+                                            src={`https://flagcdn.com/w40/${c.codigo_iso_2.toLowerCase()}.png`}
+                                            alt={c.nombre_es}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            loading="lazy"
+                                        />
+                                    </div>
                                     <span style={{ flex: 1, fontSize: '13px', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {c.nombre_es}
                                     </span>
@@ -274,6 +303,26 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                     {error}
                 </p>
             )}
+
+            <style>{`
+                @keyframes scaleIn {
+                    from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
+                }
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 5px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: var(--border-color);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: var(--text-tertiary);
+                }
+            `}</style>
         </div>
     );
 }
