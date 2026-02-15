@@ -860,13 +860,15 @@ export function ConfiguracionPage() {
                                         >
                                             <Pencil size={14} />
                                         </button>
-                                        <button
-                                            className="action-icon-btn danger"
-                                            onClick={() => handleConfirmDeleteTienda(tienda.id)}
-                                            title="Eliminar tienda"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
+                                        {(user?.rol === 'admin' || user?.rol === 'superadmin' || user?.plan?.limits?.can_delete_stores) && (
+                                            <button
+                                                className="action-icon-btn danger"
+                                                onClick={() => handleConfirmDeleteTienda(tienda.id)}
+                                                title="Eliminar tienda"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 
@@ -914,7 +916,7 @@ export function ConfiguracionPage() {
                                 <Store size={40} />
                             </div>
                             <h4 style={{ margin: '0 0 12px', fontWeight: 800, fontSize: '20px' }}>No tienes tiendas registradas</h4>
-                            <p style={{ margin: '0 0 32px', fontSize: '15px', color: 'var(--text-tertiary)', maxWidth: '400px', margin: '0 auto 32px', lineHeight: 1.6 }}>
+                            <p style={{ fontSize: '15px', color: 'var(--text-tertiary)', maxWidth: '400px', margin: '0 auto 32px', lineHeight: 1.6 }}>
                                 Crea tu primera tienda para empezar a costear tus productos y habilitar las integraciones automáticas.
                             </p>
                             <button

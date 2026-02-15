@@ -27,10 +27,14 @@ export function ReferidosPage() {
     const [copied, setCopied] = useState(false);
 
     const navigate = useNavigate();
-    const isFreePlan = user?.planId === 'plan_free' && user?.rol !== 'admin' && user?.rol !== 'superadmin';
+    const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+    const hasAccess = user?.plan?.limits?.access_referrals;
+
+    // Default to restricted if flag is missing, unless admin
+    const isRestricted = !isAdmin && !hasAccess;
 
     useEffect(() => {
-        if (isFreePlan) return;
+        if (isRestricted) return;
 
         const loadData = async () => {
             setIsLoading(true);
@@ -48,9 +52,9 @@ export function ReferidosPage() {
             }
         };
         loadData();
-    }, [isFreePlan]);
+    }, [isRestricted]);
 
-    if (isFreePlan) {
+    if (isRestricted) {
         return (
             <div style={{ padding: '80px 20px', textAlign: 'center', maxWidth: '600px', margin: '0 auto', animation: 'fadeIn 0.5s' }}>
                 <div style={{

@@ -12,7 +12,15 @@ export interface User {
         name: string;
         limits: {
             stores: number;
-            [key: string]: number;
+            costeos_limit?: number;
+            offers_limit?: number;
+            can_duplicate_costeos?: boolean;
+            can_delete_costeos?: boolean;
+            can_delete_offers?: boolean;
+            access_wallet?: boolean;
+            access_referrals?: boolean;
+            can_delete_stores?: boolean;
+            [key: string]: number | boolean | undefined;
         };
     };
     estadoSuscripcion?: 'activa' | 'cancelada' | 'suspendida' | 'trial' | 'inactiva';
