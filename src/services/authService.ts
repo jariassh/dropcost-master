@@ -106,17 +106,38 @@ export async function getCurrentUser(): Promise<User | null> {
     }
 
     // Get public profile with plan details
+    // 1. Intentar obtener el perfil SIN el join problemático primero
     const { data: profile, error: profileError } = await supabase
         .from('users')
-        .select('*, plans(name, limits)')
+        .select('*')
         .eq('id', user.id)
         .maybeSingle();
 
     if (profileError) {
-        console.error("Error fetching user profile:", profileError);
+        console.error("Error fetching user profile (Retry without join):", profileError);
     }
 
-    const planDetails = profile?.plans;
+    // 2. Si tenemos perfil y plan_id, buscamos los detalles del plan por separado
+    let planDetails = null;
+    if (profile?.plan_id) {
+        const { data: planData, error: planError } = await supabase
+            .from('plans')
+            .select('name, limits')
+            .eq('slug', profile.plan_id)
+            .maybeSingle();
+        
+        // Si falla por slug, intentamos por id (backup strategy)
+        if (planError || !planData) {
+             const { data: planDataById } = await supabase
+                .from('plans')
+                .select('name, limits')
+                .eq('id', profile.plan_id)
+                .maybeSingle();
+             planDetails = planDataById;
+        } else {
+             planDetails = planData;
+        }
+    }
 
     return {
         id: user.id,
