@@ -11,6 +11,7 @@ const CONTROLLED_FEATURES: { key: keyof PlanLimits; label: string; text: string;
     { key: 'can_delete_costeos', label: 'Eliminar Costeos', text: 'Eliminar Costeos', type: 'boolean' },
     { key: 'can_delete_offers', label: 'Eliminar Ofertas', text: 'Eliminar Ofertas', type: 'boolean' },
     { key: 'can_delete_stores', label: 'Eliminar Tiendas', text: 'Eliminar Tiendas', type: 'boolean' },
+    { key: 'view_activity_history', label: 'Ver Historial de Actividad', text: 'Historial de Actividad', type: 'boolean' }
 ];
 
 const CONTROLLED_PATTERNS = [
