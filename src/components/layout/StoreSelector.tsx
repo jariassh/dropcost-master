@@ -152,31 +152,6 @@ export function StoreSelector({ collapsed }: StoreSelectorProps) {
                             ))}
                         </div>
 
-                        <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                            <button
-                                onClick={handleOpenCreate}
-                                style={{
-                                    width: '100%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '10px',
-                                    padding: '10px 12px',
-                                    backgroundColor: 'transparent',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    color: 'rgba(255,255,255,0.6)',
-                                    cursor: 'pointer',
-                                    textAlign: 'left',
-                                    fontSize: '13px',
-                                    transition: 'all 150ms',
-                                }}
-                                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#fff'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
-                            >
-                                <Plus size={14} />
-                                <span>Nueva Tienda</span>
-                            </button>
-                        </div>
                     </div>
                 </>
             )}

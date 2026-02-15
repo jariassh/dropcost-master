@@ -5,11 +5,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EmptyState, useToast, ConfirmDialog, Tooltip } from '@/components/common';
 import type { SavedCosteo } from '@/types/simulator';
-import { ArrowLeft, Search, Trash2, Copy, Calculator, BarChart3, Check, X, Pencil, Info, Eye } from 'lucide-react';
+import { Trash2, Copy, ArrowLeft, Search, Calculator, BarChart3, Check, X, Pencil, Info, Eye } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 
 export function MisCosteos() {
     const navigate = useNavigate();
     const toast = useToast();
+    const { user } = useAuthStore();
     const [costeos, setCosteos] = useState<SavedCosteo[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -46,6 +48,13 @@ export function MisCosteos() {
         new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
 
     function handleDuplicate(costeo: SavedCosteo) {
+        const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+        // Free plan cannot duplicate (needs Pro or Enterprise)
+        if (!isAdmin && user?.planId === 'plan_free') {
+            toast.warning('Función Pro', 'Duplicar costeos está disponible desde el Plan Pro.');
+            return;
+        }
+
         const dup: SavedCosteo = {
             ...costeo,
             id: crypto.randomUUID(),
@@ -60,6 +69,13 @@ export function MisCosteos() {
     }
 
     function confirmDelete(id: string) {
+        const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+        // Only Enterprise or Admin can delete
+        if (!isAdmin && user?.planId !== 'plan_enterprise') {
+            toast.warning('Función Enterprise', 'La eliminación de registros está reservada para el Plan Enterprise.');
+            return;
+        }
+
         const linkedOffer = ofertas.find(o => o.costeoId === id);
         if (linkedOffer) {
             setLinkedOfferId(linkedOffer.id);

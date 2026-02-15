@@ -11,8 +11,10 @@ import {
     TrendingUp,
     CreditCard,
     ArrowRight,
-    Users2
+    Users2,
+    Lock
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { getReferralStats, getReferredUsers, ReferralStats, ReferredUser } from '@/services/referralService';
 import { Spinner } from '@/components/common/Spinner';
@@ -24,7 +26,12 @@ export function ReferidosPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [copied, setCopied] = useState(false);
 
+    const navigate = useNavigate();
+    const isFreePlan = user?.planId === 'plan_free' && user?.rol !== 'admin' && user?.rol !== 'superadmin';
+
     useEffect(() => {
+        if (isFreePlan) return;
+
         const loadData = async () => {
             setIsLoading(true);
             try {
@@ -41,7 +48,41 @@ export function ReferidosPage() {
             }
         };
         loadData();
-    }, []);
+    }, [isFreePlan]);
+
+    if (isFreePlan) {
+        return (
+            <div style={{ padding: '80px 20px', textAlign: 'center', maxWidth: '600px', margin: '0 auto', animation: 'fadeIn 0.5s' }}>
+                <div style={{
+                    width: '80px', height: '80px', margin: '0 auto 24px',
+                    borderRadius: '50%', backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#f59e0b'
+                }}>
+                    <Lock size={40} />
+                </div>
+                <h1 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '16px', color: 'var(--text-primary)' }}>Funcionalidad Premium</h1>
+                <p style={{ fontSize: '16px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '32px' }}>
+                    Gana comisiones invitando a otros dropshippers.
+                    <br />El Sistema de Referidos es un beneficio exclusivo para miembros Pro y Enterprise.
+                </p>
+                <button
+                    onClick={() => navigate('/pricing')}
+                    style={{
+                        padding: '14px 32px', borderRadius: '12px', border: 'none',
+                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                        color: '#fff', fontSize: '16px', fontWeight: 700, cursor: 'pointer',
+                        boxShadow: '0 10px 20px -5px rgba(245, 158, 11, 0.4)',
+                        transition: 'transform 0.2s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                    Actualizar Plan para Ganar
+                </button>
+            </div>
+        );
+    }
 
     const referralCode = stats?.referralCode || user?.codigoReferido || user?.id?.split('-')[0] || '';
     const referralLink = `${window.location.origin}/registro?ref=${referralCode}`;

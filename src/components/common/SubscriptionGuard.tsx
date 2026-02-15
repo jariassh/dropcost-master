@@ -32,8 +32,9 @@ export const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({ children }
     }
 
     // 4. Verificación de Suscripción
-    // El usuario debe tener un planID y su estado debe ser activo o trial
-    const hasNoPlan = !user?.planId || user.planId === 'plan_free';
+    // El usuario debe tener un planID
+    const hasNoPlan = !user?.planId;
+    // Permitimos estado 'activa' o 'trial'. Asumimos que plan_free tiene estado 'activa'.
     const isSubscriptionInactive = user?.estadoSuscripcion !== 'activa' && user?.estadoSuscripcion !== 'trial';
 
     if (hasNoPlan || isSubscriptionInactive) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Save, Check } from 'lucide-react';
+import { X, Plus, Trash2, Save, Check, Edit2, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '../common/Button';
 import { CurrencyInput } from '../common/CurrencyInput';
 import { Plan, PlanInput } from '@/types/plans.types';
@@ -35,6 +35,8 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
     });
 
     const [newFeature, setNewFeature] = useState('');
+    const [editingFeatureIndex, setEditingFeatureIndex] = useState<number | null>(null);
+    const [editingFeatureText, setEditingFeatureText] = useState('');
 
     useEffect(() => {
         if (initialData) {
@@ -84,6 +86,41 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
             ...prev,
             features: prev.features.filter((_, i) => i !== index)
         }));
+    };
+
+    const startEditingFeature = (index: number) => {
+        setEditingFeatureIndex(index);
+        setEditingFeatureText(formData.features[index]);
+    };
+
+    const saveEditingFeature = () => {
+        if (editingFeatureIndex === null) return;
+        if (!editingFeatureText.trim()) return;
+
+        const newFeatures = [...formData.features];
+        newFeatures[editingFeatureIndex] = editingFeatureText.trim();
+
+        setFormData(prev => ({ ...prev, features: newFeatures }));
+        setEditingFeatureIndex(null);
+        setEditingFeatureText('');
+    };
+
+    const cancelEditingFeature = () => {
+        setEditingFeatureIndex(null);
+        setEditingFeatureText('');
+    };
+
+    const moveFeature = (index: number, direction: 'up' | 'down') => {
+        if (direction === 'up' && index === 0) return;
+        if (direction === 'down' && index === formData.features.length - 1) return;
+
+        const newFeatures = [...formData.features];
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+        // Swap
+        [newFeatures[index], newFeatures[targetIndex]] = [newFeatures[targetIndex], newFeatures[index]];
+
+        setFormData(prev => ({ ...prev, features: newFeatures }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -224,19 +261,94 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                 {formData.features.map((feature, index) => (
                                     <div key={index} style={{
                                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                        padding: '8px 12px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px', border: '1px solid var(--border-color)'
+                                        padding: '8px 12px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px', border: '1px solid var(--border-color)',
+                                        gap: '12px'
                                     }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Check size={14} color="var(--color-primary)" />
-                                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{feature}</span>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveFeature(index)}
-                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)' }}
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
+                                        {editingFeatureIndex === index ? (
+                                            <div style={{ display: 'flex', gap: '8px', flex: 1, alignItems: 'center' }}>
+                                                <input
+                                                    type="text"
+                                                    value={editingFeatureText}
+                                                    onChange={e => setEditingFeatureText(e.target.value)}
+                                                    style={{
+                                                        flex: 1, padding: '6px', borderRadius: '6px', border: '1px solid var(--color-primary)',
+                                                        backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '13px'
+                                                    }}
+                                                    autoFocus
+                                                    onKeyDown={e => {
+                                                        if (e.key === 'Enter') { e.preventDefault(); saveEditingFeature(); }
+                                                        if (e.key === 'Escape') cancelEditingFeature();
+                                                    }}
+                                                />
+                                                <button type="button" onClick={saveEditingFeature} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-success)' }}>
+                                                    <Check size={16} />
+                                                </button>
+                                                <button type="button" onClick={cancelEditingFeature} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)' }}>
+                                                    <X size={16} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                                                    <Check size={14} color="var(--color-primary)" style={{ flexShrink: 0 }} />
+                                                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{feature}</span>
+                                                </div>
+
+                                                <div style={{ display: 'flex', gap: '4px', opacity: 0.7 }}>
+                                                    {/* Move Up */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => moveFeature(index, 'up')}
+                                                        disabled={index === 0}
+                                                        style={{
+                                                            background: 'none', border: 'none', cursor: index === 0 ? 'default' : 'pointer',
+                                                            color: index === 0 ? 'var(--text-tertiary)' : 'var(--text-secondary)',
+                                                            opacity: index === 0 ? 0.3 : 1
+                                                        }}
+                                                        title="Mover arriba"
+                                                    >
+                                                        <ChevronUp size={14} />
+                                                    </button>
+
+                                                    {/* Move Down */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => moveFeature(index, 'down')}
+                                                        disabled={index === formData.features.length - 1}
+                                                        style={{
+                                                            background: 'none', border: 'none', cursor: index === formData.features.length - 1 ? 'default' : 'pointer',
+                                                            color: index === formData.features.length - 1 ? 'var(--text-tertiary)' : 'var(--text-secondary)',
+                                                            opacity: index === formData.features.length - 1 ? 0.3 : 1
+                                                        }}
+                                                        title="Mover abajo"
+                                                    >
+                                                        <ChevronDown size={14} />
+                                                    </button>
+
+                                                    <div style={{ width: '1px', backgroundColor: 'var(--border-color)', margin: '0 4px' }} />
+
+                                                    {/* Edit */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => startEditingFeature(index)}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
+                                                        title="Editar"
+                                                    >
+                                                        <Edit2 size={14} />
+                                                    </button>
+
+                                                    {/* Delete */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveFeature(index)}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)' }}
+                                                        title="Eliminar"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 ))}
                                 {formData.features.length === 0 && (
