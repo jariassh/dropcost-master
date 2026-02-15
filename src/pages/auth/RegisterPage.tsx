@@ -7,8 +7,8 @@ import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Phone, Globe, ChevronDown, Sparkles, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Mail, Lock, User, Phone, Globe, ChevronDown, Sparkles, RefreshCw, CheckCircle2, UserPlus } from 'lucide-react';
 import { Button, Input, Alert, SmartPhoneInput } from '@/components/common';
 import { useAuthStore } from '@/store/authStore';
 
@@ -43,6 +43,8 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export function RegisterPage() {
     const [registered, setRegistered] = useState(false);
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const referralCode = searchParams.get('ref') || '';
     const { register: registerUser, isLoading, error, clearError } = useAuthStore();
 
     useEffect(() => {
@@ -122,6 +124,7 @@ export function RegisterPage() {
             apellidos: data.apellidos,
             telefono: data.telefono,
             pais: data.pais,
+            referredBy: referralCode,
             acceptTerms: data.acceptTerms,
         });
 
@@ -166,6 +169,24 @@ export function RegisterPage() {
             <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '24px' }}>
                 Completa tus datos para comenzar
             </p>
+
+            {referralCode && (
+                <div style={{
+                    marginBottom: '16px',
+                    padding: '12px',
+                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                    border: '1px solid rgba(16, 185, 129, 0.2)',
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    color: '#059669',
+                    fontSize: '14px'
+                }}>
+                    <UserPlus size={18} />
+                    <span>Invitación activa: Has sido invitado por <b>{referralCode}</b></span>
+                </div>
+            )}
 
             {error && (
                 <div style={{ marginBottom: '16px' }}>

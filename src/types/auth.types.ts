@@ -31,6 +31,7 @@ export interface RegisterData {
     apellidos: string;
     telefono?: string;
     pais: string;
+    referredBy?: string; // ID o Código del usuario que refiere
     acceptTerms: boolean;
 }
 
