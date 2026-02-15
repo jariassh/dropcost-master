@@ -113,7 +113,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onS
 
             {/* Action Button */}
             <Button
-                variant={isCurrent ? 'secondary' : (isPro ? 'primary' : 'outline')}
+                variant={isCurrent ? 'secondary' : (isPro ? 'primary' : 'secondary')}
                 fullWidth
                 onClick={() => onSelect && onSelect(plan)}
                 disabled={isCurrent}
