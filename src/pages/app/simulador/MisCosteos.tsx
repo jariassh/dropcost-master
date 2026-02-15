@@ -49,9 +49,10 @@ export function MisCosteos() {
 
     function handleDuplicate(costeo: SavedCosteo) {
         const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
-        // Free plan cannot duplicate (needs Pro or Enterprise)
-        if (!isAdmin && user?.planId === 'plan_free') {
-            toast.warning('Función Pro', 'Duplicar costeos está disponible desde el Plan Pro.');
+        const canDuplicate = user?.plan?.limits?.can_duplicate_costeos;
+
+        if (!isAdmin && !canDuplicate) {
+            toast.warning('Función Premium', 'La duplicación de costeos no está habilitada en tu plan actual.');
             return;
         }
 
@@ -70,9 +71,10 @@ export function MisCosteos() {
 
     function confirmDelete(id: string) {
         const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
-        // Only Enterprise or Admin can delete
-        if (!isAdmin && user?.planId !== 'plan_enterprise') {
-            toast.warning('Función Enterprise', 'La eliminación de registros está reservada para el Plan Enterprise.');
+        const canDelete = user?.plan?.limits?.can_delete_costeos;
+
+        if (!isAdmin && !canDelete) {
+            toast.warning('Restricción de Plan', 'Tu plan actual no permite eliminar registros.');
             return;
         }
 

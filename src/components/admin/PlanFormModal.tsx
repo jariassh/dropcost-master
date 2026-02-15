@@ -1,8 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Save, Check, Edit2, ChevronUp, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Plus, Trash2, Save, Check, Edit2, GripVertical } from 'lucide-react';
 import { Button } from '../common/Button';
 import { CurrencyInput } from '../common/CurrencyInput';
-import { Plan, PlanInput } from '@/types/plans.types';
+import { Plan, PlanInput, PlanLimits } from '@/types/plans.types';
+
+const CONTROLLED_FEATURES: { key: keyof PlanLimits; label: string; text: string; type: 'boolean' }[] = [
+    { key: 'access_wallet', label: 'Acceso a Billetera', text: 'Acceso a Billetera y Retiros', type: 'boolean' },
+    { key: 'access_referrals', label: 'Sistema de Referidos', text: 'Sistema de Referidos', type: 'boolean' },
+    { key: 'can_duplicate_costeos', label: 'Duplicar Costeos', text: 'Duplicar Costeos', type: 'boolean' },
+    { key: 'can_delete_costeos', label: 'Eliminar Costeos', text: 'Eliminar Costeos', type: 'boolean' },
+    { key: 'can_delete_offers', label: 'Eliminar Ofertas', text: 'Eliminar Ofertas', type: 'boolean' },
+    { key: 'can_delete_stores', label: 'Eliminar Tiendas', text: 'Eliminar Tiendas', type: 'boolean' },
+];
+
+const CONTROLLED_PATTERNS = [
+    /^Hasta \d+ (Tienda|Tiendas)$/,
+    /^Tiendas Ilimitadas$/,
+    /^\d+ Costeos$/,
+    /^Costeos Ilimitados$/,
+    /^\d+ Ofertas$/,
+    /^Ofertas Ilimitadas$/
+];
+
+const isControlledFeature = (text: string) => {
+    // Check dynamic patterns first
+    if (CONTROLLED_PATTERNS.some(p => p.test(text))) return true;
+
+    // Check boolean features (with or without prefix)
+    const cleanText = text.replace(/^⛔\s*/, '');
+    return CONTROLLED_FEATURES.some(cF => cF.text === cleanText);
+};
 
 interface PlanFormModalProps {
     isOpen: boolean;
@@ -46,7 +73,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                 description: initialData.description || '',
                 price_monthly: initialData.price_monthly,
                 price_semiannual: initialData.price_semiannual || 0, // Handle migration if needed
-                features: initialData.features || [],
+                features: Array.from(new Set(initialData.features || [])),
                 limits: initialData.limits || { stores: 1 },
                 is_active: initialData.is_active ?? true,
                 is_public: initialData.is_public ?? true
@@ -73,7 +100,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
     };
 
     const handleAddFeature = () => {
-        if (!newFeature.trim()) return;
+        if (!newFeature.trim() || formData.features.includes(newFeature.trim())) return;
         setFormData(prev => ({
             ...prev,
             features: [...prev.features, newFeature.trim()]
@@ -110,17 +137,106 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
         setEditingFeatureText('');
     };
 
-    const moveFeature = (index: number, direction: 'up' | 'down') => {
-        if (direction === 'up' && index === 0) return;
-        if (direction === 'down' && index === formData.features.length - 1) return;
+    const dragItem = useRef<number | null>(null);
+    const dragOverItem = useRef<number | null>(null);
+
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, position: number) => {
+        dragItem.current = position;
+        setEditingFeatureIndex(null); // Cancel editing if any
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', ''); // Fix for Firefox
+    };
+
+    const handleDragEnter = (position: number) => {
+        if (dragItem.current === null) return;
+        if (dragItem.current === position) return;
 
         const newFeatures = [...formData.features];
-        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        const draggedItemContent = newFeatures[dragItem.current];
+        newFeatures.splice(dragItem.current, 1);
+        newFeatures.splice(position, 0, draggedItemContent);
 
-        // Swap
-        [newFeatures[index], newFeatures[targetIndex]] = [newFeatures[targetIndex], newFeatures[index]];
-
+        dragItem.current = position;
         setFormData(prev => ({ ...prev, features: newFeatures }));
+    };
+
+    const handleDragEnd = () => {
+        dragItem.current = null;
+        dragOverItem.current = null;
+    };
+
+    const handleLimitToggle = (key: keyof PlanLimits, value: boolean) => {
+        const newLimits = { ...formData.limits, [key]: value };
+
+        // Sync with features text
+        let newFeatures = [...formData.features];
+        const featureDef = CONTROLLED_FEATURES.find(c => c.key === key);
+
+        if (featureDef) {
+            const enabledText = featureDef.text;
+            const disabledText = `⛔ ${featureDef.text}`;
+
+            // Remove both versions first to ensure clean state
+            newFeatures = newFeatures.filter(f => f !== enabledText && f !== disabledText);
+
+            if (value) {
+                // Add enabled version to top
+                newFeatures.unshift(enabledText);
+            } else {
+                // Add disabled version to bottom
+                newFeatures.push(disabledText);
+            }
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            limits: newLimits,
+            features: newFeatures
+        }));
+    };
+
+    const handleNumericLimitChange = (key: 'stores' | 'costeos_limit' | 'offers_limit', value: number) => {
+        const newLimits = { ...formData.limits, [key]: value };
+        let newFeatures = [...formData.features];
+
+        const INFINITY_THRESHOLD = 999999;
+
+        // Format helpers
+        const getStoreText = (v: number) => v >= INFINITY_THRESHOLD ? 'Tiendas Ilimitadas' : `Hasta ${v} ${v === 1 ? 'Tienda' : 'Tiendas'}`;
+        const getCosteosText = (v: number) => v >= INFINITY_THRESHOLD ? 'Costeos Ilimitados' : `${v} Costeos`;
+        const getOffersText = (v: number) => v >= INFINITY_THRESHOLD ? 'Ofertas Ilimitadas' : `${v} Ofertas`;
+
+        let newText = '';
+        let pattern: RegExp | null = null;
+        let altPattern: RegExp | null = null;
+
+        if (key === 'stores') {
+            newText = getStoreText(value);
+            pattern = /^Hasta \d+ (Tienda|Tiendas)$/;
+            altPattern = /^Tiendas Ilimitadas$/;
+        } else if (key === 'costeos_limit') {
+            newText = getCosteosText(value);
+            pattern = /^\d+ Costeos$/;
+            altPattern = /^Costeos Ilimitados$/;
+        } else if (key === 'offers_limit') {
+            newText = getOffersText(value);
+            pattern = /^\d+ Ofertas$/;
+            altPattern = /^Ofertas Ilimitadas$/;
+        }
+
+        // Remove old text matching pattern
+        if (pattern) {
+            newFeatures = newFeatures.filter(f => !pattern!.test(f) && (!altPattern || !altPattern.test(f)));
+        }
+
+        // Add new text at the beginning
+        newFeatures.unshift(newText);
+
+        setFormData(prev => ({
+            ...prev,
+            limits: newLimits,
+            features: newFeatures
+        }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -129,6 +245,8 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
     };
 
     if (!isOpen) return null;
+
+    const INFINITY_THRESHOLD = 999999;
 
     return (
         <div style={{
@@ -166,7 +284,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                                     style={{
                                         padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)',
-                                        backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '14px'
+                                        backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '14px', width: '100%', boxSizing: 'border-box'
                                     }}
                                     placeholder="Ej. Plan Pro"
                                 />
@@ -180,7 +298,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                     onChange={handleSlugChange}
                                     style={{
                                         padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)',
-                                        backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '14px'
+                                        backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '14px', width: '100%', boxSizing: 'border-box'
                                     }}
                                     placeholder="Ej. plan_pro"
                                 />
@@ -198,7 +316,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                 style={{
                                     padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)',
                                     backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '14px',
-                                    minHeight: '80px', resize: 'vertical'
+                                    minHeight: '80px', resize: 'vertical', width: '100%', boxSizing: 'border-box'
                                 }}
                                 placeholder="Descripción corta de los beneficios..."
                             />
@@ -211,6 +329,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                 <CurrencyInput
                                     value={formData.price_monthly}
                                     onChange={(val) => setFormData({ ...formData, price_monthly: val })}
+                                    style={{ width: '100%' }}
                                 />
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -218,22 +337,123 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                 <CurrencyInput
                                     value={formData.price_semiannual}
                                     onChange={(val) => setFormData({ ...formData, price_semiannual: val })}
+                                    style={{ width: '100%' }}
                                 />
                             </div>
                         </div>
 
                         {/* Limits details */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Límite de Tiendas</label>
-                            <CurrencyInput
-                                value={formData.limits.stores}
-                                onChange={(val) => setFormData({ ...formData, limits: { ...formData.limits, stores: val } })}
-                                allowDecimals={false}
-                                prefix=""
-                            />
-                            <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
-                                Definiremos otros límites de uso más adelante.
-                            </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                            <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)' }}>Configuración Técnica</h4>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '12px' }}>
+                                {/* Stores */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Tiendas</label>
+                                        <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', userSelect: 'none' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.limits.stores >= INFINITY_THRESHOLD}
+                                                onChange={(e) => handleNumericLimitChange('stores', e.target.checked ? INFINITY_THRESHOLD : 1)}
+                                            /> ∞
+                                        </label>
+                                    </div>
+                                    {formData.limits.stores >= INFINITY_THRESHOLD ? (
+                                        <div style={{
+                                            padding: '10px', backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)',
+                                            borderRadius: '8px', fontSize: '14px', color: 'var(--text-tertiary)', textAlign: 'center'
+                                        }}>Ilimitadas</div>
+                                    ) : (
+                                        <CurrencyInput
+                                            value={formData.limits.stores}
+                                            onChange={(val) => handleNumericLimitChange('stores', val)}
+                                            allowDecimals={false}
+                                            prefix=""
+                                            style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', width: '100%' }}
+                                        />
+                                    )}
+                                </div>
+                                {/* Costeos */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Costeos</label>
+                                        <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', userSelect: 'none' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={(formData.limits.costeos_limit || 0) >= INFINITY_THRESHOLD}
+                                                onChange={(e) => handleNumericLimitChange('costeos_limit', e.target.checked ? INFINITY_THRESHOLD : 10)}
+                                            /> ∞
+                                        </label>
+                                    </div>
+                                    {(formData.limits.costeos_limit || 0) >= INFINITY_THRESHOLD ? (
+                                        <div style={{
+                                            padding: '10px', backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)',
+                                            borderRadius: '8px', fontSize: '14px', color: 'var(--text-tertiary)', textAlign: 'center'
+                                        }}>Ilimitdos</div>
+                                    ) : (
+                                        <CurrencyInput
+                                            value={formData.limits.costeos_limit || 0}
+                                            onChange={(val) => handleNumericLimitChange('costeos_limit', val)}
+                                            allowDecimals={false}
+                                            prefix=""
+                                            style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', width: '100%' }}
+                                        />
+                                    )}
+                                </div>
+                                {/* Offers */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Ofertas</label>
+                                        <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', userSelect: 'none' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={(formData.limits.offers_limit || 0) >= INFINITY_THRESHOLD}
+                                                onChange={(e) => handleNumericLimitChange('offers_limit', e.target.checked ? INFINITY_THRESHOLD : 5)}
+                                            /> ∞
+                                        </label>
+                                    </div>
+                                    {(formData.limits.offers_limit || 0) >= INFINITY_THRESHOLD ? (
+                                        <div style={{
+                                            padding: '10px', backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)',
+                                            borderRadius: '8px', fontSize: '14px', color: 'var(--text-tertiary)', textAlign: 'center'
+                                        }}>Ilimitadas</div>
+                                    ) : (
+                                        <CurrencyInput
+                                            value={formData.limits.offers_limit || 0}
+                                            onChange={(val) => handleNumericLimitChange('offers_limit', val)}
+                                            allowDecimals={false}
+                                            prefix=""
+                                            style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', width: '100%' }}
+                                        />
+                                    )}
+                                </div>
+                            </div>
+
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
+                                {CONTROLLED_FEATURES.map((item) => {
+                                    const isEnabled = !!formData.limits[item.key];
+                                    return (
+                                        <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div
+                                                onClick={() => handleLimitToggle(item.key, !isEnabled)}
+                                                style={{
+                                                    width: '36px', height: '20px', backgroundColor: isEnabled ? 'var(--color-primary)' : 'var(--text-tertiary)',
+                                                    borderRadius: '12px', position: 'relative', cursor: 'pointer', transition: 'background 0.2s',
+                                                    flexShrink: 0
+                                                }}
+                                            >
+                                                <div style={{
+                                                    width: '16px', height: '16px', backgroundColor: 'white', borderRadius: '50%',
+                                                    position: 'absolute', top: '2px', left: isEnabled ? '18px' : '2px', transition: 'left 0.2s'
+                                                }} />
+                                            </div>
+                                            <span style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{item.label}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
 
                         {/* Features */}
@@ -258,12 +478,25 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                                <style>{`
+                                    .draggable-item { cursor: grab; }
+                                    .draggable-item:active { cursor: grabbing; }
+                                `}</style>
                                 {formData.features.map((feature, index) => (
-                                    <div key={index} style={{
-                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                        padding: '8px 12px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px', border: '1px solid var(--border-color)',
-                                        gap: '12px'
-                                    }}>
+                                    <div
+                                        key={feature}
+                                        draggable={editingFeatureIndex === null}
+                                        onDragStart={(e) => handleDragStart(e, index)}
+                                        onDragEnter={() => handleDragEnter(index)}
+                                        onDragOver={(e) => e.preventDefault()}
+                                        onDragEnd={handleDragEnd}
+                                        className="draggable-item"
+                                        style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                            padding: '8px 12px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px', border: '1px solid var(--border-color)',
+                                            gap: '12px', transition: 'transform 0.2s, box-shadow 0.2s'
+                                        }}
+                                    >
                                         {editingFeatureIndex === index ? (
                                             <div style={{ display: 'flex', gap: '8px', flex: 1, alignItems: 'center' }}>
                                                 <input
@@ -290,62 +523,37 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                         ) : (
                                             <>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                                                    <div style={{ color: 'var(--text-tertiary)', cursor: 'grab', display: 'flex', alignItems: 'center' }}>
+                                                        <GripVertical size={16} />
+                                                    </div>
                                                     <Check size={14} color="var(--color-primary)" style={{ flexShrink: 0 }} />
                                                     <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{feature}</span>
                                                 </div>
 
                                                 <div style={{ display: 'flex', gap: '4px', opacity: 0.7 }}>
-                                                    {/* Move Up */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => moveFeature(index, 'up')}
-                                                        disabled={index === 0}
-                                                        style={{
-                                                            background: 'none', border: 'none', cursor: index === 0 ? 'default' : 'pointer',
-                                                            color: index === 0 ? 'var(--text-tertiary)' : 'var(--text-secondary)',
-                                                            opacity: index === 0 ? 0.3 : 1
-                                                        }}
-                                                        title="Mover arriba"
-                                                    >
-                                                        <ChevronUp size={14} />
-                                                    </button>
+                                                    {/* Edit - Disable if controlled */}
+                                                    {!isControlledFeature(feature) && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => startEditingFeature(index)}
+                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
+                                                            title="Editar"
+                                                        >
+                                                            <Edit2 size={14} />
+                                                        </button>
+                                                    )}
 
-                                                    {/* Move Down */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => moveFeature(index, 'down')}
-                                                        disabled={index === formData.features.length - 1}
-                                                        style={{
-                                                            background: 'none', border: 'none', cursor: index === formData.features.length - 1 ? 'default' : 'pointer',
-                                                            color: index === formData.features.length - 1 ? 'var(--text-tertiary)' : 'var(--text-secondary)',
-                                                            opacity: index === formData.features.length - 1 ? 0.3 : 1
-                                                        }}
-                                                        title="Mover abajo"
-                                                    >
-                                                        <ChevronDown size={14} />
-                                                    </button>
-
-                                                    <div style={{ width: '1px', backgroundColor: 'var(--border-color)', margin: '0 4px' }} />
-
-                                                    {/* Edit */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => startEditingFeature(index)}
-                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
-                                                        title="Editar"
-                                                    >
-                                                        <Edit2 size={14} />
-                                                    </button>
-
-                                                    {/* Delete */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveFeature(index)}
-                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)' }}
-                                                        title="Eliminar"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
+                                                    {/* Delete - Disable if controlled */}
+                                                    {!isControlledFeature(feature) && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveFeature(index)}
+                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)' }}
+                                                            title="Eliminar"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </>
                                         )}

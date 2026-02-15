@@ -69,8 +69,10 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
 
     function checkDelete(id: string) {
         const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
-        if (!isAdmin && user?.planId !== 'plan_enterprise') {
-            toast.warning('Restricción de Plan', 'Eliminar ofertas está restringido al Plan Enterprise.');
+        const canDelete = user?.plan?.limits?.can_delete_offers;
+
+        if (!isAdmin && !canDelete) {
+            toast.warning('Restricción de Plan', 'Tu plan actual no permite eliminar ofertas.');
             return;
         }
         setDeleteConfirm(id);
