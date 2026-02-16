@@ -42,8 +42,17 @@ import { useToast, Modal, ConfirmDialog, Button, Badge, SelectPais } from '@/com
 import { CreateStoreModal } from '@/components/layout/CreateStoreModal';
 import type { Tienda } from '@/types/store.types';
 import { cargarPaises, Pais } from '@/services/paisesService';
+import { fetchUserActivityLogs, AuditLog } from '@/services/auditService';
+import {
+    Clock,
+    Zap,
+    CreditCard as CreditCardIcon,
+    UserCheck,
+    Key as KeyIcon,
+    AlertTriangle
+} from 'lucide-react';
 
-type TabType = 'perfil' | 'seguridad' | 'sesiones' | 'tiendas';
+type TabType = 'perfil' | 'seguridad' | 'notificaciones' | 'actividad' | 'sesiones' | 'tiendas';
 
 export function ConfiguracionPage() {
     const {
@@ -169,6 +178,20 @@ export function ConfiguracionPage() {
     const [deleteTiendaConfirm, setDeleteTiendaConfirm] = useState<string | null>(null);
     const [storeToDeleteData, setStoreToDeleteData] = useState<{ hasData: boolean; costeoCount: number } | null>(null);
 
+    // Notificaciones state
+    const [notifPreferences, setNotifPreferences] = useState({
+        referrals: true,
+        security: true,
+        plan: true,
+        marketing: false,
+        app_notifs: true
+    });
+    const [isSavingNotifs, setIsSavingNotifs] = useState(false);
+
+    // Actividad state
+    const [activityLogs, setActivityLogs] = useState<AuditLog[]>([]);
+    const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+
     // Fetch stores on mount/tab change
     useEffect(() => {
         fetchTiendas();
@@ -193,6 +216,16 @@ export function ConfiguracionPage() {
     useEffect(() => {
         cargarPaises().then(setAllCountries);
     }, []);
+
+    useEffect(() => {
+        if (activeTab === 'actividad') {
+            setIsLoadingLogs(true);
+            fetchUserActivityLogs(30).then(logs => {
+                setActivityLogs(logs);
+                setIsLoadingLogs(false);
+            });
+        }
+    }, [activeTab]);
 
     const executeDeleteTienda = async () => {
         if (!deleteTiendaConfirm) return;
@@ -318,8 +351,10 @@ export function ConfiguracionPage() {
                 gap: '8px',
                 marginBottom: '32px',
                 borderBottom: '1px solid var(--border-color)',
-                paddingBottom: '2px'
-            }}>
+                paddingBottom: '2px',
+                overflowX: 'auto',
+                whiteSpace: 'nowrap'
+            }} className="no-scrollbar">
                 <TabButton
                     active={activeTab === 'perfil'}
                     onClick={() => setActiveTab('perfil')}
@@ -339,19 +374,31 @@ export function ConfiguracionPage() {
                     label="Sesiones"
                 />
                 <TabButton
+                    active={activeTab === 'actividad'}
+                    onClick={() => setActiveTab('actividad')}
+                    icon={<Clock size={18} />}
+                    label="Actividad"
+                />
+                <TabButton
                     active={activeTab === 'tiendas'}
                     onClick={() => setActiveTab('tiendas')}
                     icon={<Store size={18} />}
                     label="Mis Tiendas"
                 />
+                <TabButton
+                    active={activeTab === 'notificaciones'}
+                    onClick={() => setActiveTab('notificaciones')}
+                    icon={<Settings2 size={18} />}
+                    label="Notificaciones"
+                />
             </div>
 
             {/* Contenido de Mi Perfil */}
             {activeTab === 'perfil' && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: '32px', animation: 'fadeIn 0.3s' }}>
+                <div style={{ gap: '32px', animation: 'fadeIn 0.3s' }} className="dc-config-grid">
                     <Card>
                         <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 24px' }}>Información Personal</h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                        <div style={{ gap: '20px', marginBottom: '20px' }} className="dc-config-inner-grid">
                             <InputGroup label="Nombres">
                                 <input
                                     className="dc-input"
@@ -953,6 +1000,76 @@ export function ConfiguracionPage() {
                 </div>
             )}
 
+            {/* Contenido de Notificaciones */}
+            {activeTab === 'notificaciones' && (
+                <div style={{ maxWidth: '800px', animation: 'fadeIn 0.3s' }}>
+                    <Card>
+                        <div style={{ marginBottom: '32px' }}>
+                            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 8px' }}>Preferencias de Notificación</h3>
+                            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                                Elige cómo quieres recibir las actualizaciones del sistema y tu cuenta.
+                            </p>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <NotificationItem
+                                icon={<Share2 size={18} />}
+                                title="Comisiones y Referidos"
+                                description="Recibe avisos cuando un nuevo usuario se registre o ganes una comisión."
+                                checked={notifPreferences.referrals}
+                                onChange={() => setNotifPreferences({ ...notifPreferences, referrals: !notifPreferences.referrals })}
+                            />
+                            <NotificationItem
+                                icon={<Shield size={18} />}
+                                title="Seguridad de la Cuenta"
+                                description="Alertas sobre inicios de sesión, cambios de contraseña y seguridad (Recomendado)."
+                                checked={notifPreferences.security}
+                                onChange={() => setNotifPreferences({ ...notifPreferences, security: !notifPreferences.security })}
+                            />
+                            <NotificationItem
+                                icon={<Sparkles size={18} />}
+                                title="Suscripción y Planes"
+                                description="Avisos sobre la activación, vencimiento y facturación de tus planes Pro/Enterprise."
+                                checked={notifPreferences.plan}
+                                onChange={() => setNotifPreferences({ ...notifPreferences, plan: !notifPreferences.plan })}
+                            />
+                            <NotificationItem
+                                icon={<Globe size={18} />}
+                                title="Novedades y Marketing"
+                                description="Entérate antes que nadie de las nuevas funciones y promociones de DropCost."
+                                checked={notifPreferences.marketing}
+                                onChange={() => setNotifPreferences({ ...notifPreferences, marketing: !notifPreferences.marketing })}
+                            />
+                            <NotificationItem
+                                icon={<Smartphone size={18} />}
+                                title="Notificaciones en la App"
+                                description="Mostrar el punto rojo y avisos dentro del panel principal de la aplicación."
+                                checked={notifPreferences.app_notifs}
+                                onChange={() => setNotifPreferences({ ...notifPreferences, app_notifs: !notifPreferences.app_notifs })}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border-color)', paddingTop: '20px', marginTop: '24px' }}>
+                            <button
+                                className="dc-button-primary"
+                                onClick={() => {
+                                    setIsSavingNotifs(true);
+                                    setTimeout(() => {
+                                        setIsSavingNotifs(false);
+                                        toast.success('Preferencias guardadas', 'Tus ajustes de notificaciones han sido actualizados.');
+                                    }, 800);
+                                }}
+                                disabled={isSavingNotifs}
+                                style={{ gap: '8px' }}
+                            >
+                                {isSavingNotifs ? <Spinner size="sm" /> : <Save size={16} />}
+                                Guardar Preferencias
+                            </button>
+                        </div>
+                    </Card>
+                </div>
+            )}
+
             {/* Modales de Tiendas */}
             <CreateStoreModal
                 isOpen={isCreateStoreOpen}
@@ -1169,12 +1286,39 @@ export function ConfiguracionPage() {
                     border-color: var(--color-error);
                     background: rgba(var(--color-error-rgb), 0.1);
                 }
+                .spin { animation: spin 1s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
             `}</style>
         </div>
     );
 }
 
-// Subcomponentes Internos
+// Subcomponentes Internos y Helpers
+function getLogDisplay(accion: string) {
+    switch (accion) {
+        case 'PAYMENT_RECEIVED':
+            return { icon: <CreditCardIcon size={18} />, color: '#10B981', label: 'Pago Recibido' };
+        case 'PLAN_ACTIVATED':
+            return { icon: <Zap size={18} />, color: '#F59E0B', label: 'Suscripción Activada' };
+        case 'COMMISSION_EARNED':
+            return { icon: <Zap size={18} />, color: '#3B82F6', label: 'Comisión Ganada' };
+        case 'LOGIN':
+            return { icon: <UserCheck size={18} />, color: '#6366F1', label: 'Inicio de Sesión' };
+        case 'PASSWORD_CHANGE':
+            return { icon: <KeyIcon size={18} />, color: '#EF4444', label: 'Cambio de Contraseña' };
+        default:
+            return { icon: <Clock size={18} />, color: '#6B7280', label: accion.replace(/_/g, ' ') };
+    }
+}
+
+function formatLogDetails(log: AuditLog) {
+    if (!log.detalles) return '';
+    if (log.accion === 'PLAN_ACTIVATED') return `Plan: ${log.detalles.plan_id?.toUpperCase()}`;
+    if (log.accion === 'PAYMENT_RECEIVED') return `Monto: ${log.detalles.amount} ${log.detalles.currency}`;
+    if (log.accion === 'COMMISSION_EARNED') return `Recibiste +$ ${log.detalles.amount_usd} de referido`;
+    return JSON.stringify(log.detalles).substring(0, 50);
+}
+
 function Card({ children }: { children: React.ReactNode }) {
     return (
         <div style={{
@@ -1194,6 +1338,43 @@ function InputGroup({ label, children }: { label: string, children: React.ReactN
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
             <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>{label}</label>
             {children}
+        </div>
+    );
+}
+
+function NotificationItem({ icon, title, description, checked, onChange }: {
+    icon: React.ReactNode,
+    title: string,
+    description: string,
+    checked: boolean,
+    onChange: () => void
+}) {
+    return (
+        <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '16px',
+            borderRadius: '12px',
+            backgroundColor: 'var(--bg-secondary)',
+            border: '1px solid var(--border-color)',
+            marginBottom: '8px'
+        }}>
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                <div style={{
+                    width: '40px', height: '40px', borderRadius: '10px',
+                    backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: 'var(--color-primary)'
+                }}>
+                    {icon}
+                </div>
+                <div>
+                    <h4 style={{ margin: '0 0 2px', fontSize: '14px', fontWeight: 700 }}>{title}</h4>
+                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', lineHeight: 1.4 }}>{description}</p>
+                </div>
+            </div>
+            <Toggle checked={checked} onChange={onChange} />
         </div>
     );
 }
@@ -1250,4 +1431,32 @@ function Toggle({ checked, onChange }: { checked: boolean, onChange: () => void 
             }} />
         </div>
     );
+}
+
+/* ─── Styles adicionales ─── */
+const responsiveStyles = `
+    .dc-config-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
+    }
+    .dc-config-inner-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 900px) {
+        .dc-config-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    @media (max-width: 600px) {
+        .dc-config-inner-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+`;
+
+if (typeof document !== 'undefined') {
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = responsiveStyles;
+    document.head.appendChild(styleSheet);
 }

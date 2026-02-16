@@ -64,6 +64,13 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
         throw payError;
     }
 
+    // AUDIT LOG: Payment Received
+    await supabase.from("audit_logs").insert({
+        usuario_id: userId,
+        accion: 'PAYMENT_RECEIVED',
+        detalles: { payment_id: dataId, amount: paymentData.transaction_amount, currency: paymentData.currency_id }
+    }).catch(e => console.error("Audit Log Error:", e));
+
     // 2. Transaction: Update User Subscription
     const { error: userError } = await supabase.from("users").update({
         plan_id: planId,
@@ -75,6 +82,13 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
         console.error("Error updating user:", userError);
         throw userError;
     }
+
+    // AUDIT LOG: Plan Activated
+    await supabase.from("audit_logs").insert({
+        usuario_id: userId,
+        accion: 'PLAN_ACTIVATED',
+        detalles: { plan_id: planId, expires_at: expiresAt.toISOString() }
+    }).catch(e => console.error("Audit Log Error:", e));
 
     // 3. COMMISSION LOGIC (Referrals)
     try {
@@ -132,6 +146,13 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
                     amount: commissionAmountUSD,
                     description: `Comisión por suscripción de referido (${currency} ${originalAmount})`
                 });
+
+                // AUDIT LOG: Commission Earned
+                await supabase.from("audit_logs").insert({
+                    usuario_id: leader.user_id,
+                    accion: 'COMMISSION_EARNED',
+                    detalles: { amount_usd: commissionAmountUSD, from_user: userId, payment_id: dataId }
+                }).catch(e => console.error("Audit Log Error:", e));
 
                 // B. Update User Wallet Balance (Atomic-like)
                 const { data: userData } = await supabase.from('users').select('wallet_saldo').eq('id', leader.user_id).single();

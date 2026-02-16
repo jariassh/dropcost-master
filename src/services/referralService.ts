@@ -8,7 +8,7 @@ export interface ReferralStats {
     totalReferred: number;
     totalEarned: number;
     referralCode: string;
-    // V3 Fields
+    // Fields
     minReferredForLeader: number;
     commissionLevel1: number;
     commissionLevel2: number;
@@ -261,7 +261,7 @@ export async function getLevel2ReferredUsers(): Promise<any[]> {
         // Usamos una subquery o filtrado manual si es necesario.
         // Optimizamos: buscamos referidos_lideres vinculados a mis referidos directos.
         
-    // Por ahora, para V3, simplificamos la lógica de fetch
+    // Simplificamos la lógica de fetch
     if (error) {
         console.error('Error fetching level 2 users:', error);
         return [];
@@ -312,7 +312,7 @@ export async function getAdminReferralStats(): Promise<any> {
             supabase.from('sistema_referidos_config').select('*').order('fecha_actualizacion', { ascending: false }).limit(1).maybeSingle(),
             supabase.from('referidos_usuarios').select('id', { count: 'exact', head: true }),
             supabase.from('referidos_lideres').select('total_comisiones_generadas'),
-            supabase.from('wallet_transactions' as any).select('amount').eq('type', 'withdrawal').eq('status', 'completed')
+            supabase.from('wallet_transactions' as any).select('amount').eq('type', 'withdrawal')
         ]);
 
         const totalReferred = usersRes.count || 0;

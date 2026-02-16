@@ -21,6 +21,7 @@ import {
     LayoutDashboard,
     PanelLeftClose,
     PanelLeftOpen,
+    Menu,
     UserCircle,
     Gift,
     Share2,
@@ -29,6 +30,7 @@ import {
     PieChart,
     GraduationCap,
     History as HistoryIcon,
+    X,
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
@@ -75,6 +77,8 @@ export function AppLayout() {
     }, [fetchNotifications]);
 
     const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_OPEN;
+    // Si el drawer está abierto en móvil, forzamos que NO esté colapsado para mostrar textos
+    const effectivelyCollapsed = collapsed && !mobileOpen;
 
     function handleLogout() {
         logout();
@@ -82,37 +86,38 @@ export function AppLayout() {
     }
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-primary)' }}>
+        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-primary)', '--sidebar-width': `${sidebarWidth}px` } as any}>
             {/* ─── Sidebar ─── */}
             <aside
                 style={{
                     position: 'fixed',
                     top: 0,
-                    left: 0,
+                    left: undefined,
                     bottom: 0,
-                    width: `${sidebarWidth}px`,
+                    width: mobileOpen ? '280px' : `${sidebarWidth}px`,
                     backgroundColor: 'var(--sidebar-bg)',
                     display: 'flex',
                     flexDirection: 'column',
-                    zIndex: 40,
-                    transition: 'width 250ms ease',
+                    zIndex: 50,
+                    transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
                     overflow: 'hidden',
+                    ...(mobileOpen ? { left: 0 } : {})
                 }}
-                className={mobileOpen ? '' : 'max-lg:hidden'}
+                className={`lg:left-0 ${!mobileOpen ? 'max-lg:-left-full' : ''}`}
             >
                 {/* Logo + Toggle */}
                 <div
                     style={{
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: collapsed ? 'center' : 'space-between',
-                        padding: collapsed ? '0' : '0 16px 0 20px',
+                        justifyContent: effectivelyCollapsed ? 'center' : 'space-between',
+                        padding: effectivelyCollapsed ? '0' : '0 16px 0 20px',
                         borderBottom: '1px solid rgba(255,255,255,0.1)',
                         height: '64px',
                         transition: 'padding 250ms ease',
                     }}
                 >
-                    {!collapsed && (
+                    {!effectivelyCollapsed && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <div
                                 style={{
@@ -132,10 +137,16 @@ export function AppLayout() {
 
                     {/* Toggle collapse */}
                     <button
-                        onClick={() => setCollapsed((v) => !v)}
+                        onClick={() => {
+                            if (window.innerWidth < 1024) {
+                                setMobileOpen(false);
+                            } else {
+                                setCollapsed((v) => !v);
+                            }
+                        }}
                         style={{
                             padding: '8px',
-                            borderRadius: '8px',
+                            borderRadius: '88px',
                             background: 'none',
                             border: 'none',
                             color: 'rgba(255,255,255,0.4)',
@@ -145,19 +156,19 @@ export function AppLayout() {
                         }}
                         onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
-                        aria-label={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+                        aria-label={effectivelyCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
                     >
-                        {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+                        {window.innerWidth < 1024 ? <X size={20} /> : (effectivelyCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />)}
                     </button>
                 </div>
 
                 {/* Selector de Tienda */}
                 <div style={{ marginTop: '16px' }}>
-                    <StoreSelector collapsed={collapsed} />
+                    <StoreSelector collapsed={effectivelyCollapsed} />
                 </div>
 
                 {/* Navegación */}
-                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', padding: collapsed ? '4px 8px 12px' : '0 12px 16px' }}>
+                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', padding: effectivelyCollapsed ? '4px 8px 12px' : '0 12px 16px' }}>
                     {/* Módulos Activos */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {navItems.filter(i => i.active).map((item) => {
@@ -167,7 +178,7 @@ export function AppLayout() {
                                 <SidebarNavItem
                                     key={item.to}
                                     {...item}
-                                    collapsed={collapsed}
+                                    collapsed={effectivelyCollapsed}
                                     end={item.to === '/'}
                                     onClick={() => setMobileOpen(false)}
                                     disabled={isRestricted}
@@ -179,13 +190,13 @@ export function AppLayout() {
 
                     {/* Módulos Próximamente */}
                     <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        {!collapsed && (
+                        {!effectivelyCollapsed && (
                             <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '14px', marginBottom: '8px' }}>
                                 Próximamente
                             </span>
                         )}
                         {navItems.filter(i => !i.active).map((item) => (
-                            <SidebarNavItem key={item.to} {...item} collapsed={collapsed} disabled onClick={() => setMobileOpen(false)} />
+                            <SidebarNavItem key={item.to} {...item} collapsed={effectivelyCollapsed} disabled onClick={() => setMobileOpen(false)} />
                         ))}
                     </div>
 
@@ -194,7 +205,7 @@ export function AppLayout() {
                         <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                             <SidebarNavItem
                                 {...adminLink}
-                                collapsed={collapsed}
+                                collapsed={effectivelyCollapsed}
                                 onClick={() => setMobileOpen(false)}
                                 style={{
                                     backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -222,8 +233,8 @@ export function AppLayout() {
                     display: 'flex',
                     flexDirection: 'column',
                     minWidth: 0,
-                    marginLeft: `${sidebarWidth}px`,
-                    transition: 'margin-left 250ms ease',
+                    marginLeft: 'var(--sidebar-width, 0px)',
+                    transition: 'margin-left 300ms ease',
                 }}
                 className="max-lg:!ml-0"
             >
@@ -246,15 +257,10 @@ export function AppLayout() {
                         {/* Hamburger — solo visible en mobile */}
                         <button
                             onClick={() => setMobileOpen((v) => !v)}
-                            className="lg:hidden"
-                            style={{
-                                padding: '8px', borderRadius: '8px',
-                                color: 'var(--text-secondary)', background: 'none', border: 'none',
-                                cursor: 'pointer',
-                            }}
+                            className="flex lg:hidden items-center justify-center dc-hamburger-button"
                             aria-label="Menú"
                         >
-                            <PanelLeftOpen size={20} />
+                            <Menu size={20} />
                         </button>
                     </div>
 
@@ -412,7 +418,7 @@ export function AppLayout() {
                 <main
                     style={{
                         flex: 1,
-                        padding: '28px 32px',
+                        padding: 'var(--main-padding)',
                         maxWidth: '1600px',
                         width: '100%',
                         margin: '0 auto',

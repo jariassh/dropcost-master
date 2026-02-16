@@ -72,8 +72,8 @@ export const AdminPlansPage: React.FC = () => {
     };
 
     return (
-        <div style={{ padding: '0 20px', fontFamily: "'Inter', sans-serif" }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+        <div style={{ padding: '0 var(--main-padding)', fontFamily: "'Inter', sans-serif" }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '16px', flexWrap: 'wrap' }}>
                 <div>
                     <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
                         Gestión de Planes
@@ -82,7 +82,7 @@ export const AdminPlansPage: React.FC = () => {
                         Configura los niveles de suscripción y precios.
                     </p>
                 </div>
-                <Button onClick={handleCreate} leftIcon={<Plus size={18} />}>
+                <Button onClick={handleCreate} leftIcon={<Plus size={18} />} className="w-full sm:w-auto">
                     Nuevo Plan
                 </Button>
             </div>
@@ -90,17 +90,18 @@ export const AdminPlansPage: React.FC = () => {
             {/* Plans Table */}
             <div style={{
                 backgroundColor: 'var(--card-bg)', borderRadius: '16px', border: '1px solid var(--border-color)',
-                overflow: 'hidden', boxShadow: 'var(--shadow-sm)'
+                overflowX: 'auto', boxShadow: 'var(--shadow-sm)',
+                WebkitOverflowScrolling: 'touch' // Suavidad en iOS
             }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
                     <thead>
                         <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
-                            <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Nombre / Slug</th>
-                            <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Precio Mensual</th>
-                            <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Precio Semestral</th>
-                            <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Límites</th>
-                            <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Estado / Visibilidad</th>
-                            <th style={{ padding: '16px 24px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Acciones</th>
+                            <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', minWidth: '200px' }}>Nombre / Slug</th>
+                            <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', minWidth: '150px' }}>Precio Mensual</th>
+                            <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', minWidth: '150px' }}>Precio Semestral</th>
+                            <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', minWidth: '120px' }}>Límites</th>
+                            <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', minWidth: '200px' }}>Estado / Visibilidad</th>
+                            <th style={{ padding: '16px 24px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', minWidth: '100px' }}>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>

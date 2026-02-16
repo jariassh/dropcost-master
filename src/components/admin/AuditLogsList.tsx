@@ -268,8 +268,8 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             {/* Header / Filter Bar */}
             <Card style={{ border: '1px solid var(--border-color)', padding: '24px', borderRadius: '16px' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'flex-end' }}>
-                    <div style={{ flex: '0 0 240px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'flex-end' }} className="dc-audit-filter-bar">
+                    <div style={{ flex: '1 1 240px' }}>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Módulo</label>
                         <div style={{ position: 'relative' }}>
                             <select
@@ -329,7 +329,7 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
                 </div>
             </Card>
 
-            <div style={{ display: 'grid', gridTemplateColumns: selectedLog ? '1fr 400px' : '1fr', gap: '32px', alignItems: 'start' }}>
+            <div style={{ gap: '32px', alignItems: 'start' }} className={selectedLog ? "dc-audit-grid-active" : "dc-audit-grid"}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <Card noPadding style={{ border: '1px solid var(--border-color)', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
                         <div style={{ overflowX: 'auto' }}>
@@ -340,7 +340,7 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
                                         <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Módulo</th>
                                         <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Acción</th>
                                         {!hideUser && <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hecho por</th>}
-                                        <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Día y Hora</th>
+                                        <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', minWidth: '150px' }}>Día y Hora</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -409,9 +409,9 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
                                                             </div>
                                                         </td>
                                                     )}
-                                                    <td style={{ padding: '16px 24px' }}>
-                                                        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{day}</div>
-                                                        <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{time}</div>
+                                                    <td style={{ padding: '16px 24px', minWidth: '150px' }}>
+                                                        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{day}</div>
+                                                        <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>{time}</div>
                                                     </td>
                                                 </tr>
                                             );
