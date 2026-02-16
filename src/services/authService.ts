@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { translateError } from '@/lib/errorTranslations';
+import { auditService } from './auditService';
 import type {
     LoginCredentials,
     RegisterData,
@@ -42,7 +43,7 @@ export async function loginUser(credentials: LoginCredentials): Promise<AuthResp
     // Update DB
     const { error: sessionError } = await supabase
         .from('users')
-        .update({ session_token: newSessionToken })
+        .update({ session_token: newSessionToken } as any)
         .eq('id', data.user?.id);
 
     if (sessionError) {
@@ -50,6 +51,14 @@ export async function loginUser(credentials: LoginCredentials): Promise<AuthResp
         // We log but don't block login
     } else {
         localStorage.setItem('dc_session_token', newSessionToken);
+        
+        // Registrar actividad de login (esto actualizará ultima_actividad y capturará IP)
+        await auditService.recordLog({
+            accion: 'LOGIN',
+            entidad: 'USER',
+            entidad_id: data.user?.id,
+            detalles: { method: 'email', success: true }
+        });
     }
 
     return {
@@ -88,7 +97,7 @@ export async function registerUser(data: RegisterData): Promise<AuthResponse> {
          if (authData.session) {
              const { error: updateError } = await supabase
                 .from('users')
-                .update({ session_token: newSessionToken })
+                .update({ session_token: newSessionToken } as any)
                 .eq('id', authData.user.id);
              
              if (!updateError) {
@@ -285,15 +294,17 @@ export async function updateUserProfile(userData: Partial<User>): Promise<AuthRe
     if (authError) return { success: false, error: translateError(authError.message) };
 
     // 2. Actualizar tabla public.users
+    const updates: any = {
+        nombres: userData.nombres,
+        apellidos: userData.apellidos,
+        telefono: userData.telefono,
+        pais: userData.pais,
+        codigo_referido_personal: userData.codigoReferido
+    };
+
     const { error: profileError } = await supabase
         .from('users')
-        .update({
-            nombres: userData.nombres,
-            apellidos: userData.apellidos,
-            telefono: userData.telefono,
-            pais: userData.pais,
-            codigo_referido_personal: userData.codigoReferido
-        })
+        .update(updates)
         .eq('id', user.id);
 
     if (profileError) return { success: false, error: translateError(profileError.message) };

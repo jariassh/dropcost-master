@@ -5,6 +5,7 @@ import { adminService, AdminStats } from '@/services/adminService';
 import { Spinner } from '@/components/common/Spinner';
 
 import { supabase } from '@/lib/supabase';
+import { UserStatusBadge } from '@/components/admin/UserStatusBadge';
 
 export const AdminDashboard: React.FC = () => {
     const [stats, setStats] = useState<AdminStats | null>(null);
@@ -129,19 +130,10 @@ export const AdminDashboard: React.FC = () => {
                                             </p>
                                         </div>
                                     </div>
-                                    <span style={{
-                                        fontSize: '10px',
-                                        fontWeight: 800,
-                                        padding: '4px 10px',
-                                        borderRadius: '20px',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.05em',
-                                        backgroundColor: user.estado_suscripcion === 'activa' ? 'var(--color-success-light)' : 'var(--bg-secondary)',
-                                        color: user.estado_suscripcion === 'activa' ? 'var(--color-success)' : 'var(--text-tertiary)',
-                                        border: `1px solid ${user.estado_suscripcion === 'activa' ? 'var(--color-success)33' : 'var(--border-color)'}`
-                                    }}>
-                                        {user.estado_suscripcion || 'Inactivo'}
-                                    </span>
+                                    <UserStatusBadge
+                                        status={user.estado_suscripcion}
+                                        planId={user.plan_id}
+                                    />
                                 </div>
                             ))
                         )}
@@ -185,7 +177,7 @@ export const AdminDashboard: React.FC = () => {
                         ))}
                     </div>
                 </Card>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };

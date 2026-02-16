@@ -22,6 +22,8 @@ const getVariantColors = (v: BadgeVariant) => {
             return { bg: 'var(--color-warning-light)', text: 'var(--color-warning)', border: 'var(--color-warning)' };
         case 'pill-purple':
             return { bg: 'rgba(139, 92, 246, 0.1)', text: 'rgb(139, 92, 246)', border: 'rgba(139, 92, 246, 0.2)' };
+        case 'pill-secondary':
+            return { bg: 'var(--bg-secondary)', text: 'var(--text-secondary)', border: 'var(--border-color)' };
         default:
             return { bg: 'var(--color-primary-light)', text: 'var(--color-primary)', border: 'var(--color-primary)' };
     }
