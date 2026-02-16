@@ -19,6 +19,7 @@ import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
 import { AdminPlansPage } from '@/pages/admin/AdminPlansPage';
 import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { AdminAuditLogsPage } from '@/pages/admin/AdminAuditLogsPage';
+import { AdminReferralPage } from '@/pages/admin/AdminReferralPage';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { PricingPage } from '@/pages/PricingPage';
 import { useAuthStore } from '@/store/authStore';
@@ -107,6 +108,7 @@ export function AppRouter() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUsersPage />} />
                 <Route path="plans" element={<AdminPlansPage />} />
+                <Route path="referrals" element={<AdminReferralPage />} />
                 <Route path="promo-codes" element={<AdminDashboard />} />
                 <Route path="logs" element={<AdminAuditLogsPage />} />
                 <Route path="settings" element={<AdminDashboard />} />

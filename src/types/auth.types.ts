@@ -27,7 +27,7 @@ export interface User {
     estadoSuscripcion?: 'activa' | 'cancelada' | 'suspendida' | 'trial' | 'inactiva';
     emailVerificado: boolean;
     twoFactorEnabled: boolean;
-    rol?: 'cliente' | 'admin' | 'superadmin';
+    rol?: 'cliente' | 'lider' | 'admin' | 'superadmin';
     fechaRegistro: string;
     ultimaActividad?: string;
     codigoReferido?: string;

@@ -1,5 +1,5 @@
-export type UserRole = 'cliente' | 'admin' | 'superadmin';
-export type SubscriptionStatus = 'activa' | 'cancelada' | 'suspendida' | 'pendiente';
+export type UserRole = 'cliente' | 'lider' | 'admin' | 'superadmin';
+export type SubscriptionStatus = 'activa' | 'cancelada' | 'suspendida' | 'pendiente' | 'trial' | 'inactiva';
 
 export interface User {
     id: string;
@@ -7,7 +7,7 @@ export interface User {
     nombres: string;
     apellidos: string;
     rol: UserRole;
-    estado_suscripcion: SubscriptionStatus;
+    estado_suscripcion: SubscriptionStatus | null;
     telefono?: string;
     pais?: string;
     email_verificado: boolean;
