@@ -25,6 +25,7 @@ import { PricingPage } from '@/pages/PricingPage';
 import { useAuthStore } from '@/store/authStore';
 import UserAuditLogsPage from '@/pages/UserAuditLogsPage';
 import { SubscriptionGuard } from '@/components/common/SubscriptionGuard';
+import { PaymentStatusPage } from '@/pages/app/PaymentStatusPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -93,7 +94,9 @@ export function AppRouter() {
                 <Route path="/configuracion" element={<ConfiguracionPage />} />
                 <Route path="/referidos" element={<SubscriptionGuard><ReferidosPage /></SubscriptionGuard>} />
                 <Route path="/billetera" element={<SubscriptionGuard><WalletPage /></SubscriptionGuard>} />
+                <Route path="/billetera" element={<SubscriptionGuard><WalletPage /></SubscriptionGuard>} />
                 <Route path="/historial" element={<UserAuditLogsPage />} />
+                <Route path="/payment/status" element={<PaymentStatusPage />} />
             </Route>
 
             {/* Rutas de Administración (Independientes) */}

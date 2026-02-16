@@ -107,6 +107,34 @@ export async function incrementReferralClicks(code: string): Promise<void> {
 }
 
 /**
+ * Obtiene el historial de comisiones.
+ */
+export async function getCommissionHistory(): Promise<any[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+        .from('wallet_transactions' as any)
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('type', 'referral_bonus')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching commission history:', error);
+        return [];
+    }
+
+    return (data || []).map((t: any) => ({
+        id: t.id,
+        amount: Number(t.amount),
+        description: t.description,
+        date: t.created_at,
+        status: 'completed'
+    }));
+}
+
+/**
  * Obtiene la lista de usuarios referidos.
  */
 export async function getReferredUsers(): Promise<ReferredUser[]> {

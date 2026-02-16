@@ -145,6 +145,7 @@ export const AdminDashboard: React.FC = () => {
                         {[
                             { name: 'API Gateway (Edge)', status: 'Operativo', type: 'success' },
                             { name: 'Database (PostgreSQL)', status: 'Conectado', type: 'success' },
+                            { name: 'Pasarela (Mercado Pago)', status: 'Activa', type: 'success' },
                             { name: 'Integración Meta Ads', status: metaStatus === 'operativo' ? 'Sincronizado' : 'Pendiente', type: metaStatus === 'operativo' ? 'success' : 'warning' },
                             { name: 'Storage (Assets)', status: 'Operativo', type: 'success' },
                         ].map((item) => (
