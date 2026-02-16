@@ -141,7 +141,7 @@ export function AdminReferralPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <div>
                 <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                    Sistema de Referidos (V3)
+                    Sistema de Referidos
                 </h1>
                 <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)' }}>
                     Monitoreo global y configuración dinámica del programa de referidos.
@@ -149,7 +149,7 @@ export function AdminReferralPage() {
             </div>
 
             {/* Global Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+            <div style={{ gap: '20px' }} className="dc-referral-stats-grid">
                 <StatBox
                     label="Referidos Totales"
                     value={stats?.totalReferred || 0}
@@ -178,11 +178,11 @@ export function AdminReferralPage() {
                 />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px' }}>
+            <div style={{ gap: '32px' }} className="dc-referral-main-grid">
                 {/* Configuration Form */}
                 <Card title="Configuración del Sistema">
                     <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        <div style={{ gap: '20px' }} className="dc-referral-config-grid">
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                                     Comisión Nivel 1 (%)
@@ -488,4 +488,42 @@ function StatBox({ label, value, icon, color, onClick }: { label: string, value:
             </div>
         </Card>
     );
+}
+
+/* ─── Styles adicionales ─── */
+const adminReferralStyles = `
+    .dc-referral-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+    }
+    .dc-referral-main-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+    }
+    .dc-referral-config-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 1100px) {
+        .dc-referral-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .dc-referral-main-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    @media (max-width: 600px) {
+        .dc-referral-stats-grid {
+            grid-template-columns: 1fr;
+        }
+        .dc-referral-config-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+`;
+
+if (typeof document !== 'undefined') {
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = adminReferralStyles;
+    document.head.appendChild(styleSheet);
 }

@@ -20,7 +20,9 @@ import {
     Megaphone,
     PieChart,
     Link2,
-    Share
+    Share,
+    Menu,
+    X,
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
@@ -50,6 +52,8 @@ export function AdminLayout() {
     const navigate = useNavigate();
 
     const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_OPEN;
+    // En móvil (drawer abierto), siempre mostramos el contenido completo
+    const effectivelyCollapsed = collapsed && !mobileOpen;
 
     function handleLogout() {
         logout();
@@ -57,37 +61,38 @@ export function AdminLayout() {
     }
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-primary)' }}>
+        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-primary)', '--sidebar-width': `${sidebarWidth}px` } as any}>
             {/* ─── Admin Sidebar ─── */}
             <aside
                 style={{
                     position: 'fixed',
                     top: 0,
-                    left: 0,
+                    left: undefined,
                     bottom: 0,
-                    width: `${sidebarWidth}px`,
+                    width: mobileOpen ? '280px' : `${sidebarWidth}px`,
                     backgroundColor: '#111827', // Darker for Admin
                     display: 'flex',
                     flexDirection: 'column',
-                    zIndex: 40,
-                    transition: 'width 250ms ease',
+                    zIndex: 50,
+                    transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
                     overflow: 'hidden',
+                    ...(mobileOpen ? { left: 0 } : {})
                 }}
-                className={mobileOpen ? '' : 'max-lg:hidden'}
+                className={`lg:left-0 ${!mobileOpen ? 'max-lg:-left-full' : ''}`}
             >
                 {/* Admin Badge/Header */}
                 <div
                     style={{
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: collapsed ? 'center' : 'space-between',
-                        padding: collapsed ? '0' : '0 16px 0 20px',
+                        justifyContent: effectivelyCollapsed ? 'center' : 'space-between',
+                        padding: effectivelyCollapsed ? '0' : '0 16px 0 20px',
                         borderBottom: '1px solid rgba(255,255,255,0.05)',
                         height: '64px',
                         background: 'linear-gradient(90deg, #1F2937, #111827)',
                     }}
                 >
-                    {!collapsed && (
+                    {!effectivelyCollapsed && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <div
                                 style={{
@@ -106,25 +111,35 @@ export function AdminLayout() {
                     )}
 
                     <button
-                        onClick={() => setCollapsed((v) => !v)}
+                        onClick={() => {
+                            if (window.innerWidth < 1024) {
+                                setMobileOpen(false);
+                            } else {
+                                setCollapsed((v) => !v);
+                            }
+                        }}
                         style={{
                             padding: '8px', borderRadius: '8px', background: 'none', border: 'none',
                             color: 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex'
                         }}
+                        aria-label={effectivelyCollapsed ? 'Expandir' : 'Cerrar'}
                     >
-                        {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+                        {window.innerWidth < 1024 ? <X size={18} /> : (effectivelyCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />)}
                     </button>
                 </div>
 
                 {/* Return to App */}
-                <div style={{ padding: collapsed ? '12px 8px' : '16px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ padding: effectivelyCollapsed ? '12px 8px' : '16px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                     <button
-                        onClick={() => navigate('/')}
+                        onClick={() => {
+                            navigate('/');
+                            setMobileOpen(false);
+                        }}
                         style={{
                             width: '100%',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: collapsed ? 'center' : 'flex-start',
+                            justifyContent: effectivelyCollapsed ? 'center' : 'flex-start',
                             gap: '12px',
                             padding: '10px 14px',
                             borderRadius: '10px',
@@ -140,17 +155,31 @@ export function AdminLayout() {
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
                     >
                         <ArrowLeft size={18} />
-                        {!collapsed && "Volver a la App"}
+                        {!effectivelyCollapsed && "Volver a la App"}
                     </button>
                 </div>
 
                 {/* Admin Nav */}
-                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', padding: collapsed ? '12px 8px' : '16px 12px' }}>
+                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', padding: effectivelyCollapsed ? '12px 8px' : '16px 12px' }}>
                     {adminNavItems.map((item) => (
-                        <AdminSidebarNavItem key={item.to} {...item} collapsed={collapsed} />
+                        <AdminSidebarNavItem
+                            key={item.to}
+                            {...item}
+                            collapsed={effectivelyCollapsed}
+                            onClick={() => setMobileOpen(false)}
+                        />
                     ))}
                 </nav>
             </aside>
+
+            {/* Overlay mobile */}
+            {mobileOpen && (
+                <div
+                    style={{ position: 'fixed', inset: 0, zIndex: 30, backgroundColor: 'rgba(0,0,0,0.5)' }}
+                    className="lg:hidden"
+                    onClick={() => setMobileOpen(false)}
+                />
+            )}
 
             {/* Main Content */}
             <div
@@ -159,8 +188,8 @@ export function AdminLayout() {
                     display: 'flex',
                     flexDirection: 'column',
                     minWidth: 0,
-                    marginLeft: `${sidebarWidth}px`,
-                    transition: 'margin-left 250ms ease',
+                    marginLeft: 'var(--sidebar-width, 0px)',
+                    transition: 'margin-left 300ms ease',
                 }}
                 className="max-lg:!ml-0"
             >
@@ -180,8 +209,11 @@ export function AdminLayout() {
                     }}
                 >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <button onClick={() => setMobileOpen((v) => !v)} className="lg:hidden" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                            <PanelLeftOpen size={20} color="var(--text-secondary)" />
+                        <button
+                            onClick={() => setMobileOpen(true)}
+                            className="flex lg:hidden items-center justify-center dc-hamburger-button"
+                        >
+                            <Menu size={20} />
                         </button>
                         <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>Panel de Administración</h2>
                     </div>
@@ -229,7 +261,7 @@ export function AdminLayout() {
                     </div>
                 </header>
 
-                <main style={{ flex: 1, padding: '32px', maxWidth: '1400px', width: '100%', margin: '0 auto' }}>
+                <main style={{ flex: 1, padding: 'var(--main-padding)', maxWidth: '1400px', width: '100%', margin: '0 auto' }}>
                     <Outlet />
                 </main>
             </div>
@@ -237,7 +269,7 @@ export function AdminLayout() {
     );
 }
 
-function AdminSidebarNavItem({ to, icon: Icon, label, collapsed, disabled, end }: any) {
+function AdminSidebarNavItem({ to, icon: Icon, label, collapsed, disabled, end, onClick }: any) {
     const [hovered, setHovered] = useState(false);
 
     if (disabled) {
@@ -266,6 +298,7 @@ function AdminSidebarNavItem({ to, icon: Icon, label, collapsed, disabled, end }
         <NavLink
             to={to}
             end={end}
+            onClick={onClick}
             style={({ isActive }) => ({
                 display: 'flex', alignItems: 'center', gap: '12px', padding: collapsed ? '12px' : '10px 14px',
                 borderRadius: '10px', fontSize: '14px', fontWeight: isActive ? 600 : 500,

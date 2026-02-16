@@ -119,6 +119,7 @@ export const UserList: React.FC = () => {
                     </div>
 
                     <select
+                        className="dc-input"
                         style={{
                             padding: '10px 16px',
                             backgroundColor: 'var(--bg-primary)',
@@ -127,7 +128,9 @@ export const UserList: React.FC = () => {
                             fontSize: '14px',
                             color: 'var(--text-primary)',
                             cursor: 'pointer',
-                            outline: 'none'
+                            outline: 'none',
+                            flex: '1 1 auto',
+                            minWidth: '150px'
                         }}
                         value={filters.status}
                         onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value as any }))}
@@ -139,7 +142,7 @@ export const UserList: React.FC = () => {
                     </select>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', justifyContent: 'space-between' }} className="w-full sm:w-auto">
                     <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                         {totalCount > 0 ? `${(page - 1) * 10 + 1}-${Math.min(page * 10, totalCount)} de ${totalCount}` : '0 usuarios'}
                     </p>
@@ -175,7 +178,7 @@ export const UserList: React.FC = () => {
                             <ChevronRight size={18} />
                         </button>
                     </div>
-                    <Button onClick={() => { }} style={{ borderRadius: '12px', padding: '0 20px', height: '44px' }}>
+                    <Button onClick={() => { }} style={{ borderRadius: '12px', padding: '0 20px', height: '44px' }} className="w-full sm:w-auto">
                         <Plus size={18} style={{ marginRight: '8px' }} /> Crear Usuario
                     </Button>
                 </div>

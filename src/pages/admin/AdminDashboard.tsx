@@ -6,11 +6,14 @@ import { Spinner } from '@/components/common/Spinner';
 
 import { supabase } from '@/lib/supabase';
 import { UserStatusBadge } from '@/components/admin/UserStatusBadge';
+import { plansService } from '@/services/plansService';
+import { Plan } from '@/types/plans.types';
 
 export const AdminDashboard: React.FC = () => {
     const [stats, setStats] = useState<AdminStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [metaStatus, setMetaStatus] = useState<'operativo' | 'pendiente' | 'error'>('pendiente');
+    const [plans, setPlans] = useState<Plan[]>([]);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -20,6 +23,14 @@ export const AdminDashboard: React.FC = () => {
             // Simular verificación de Meta Ads (en el futuro será una query real)
             const { data: metaTokens } = await supabase.from('integraciones').select('id').eq('tipo', 'meta_ads').limit(1);
             setMetaStatus(metaTokens && metaTokens.length > 0 ? 'operativo' : 'pendiente');
+
+            // Cargar planes para mostrar nombres reales
+            try {
+                const plansData = await plansService.getPlans();
+                setPlans(plansData);
+            } catch (e) {
+                console.error('Error loading plans:', e);
+            }
 
             setLoading(false);
         };
@@ -85,7 +96,7 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Secondary Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }} className="max-lg:grid-cols-1">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <Card title="Usuarios Recientes">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {!stats || stats.recentUsers.length === 0 ? (
@@ -99,41 +110,43 @@ export const AdminDashboard: React.FC = () => {
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
-                                    padding: '14px',
+                                    padding: '16px 20px',
                                     backgroundColor: 'var(--bg-tertiary)',
                                     borderRadius: '12px',
-                                    border: '1px solid var(--border-color)'
+                                    border: '1px solid var(--border-color)',
+                                    gap: '16px'
                                 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0 }}>
                                         <div style={{
-                                            width: '40px',
-                                            height: '40px',
-                                            borderRadius: '10px',
+                                            width: '36px',
+                                            height: '36px',
+                                            borderRadius: '8px',
                                             background: 'linear-gradient(135deg, var(--color-primary), #6366f1)',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             color: '#fff',
-                                            fontSize: '14px',
-                                            fontWeight: 700
+                                            fontSize: '13px',
+                                            fontWeight: 700,
+                                            flexShrink: 0
                                         }}>
                                             {user.nombres?.[0] || 'U'}
                                         </div>
-                                        <div>
-                                            <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                                        <div style={{ minWidth: 0 }}>
+                                            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                 {user.nombres} {user.apellidos}
                                             </p>
-                                            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: '2px 0 0 0' }}>
-                                                {user.plan_id === 'plan_pro' ? 'Plan Pro' :
-                                                    user.plan_id === 'plan_enterprise' ? 'Plan Enterprise' :
-                                                        'Plan Gratis'} • {new Date(user.fecha_registro).toLocaleDateString()}
+                                            <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: '2px 0 0 0', whiteSpace: 'nowrap' }}>
+                                                {plans.find(p => p.slug === user.plan_id || p.id === user.plan_id)?.name || 'Plan Gratis'} • {new Date(user.fecha_registro).toLocaleDateString()}
                                             </p>
                                         </div>
                                     </div>
-                                    <UserStatusBadge
-                                        status={user.estado_suscripcion}
-                                        planId={user.plan_id}
-                                    />
+                                    <div style={{ flexShrink: 0 }}>
+                                        <UserStatusBadge
+                                            status={user.estado_suscripcion}
+                                            planId={user.plan_id}
+                                        />
+                                    </div>
                                 </div>
                             ))
                         )}
@@ -141,7 +154,7 @@ export const AdminDashboard: React.FC = () => {
                 </Card>
 
                 <Card title="Estado del Sistema">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {[
                             { name: 'API Gateway (Edge)', status: 'Operativo', type: 'success' },
                             { name: 'Database (PostgreSQL)', status: 'Conectado', type: 'success' },
@@ -153,13 +166,16 @@ export const AdminDashboard: React.FC = () => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
-                                padding: '16px',
-                                borderRadius: '14px',
+                                padding: '16px 20px',
+                                borderRadius: '12px',
                                 backgroundColor: 'var(--bg-tertiary)',
-                                border: '1px solid var(--border-color)'
+                                border: '1px solid var(--border-color)',
+                                gap: '16px'
                             }}>
-                                <span style={{ flex: 1, fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>{item.name}</span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ flex: 1, fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {item.name}
+                                </span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                                     <div style={{
                                         width: '8px',
                                         height: '8px',

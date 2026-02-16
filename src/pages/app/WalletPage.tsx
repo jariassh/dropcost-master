@@ -18,12 +18,17 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { getWalletBalance, getWalletTransactions, WalletTransaction } from '@/services/walletService';
 import { Spinner } from '@/components/common/Spinner';
+import { fetchExchangeRates, getDisplayCurrency } from '@/utils/currencyUtils';
+import { formatCurrency } from '@/lib/format';
+import { obtenerPaisPorCodigo } from '@/services/paisesService';
 
 export function WalletPage() {
     const { user } = useAuthStore();
-    const [balance, setBalance] = useState<number>(0);
+    const [balance, setBalance] = useState(0);
     const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [targetCurrency, setTargetCurrency] = useState('USD');
+    const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
 
     const navigate = useNavigate();
     const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
@@ -44,6 +49,16 @@ export function WalletPage() {
                 ]);
                 setBalance(b);
                 setTransactions(t);
+
+                if (user?.pais) {
+                    const paisInfo = await obtenerPaisPorCodigo(user.pais);
+                    if (paisInfo) {
+                        const currency = getDisplayCurrency(user.pais, paisInfo.moneda_codigo);
+                        setTargetCurrency(currency);
+                        const rates = await fetchExchangeRates('USD');
+                        setExchangeRates(rates);
+                    }
+                }
             } catch (err) {
                 console.error(err);
             } finally {
@@ -51,7 +66,14 @@ export function WalletPage() {
             }
         };
         loadData();
-    }, [isRestricted]);
+    }, [isRestricted, user]);
+
+    const convertValue = (val: number) => {
+        if (!exchangeRates || !targetCurrency || targetCurrency === 'USD') return formatCurrency(val, 'USD');
+        const rate = exchangeRates[targetCurrency];
+        if (!rate) return formatCurrency(val, 'USD');
+        return formatCurrency(val * rate, targetCurrency);
+    };
 
     if (isRestricted) {
         return (
@@ -90,7 +112,7 @@ export function WalletPage() {
     if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '100px' }}><Spinner /></div>;
 
     return (
-        <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto', padding: 'var(--main-padding)' }}>
             <div style={{ marginBottom: '32px' }}>
                 <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     Tu Billetera
@@ -100,7 +122,7 @@ export function WalletPage() {
                 </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '24px', marginBottom: '32px' }}>
+            <div style={{ gap: '24px', marginBottom: '32px' }} className="dc-wallet-grid">
                 {/* Main Content: Balance Card & History */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     {/* Tarjeta de Balance */}
@@ -117,7 +139,7 @@ export function WalletPage() {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
                                 <div>
                                     <div style={{ fontSize: '14px', opacity: 0.8, marginBottom: '4px' }}>Balance Disponible</div>
-                                    <div style={{ fontSize: '36px', fontWeight: 800 }}>${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                    <div style={{ fontSize: '36px', fontWeight: 800 }}>{convertValue(balance)}</div>
                                 </div>
                                 <div style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '10px', borderRadius: '12px' }}>
                                     <Wallet size={24} />
@@ -199,7 +221,7 @@ export function WalletPage() {
                                             fontSize: '15px',
                                             color: t.type === 'withdrawal' ? 'var(--color-error)' : 'var(--color-success)'
                                         }}>
-                                            {t.type === 'withdrawal' ? '-' : '+'}${t.amount.toLocaleString()}
+                                            {t.type === 'withdrawal' ? '-' : '+'}{convertValue(t.amount)}
                                         </div>
                                     </div>
                                 ))
@@ -252,4 +274,23 @@ export function WalletPage() {
             </div>
         </div>
     );
+}
+
+/* ─── Styles adicionales ─── */
+const walletResponsiveStyles = `
+    .dc-wallet-grid {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+    }
+    @media (max-width: 900px) {
+        .dc-wallet-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+`;
+
+if (typeof document !== 'undefined') {
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = walletResponsiveStyles;
+    document.head.appendChild(styleSheet);
 }
