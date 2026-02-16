@@ -19,7 +19,8 @@ import {
     ShieldCheck,
     Megaphone,
     PieChart,
-    Link2
+    Link2,
+    Share
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
@@ -34,6 +35,7 @@ const adminNavItems = [
     { to: '/admin/shortener', icon: Link2, label: 'Acortador de Enlaces', disabled: true },
     { to: '/admin/ads', icon: Megaphone, label: 'Ads & Creatividades', disabled: true },
     { to: '/admin/plans', icon: CreditCard, label: 'Planes y Membresías' },
+    { to: '/admin/referrals', icon: Share, label: 'Sistema de Referidos' },
     { to: '/admin/promo-codes', icon: Ticket, label: 'Códigos Promocionales', disabled: true },
     { to: '/admin/logs', icon: History, label: 'Logs de Auditoría' },
     { to: '/admin/settings', icon: Settings, label: 'Ajustes Globales', disabled: true },

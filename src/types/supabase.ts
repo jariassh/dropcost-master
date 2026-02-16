@@ -345,6 +345,130 @@ export type Database = {
           },
         ]
       }
+      plans: {
+        Row: {
+          id: string
+          slug: string
+          name: string
+          description: string | null
+          price_monthly: number
+          price_yearly: number | null
+          currency: string
+          features: Json | null
+          limits: Json | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          name: string
+          description?: string | null
+          price_monthly: number
+          price_yearly?: number | null
+          currency?: string
+          features?: Json | null
+          limits?: Json | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          name?: string
+          description?: string | null
+          price_monthly?: number
+          price_yearly?: number | null
+          currency?: string
+          features?: Json | null
+          limits?: Json | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sistema_referidos_config: {
+        Row: {
+          id: string
+          comision_nivel_1: number
+          comision_nivel_2: number
+          referidos_minimo_lider: number
+          meses_vigencia_comision: number
+          fecha_actualizacion: string
+          actualizado_por: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          comision_nivel_1?: number
+          comision_nivel_2?: number
+          referidos_minimo_lider?: number
+          meses_vigencia_comision?: number
+          fecha_actualizacion?: string
+          actualizado_por?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          comision_nivel_1?: number
+          comision_nivel_2?: number
+          referidos_minimo_lider?: number
+          meses_vigencia_comision?: number
+          fecha_actualizacion?: string
+          actualizado_por?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_referidos_config_actualizado_por_fkey"
+            columns: ["actualizado_por"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      sistema_referidos_cambios: {
+        Row: {
+          id: string
+          tipo_cambio: string
+          valor_anterior: number | null
+          valor_nuevo: number | null
+          usuario_admin: string
+          fecha_cambio: string
+          descripcion: string | null
+        }
+        Insert: {
+          id?: string
+          tipo_cambio: string
+          valor_anterior?: number | null
+          valor_nuevo?: number | null
+          usuario_admin: string
+          fecha_cambio?: string
+          descripcion?: string | null
+        }
+        Update: {
+          id?: string
+          tipo_cambio?: string
+          valor_anterior?: number | null
+          valor_nuevo?: number | null
+          usuario_admin?: string
+          fecha_cambio?: string
+          descripcion?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_referidos_cambios_usuario_admin_fkey"
+            columns: ["usuario_admin"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       tiendas: {
         Row: {
           active: boolean | null
