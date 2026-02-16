@@ -11,16 +11,16 @@ const corsHeaders = {
 async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClient) {
     const dataId = String(paymentData.id);
     
-    // Idempotency Check
-    const { data: existingPayment } = await supabase
+    // Idempotency Check: Critical to avoid double commissions
+    const { data: existingPayment, error: checkError } = await supabase
         .from("payments")
         .select("id")
         .eq("provider_payment_id", dataId)
-        .single();
+        .maybeSingle();
 
     if (existingPayment) {
-        console.log("Payment already processed (Idempotency):", dataId);
-        return { status: "already_processed" };
+        console.log("PAYMENT_ALREADY_PROCESSED: Skipping to avoid duplicate commissions for ID:", dataId);
+        return { status: "already_processed", message: "Este pago ya fue registrado anteriormente." };
     }
 
     // Parse Metadata
