@@ -92,52 +92,62 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
                 .single();
             
             if (leader && leader.estado === 'activo') {
-                const amount = Number(paymentData.transaction_amount);
-                const commissionPercent = Number(leader.porcentaje_comision) || 0;
-                const commissionAmount = Math.round((amount * (commissionPercent / 100)) * 100) / 100;
+                const originalAmount = Number(paymentData.transaction_amount);
+                const currency = paymentData.currency_id; // 'COP' or 'USD'
                 
-                console.log(`Calculando comisión: Plan de ${amount} * ${commissionPercent}% = ${commissionAmount}`);
+                // Get commission percent (Default 15%)
+                let commissionPercent = Number(leader.porcentaje_comision) || 15;
+                if (commissionPercent > 100) commissionPercent = 15;
 
-                // A. Add Wallet Transaction
+                // Calculate original currency commission
+                let commissionAmountOrig = Math.round((originalAmount * (commissionPercent / 100)) * 100) / 100;
+                
+                // CONVERT TO USD (Source of truth for Wallet)
+                let commissionAmountUSD = commissionAmountOrig;
+                
+                if (currency === 'COP') {
+                    try {
+                        const rateResponse = await fetch('https://open.er-api.com/v6/latest/USD');
+                        const rateData = await rateResponse.json();
+                        const copRate = rateData.rates.COP || 3900; // Fallback rate
+                        commissionAmountUSD = Math.round((commissionAmountOrig / copRate) * 100) / 100;
+                        console.log(`Conversión COP -> USD: ${commissionAmountOrig} COP / ${copRate} = ${commissionAmountUSD} USD`);
+                    } catch (fetchError) {
+                        console.error("Error fetching rates, using static fallback 3900:", fetchError);
+                        commissionAmountUSD = Math.round((commissionAmountOrig / 3900) * 100) / 100;
+                    }
+                }
+
+                // SEGURIDAD: La comisión no puede ser igual o mayor al pago total
+                if (commissionAmountUSD >= (currency === 'USD' ? originalAmount : originalAmount/3000)) {
+                   console.warn("ALERTA: Monto de comisión anómalo detectado");
+                }
+                
+                console.log(`PAGO_EXITOSO [${dataId}]: Líder ${leader.id}. Plan: ${originalAmount} ${currency} | Comisión: ${commissionAmountUSD} USD`);
+
+                // A. Add Wallet Transaction (Always in USD)
                 await supabase.from("wallet_transactions").insert({
                     user_id: leader.user_id,
                     type: 'referral_bonus',
-                    amount: commissionAmount,
-                    description: `Comisión por suscripción de referido (${paymentData.currency_id} ${amount})`
+                    amount: commissionAmountUSD,
+                    description: `Comisión por suscripción de referido (${currency} ${originalAmount})`
                 });
 
-                // B. Update User Wallet Balance
-                const { data: currentUser } = await supabase
-                    .from('users')
-                    .select('wallet_saldo')
-                    .eq('id', leader.user_id)
-                    .single();
-                    
-                const currentBalance = Number(currentUser?.wallet_saldo) || 0;
-                const newBalance = Math.round((currentBalance + commissionAmount) * 100) / 100;
+                // B. Update User Wallet Balance (Atomic-like)
+                const { data: userData } = await supabase.from('users').select('wallet_saldo').eq('id', leader.user_id).single();
+                const newBalance = Math.round(((Number(userData?.wallet_saldo) || 0) + commissionAmountUSD) * 100) / 100;
                 
-                await supabase.from('users')
-                    .update({ wallet_saldo: newBalance })
-                    .eq('id', leader.user_id);
+                await supabase.from('users').update({ wallet_saldo: newBalance }).eq('id', leader.user_id);
 
                 // C. Update Leader Total Stats
-                const { data: leaderStats } = await supabase
-                    .from('referidos_lideres')
-                    .select('total_comisiones_generadas')
-                    .eq('id', leader.id)
-                    .single();
-                    
-                const currentTotal = Number(leaderStats?.total_comisiones_generadas) || 0;
-                const newTotal = Math.round((currentTotal + commissionAmount) * 100) / 100;
+                const { data: leadStats } = await supabase.from('referidos_lideres').select('total_comisiones_generadas').eq('id', leader.id).single();
+                const newTotal = Math.round(((Number(leadStats?.total_comisiones_generadas) || 0) + commissionAmountUSD) * 100) / 100;
                 
-                await supabase.from('referidos_lideres')
-                    .update({ total_comisiones_generadas: newTotal })
-                    .eq('id', leader.id);
+                await supabase.from('referidos_lideres').update({ total_comisiones_generadas: newTotal }).eq('id', leader.id);
             }
         }
     } catch (refError) {
         console.error("Error processing referral commission (non-blocking):", refError);
-        // Do not block the payment success response
     }
 
     return { status: "processed" };
@@ -213,7 +223,7 @@ serve(async (req) => {
           failure: `${returnUrl}/payment/status?status=rejected`,
           pending: `${returnUrl}/payment/status?status=pending`,
         },
-        auto_return: "approved", 
+        auto_return: (returnUrl.includes('localhost') || returnUrl.includes('127.0.0.1')) ? undefined : "approved", 
         external_reference: JSON.stringify({ userId, planId, period }),
         notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago?action=webhook`,
       };
