@@ -16,6 +16,7 @@ export interface User {
     // Referral System Fields
     codigo_referido_personal?: string;
     wallet_saldo?: number;
+    bank_info?: any;
 
     fecha_registro: string;
     ultima_actividad?: string;

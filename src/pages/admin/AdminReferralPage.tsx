@@ -38,7 +38,9 @@ export function AdminReferralPage() {
         comision_nivel_1: '15',
         comision_nivel_2: '5',
         referidos_minimo_lider: '50',
-        meses_vigencia_comision: '12'
+        meses_vigencia_comision: '12',
+        dias_retencion_comision: '30',
+        monto_minimo_retiro_usd: '10.00'
     });
 
     useEffect(() => {
@@ -61,7 +63,9 @@ export function AdminReferralPage() {
                     comision_nivel_1: String(c.comision_nivel_1),
                     comision_nivel_2: String(c.comision_nivel_2),
                     referidos_minimo_lider: String(c.referidos_minimo_lider),
-                    meses_vigencia_comision: String(c.meses_vigencia_comision)
+                    meses_vigencia_comision: String(c.meses_vigencia_comision),
+                    dias_retencion_comision: String((c as any).dias_retencion_comision ?? 30),
+                    monto_minimo_retiro_usd: String((c as any).monto_minimo_retiro_usd ?? 10.00)
                 });
             }
             setStats(s);
@@ -97,7 +101,9 @@ export function AdminReferralPage() {
                 comision_nivel_1: parseFloat(formData.comision_nivel_1) || 0,
                 comision_nivel_2: parseFloat(formData.comision_nivel_2) || 0,
                 referidos_minimo_lider: parseInt(formData.referidos_minimo_lider) || 0,
-                meses_vigencia_comision: parseInt(formData.meses_vigencia_comision) || 0
+                meses_vigencia_comision: parseInt(formData.meses_vigencia_comision) || 0,
+                dias_retencion_comision: parseInt(formData.dias_retencion_comision) ?? 0,
+                monto_minimo_retiro_usd: parseFloat(formData.monto_minimo_retiro_usd) || 10.00
             };
 
             const { error } = await supabase
@@ -254,6 +260,43 @@ export function AdminReferralPage() {
                                 />
                                 <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
                                     Duración de la comisión recurrente.
+                                </span>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                    Días de Retención
+                                </label>
+                                <input
+                                    type="number"
+                                    value={formData.dias_retencion_comision}
+                                    onChange={e => setFormData({ ...formData, dias_retencion_comision: e.target.value })}
+                                    style={{
+                                        padding: '12px', borderRadius: '10px', border: '1px solid var(--border-color)',
+                                        backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)'
+                                    }}
+                                />
+                                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
+                                    Días que una comisión debe esperar antes de estar disponible para retiro.
+                                </span>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                    Monto Mínimo de Retiro (USD)
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={formData.monto_minimo_retiro_usd}
+                                    onChange={e => setFormData({ ...formData, monto_minimo_retiro_usd: e.target.value })}
+                                    style={{
+                                        padding: '12px', borderRadius: '10px', border: '1px solid var(--border-color)',
+                                        backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)'
+                                    }}
+                                />
+                                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
+                                    Monto mínimo en USD que un usuario puede retirar.
                                 </span>
                             </div>
                         </div>
