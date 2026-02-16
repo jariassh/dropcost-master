@@ -14,6 +14,10 @@ import {
 import { getReferralConfig, ReferralConfig, getAdminReferralStats, getAllReferredUsers, getAllLeaders } from '@/services/referralService';
 import { supabase } from '@/lib/supabase';
 import { Spinner } from '@/components/common/Spinner';
+import { fetchExchangeRates, getDisplayCurrency } from '@/utils/currencyUtils';
+import { formatCurrency } from '@/lib/format';
+import { obtenerPaisPorCodigo } from '@/services/paisesService';
+import { useAuthStore } from '@/store/authStore';
 
 export function AdminReferralPage() {
     const [config, setConfig] = useState<ReferralConfig | null>(null);
@@ -25,6 +29,9 @@ export function AdminReferralPage() {
     const [allLeaders, setAllLeaders] = useState<any[]>([]);
     const [activeListTab, setActiveListTab] = useState<'users' | 'leaders'>('users');
     const [showOnlyPromoted, setShowOnlyPromoted] = useState(false);
+    const [targetCurrency, setTargetCurrency] = useState('USD');
+    const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
+    const { user } = useAuthStore();
 
     // Form state (using strings for inputs to prevent NaN issues during typing)
     const [formData, setFormData] = useState({
@@ -60,6 +67,17 @@ export function AdminReferralPage() {
             setStats(s);
             setAllReferred(ur);
             setAllLeaders(l);
+
+            // Currency detection
+            if (user?.pais) {
+                const paisInfo = await obtenerPaisPorCodigo(user.pais);
+                if (paisInfo) {
+                    const currency = getDisplayCurrency(user.pais, paisInfo.moneda_codigo);
+                    setTargetCurrency(currency);
+                    const rates = await fetchExchangeRates('USD');
+                    setExchangeRates(rates);
+                }
+            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -110,6 +128,13 @@ export function AdminReferralPage() {
         }
     };
 
+    const convertValue = (val: number) => {
+        if (!exchangeRates || !targetCurrency || targetCurrency === 'USD') return formatCurrency(val, 'USD');
+        const rate = exchangeRates[targetCurrency];
+        if (!rate) return formatCurrency(val, 'USD');
+        return formatCurrency(val * rate, targetCurrency);
+    };
+
     if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '100px' }}><Spinner /></div>;
 
     return (
@@ -141,13 +166,13 @@ export function AdminReferralPage() {
                 />
                 <StatBox
                     label="Comisiones Pagadas"
-                    value={`$${(stats?.totalCommissionsPaid || 0).toLocaleString()}`}
+                    value={convertValue(stats?.totalCommissionsPaid || 0)}
                     icon={<DollarSign size={24} />}
-                    color="#f59e0b"
+                    color="#10B981"
                 />
                 <StatBox
                     label="Pendiente de Pago"
-                    value={`$${(stats?.totalCommissionsPending || 0).toLocaleString()}`}
+                    value={convertValue(stats?.totalCommissionsPending || 0)}
                     icon={<AlertCircle size={24} />}
                     color="#EF4444"
                 />
@@ -416,7 +441,7 @@ export function AdminReferralPage() {
                                                                 <span style={{ fontWeight: 700 }}>{l.totalReferidos}</span> referidos
                                                             </div>
                                                             <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
-                                                                ${(l.totalComisiones || 0).toLocaleString()} generados
+                                                                {convertValue(l.totalComisiones || 0)} generados
                                                             </div>
                                                         </td>
                                                         <td style={{ padding: '16px' }}>

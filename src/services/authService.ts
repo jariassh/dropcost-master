@@ -20,6 +20,22 @@ export async function loginUser(credentials: LoginCredentials): Promise<AuthResp
         return { success: false, error: translateError(error.message) };
     }
 
+    // Check if user is suspended
+    const { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select('estado_suscripcion')
+        .eq('id', data.user?.id)
+        .maybeSingle();
+
+    if (profile?.estado_suscripcion === 'suspendida') {
+        // Sign out immediately if suspended
+        await supabase.auth.signOut();
+        return { 
+            success: false, 
+            error: 'Tu cuenta ha sido suspendida. Contacta al administrador para más información.' 
+        };
+    }
+
     // Single Session Enforcement: Generate new token
     const newSessionToken = crypto.randomUUID();
     
@@ -142,12 +158,12 @@ export async function getCurrentUser(): Promise<User | null> {
     return {
         id: user.id,
         email: user.email!,
-        nombres: profile?.nombres || user.user_metadata?.nombres || '',
-        apellidos: profile?.apellidos || user.user_metadata?.apellidos || '',
-        telefono: profile?.telefono || user.user_metadata?.telefono,
-        pais: profile?.pais || user.user_metadata?.pais,
+        nombres: profile?.nombres || (user.user_metadata?.nombres as string) || '',
+        apellidos: profile?.apellidos || (user.user_metadata?.apellidos as string) || '',
+        telefono: profile?.telefono || (user.user_metadata?.telefono as string),
+        pais: profile?.pais || (user.user_metadata?.pais as string),
         rol: (profile?.rol || user.user_metadata?.rol || 'cliente') as any,
-        estadoSuscripcion: (profile?.estado_suscripcion || 'inactiva') as any,
+        estadoSuscripcion: (profile?.estado_suscripcion || 'pendiente') as any,
         emailVerificado: !!user.email_confirmed_at,
         twoFactorEnabled: profile?.['2fa_habilitado'] || false,
         fechaRegistro: user.created_at,
@@ -184,6 +200,22 @@ export async function updatePassword(newPassword: string): Promise<AuthResponse>
 
 export async function updateEmail(newEmail: string): Promise<AuthResponse> {
     const { error } = await supabase.auth.updateUser({ email: newEmail });
+
+    if (error) {
+        return { success: false, error: translateError(error.message) };
+    }
+
+    return { success: true };
+}
+
+/**
+ * Reenvía el email de verificación a un usuario.
+ */
+export async function resendVerificationEmail(email: string): Promise<AuthResponse> {
+    const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+    });
 
     if (error) {
         return { success: false, error: translateError(error.message) };

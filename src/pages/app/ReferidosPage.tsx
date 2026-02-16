@@ -23,6 +23,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { getReferralStats, getReferredUsers, getLevel2ReferredUsers, getReferredUserDetails, ReferralStats, ReferredUser, ReferredUserDetails } from '@/services/referralService';
 import { Spinner } from '@/components/common/Spinner';
+import { fetchExchangeRates, getDisplayCurrency } from '@/utils/currencyUtils';
+import { formatCurrency } from '@/lib/format';
+import { obtenerPaisPorCodigo } from '@/services/paisesService';
 
 export function ReferidosPage() {
     const { user } = useAuthStore();
@@ -38,6 +41,8 @@ export function ReferidosPage() {
     const [userDetails, setUserDetails] = useState<ReferredUserDetails | null>(null);
     const [isDetailsLoading, setIsDetailsLoading] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [targetCurrency, setTargetCurrency] = useState('USD');
+    const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
 
     const navigate = useNavigate();
     const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
@@ -65,6 +70,17 @@ export function ReferidosPage() {
                     const l2 = await getLevel2ReferredUsers();
                     setLevel2Users(l2);
                 }
+
+                // Currency detection
+                if (user?.pais) {
+                    const paisInfo = await obtenerPaisPorCodigo(user.pais);
+                    if (paisInfo) {
+                        const currency = getDisplayCurrency(user.pais, paisInfo.moneda_codigo);
+                        setTargetCurrency(currency);
+                        const rates = await fetchExchangeRates('USD');
+                        setExchangeRates(rates);
+                    }
+                }
             } catch (err) {
                 console.error('Error loading referral data:', err);
             } finally {
@@ -78,7 +94,7 @@ export function ReferidosPage() {
         if (!hasSeenOnboarding) {
             setShowOnboarding(true);
         }
-    }, [isRestricted, canSeeLevel2]);
+    }, [isRestricted, canSeeLevel2, user]);
 
     if (isRestricted) {
         return (
@@ -173,48 +189,52 @@ export function ReferidosPage() {
         setUserDetails(null);
     };
 
+    const convertValue = (val: number) => {
+        if (!exchangeRates || !targetCurrency || targetCurrency === 'USD') return formatCurrency(val, 'USD');
+        const rate = exchangeRates[targetCurrency];
+        if (!rate) return formatCurrency(val, 'USD');
+        return formatCurrency(val * rate, targetCurrency);
+    };
+
     const progressToLider = stats ? Math.min(100, (stats.totalReferred / stats.minReferredForLeader) * 100) : 0;
 
-    const getStatusBadge = (r: ReferredUser) => {
-        if (!r.emailVerificado) {
-            return (
-                <span style={{
-                    padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 700,
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#EF4444'
-                }}>
-                    SIN VERIFICAR
-                </span>
-            );
-        }
-
-        if (r.planId === 'plan_free' || !r.planId) {
-            return (
-                <span style={{
-                    padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 700,
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6'
-                }}>
-                    USUARIO GRATIS
-                </span>
-            );
-        }
-
-        if (r.estadoSuscripcion === 'activa') {
+    const getVerificationBadge = (r: ReferredUser) => {
+        if (r.emailVerificado) {
             return (
                 <span style={{
                     padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 700,
                     backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--color-success)'
                 }}>
-                    SUSCRIPCIÓN ACTIVA ⭐
+                    VERIFICADO
                 </span>
             );
         }
+        return (
+            <span style={{
+                padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 700,
+                backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#EF4444'
+            }}>
+                SIN VERIFICAR
+            </span>
+        );
+    };
+
+    const getPlanBadge = (r: ReferredUser) => {
+        const planMap: Record<string, { label: string, color: string, bg: string }> = {
+            'plan_free': { label: 'GRATIS', color: '#6B7280', bg: 'rgba(107, 114, 128, 0.1)' },
+            'plan_pro': { label: 'PRO', color: 'var(--color-primary)', bg: 'rgba(0, 102, 255, 0.1)' },
+            'plan_enterprise': { label: 'ENTERPRISE', color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.1)' }
+        };
+
+        const config = planMap[r.planId || 'plan_free'] || planMap['plan_free'];
 
         return (
             <span style={{
                 padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 700,
-                backgroundColor: 'rgba(107, 114, 128, 0.1)', color: '#6B7280'
+                backgroundColor: config.bg, color: config.color
             }}>
-                INACTIVO
+                {config.label}
+                {r.estadoSuscripcion === 'activa' && ' ⭐'}
             </span>
         );
     };
@@ -398,7 +418,7 @@ export function ReferidosPage() {
                 />
                 <StatsCard
                     label="Ganancias Totales"
-                    value={`$${(stats?.totalEarned || 0).toLocaleString()}`}
+                    value={convertValue(stats?.totalEarned || 0)}
                     icon={<DollarSign size={20} />}
                     color="#f59e0b"
                     suffix="disponibles para retirar"
@@ -458,8 +478,9 @@ export function ReferidosPage() {
                             <tr style={{ textAlign: 'left', backgroundColor: 'var(--bg-tertiary)' }}>
                                 <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Usuario</th>
                                 <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                    {activeTab === 'nivel1' ? 'Tipo de Plan' : 'Invitado Por'}
+                                    {activeTab === 'nivel1' ? 'Plan' : 'Invitado Por'}
                                 </th>
+                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Verificación</th>
                                 <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Registro</th>
                                 <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Detalles</th>
                             </tr>
@@ -513,13 +534,16 @@ export function ReferidosPage() {
                                         </td>
                                         <td style={{ padding: '16px 24px' }}>
                                             {activeTab === 'nivel1' ? (
-                                                getStatusBadge(r)
+                                                getPlanBadge(r)
                                             ) : (
                                                 <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                     <ArrowRight size={14} color="var(--color-primary)" />
                                                     {r.referenteDe || 'N/A'}
                                                 </div>
                                             )}
+                                        </td>
+                                        <td style={{ padding: '16px 24px' }}>
+                                            {getVerificationBadge(r)}
                                         </td>
                                         <td style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                                             {new Date(r.createdAt).toLocaleDateString()}
@@ -563,6 +587,7 @@ export function ReferidosPage() {
                 details={userDetails}
                 isLoading={isDetailsLoading}
                 commissionRate={stats?.commissionLevel2 || 5}
+                convertValue={convertValue}
             />
         </div>
     );
@@ -673,13 +698,14 @@ function ModalItem({ icon, title, desc }: { icon: React.ReactNode, title: string
     );
 }
 
-function DetailsModal({ isOpen, onClose, user, details, isLoading, commissionRate }: {
+function DetailsModal({ isOpen, onClose, user, details, isLoading, commissionRate, convertValue }: {
     isOpen: boolean,
     onClose: () => void,
     user: ReferredUser | null,
     details: ReferredUserDetails | null,
     isLoading: boolean,
-    commissionRate: number
+    commissionRate: number,
+    convertValue: (val: number) => string
 }) {
     if (!isOpen) return null;
 
@@ -750,7 +776,7 @@ function DetailsModal({ isOpen, onClose, user, details, isLoading, commissionRat
                         <div style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Impacto en Red</div>
                             <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-success)' }}>
-                                ${((details?.commissionsEarned || 0) * (commissionRate / 100)).toLocaleString()}
+                                {convertValue((details?.commissionsEarned || 0) * (commissionRate / 100))}
                             </div>
                             <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>Ganas el {commissionRate}%</div>
                         </div>

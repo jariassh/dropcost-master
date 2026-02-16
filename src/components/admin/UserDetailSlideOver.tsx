@@ -23,7 +23,11 @@ import {
 } from 'lucide-react';
 import { Button } from '../common/Button';
 import { AssignPlanModal } from './AssignPlanModal';
+import { ConfirmDialog } from '../common/ConfirmDialog';
 import { obtenerPaisPorCodigo, Pais } from '../../services/paisesService';
+import { userService } from '../../services/userService';
+import { resendVerificationEmail } from '../../services/authService';
+import { useToast } from '../common/Toast';
 
 import { Plan } from '../../types/plans.types';
 
@@ -40,6 +44,9 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
     const [loadingActivity, setLoadingActivity] = useState(false);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
     const [countryData, setCountryData] = useState<Pais | null>(null);
+    const [loadingAction, setLoadingAction] = useState(false);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const toast = useToast();
 
     const fetchActivity = async () => {
         if (!user) return;
@@ -107,6 +114,50 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
         if (hours > 0) return `Hace ${hours} hora${hours > 1 ? 's' : ''}`;
         if (minutes > 0) return `Hace ${minutes} minuto${minutes > 1 ? 's' : ''}`;
         return 'Hace un momento';
+    };
+
+    const handleResendVerification = async () => {
+        if (!user || user.email_verificado) return;
+        setLoadingAction(true);
+        try {
+            const response = await resendVerificationEmail(user.email);
+            if (response.success) {
+                toast.success('Éxito', 'Email de verificación reenviado con éxito');
+            } else {
+                toast.error('Error', response.error || 'Error al reenviar el email');
+            }
+        } catch (error) {
+            toast.error('Error', 'Error al conectar con el servidor');
+        } finally {
+            setLoadingAction(false);
+        }
+    };
+
+    const handleToggleSuspension = async () => {
+        if (!user) return;
+        setIsConfirmOpen(true);
+    };
+
+    const executeToggleSuspension = async () => {
+        if (!user) return;
+        const isCurrentlySuspended = user.estado_suscripcion === 'suspendida';
+        const newStatus = isCurrentlySuspended ? 'activa' : 'suspendida';
+
+        setLoadingAction(true);
+        setIsConfirmOpen(false);
+        try {
+            const success = await userService.updateUserStatus(user.id, newStatus);
+            if (success) {
+                toast.success('Usuario actualizado', `Usuario ${isCurrentlySuspended ? 'activado' : 'suspendido'} correctamente`);
+                onUserUpdate?.();
+            } else {
+                toast.error('Ocurrió un problema', 'No se pudo actualizar el estado del usuario');
+            }
+        } catch (error) {
+            toast.error('Error de conexión', 'No se pudo contactar con el servidor');
+        } finally {
+            setLoadingAction(false);
+        }
     };
 
     if (!user) return null;
@@ -236,7 +287,7 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                                         </h5>
                                         <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Siguiente cobro: N/A</p>
                                     </div>
-                                    <UserStatusBadge status={user.estado_suscripcion} />
+                                    <UserStatusBadge status={user.estado_suscripcion || 'inactiva'} />
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                     <div style={{ height: '8px', width: '100%', backgroundColor: 'var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
@@ -294,9 +345,32 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Verificación</p>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: user.email_verificado ? 'var(--color-success)' : 'var(--color-warning)' }}>
-                                    {user.email_verificado ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
-                                    {user.email_verificado ? 'Verificado' : 'Pendiente'}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: user.email_verificado ? 'var(--color-success)' : 'var(--color-warning)' }}>
+                                        {user.email_verificado ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                                        {user.email_verificado ? 'Verificado' : 'Pendiente'}
+                                    </div>
+                                    {!user.email_verificado && (
+                                        <button
+                                            onClick={handleResendVerification}
+                                            disabled={loadingAction}
+                                            style={{
+                                                fontSize: '11px',
+                                                color: 'var(--color-primary)',
+                                                background: 'none',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                fontWeight: 700,
+                                                padding: '2px 6px',
+                                                borderRadius: '4px',
+                                                transition: 'background-color 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        >
+                                            {loadingAction ? '...' : 'Reenviar Email'}
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -397,21 +471,30 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                         >
                             Cambiar Plan
                         </Button>
-                        <button style={{
-                            padding: '12px',
-                            backgroundColor: 'transparent',
-                            border: '1px solid #EF444455',
-                            borderRadius: '12px',
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            color: '#EF4444',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px'
-                        }}>
-                            <Ban size={16} /> Suspender
+                        <button
+                            disabled={loadingAction}
+                            onClick={handleToggleSuspension}
+                            style={{
+                                padding: '12px',
+                                backgroundColor: 'transparent',
+                                border: `1px solid ${user.estado_suscripcion === 'suspendida' ? 'var(--color-success)55' : '#EF444455'}`,
+                                borderRadius: '12px',
+                                fontSize: '14px',
+                                fontWeight: 600,
+                                color: user.estado_suscripcion === 'suspendida' ? 'var(--color-success)' : '#EF4444',
+                                cursor: loadingAction ? 'default' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                opacity: loadingAction ? 0.7 : 1
+                            }}
+                        >
+                            {user.estado_suscripcion === 'suspendida' ? (
+                                <><CheckCircle2 size={16} /> Activar</>
+                            ) : (
+                                <><Ban size={16} /> Suspender</>
+                            )}
                         </button>
                     </div>
                 </div>
@@ -425,6 +508,20 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                         setIsAssignModalOpen(false);
                         onUserUpdate?.();
                     }}
+                />
+
+                <ConfirmDialog
+                    isOpen={isConfirmOpen}
+                    title={user.estado_suscripcion === 'suspendida' ? 'Activar Usuario' : 'Suspender Usuario'}
+                    description={user.estado_suscripcion === 'suspendida'
+                        ? `¿Estás seguro de que deseas reactivar la cuenta de ${user.nombres}? Volverá a tener acceso completo.`
+                        : `¿Estás seguro de que deseas suspender a ${user.nombres}? No podrá iniciar sesión hasta que lo reactives.`
+                    }
+                    confirmLabel={user.estado_suscripcion === 'suspendida' ? 'Activar Cuenta' : 'Suspender Cuenta'}
+                    variant={user.estado_suscripcion === 'suspendida' ? 'info' : 'danger'}
+                    onConfirm={executeToggleSuspension}
+                    onCancel={() => setIsConfirmOpen(false)}
+                    isLoading={loadingAction}
                 />
             </div>
         </SlideOver>
