@@ -105,6 +105,22 @@ export const PricingPage: React.FC = () => {
         }
     };
 
+    const calculateMaxSavings = () => {
+        if (!plans || plans.length === 0) return 0;
+        const paidPlans = plans.filter(p => p.price_monthly > 0 && p.price_semiannual > 0);
+        if (paidPlans.length === 0) return 0;
+
+        const savingsArr = paidPlans.map(plan => {
+            const costSixMonths = plan.price_monthly * 6;
+            const savings = costSixMonths - plan.price_semiannual;
+            return Math.round((savings / costSixMonths) * 100);
+        });
+
+        return Math.max(...savingsArr);
+    };
+
+    const maxSavings = calculateMaxSavings();
+
     if (loading) {
         return (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
@@ -165,9 +181,11 @@ export const PricingPage: React.FC = () => {
                         }}
                     >
                         Semestral
-                        <span style={{ fontSize: '10px', backgroundColor: '#ecfdf5', color: '#059669', padding: '2px 6px', borderRadius: '10px' }}>
-                            AHORRA 15%
-                        </span>
+                        {maxSavings > 0 && (
+                            <span style={{ fontSize: '10px', backgroundColor: '#ecfdf5', color: '#059669', padding: '2px 6px', borderRadius: '10px' }}>
+                                AHORRA {maxSavings}%
+                            </span>
+                        )}
                     </button>
                 </div>
             </div>
