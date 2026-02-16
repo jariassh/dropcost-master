@@ -92,14 +92,18 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
                 .single();
             
             if (leader && leader.estado === 'activo') {
-                const commissionAmount = paymentData.transaction_amount * (leader.porcentaje_comision / 100);
+                const amount = Number(paymentData.transaction_amount);
+                const commissionPercent = Number(leader.porcentaje_comision) || 0;
+                const commissionAmount = Math.round((amount * (commissionPercent / 100)) * 100) / 100;
                 
+                console.log(`Calculando comisión: Plan de ${amount} * ${commissionPercent}% = ${commissionAmount}`);
+
                 // A. Add Wallet Transaction
                 await supabase.from("wallet_transactions").insert({
                     user_id: leader.user_id,
                     type: 'referral_bonus',
                     amount: commissionAmount,
-                    description: `Comisión por suscripción de referido (${paymentData.currency_id} ${paymentData.transaction_amount})`
+                    description: `Comisión por suscripción de referido (${paymentData.currency_id} ${amount})`
                 });
 
                 // B. Update User Wallet Balance
@@ -109,7 +113,9 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
                     .eq('id', leader.user_id)
                     .single();
                     
-                const newBalance = (Number(currentUser?.wallet_saldo) || 0) + commissionAmount;
+                const currentBalance = Number(currentUser?.wallet_saldo) || 0;
+                const newBalance = Math.round((currentBalance + commissionAmount) * 100) / 100;
+                
                 await supabase.from('users')
                     .update({ wallet_saldo: newBalance })
                     .eq('id', leader.user_id);
@@ -121,7 +127,9 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
                     .eq('id', leader.id)
                     .single();
                     
-                const newTotal = (Number(leaderStats?.total_comisiones_generadas) || 0) + commissionAmount;
+                const currentTotal = Number(leaderStats?.total_comisiones_generadas) || 0;
+                const newTotal = Math.round((currentTotal + commissionAmount) * 100) / 100;
+                
                 await supabase.from('referidos_lideres')
                     .update({ total_comisiones_generadas: newTotal })
                     .eq('id', leader.id);

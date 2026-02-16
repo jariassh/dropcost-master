@@ -21,8 +21,10 @@ export function PaymentStatusPage() {
 
     const [isVerifying, setIsVerifying] = useState(false);
     const [verificationResult, setVerificationResult] = useState<'success' | 'error' | null>(null);
+    const [hasAttemptedVerification, setHasAttemptedVerification] = useState(false);
 
     useEffect(() => {
+        // MODO MOCK PARA PREVISUALIZACIÓN DE DISEÑO
         if (mockStatus) {
             if (mockStatus === 'approved') setVerificationResult('success');
             else if (mockStatus === 'verifying') setIsVerifying(true);
@@ -31,7 +33,10 @@ export function PaymentStatusPage() {
         }
 
         const verifyPayment = async () => {
+            if (hasAttemptedVerification) return;
+
             if (status === 'approved' && paymentId) {
+                setHasAttemptedVerification(true);
                 setIsVerifying(true);
                 try {
                     await paymentService.checkPaymentStatus(paymentId);
@@ -45,13 +50,14 @@ export function PaymentStatusPage() {
                     setIsVerifying(false);
                 }
             } else if (status === 'approved' && !paymentId) {
+                setHasAttemptedVerification(true);
                 await initialize();
                 setVerificationResult('success');
             }
         };
 
         verifyPayment();
-    }, [status, paymentId, mockStatus, initialize, toast]);
+    }, [status, paymentId, mockStatus, initialize, toast, hasAttemptedVerification]);
 
     const renderIcon = (type: 'success' | 'error' | 'pending' | 'warning' | 'loading') => {
         let color = 'var(--color-primary)';
