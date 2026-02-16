@@ -31,6 +31,14 @@ export interface User {
     fechaRegistro: string;
     ultimaActividad?: string;
     codigoReferido?: string;
+    wallet_saldo?: number;
+    bank_info?: {
+        banco_nombre: string;
+        cuenta_numero: string;
+        cuenta_tipo: string;
+        documento_id: string;
+        titular_nombre: string;
+    };
 }
 
 export interface LoginCredentials {

@@ -1,296 +1,426 @@
-/**
- * Página de la Billetera Digital (Wallet).
- */
 import React, { useState, useEffect } from 'react';
 import {
     Wallet,
-    ArrowUpRight,
-    ArrowDownLeft,
-    CreditCard,
-    Plus,
-    MoreHorizontal,
-    History,
     TrendingUp,
+    ArrowUpRight,
+    History,
+    Plus,
+    Search,
     Download,
-    Lock
+    Eye,
+    ChevronRight,
+    LucideIcon
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/store/authStore';
-import { getWalletBalance, getWalletTransactions, WalletTransaction } from '@/services/walletService';
+import { Card } from '@/components/common/Card';
+import { Button } from '@/components/common/Button';
+import { Badge } from '@/components/common/Badge';
 import { Spinner } from '@/components/common/Spinner';
-import { fetchExchangeRates, getDisplayCurrency } from '@/utils/currencyUtils';
+import { walletService, WalletBalance, WalletMovement, WithdrawalRequest } from '@/services/walletService';
 import { formatCurrency } from '@/lib/format';
-import { obtenerPaisPorCodigo } from '@/services/paisesService';
+import { fetchExchangeRates, convertPrice } from '@/utils/currencyUtils';
+import { useAuthStore } from '@/store/authStore';
+import { WithdrawalModal } from '@/components/referidos/WithdrawalModal';
+import { supabase } from '@/lib/supabase';
 
-export function WalletPage() {
+export const WalletPage: React.FC = () => {
     const { user } = useAuthStore();
-    const [balance, setBalance] = useState(0);
-    const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [targetCurrency, setTargetCurrency] = useState('USD');
+    const [balance, setBalance] = useState<WalletBalance | null>(null);
+    const [movements, setMovements] = useState<WalletMovement[]>([]);
+    const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
+    const [loading, setLoading] = useState(true);
     const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
+    const [displayCurrency, setDisplayCurrency] = useState<string>('COP');
+    const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+    const [minimumWithdrawal, setMinimumWithdrawal] = useState<number>(10);
+    const [retentionDays, setRetentionDays] = useState<number>(30);
 
-    const navigate = useNavigate();
-    const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
-    const hasAccess = user?.plan?.limits?.access_wallet;
+    const loadData = async () => {
+        try {
+            // 1. Cargar balances, movimientos y configuración
+            const [balanceData, movementsData, withdrawalsData, rates, minWithdrawal] = await Promise.all([
+                walletService.getBalance(),
+                walletService.getMovements(),
+                walletService.getWithdrawals(),
+                fetchExchangeRates('USD'),
+                walletService.getMinimumWithdrawal()
+            ]);
 
-    // Default to restricted if flag is missing, unless admin
-    const isRestricted = !isAdmin && !hasAccess;
+            // 2. Obtener días de retención desde la configuración
+            const { data: config } = await supabase
+                .from('sistema_referidos_config' as any)
+                .select('dias_retencion_comision')
+                .order('fecha_actualizacion', { ascending: false })
+                .limit(1)
+                .maybeSingle();
 
-    useEffect(() => {
-        if (isRestricted) return; // Don't load data if restricted
+            const days = config?.dias_retencion_comision ?? 30;
 
-        const loadData = async () => {
-            setIsLoading(true);
-            try {
-                const [b, t] = await Promise.all([
-                    getWalletBalance(),
-                    getWalletTransactions()
-                ]);
-                setBalance(b);
-                setTransactions(t);
+            setBalance(balanceData);
+            setMovements(movementsData);
+            setWithdrawals(withdrawalsData);
+            setExchangeRates(rates);
+            setMinimumWithdrawal(minWithdrawal);
+            setRetentionDays(days);
 
-                if (user?.pais) {
-                    const paisInfo = await obtenerPaisPorCodigo(user.pais);
-                    if (paisInfo) {
-                        const currency = getDisplayCurrency(user.pais, paisInfo.moneda_codigo);
-                        setTargetCurrency(currency);
-                        const rates = await fetchExchangeRates('USD');
-                        setExchangeRates(rates);
-                    }
-                }
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        loadData();
-    }, [isRestricted, user]);
+            // Determinar moneda de visualización
+            if (user?.pais === 'MX') setDisplayCurrency('MXN');
+            else if (user?.pais === 'EC') setDisplayCurrency('USD');
+            else setDisplayCurrency('COP');
 
-    const convertValue = (val: number) => {
-        if (!exchangeRates || !targetCurrency || targetCurrency === 'USD') return formatCurrency(val, 'USD');
-        const rate = exchangeRates[targetCurrency];
-        if (!rate) return formatCurrency(val, 'USD');
-        return formatCurrency(val * rate, targetCurrency);
+        } catch (error) {
+            console.error('Error loading wallet data:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    if (isRestricted) {
+    useEffect(() => {
+        setLoading(true);
+        loadData();
+    }, [user]);
+
+    const getConverted = (amountUsd: number) => {
+        if (!exchangeRates) return amountUsd;
+        return convertPrice(amountUsd, displayCurrency, exchangeRates);
+    };
+
+    if (loading) {
         return (
-            <div style={{ padding: '80px 20px', textAlign: 'center', maxWidth: '600px', margin: '0 auto', animation: 'fadeIn 0.5s' }}>
-                <div style={{
-                    width: '80px', height: '80px', margin: '0 auto 24px',
-                    borderRadius: '50%', backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#f59e0b'
-                }}>
-                    <Lock size={40} />
-                </div>
-                <h1 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '16px', color: 'var(--text-primary)' }}>Funcionalidad Premium</h1>
-                <p style={{ fontSize: '16px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '32px' }}>
-                    El acceso a la Billetera Digital es exclusivo para nuestros miembros Pro y Enterprise.
-                    <br />Gestiona tus ganancias y retiros actualizando tu plan.
-                </p>
-                <button
-                    onClick={() => navigate('/pricing')}
-                    style={{
-                        padding: '14px 32px', borderRadius: '12px', border: 'none',
-                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                        color: '#fff', fontSize: '16px', fontWeight: 700, cursor: 'pointer',
-                        boxShadow: '0 10px 20px -5px rgba(245, 158, 11, 0.4)',
-                        transition: 'transform 0.2s'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-                >
-                    Ver Planes Disponibles
-                </button>
+            <div className="flex items-center justify-center min-h-[400px]">
+                <Spinner size="lg" />
             </div>
         );
     }
 
-    if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '100px' }}><Spinner /></div>;
-
     return (
-        <div style={{ maxWidth: '1000px', margin: '0 auto', padding: 'var(--main-padding)' }}>
-            <div style={{ marginBottom: '32px' }}>
-                <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                    Tu Billetera
-                </h1>
-                <p style={{ color: 'var(--text-tertiary)', margin: 0 }}>
-                    Gestiona tus ganancias del sistema de referidos y solicita tus retiros.
-                </p>
+        <div className="dc-wallet-container" style={{ display: 'flex', flexDirection: 'column', gap: '64px', padding: '20px 0 60px 0' }}>
+            {/* Header section */}
+            <div className="dc-wallet-header">
+                <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>Mi Billetera</h1>
+                <p style={{ color: 'var(--text-tertiary)', fontSize: '15px' }}>Gestiona tus comisiones y solicita retiros de forma segura.</p>
             </div>
 
-            <div style={{ gap: '24px', marginBottom: '32px' }} className="dc-wallet-grid">
-                {/* Main Content: Balance Card & History */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    {/* Tarjeta de Balance */}
-                    <div style={{
-                        background: 'linear-gradient(135deg, var(--color-primary) 0%, #004dc2 100%)',
-                        color: '#fff',
-                        borderRadius: '24px',
-                        padding: '32px',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        boxShadow: '0 10px 30px -5px rgba(0, 102, 255, 0.4)'
-                    }}>
-                        <div style={{ position: 'relative', zIndex: 1 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
-                                <div>
-                                    <div style={{ fontSize: '14px', opacity: 0.8, marginBottom: '4px' }}>Balance Disponible</div>
-                                    <div style={{ fontSize: '36px', fontWeight: 800 }}>{convertValue(balance)}</div>
-                                </div>
-                                <div style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '10px', borderRadius: '12px' }}>
-                                    <Wallet size={24} />
-                                </div>
-                            </div>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <BalanceCard
+                    title="Saldo Disponible"
+                    amount={getConverted(balance?.available_balance || 0)}
+                    currency={displayCurrency}
+                    icon={Wallet}
+                    color="var(--color-primary)"
+                    subtitle="Dinero listo para retirar"
+                />
+                <BalanceCard
+                    title="Total Generado"
+                    amount={getConverted(balance?.total_earned || 0)}
+                    currency={displayCurrency}
+                    icon={TrendingUp}
+                    color="var(--color-success)"
+                    subtitle="Histórico de ganancias"
+                />
+                <BalanceCard
+                    title="En Revisión"
+                    amount={getConverted(balance?.pending_commissions || 0)}
+                    currency={displayCurrency}
+                    icon={History}
+                    color="var(--color-warning)"
+                    subtitle={`Comisiones pendientes (< ${retentionDays} días)`}
+                />
+            </div>
 
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <button style={{
-                                    backgroundColor: '#fff', color: 'var(--color-primary)', border: 'none',
-                                    padding: '12px 24px', borderRadius: '14px', fontWeight: 700, fontSize: '14px',
-                                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'
-                                }}>
-                                    <ArrowUpRight size={18} />
-                                    Solicitar Retiro
-                                </button>
-                                <button style={{
-                                    backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)',
-                                    padding: '12px 24px', borderRadius: '14px', fontWeight: 700, fontSize: '14px',
-                                    cursor: 'pointer'
-                                }}>
-                                    Gestionar Bancos
-                                </button>
-                            </div>
+            {/* Main Content Area */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                {/* Left: Movements Table */}
+                <div className="xl:col-span-2" style={{ display: 'flex', flexDirection: 'column', gap: '64px' }}>
+                    <Card title="Movimientos Recientes">
+                        <div className="overflow-x-auto">
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                        <th style={tableHeaderStyle}>Concepto</th>
+                                        <th style={tableHeaderStyle}>Tipo</th>
+                                        <th style={tableHeaderStyle}>Fecha</th>
+                                        <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {movements.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                                                No hay movimientos registrados.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        movements.map((move) => (
+                                            <tr key={move.id} style={tableRowStyle}>
+                                                <td style={tableCellStyle}>
+                                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{move.description}</span>
+                                                </td>
+                                                <td style={tableCellStyle}>
+                                                    <Badge variant={move.type === 'withdrawal' ? 'modern-error' : 'modern-success'}>
+                                                        {move.type === 'referral_bonus' ? 'Comisión' :
+                                                            move.type === 'withdrawal' ? 'Retiro' : 'Ajuste'}
+                                                    </Badge>
+                                                </td>
+                                                <td style={tableCellStyle}>
+                                                    <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                                                        {new Date(move.created_at).toLocaleDateString()}
+                                                    </span>
+                                                </td>
+                                                <td style={{ ...tableCellStyle, textAlign: 'right' }}>
+                                                    <span style={{
+                                                        fontWeight: 700,
+                                                        color: move.type === 'withdrawal' ? 'var(--color-error)' : 'var(--color-success)'
+                                                    }}>
+                                                        {move.type === 'withdrawal' ? '-' : '+'}
+                                                        {formatCurrency(getConverted(move.amount), displayCurrency)}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
+                    </Card>
 
-                        {/* Decoration */}
-                        <div style={{
-                            position: 'absolute', right: '-40px', top: '-40px', width: '200px', height: '200px',
-                            borderRadius: '50%', background: 'rgba(255,255,255,0.05)'
-                        }} />
-                        <div style={{
-                            position: 'absolute', left: '-20px', bottom: '-40px', width: '120px', height: '120px',
-                            borderRadius: '50%', background: 'rgba(255,255,255,0.03)'
-                        }} />
-                    </div>
-
-                    {/* Historial de Movimientos */}
-                    <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '20px', overflow: 'hidden' }}>
-                        <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <History size={20} color="var(--color-primary)" />
-                                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>Actividad Reciente</h3>
-                            </div>
-                            <button style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer' }}>
-                                <Download size={20} />
-                            </button>
+                    <Card title="Estado de Retiros">
+                        <div className="overflow-x-auto">
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                        <th style={tableHeaderStyle}>ID</th>
+                                        <th style={tableHeaderStyle}>Monto Local</th>
+                                        <th style={tableHeaderStyle}>Estado</th>
+                                        <th style={tableHeaderStyle}>Banco</th>
+                                        <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {withdrawals.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                                                No has solicitado retiros aún.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        withdrawals.map((req) => (
+                                            <tr key={req.id} style={tableRowStyle}>
+                                                <td style={tableCellStyle}>
+                                                    <span style={{ fontSize: '12px', fontFamily: 'monospace', color: 'var(--text-tertiary)' }}>
+                                                        {req.id.split('-')[0]}...
+                                                    </span>
+                                                </td>
+                                                <td style={tableCellStyle}>
+                                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                                                        {formatCurrency(req.monto_local, req.moneda_destino)}
+                                                    </span>
+                                                </td>
+                                                <td style={tableCellStyle}>
+                                                    <Badge variant={
+                                                        req.estado === 'completado' ? 'modern-success' :
+                                                            req.estado === 'en_proceso' ? 'pill-info' :
+                                                                req.estado === 'rechazado' ? 'modern-error' : 'pill-warning'
+                                                    }>
+                                                        {req.estado === 'completado' ? 'Completado' :
+                                                            req.estado === 'en_proceso' ? 'En Proceso' :
+                                                                req.estado === 'rechazado' ? 'Rechazado' : 'Pendiente'}
+                                                    </Badge>
+                                                </td>
+                                                <td style={tableCellStyle}>
+                                                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{req.banco_nombre}</span>
+                                                </td>
+                                                <td style={{ ...tableCellStyle, textAlign: 'right' }}>
+                                                    <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                                                        {new Date(req.fecha_solicitud).toLocaleDateString()}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            {transactions.length === 0 ? (
-                                <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
-                                    Aún no hay movimientos en tu billetera.
-                                </div>
-                            ) : (
-                                transactions.map(t => (
-                                    <div key={t.id} style={{
-                                        padding: '16px 24px',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        borderBottom: '1px solid var(--border-color)'
-                                    }}>
-                                        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                                            <div style={{
-                                                width: '40px', height: '40px', borderRadius: '12px',
-                                                backgroundColor: t.type === 'withdrawal' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                                                color: t.type === 'withdrawal' ? 'var(--color-error)' : 'var(--color-success)',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                            }}>
-                                                {t.type === 'withdrawal' ? <ArrowUpRight size={20} /> : <ArrowDownLeft size={20} />}
-                                            </div>
-                                            <div>
-                                                <div style={{ fontWeight: 600, fontSize: '14px' }}>{t.description}</div>
-                                                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{new Date(t.createdAt).toLocaleDateString()}</div>
-                                            </div>
-                                        </div>
-                                        <div style={{
-                                            fontWeight: 700,
-                                            fontSize: '15px',
-                                            color: t.type === 'withdrawal' ? 'var(--color-error)' : 'var(--color-success)'
-                                        }}>
-                                            {t.type === 'withdrawal' ? '-' : '+'}{convertValue(t.amount)}
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
+                    </Card>
                 </div>
 
-                {/* Sidebar: Infor & Bank Mock */}
-                <aside style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '20px', padding: '24px' }}>
-                        <h4 style={{ margin: '0 0 16px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <CreditCard size={18} /> Metodo de Pago
-                        </h4>
-                        <div style={{
-                            padding: '16px',
-                            backgroundColor: 'var(--bg-secondary)',
-                            borderRadius: '12px',
-                            border: '1px dashed var(--border-color)',
-                            textAlign: 'center'
-                        }}>
-                            <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '8px' }}>No has configurado una cuenta bancaria</div>
-                            <button style={{
-                                background: 'none', border: 'none', color: 'var(--color-primary)',
-                                fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', margin: '0 auto'
+                {/* Right: Actions and Bank Info */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                    <Card>
+                        <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                            <div style={{
+                                width: '60px', height: '60px',
+                                backgroundColor: 'rgba(0, 102, 255, 0.1)',
+                                borderRadius: '16px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                margin: '0 auto 20px',
+                                color: 'var(--color-primary)'
                             }}>
-                                <Plus size={14} /> Añadir Cuenta
-                            </button>
-                        </div>
-                    </div>
+                                <ArrowUpRight size={32} />
+                            </div>
+                            <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px' }}>Solicitar Retiro</h3>
+                            <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginBottom: '24px' }}>
+                                Retira tus ganancias de forma rápida a tu cuenta bancaria.
+                                <br /> <span style={{ fontSize: '14px', color: 'var(--color-primary)', fontWeight: 800, display: 'block', marginTop: '12px' }}>
+                                    {displayCurrency === 'COP' ? (
+                                        `Mínimo de retiro: $ ${new Intl.NumberFormat('es-CO').format(Math.round(((exchangeRates?.['COP'] || 3950) * minimumWithdrawal) / 100) * 100)} (~${minimumWithdrawal} USD)`
+                                    ) : (
+                                        `Mínimo de retiro: ${formatCurrency(getConverted(minimumWithdrawal), displayCurrency)} (~${minimumWithdrawal} USD)`
+                                    )}
+                                </span>
+                            </p>
 
-                    <div style={{
-                        backgroundColor: 'rgba(245, 158, 11, 0.05)',
-                        border: '1px solid rgba(245, 158, 11, 0.2)',
-                        borderRadius: '20px',
-                        padding: '24px',
-                        color: '#92400e'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                            <div style={{ marginTop: '2px' }}><TrendingUp size={20} /></div>
-                            <div>
-                                <h4 style={{ margin: '0 0 8px', fontWeight: 700, fontSize: '14px' }}>Potencial de Ganancia</h4>
-                                <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5, opacity: 0.9 }}>
-                                    Recuerda que recibes el 10% de cada renovación de tus referidos directos. ¡Sigue invitando!
+                            <Button
+                                className="w-full"
+                                leftIcon={<Plus size={18} />}
+                                disabled={(balance?.available_balance ?? 0) < minimumWithdrawal}
+                                onClick={() => setIsWithdrawModalOpen(true)}
+                            >
+                                Iniciar Retiro
+                            </Button>
+                        </div>
+                    </Card>
+
+                    <Card title="Información Bancaria">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                                Vincula tu cuenta para recibir tus pagos automáticamente.
+                            </p>
+
+                            {user?.bank_info ? (
+                                <div style={{
+                                    padding: '16px',
+                                    backgroundColor: 'var(--bg-secondary)',
+                                    borderRadius: '12px',
+                                    border: '1px solid var(--border-color)'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Banco</span>
+                                        <span style={{ fontSize: '13px', fontWeight: 600 }}>{user.bank_info.banco_nombre}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Cuenta</span>
+                                        <span style={{ fontSize: '13px', fontWeight: 600 }}>****{user.bank_info.cuenta_numero?.slice(-4)}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Titular</span>
+                                        <span style={{ fontSize: '13px', fontWeight: 600 }}>{user.bank_info.titular_nombre}</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{ padding: '20px', textAlign: 'center', border: '2px dashed var(--border-color)', borderRadius: '12px' }}>
+                                    <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Sin cuenta vinculada</span>
+                                </div>
+                            )}
+
+                            <Button variant="ghost" size="sm" className="w-full">
+                                {user?.bank_info ? 'Cambiar cuenta' : 'Vincular cuenta'}
+                            </Button>
+                        </div>
+                    </Card>
+
+                    <Card title="Información de Wise">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'start' }}>
+                                <div style={{ color: 'var(--color-primary)' }}><Eye size={18} /></div>
+                                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                                    Los retiros se procesan todos los <strong>viernes</strong>.
+                                </p>
+                            </div>
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'start' }}>
+                                <div style={{ color: 'var(--color-primary)' }}><Download size={18} /></div>
+                                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                                    Se aplica un cargo de gestión del <strong>3%</strong> por transferencia.
                                 </p>
                             </div>
                         </div>
-                    </div>
-                </aside>
+                    </Card>
+                </div>
             </div>
+
+            {/* Withdraw Modal */}
+            <WithdrawalModal
+                isOpen={isWithdrawModalOpen}
+                onClose={() => setIsWithdrawModalOpen(false)}
+                onSuccess={loadData}
+                availableBalanceUsd={balance?.available_balance || 0}
+                exchangeRate={exchangeRates?.[displayCurrency] || 1}
+                currency={displayCurrency}
+                existingBankInfo={user?.bank_info}
+                minimumWithdrawalUsd={minimumWithdrawal}
+            />
         </div>
     );
-}
+};
 
-/* ─── Styles adicionales ─── */
-const walletResponsiveStyles = `
-    .dc-wallet-grid {
-        display: grid;
-        grid-template-columns: 1fr 350px;
-    }
-    @media (max-width: 900px) {
-        .dc-wallet-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-`;
+/* Styles & Sub-components */
 
-if (typeof document !== 'undefined') {
-    const styleSheet = document.createElement("style");
-    styleSheet.innerText = walletResponsiveStyles;
-    document.head.appendChild(styleSheet);
-}
+const BalanceCard: React.FC<{
+    title: string;
+    amount: number;
+    currency: string;
+    icon: LucideIcon;
+    color: string;
+    subtitle: string;
+}> = ({ title, amount, currency, icon: Icon, color, subtitle }) => (
+    <div style={{
+        backgroundColor: 'var(--card-bg)',
+        borderRadius: '20px',
+        padding: '24px',
+        border: '1px solid var(--border-color)',
+        boxShadow: 'var(--shadow-sm)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px'
+    }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+            <div style={{
+                width: '44px', height: '44px',
+                backgroundColor: `${color}15`,
+                borderRadius: '12px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: color
+            }}>
+                <Icon size={24} />
+            </div>
+            <div style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                backgroundColor: 'var(--bg-secondary)',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                color: 'var(--text-tertiary)',
+                textTransform: 'uppercase'
+            }}>
+                {currency}
+            </div>
+        </div>
+        <div>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>{title}</p>
+            <h2 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                {formatCurrency(amount, currency)}
+            </h2>
+            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '6px' }}>{subtitle}</p>
+        </div>
+    </div>
+);
+
+const tableHeaderStyle: React.CSSProperties = {
+    padding: '16px 20px',
+    textAlign: 'left',
+    fontSize: '11px',
+    fontWeight: 700,
+    color: 'var(--text-tertiary)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em'
+};
+
+const tableCellStyle: React.CSSProperties = {
+    padding: '16px 20px',
+    fontSize: '14px'
+};
+
+const tableRowStyle: React.CSSProperties = {
+    borderBottom: '1px solid var(--border-color)',
+    transition: 'background-color 0.2s'
+};
