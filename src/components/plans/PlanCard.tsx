@@ -9,9 +9,10 @@ interface PlanCardProps {
     isCurrent?: boolean;
     onSelect?: (plan: Plan) => void;
     displayedPrice?: string;
+    period?: 'monthly' | 'semiannual';
 }
 
-export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onSelect, displayedPrice }) => {
+export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onSelect, displayedPrice, period = 'monthly' }) => {
 
     // Logic based on slug for styling
     const isEnterprise = plan.slug === 'plan_enterprise';
@@ -83,7 +84,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onS
                     {displayedPrice ? displayedPrice.replace(/\s/g, '') : formatCurrency(plan.price_monthly).replace(/\s/g, '')}
                 </span>
                 <span style={{ fontSize: '14px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
-                    /mes
+                    {period === 'monthly' ? '/mes' : '/semestre'}
                 </span>
             </div>
 
