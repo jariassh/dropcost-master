@@ -71,6 +71,9 @@ Para ejecutar este proyecto localmente, sigue estos pasos:
 - **👁️ Auditoría y Seguridad:** Implementación de historial de actividad completo. Registro inmutable de acciones críticas (Login, Creación/Borrado de Tiendas, Cambios de Configuración) con detalles de IP y Agente de Usuario, visible tanto para administradores como para el propio usuario.
 - **🔒 Control de Acceso por Plan (Paywall):** Implementación de restricciones estrictas basadas en el plan de suscripción del usuario. Rutas premium como "Sistema de Referidos" y "Billetera" ahora están protegidas. Validación de límites de creación de tiendas en tiempo real (UI y Lógica de Negocio) para asegurar el cumplimiento de las cuotas del plan.
 - **🌎 Precios Dinámicos Multi-Moneda:** Sistema inteligente de conversión de precios en tiempo real. Los planes base pueden configurarse en COP, USD, MXN o EUR, y los usuarios ven los precios automáticamente convertidos a su moneda local (ej. PEN, CLP, BRL) utilizando tasas de cambio actualizadas vía API externa.
+- **🚀 Sistema de Referidos de 2 Niveles (V3):** Lanzamiento del programa de afiliados avanzado. Implementación de seguimiento de clicks, comisiones recurrentes de 12 meses y ascenso automático a Líder.
+- **💎 Modal de Detalles de Red:** Nueva funcionalidad que permite a los líderes visualizar el impacto y comisiones generadas por cada uno de sus referidos directos (Nivel 2).
+- **🛡️ Corrección de Identidad y Roles**: Desacoplamiento total de roles administrativos de los logros de red para asegurar que badges de "LÍDER" reflejen el éxito real en el sistema de referidos.
 
 ---
 
