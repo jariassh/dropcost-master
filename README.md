@@ -1,73 +1,49 @@
-# React + TypeScript + Vite
+# 📊 DropCost Master
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**DropCost Master** es la plataforma definitiva diseñada para dropshippers de la modalidad **Pago Contra Entrega (COD)** en Latinoamérica. Optimiza tu rentabilidad con un control financiero preciso, métricas en tiempo real y una gestión inteligente de tus costos de operación.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Propósito del Proyecto
 
-## React Compiler
+En el ecosistema del dropshipping COD, la rentabilidad se pierde en los detalles: fletes, porcentajes de devolución y costos de publicidad (CPA). **DropCost Master** resuelve esto mediante un motor de costeo avanzado que permite a los emprendedores saber *exactamente* cuánto están ganando por cada venta antes de que ocurra.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 🌟 Características Principales (Próximamente en v1.0)
 
-## Expanding the ESLint configuration
+-   **🎯 Simulador de Costeo de Alta Precisión:** Calcula el precio ideal de venta considerando margen deseado, fletes por región, CPA proyectado y el impacto del % de devoluciones.
+-   **📈 Dashboard en Tiempo Real:** Visualiza tus KPIs más importantes: ROAS real, utilidad neta por tienda y rendimiento de campañas.
+-   **🏢 Arquitectura Multi-Tenant:** Gestiona múltiples tiendas de forma totalmente independiente y segura desde una sola cuenta.
+-   **🚀 Sistema de Referidos Avanzado:** Programa de afiliados con seguimiento de clicks, comisiones recurrentes y panel de recompensas.
+-   **🔗 Integraciones Estratégicas:** Sincronización con Meta Ads, plataformas de logística (Dropi) y tiendas Shopify.
+-   **🔒 Seguridad y Auditoría:** Historial de actividad completo y aislamiento de datos grado empresarial (RLS).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🛠️ Stack Tecnológico
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+-   **Frontend:** React 19 + Vite 7
+-   **Lenguaje:** TypeScript
+-   **Backend & DB:** Supabase (PostgreSQL, Auth, RLS)
+-   **Estilos:** Tailwind CSS v4
+-   **Estado:** Zustand
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 📅 Estado del Proyecto: En Desarrollo Activo 🛠️
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Actualmente nos encontramos finalizando la primera versión pública (MVP). El código en esta rama (`main`) representa la base estable del proyecto. Los avances más recientes y flujos de trabajo se encuentran en la rama `develop`.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+
+## 🛡️ Seguridad y Buenas Prácticas
+
+DropCost Master sigue los más altos estándares de desarrollo para garantizar que tus datos financieros estén siempre seguros.
+
+---
+
+## 📄 Licencia
+
+Este proyecto es de propiedad privada para **DropCost Master**. Todos los derechos reservados.
+
+---
+*Impulsando la logística inteligente en Latinoamérica.*
