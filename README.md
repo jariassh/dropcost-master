@@ -74,6 +74,7 @@ Para ejecutar este proyecto localmente, sigue estos pasos:
 - **🚀 Sistema de Referidos de 2 Niveles (V3):** Lanzamiento del programa de afiliados avanzado. Implementación de seguimiento de clicks, comisiones recurrentes de 12 meses y ascenso automático a Líder.
 - **💎 Modal de Detalles de Red:** Nueva funcionalidad que permite a los líderes visualizar el impacto y comisiones generadas por cada uno de sus referidos directos (Nivel 2).
 - **🛡️ Corrección de Identidad y Roles**: Desacoplamiento total de roles administrativos de los logros de red para asegurar que badges de "LÍDER" reflejen el éxito real en el sistema de referidos.
+- **👮 Gestión de Usuarios y Auditoría:** Nueva capacidad para suspender usuarios, reenviar correos de verificación y visualizar el estado real de las suscripciones. Implementación de rastreo de actividad detallado que captura IP y fecha de última interacción para una seguridad robusta.
 
 ---
 
