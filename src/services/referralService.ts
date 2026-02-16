@@ -131,7 +131,7 @@ export async function getReferredUsers(): Promise<ReferredUser[]> {
     }
 
     return (data || []).map((r: any) => ({
-        id: r.id,
+        id: r.usuario_id,
         email: r.users?.email || 'Usuario oculto',
         nombres: r.users?.nombres,
         apellidos: r.users?.apellidos,
@@ -164,11 +164,21 @@ export async function getReferredUserDetails(referredUserId: string): Promise<Re
     }
 
     // Buscamos si este usuario también es un referente (tiene entrada en referidos_lideres)
+    // Para el conteo, contamos directamente de referidos_usuarios para mayor precisión
     const { data: leaderData } = await supabase
         .from('referidos_lideres')
-        .select('total_usuarios_referidos, total_comisiones_generadas')
+        .select('id, total_comisiones_generadas')
         .eq('user_id', referredUserId)
         .maybeSingle();
+
+    let referralsCount = 0;
+    if (leaderData) {
+        const { count } = await supabase
+            .from('referidos_usuarios')
+            .select('*', { count: 'exact', head: true })
+            .eq('lider_id', leaderData.id);
+        referralsCount = count || 0;
+    }
 
     return {
         id: userData.id,
@@ -180,7 +190,7 @@ export async function getReferredUserDetails(referredUserId: string): Promise<Re
         estadoSuscripcion: userData.estado_suscripcion || undefined,
         status: 'completed',
         createdAt: userData.created_at,
-        referralsCount: leaderData?.total_usuarios_referidos || 0,
+        referralsCount: referralsCount,
         commissionsEarned: leaderData?.total_comisiones_generadas || 0
     };
 }
@@ -230,7 +240,7 @@ export async function getLevel2ReferredUsers(): Promise<any[]> {
     }
 
     return (data || []).map((r: any) => ({
-        id: r.id,
+        id: r.usuario_id,
         email: r.users?.email || 'Usuario oculto',
         nombres: r.users?.nombres,
         apellidos: r.users?.apellidos,

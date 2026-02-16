@@ -21,11 +21,12 @@ export const adminService = {
 
             if (usersError) console.error('AdminService: Error al contar usuarios:', usersError);
 
-            // Suscripciones Activas
+            // Suscripciones Activas (Excluyendo Plan Gratis y planes inactivos)
             const { count: activeSubs, error: subsError } = await supabase
                 .from('users')
                 .select('*', { count: 'exact', head: true })
-                .eq('estado_suscripcion', 'activa');
+                .eq('estado_suscripcion', 'activa')
+                .neq('plan_id', 'plan_free');
 
             if (subsError) console.error('AdminService: Error al contar suscripciones:', subsError);
 
