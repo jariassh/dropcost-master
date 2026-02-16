@@ -1,10 +1,10 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, XCircle, Clock, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { paymentService } from '@/services/paymentService';
 import { useToast } from '@/components/common';
+import { Button } from '@/components/common/Button';
 
 export function PaymentStatusPage() {
     const [searchParams] = useSearchParams();
@@ -13,8 +13,9 @@ export function PaymentStatusPage() {
 
     // URL Params from Mercado Pago
     const status = searchParams.get('status');
-    const paymentId = searchParams.get('payment_id'); // MP sends this
+    const paymentId = searchParams.get('payment_id');
     const externalRef = searchParams.get('external_reference');
+    const mockStatus = searchParams.get('mock');
 
     const { initialize } = useAuthStore();
 
@@ -22,153 +23,265 @@ export function PaymentStatusPage() {
     const [verificationResult, setVerificationResult] = useState<'success' | 'error' | null>(null);
 
     useEffect(() => {
+        if (mockStatus) {
+            if (mockStatus === 'approved') setVerificationResult('success');
+            else if (mockStatus === 'verifying') setIsVerifying(true);
+            else if (mockStatus === 'error') setVerificationResult('error');
+            return;
+        }
+
         const verifyPayment = async () => {
             if (status === 'approved' && paymentId) {
                 setIsVerifying(true);
                 try {
-                    // Manual verification against backend to ensure subscription update
-                    // This creates a robust fallback if webhooks fail or are delayed.
                     await paymentService.checkPaymentStatus(paymentId);
-
-                    // If successful, refresh user session to get new plan claims
                     await initialize();
                     setVerificationResult('success');
-                    toast.success('¡Plan Activado!', 'Tu pago ha sido validado correctamente.');
+                    toast.success('¡Plan Activado!', 'Tu suscripción PRO ya está activa.');
                 } catch (error) {
                     console.error("Verification failed:", error);
                     setVerificationResult('error');
-                    toast.error('Atención', 'El pago fue aprobado en Mercado Pago pero hubo un error al activar tu plan. Por favor contacta a soporte.');
                 } finally {
                     setIsVerifying(false);
                 }
             } else if (status === 'approved' && !paymentId) {
-                // Determine success without verification (less secure, but fallback for UI)
                 await initialize();
                 setVerificationResult('success');
             }
         };
 
-        // Run validation only once on mount if approved
         verifyPayment();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Run once
+    }, [status, paymentId, mockStatus, initialize, toast]);
 
-    // Redirect automatically on success after delay? No, let user read.
+    const renderIcon = (type: 'success' | 'error' | 'pending' | 'warning' | 'loading') => {
+        let color = 'var(--color-primary)';
+        let Icon: any = AlertTriangle;
+
+        if (type === 'success') {
+            color = 'var(--color-success)';
+            Icon = CheckCircle;
+        } else if (type === 'error') {
+            color = 'var(--color-error)';
+            Icon = XCircle;
+        } else if (type === 'pending') {
+            color = 'var(--color-warning)';
+            Icon = Clock;
+        } else if (type === 'warning') {
+            color = 'var(--color-warning)';
+            Icon = AlertTriangle;
+        } else if (type === 'loading') {
+            color = 'var(--color-primary)';
+            Icon = Loader2;
+        }
+
+        return (
+            <div
+                style={{
+                    marginBottom: '32px',
+                    padding: '24px',
+                    borderRadius: '50%',
+                    backgroundColor: type === 'loading' ? 'transparent' : `${color}20`,
+                    color: color,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '84px',
+                    height: '84px'
+                }}
+            >
+                <Icon size={42} strokeWidth={2} className={type === 'loading' ? 'animate-spin' : ''} />
+            </div>
+        );
+    };
 
     const renderContent = () => {
-        if (isVerifying) {
+        // STATE: VERIFICANDO
+        if (isVerifying || mockStatus === 'verifying') {
             return (
-                <div className="text-center animate-fade-in">
-                    <div className="flex justify-center mb-6">
-                        <Loader2 size={64} className="text-[#0066FF] animate-spin" />
-                    </div>
-                    <h1 className="text-2xl font-bold mb-4 text-[#0066FF]">Verificando tu pago...</h1>
-                    <p className="text-gray-600 dark:text-gray-400">Estamos confirmando la transacción con el banco para activar tu plan.</p>
+                <div style={containerStyle}>
+                    {renderIcon('loading')}
+                    <h3 style={titleStyle}>Verificando tu pago</h3>
+                    <p style={descriptionStyle}>
+                        Estamos confirmando la transacción con Mercado Pago para activar tu plan PRO.
+                    </p>
                 </div>
             );
         }
 
-        if (status === 'rejected' || status === 'failure') {
+        // STATE: RECHAZADO
+        if (status === 'rejected' || status === 'failure' || mockStatus === 'rejected') {
             return (
-                <div className="text-center animate-fade-in">
-                    <div className="flex justify-center mb-6">
-                        <XCircle size={64} className="text-red-500" />
-                    </div>
-                    <h1 className="text-2xl font-bold mb-4 text-red-500">Pago Rechazado</h1>
-                    <p className="text-gray-600 dark:text-gray-400 mb-8">
-                        Hubo un problema con tu método de pago. No se ha realizado ningún cargo.
-                        Por favor intenta con otra tarjeta o medio de pago.
+                <div style={containerStyle}>
+                    {renderIcon('error')}
+                    <h3 style={titleStyle}>Pago Rechazado</h3>
+                    <p style={descriptionStyle}>
+                        Hubo un problema con tu método de pago y no se pudo completar la transacción.
                     </p>
-                    <button
+                    <Button
+                        variant="primary"
                         onClick={() => navigate('/pricing')}
-                        className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-xl transition-colors"
+                        fullWidth
+                        style={buttonStyle}
                     >
                         Volver a Intentar
-                    </button>
+                    </Button>
                 </div>
             );
         }
 
-        if (status === 'pending') {
+        // STATE: PENDIENTE
+        if (status === 'pending' || mockStatus === 'pending') {
             return (
-                <div className="text-center animate-fade-in">
-                    <div className="flex justify-center mb-6">
-                        <Clock size={64} className="text-yellow-500" />
-                    </div>
-                    <h1 className="text-2xl font-bold mb-4 text-yellow-500">Pago Pendiente</h1>
-                    <p className="text-gray-600 dark:text-gray-400 mb-8">
-                        Estamos procesando tu pago. Esto puede tomar unos minutos (especialmente con PSE o Efectivo).
-                        Te notificaremos por correo cuando se confirme.
+                <div style={containerStyle}>
+                    {renderIcon('pending')}
+                    <h3 style={titleStyle}>Pago Pendiente</h3>
+                    <p style={descriptionStyle}>
+                        Estamos procesando tu pago. Te notificaremos en cuanto se confirme la activación.
                     </p>
-                    <button
-                        onClick={() => navigate('/dashboard')}
-                        className="w-full bg-[#0066FF] hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-colors"
+                    <Button
+                        variant="primary"
+                        onClick={() => navigate('/simulador')}
+                        fullWidth
+                        style={buttonStyle}
                     >
-                        Ir al Dashboard
-                    </button>
+                        Ir al Simulador
+                    </Button>
                 </div>
             );
         }
 
-        // Success Case (Verified or implicit)
-        if (status === 'approved' || verificationResult === 'success') {
+        // STATE: ÉXITO
+        if (verificationResult === 'success' || mockStatus === 'approved') {
             return (
-                <div className="text-center animate-fade-in">
-                    <div className="flex justify-center mb-6">
-                        <CheckCircle size={64} className="text-green-500" />
-                    </div>
-                    <h1 className="text-2xl font-bold mb-4 text-green-500">¡Suscripción Activada!</h1>
-                    <p className="text-gray-600 dark:text-gray-400 mb-8">
-                        Gracias por tu compra. Tu plan ha sido actualizado correctamente.
-                        Ya tienes acceso a todas las funcionalidades PRO.
+                <div style={containerStyle}>
+                    {renderIcon('success')}
+                    <h3 style={titleStyle}>¡Suscripción Activada!</h3>
+                    <p style={descriptionStyle}>
+                        Tu plan ha sido actualizado correctamente. Ya puedes disfrutar de las ventajas PRO.
                     </p>
-                    <button
-                        onClick={() => navigate('/dashboard')}
-                        className="w-full bg-[#0066FF] hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                    <Button
+                        variant="primary"
+                        onClick={() => navigate('/simulador')}
+                        fullWidth
+                        style={{ ...buttonStyle, backgroundColor: 'var(--color-primary)' }}
                     >
-                        Ir al Dashboard <ArrowRight size={20} />
-                    </button>
+                        Ir al Simulador <ArrowRight size={20} style={{ marginLeft: '8px' }} />
+                    </Button>
                 </div>
             );
         }
 
-        // Catch all error (verification failed but status was approved)
-        if (verificationResult === 'error') {
+        // STATE: ERROR DE VERIFICACIÓN
+        if (verificationResult === 'error' || mockStatus === 'error') {
             return (
-                <div className="text-center animate-fade-in">
-                    <div className="flex justify-center mb-6">
-                        <AlertTriangle size={64} className="text-orange-500" />
-                    </div>
-                    <h1 className="text-2xl font-bold mb-4 text-orange-500">Atención Requerida</h1>
-                    <p className="text-gray-600 dark:text-gray-400 mb-8">
-                        Recibimos tu pago pero hubo un retraso activando el plan automáticamente.
-                        <br /><br />
-                        <strong>No te preocupes, tu dinero está seguro.</strong><br />
-                        Por favor contacta a soporte con el ID: <code>{paymentId || externalRef || 'N/A'}</code>
+                <div style={containerStyle}>
+                    {renderIcon('warning')}
+                    <h3 style={titleStyle}>Atención Requerida</h3>
+                    <p style={{ ...descriptionStyle, marginBottom: '20px' }}>
+                        Recibimos tu pago pero hubo un retraso activando el plan. Tu dinero está seguro.
                     </p>
-                    <button
-                        onClick={() => navigate('/dashboard')}
-                        className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-xl transition-colors"
+                    <div style={infoBoxStyle}>
+                        <p style={infoLabelStyle}>ID DE REFERENCIA</p>
+                        <code style={infoValueStyle}>{paymentId || externalRef || 'N/A'}</code>
+                    </div>
+                    <Button
+                        variant="secondary"
+                        onClick={() => navigate('/simulador')}
+                        fullWidth
+                        style={buttonStyle}
                     >
-                        Continuar al Dashboard
-                    </button>
+                        Continuar al Simulador
+                    </Button>
                 </div>
             );
         }
 
         return (
-            <div className="text-center animate-fade-in">
-                <Loader2 size={48} className="text-gray-400 animate-spin mx-auto mb-4" />
-                <p>Cargando información del pago...</p>
+            <div style={containerStyle}>
+                <Loader2 size={32} className="animate-spin text-[var(--text-tertiary)]" />
             </div>
         );
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-            <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-[var(--overlay-bg)] backdrop-blur-sm" />
+
+            {/* Modal Content */}
+            <div
+                style={{
+                    position: 'relative',
+                    width: '100%',
+                    maxWidth: '448px', // size="sm" equivalent
+                    backgroundColor: 'var(--card-bg)',
+                    borderRadius: '24px',
+                    boxShadow: 'var(--shadow-xl)',
+                    padding: '48px 32px 40px 32px', // Espaciado interno generoso
+                    animation: 'scaleIn 200ms ease-out',
+                    zIndex: 1
+                }}
+            >
                 {renderContent()}
             </div>
         </div>
     );
 }
+
+// Estilos Reutilizables (Extraídos de ConfirmDialog/Button)
+const containerStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center'
+};
+
+const titleStyle: React.CSSProperties = {
+    fontSize: '24px',
+    fontWeight: 800,
+    color: 'var(--text-primary)',
+    marginBottom: '16px',
+    letterSpacing: '-0.02em',
+    lineHeight: '1.2'
+};
+
+const descriptionStyle: React.CSSProperties = {
+    fontSize: '15px',
+    color: 'var(--text-secondary)',
+    lineHeight: '1.6',
+    maxWidth: '300px',
+    margin: '0 auto 40px auto'
+};
+
+const buttonStyle: React.CSSProperties = {
+    height: '52px',
+    borderRadius: '14px',
+    fontWeight: 700,
+    fontSize: '16px'
+};
+
+const infoBoxStyle: React.CSSProperties = {
+    width: '100%',
+    backgroundColor: 'var(--bg-secondary)',
+    padding: '12px 16px',
+    borderRadius: '12px',
+    border: '1px solid var(--border-color)',
+    marginBottom: '32px',
+    textAlign: 'left'
+};
+
+const infoLabelStyle: React.CSSProperties = {
+    fontSize: '10px',
+    fontWeight: 700,
+    color: 'var(--text-tertiary)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    marginBottom: '4px'
+};
+
+const infoValueStyle: React.CSSProperties = {
+    fontSize: '12px',
+    fontFamily: 'monospace',
+    color: 'var(--text-primary)',
+    wordBreak: 'break-all'
+};

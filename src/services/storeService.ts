@@ -44,7 +44,7 @@ export const storeService = {
                 accion: 'CREATE_STORE',
                 entidad: 'STORE',
                 entidad_id: data.id,
-                detalles: { nombre: data.nombre, pais: data.pais_id }
+                detalles: { nombre: data.nombre, pais: data.pais }
             });
         }
 
@@ -87,7 +87,7 @@ export const storeService = {
         // 1. Obtener datos antes de borrar para el log
         const { data: tienda } = await supabase
             .from('tiendas')
-            .select('nombre') // Solo pedimos nombre para mayor seguridad
+            .select('nombre, pais') // Solo pedimos nombre y país para log
             .eq('id', id)
             .single();
 
@@ -109,7 +109,7 @@ export const storeService = {
             detalles: { 
                 id, 
                 nombre: tienda?.nombre || 'Tienda eliminada (Nombre desconocido)',
-                pais: tienda?.pais_id 
+                pais: tienda?.pais 
             }
         });
     }

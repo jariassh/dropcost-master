@@ -357,6 +357,7 @@ export type Database = {
           features: Json | null
           limits: Json | null
           is_active: boolean
+          is_public: boolean
           created_at: string
           updated_at: string
         }
@@ -532,6 +533,7 @@ export type Database = {
           ultima_actividad: string | null
           updated_at: string
           wallet_saldo: number | null
+          session_token: string | null
         }
         Insert: {
           "2fa_habilitado"?: boolean | null

@@ -23,7 +23,7 @@ export const plansService = {
             throw error;
         }
 
-        return data as Plan[];
+        return data as unknown as Plan[];
     },
 
     async getPlanById(id: string): Promise<Plan | null> {
@@ -38,7 +38,7 @@ export const plansService = {
             return null;
         }
 
-        return data as Plan;
+        return data as unknown as Plan;
     },
 
     async getPlanBySlug(slug: string): Promise<Plan | null> {
@@ -53,7 +53,7 @@ export const plansService = {
             return null;
         }
 
-        return data as Plan;
+        return data as unknown as Plan;
     },
 
     async createPlan(plan: PlanInput): Promise<Plan> {
@@ -68,7 +68,7 @@ export const plansService = {
             throw error;
         }
 
-        return data as Plan;
+        return data as unknown as Plan;
     },
 
     async updatePlan(id: string, updates: Partial<PlanInput>): Promise<Plan> {
@@ -84,7 +84,7 @@ export const plansService = {
             throw error;
         }
 
-        return data as Plan;
+        return data as unknown as Plan;
     },
 
     async deletePlan(id: string): Promise<void> {
