@@ -266,7 +266,7 @@ export const UserList: React.FC = () => {
                                             <UserPlanBadge planId={user.plan_id || ''} plans={plans} />
                                         </td>
                                         <td style={{ padding: '16px 24px' }}>
-                                            <UserStatusBadge status={user.estado_suscripcion} />
+                                            <UserStatusBadge status={user.estado_suscripcion || 'pendiente'} planId={user.plan_id} />
                                         </td>
                                         <td style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                                             {formatLastActivity(user.ultima_actividad)}

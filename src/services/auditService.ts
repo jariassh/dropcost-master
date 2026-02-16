@@ -7,31 +7,19 @@ export const auditService = {
    */
   async recordLog(log: Omit<AuditLog, 'id' | 'created_at' | 'usuario' | 'usuario_id' | 'ip_address' | 'user_agent'> & { usuario_id?: string | null, ip_address?: string | null, user_agent?: string | null }) {
     try {
-      // 1. Si no viene usuario_id explícito, intentar obtenerlo de la sesión
-      let userId = log.usuario_id;
-      if (!userId) {
-        const { data: { session } } = await supabase.auth.getSession();
-        userId = session?.user?.id || null;
-      }
-
-      const { error } = await supabase
-        .from('audit_logs')
-        .insert([{
-          usuario_id: userId,
-          entidad: log.entidad,
-          entidad_id: log.entidad_id,
-          accion: log.accion,
-          detalles: log.detalles,
-          ip_address: log.ip_address,
-          user_agent: log.user_agent || navigator.userAgent // Fallback to current browser UA
-        }]);
+      // Usar la función RPC para que el servidor capture la IP y actualice ultima_actividad
+      const { error } = await supabase.rpc('record_user_activity' as any, {
+        p_accion: log.accion,
+        p_entidad: log.entidad,
+        p_entidad_id: log.entidad_id,
+        p_detalles: log.detalles || {}
+      });
 
       if (error) {
-          console.error('Supabase Audit Log Error:', error);
-          throw error;
+          console.error('Supabase Audit RPC Error:', error);
       };
     } catch (error) {
-      console.error('Error recording audit log:', error);
+      console.error('Error recording audit activity:', error);
     }
   },
 
