@@ -308,8 +308,14 @@ export async function getReferrerNameByCode(code: string): Promise<string | null
  */
 export async function getAdminReferralStats(): Promise<any> {
     try {
-        const { data: config } = await supabase.from('sistema_referidos_config').select('*').order('fecha_actualizacion', { ascending: false }).limit(1).maybeSingle();
-        const { count: totalReferred } = await supabase.from('referidos_usuarios').select('id', { count: 'exact', head: true });
+        const [configRes, usersRes, leaderStatsRes, withdrawalsRes] = await Promise.all([
+            supabase.from('sistema_referidos_config').select('*').order('fecha_actualizacion', { ascending: false }).limit(1).maybeSingle(),
+            supabase.from('referidos_usuarios').select('id', { count: 'exact', head: true }),
+            supabase.from('referidos_lideres').select('total_comisiones_generadas'),
+            supabase.from('wallet_transactions' as any).select('amount').eq('type', 'withdrawal').eq('status', 'completed')
+        ]);
+
+        const totalReferred = usersRes.count || 0;
         
         // Contamos líderes reales (por rol)
         const { count: totalLeaders } = await supabase
@@ -317,19 +323,19 @@ export async function getAdminReferralStats(): Promise<any> {
             .select('id', { count: 'exact', head: true })
             .eq('rol', 'lider');
 
-        // Sumamos comisiones de todos los que tengan entrada en referidos_lideres
-        const { data: stats } = await supabase
-            .from('referidos_lideres')
-            .select('total_comisiones_generadas');
-
-        const totalEarned = (stats || []).reduce((acc, curr) => acc + (curr.total_comisiones_generadas || 0), 0);
+        // Dinero REAL ya pagado (retiros completados)
+        const totalPaid = (withdrawalsRes.data as any[] || []).reduce((acc: number, curr: any) => acc + (Number(curr.amount) || 0), 0);
+        
+        // Dinero que los usuarios tienen en su billetera (Deuda de DropCost)
+        const { data: wallets } = await supabase.from('users').select('wallet_saldo').gt('wallet_saldo', 0);
+        const totalPending = (wallets as any[] || []).reduce((acc: number, curr: any) => acc + (Number(curr.wallet_saldo) || 0), 0);
 
         return {
-            totalReferred: totalReferred || 0,
+            totalReferred,
             totalLeaders: totalLeaders || 0,
-            totalCommissionsPaid: totalEarned * 0.8, // Estimación
-            totalCommissionsPending: totalEarned * 0.2,
-            config
+            totalCommissionsPaid: totalPaid,
+            totalCommissionsPending: totalPending,
+            config: configRes.data
         };
     } catch (err) {
         console.error('Error fetching admin referral stats:', err);
