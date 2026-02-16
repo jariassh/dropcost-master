@@ -205,7 +205,7 @@ serve(async (req) => {
           failure: `${returnUrl}/payment/status?status=rejected`,
           pending: `${returnUrl}/payment/status?status=pending`,
         },
-        // auto_return: "approved", // Desactivado temporalmente para evitar error invalid_auto_return en localhost
+        auto_return: "approved", 
         external_reference: JSON.stringify({ userId, planId, period }),
         notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago?action=webhook`,
       };

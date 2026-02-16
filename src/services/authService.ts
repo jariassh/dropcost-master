@@ -176,11 +176,11 @@ export async function getCurrentUser(): Promise<User | null> {
         emailVerificado: !!user.email_confirmed_at,
         twoFactorEnabled: profile?.['2fa_habilitado'] || false,
         fechaRegistro: user.created_at,
-        codigoReferido: profile?.codigo_referido_personal,
+        codigoReferido: profile?.codigo_referido_personal || undefined,
         planId: profile?.plan_id || 'plan_free',
         plan: planDetails ? {
             name: planDetails.name,
-            limits: planDetails.limits
+            limits: planDetails.limits as any
         } : undefined
     };
 }

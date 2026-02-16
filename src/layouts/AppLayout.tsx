@@ -511,7 +511,7 @@ function SidebarNavItem({
 
     if (disabled) {
         return (
-            <Tooltip content={tooltip || "Próximamente disponible"} position="right" delay={100}>
+            <Tooltip content={tooltip || "Próximamente disponible"} position="right" delay={50} offset={-14}>
                 <div
                     onMouseEnter={() => setHovered(true)}
                     onMouseLeave={() => setHovered(false)}

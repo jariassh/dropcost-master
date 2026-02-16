@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface TooltipProps {
     children: React.ReactNode;
@@ -6,6 +7,7 @@ interface TooltipProps {
     position?: 'top' | 'right' | 'bottom' | 'left';
     delay?: number;
     disabled?: boolean;
+    offset?: number;
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({
@@ -14,73 +16,121 @@ export const Tooltip: React.FC<TooltipProps> = ({
     position = 'right',
     delay = 200,
     disabled = false,
+    offset = 6,
 }) => {
     const [isVisible, setIsVisible] = useState(false);
-    const [timeoutId, setTimeoutId] = useState<ReturnType<typeof setTimeout> | null>(null);
+    const [coords, setCoords] = useState({ top: 0, left: 0 });
+    const triggerRef = useRef<HTMLDivElement>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    if (disabled) return <>{children}</>;
+    const updatePosition = () => {
+        if (triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect();
+            let top = 0;
+            let left = 0;
 
-    const showTooltip = () => {
-        const id = setTimeout(() => {
-            setIsVisible(true);
-        }, delay);
-        setTimeoutId(id);
+            // Ajuste de distancia
+            const gap = offset;
+
+            switch (position) {
+                case 'top':
+                    top = rect.top - gap; // Se ajustará con transform translateY(-100%)
+                    left = rect.left + rect.width / 2;
+                    break;
+                case 'right':
+                    top = rect.top + rect.height / 2;
+                    left = rect.right + gap;
+                    break;
+                case 'bottom':
+                    top = rect.bottom + gap;
+                    left = rect.left + rect.width / 2;
+                    break;
+                case 'left':
+                    top = rect.top + rect.height / 2;
+                    left = rect.left - gap; // Se ajustará con transform translateX(-100%)
+                    break;
+            }
+
+            setCoords({ top, left });
+        }
     };
 
-    const hideTooltip = () => {
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-            setTimeoutId(null);
+    const handleMouseEnter = () => {
+        if (disabled) return;
+        updatePosition();
+        timeoutRef.current = setTimeout(() => {
+            setIsVisible(true);
+        }, delay);
+    };
+
+    const handleMouseLeave = () => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
         }
         setIsVisible(false);
     };
 
-    const getPositionStyles = () => {
-        switch (position) {
-            case 'top':
-                return { bottom: '100%', left: '50%', transform: 'translateX(-50%) translateY(-8px)' };
-            case 'right':
-                return { left: '100%', top: '50%', transform: 'translateY(-50%) translateX(8px)' };
-            case 'bottom':
-                return { top: '100%', left: '50%', transform: 'translateX(-50%) translateY(8px)' };
-            case 'left':
-                return { right: '100%', top: '50%', transform: 'translateY(-50%) translateX(-8px)' };
-            default:
-                return { left: '100%', top: '50%', transform: 'translateY(-50%) translateX(8px)' };
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
+    }, []);
+
+    // Actualizar posición al hacer scroll o resize si está visible
+    useEffect(() => {
+        if (isVisible) {
+            window.addEventListener('scroll', updatePosition, true);
+            window.addEventListener('resize', updatePosition);
         }
-    };
+        return () => {
+            window.removeEventListener('scroll', updatePosition, true);
+            window.removeEventListener('resize', updatePosition);
+        };
+    }, [isVisible]);
+
 
     return (
-        <div
-            style={{ position: 'relative', display: 'inline-block', width: '100%' }}
-            onMouseEnter={showTooltip}
-            onMouseLeave={hideTooltip}
-        >
-            {children}
-            {isVisible && (
+        <>
+            <div
+                ref={triggerRef}
+                style={{ position: 'relative', display: 'inline-block', width: '100%' }}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+            >
+                {children}
+            </div>
+            {isVisible && createPortal(
                 <div
                     style={{
-                        position: 'absolute',
-                        zIndex: 2000,
+                        position: 'fixed',
+                        top: coords.top,
+                        left: coords.left,
+                        zIndex: 9999, // Elevación máxima para estar sobre todo
+                        transform:
+                            position === 'top' ? 'translate(-50%, -100%)' :
+                                position === 'right' ? 'translateY(-50%)' :
+                                    position === 'bottom' ? 'translate(-50%, 0)' :
+                                        'translate(-100%, -50%)',
                         backgroundColor: '#1F2937',
                         color: '#FFFFFF',
-                        padding: '10px 14px',
-                        borderRadius: '10px',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
                         fontSize: '12px',
-                        fontWeight: 500,
-                        lineHeight: '1.5',
-                        width: 'max-content',
-                        maxWidth: '250px',
+                        fontWeight: 600,
+                        lineHeight: '1.4',
+                        maxWidth: '220px',
                         whiteSpace: 'normal',
-                        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3)',
+                        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5), 0 4px 10px rgba(0, 0, 0, 0.3)', // Elevación fuerte
                         border: '1px solid rgba(255, 255, 255, 0.1)',
                         pointerEvents: 'none',
                         textAlign: 'center',
-                        ...getPositionStyles(),
+                        animation: 'fadeIn 150ms ease-out',
                     }}
                 >
                     {content}
-                    {/* Arrow */}
+
+                    {/* Flecha (Arrow) - Usando bordes CSS */}
                     <div
                         style={{
                             position: 'absolute',
@@ -88,37 +138,30 @@ export const Tooltip: React.FC<TooltipProps> = ({
                             height: '0',
                             borderStyle: 'solid',
                             ...(position === 'top' && {
-                                bottom: '-4px',
-                                left: '50%',
-                                marginLeft: '-4px',
-                                borderWidth: '4px 4px 0 4px',
+                                bottom: '-5px', left: '50%', marginLeft: '-5px',
+                                borderWidth: '5px 5px 0 5px',
                                 borderColor: '#1F2937 transparent transparent transparent',
                             }),
                             ...(position === 'right' && {
-                                left: '-4px',
-                                top: '50%',
-                                marginTop: '-4px',
-                                borderWidth: '4px 4px 4px 0',
+                                left: '-5px', top: '50%', marginTop: '-5px',
+                                borderWidth: '5px 5px 5px 0',
                                 borderColor: 'transparent #1F2937 transparent transparent',
                             }),
                             ...(position === 'bottom' && {
-                                top: '-4px',
-                                left: '50%',
-                                marginLeft: '-4px',
-                                borderWidth: '0 4px 4px 4px',
+                                top: '-5px', left: '50%', marginLeft: '-5px',
+                                borderWidth: '0 5px 5px 5px',
                                 borderColor: 'transparent transparent #1F2937 transparent',
                             }),
                             ...(position === 'left' && {
-                                right: '-4px',
-                                top: '50%',
-                                marginTop: '-4px',
-                                borderWidth: '4px 0 4px 4px',
+                                right: '-5px', top: '50%', marginTop: '-5px',
+                                borderWidth: '5px 0 5px 5px',
                                 borderColor: 'transparent transparent transparent #1F2937',
                             }),
                         }}
                     />
-                </div>
+                </div>,
+                document.body
             )}
-        </div>
+        </>
     );
 };
