@@ -36,11 +36,11 @@ serve(async (req) => {
     if (!resendKey) throw new Error('RESEND_API_KEY no configurada')
 
     /**
-     * Función interna para enviar váa email-service (evitamos fetch externo si podemos, 
+     * Función interna para enviar vía email-service (evitamos fetch externo si podemos, 
      * pero para mantener desacoplamiento usaremos la misma lógica de renderizado)
      */
     const sendEmail = async (slug: string, to: string, vars: any) => {
-        // En lugar de hacer un fetch a sá mismo (re-entrada), usamos la base directamente
+        // En lugar de hacer un fetch a sí mismo (re-entrada), usamos la base directamente
         const { data: template } = await adminClient
             .from('email_templates')
             .select('*')

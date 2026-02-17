@@ -86,7 +86,7 @@ export function AdminEmailTemplatesPage() {
             [field]: newText
         });
 
-        // Cerrar men├║s
+        // Cerrar menús
         setShowVariablesSubject(false);
         setShowVariablesBody(false);
 
@@ -104,7 +104,7 @@ export function AdminEmailTemplatesPage() {
             { name: 'apellidos', label: 'Apellidos del Usuario' },
             { name: 'email', label: 'Email Principal' },
             { name: 'telefono', label: 'Teléfono de Contacto' },
-            { name: 'pais', label: 'Paás de Residencia' },
+            { name: 'pais', label: 'País de Residencia' },
             { name: 'wallet_saldo', label: 'Saldo en Wallet' },
             { name: 'codigo_referido_personal', label: 'Su Código de Invitación' },
             { name: 'fecha_registro', label: 'Fecha de Registro' }
@@ -117,17 +117,17 @@ export function AdminEmailTemplatesPage() {
         ],
         'Tienda': [
             { name: 'tienda_nombre', label: 'Nombre de la Tienda' },
-            { name: 'tienda_pais', label: 'Paás de la Tienda' },
+            { name: 'tienda_pais', label: 'País de la Tienda' },
             { name: 'tienda_moneda', label: 'Moneda (COP, USD, etc)' }
         ],
         'Financiero': [
-            { name: 'producto_nombre', label: 'Nombre del Producto (├Ültimo)' },
+            { name: 'producto_nombre', label: 'Nombre del Producto (Último)' },
             { name: 'producto_sku', label: 'SKU del Producto' },
             { name: 'producto_precio_sugerido', label: 'Precio Sugerido' },
             { name: 'producto_utilidad_neta', label: 'Utilidad Neta Estimada' }
         ],
         'Referidos': [
-            { name: 'lider_nombre', label: 'Nombre de su Láder' },
+            { name: 'lider_nombre', label: 'Nombre de su Líder' },
             { name: 'total_referidos', label: 'Total de Invitados' },
             { name: 'total_comisiones', label: 'Comisiones Totales' }
         ],
@@ -153,7 +153,7 @@ export function AdminEmailTemplatesPage() {
                 className="absolute right-0 top-full mt-2 w-80 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
                 style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
             >
-                {/* Buscador Din├ímico */}
+                {/* Buscador Dinámico */}
                 <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
                     <div className="relative">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
@@ -268,7 +268,7 @@ export function AdminEmailTemplatesPage() {
 
             setTemplates(prev => prev.map(t => t.id === selectedTemplate.id ? selectedTemplate : t));
 
-            toast.success('┬íGuardado!', 'La plantilla se ha actualizado correctamente.');
+            toast.success('¡Guardado!', 'La plantilla se ha actualizado correctamente.');
         } catch (error) {
             toast.error('Error', 'No se pudo guardar la plantilla.');
         } finally {
@@ -290,7 +290,7 @@ export function AdminEmailTemplatesPage() {
             setTemplates([...templates, data]);
             setIsCreateModalOpen(false);
             setNewItem({ slug: '', description: '', subject: '' });
-            toast.success('┬íCreado!', 'La plantilla se ha creado correctamente.');
+            toast.success('¡Creado!', 'La plantilla se ha creado correctamente.');
             setSelectedTemplate(data);
         } catch (error) {
             toast.error('Error', 'No se pudo crear la plantilla.');
@@ -315,7 +315,7 @@ export function AdminEmailTemplatesPage() {
             setTemplates([...templates, data]);
             setIsFolderModalOpen(false);
             setNewItem({ slug: '', description: '', subject: '' });
-            toast.success('┬íCreado!', 'La carpeta se ha creado correctamente.');
+            toast.success('¡Creado!', 'La carpeta se ha creado correctamente.');
         } catch (error) {
             toast.error('Error', 'No se pudo crear la carpeta.');
         } finally {
@@ -745,7 +745,7 @@ export function AdminEmailTemplatesPage() {
 
                         {/* Info y Variables Side */}
                         <div className="xl:col-span-4 flex flex-col gap-6">
-                            <Card title="Guáa del Desarrollador">
+                            <Card title="Guía del Desarrollador">
                                 <div className="flex flex-col gap-8 p-2">
                                     <div className="space-y-3">
                                         <h5 className="text-[11px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-2">
@@ -789,7 +789,7 @@ export function AdminEmailTemplatesPage() {
                                             style={{ padding: '24px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '16px', border: '1px dashed var(--border-color)' }}
                                         >
                                             <p className="text-[12px] text-[var(--text-tertiary)] leading-normal italic">
-                                                Estas variables son fundamentales para que este email funcione correctamente. El autocompletador incluye adem├ís campos generales de usuario y tienda.
+                                                Estas variables son fundamentales para que este email funcione correctamente. El autocompletador incluye además campos generales de usuario y tienda.
                                             </p>
                                         </div>
                                     </div>
@@ -816,7 +816,7 @@ export function AdminEmailTemplatesPage() {
                         </div>
                     </div>
 
-                    {/* SECCIÔN VISTA PREVIA: Siempre visible y Responsiva */}
+                    {/* SECCIÓN VISTA PREVIA: Siempre visible y Responsiva */}
                     <div className="flex flex-col gap-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -954,20 +954,20 @@ export function AdminEmailTemplatesPage() {
             >
                 <div className="space-y-5">
                     <Input
-                        label="Nombre ├Ünico (slug)"
+                        label="Nombre Único (slug)"
                         placeholder="ej: BIENVENIDA_CLIENTE"
                         value={newItem.slug}
                         onChange={(e) => setNewItem({ ...newItem, slug: e.target.value })}
                     />
                     <Input
                         label="Asunto del Correo"
-                        placeholder="ej: ┬íBienvenido a nuestra tienda!"
+                        placeholder="ej: ¡Bienvenido a nuestra tienda!"
                         value={newItem.subject}
                         onChange={(e) => setNewItem({ ...newItem, subject: e.target.value })}
                     />
                     <Input
                         label="Descripción"
-                        placeholder="┬┐Para qué sirve esta plantilla?"
+                        placeholder="¿Para qué sirve esta plantilla?"
                         value={newItem.description}
                         onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
                     />

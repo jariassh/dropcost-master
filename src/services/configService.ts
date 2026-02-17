@@ -79,7 +79,7 @@ const CACHE_KEY = 'dc_global_config_cache';
 
 export const configService = {
     /**
-     * Obtiene la configuración global actual (con caché local para velocidad instant├ínea)
+     * Obtiene la configuración global actual (con caché local para velocidad instantánea)
      */
     async getConfig(): Promise<GlobalConfig> {
         // 1. Intentar cargar desde caché para respuesta inmediata

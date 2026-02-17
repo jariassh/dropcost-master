@@ -84,7 +84,7 @@ export function AppRouter() {
             >
                 <Route path="/" element={<Navigate to="/simulador" replace />} />
 
-                {/* Rutas de Planes (P├║blicas dentro de la App) */}
+                {/* Rutas de Planes (Públicas dentro de la App) */}
                 <Route path="/pricing" element={<PricingPage />} />
 
                 {/* Rutas con Paywall (Requieren suscripción activa) */}

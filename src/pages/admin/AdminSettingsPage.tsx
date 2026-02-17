@@ -81,10 +81,10 @@ export function AdminSettingsPage() {
 
             const updated = await configService.updateConfig(payload);
 
-            // Si llegamos aquá, la DB aceptó el cambio
+            // Si llegamos aquí, la DB aceptó el cambio
             setConfig(updated);
             await applyConfig(updated);
-            toast.success('┬íGuardado!', 'La configuración global se ha actualizado correctamente.');
+            toast.success('¡Guardado!', 'La configuración global se ha actualizado correctamente.');
         } catch (error: any) {
             console.error('Save error:', error);
             toast.error('Error de Guardado', error.message || 'Hubo un problema al guardar los cambios.');
@@ -94,7 +94,7 @@ export function AdminSettingsPage() {
     }
 
     async function handleReset() {
-        if (!window.confirm('┬┐Est├ís seguro de que deseas restaurar los valores por defecto?')) return;
+        if (!window.confirm('¿Estás seguro de que deseas restaurar los valores por defecto?')) return;
         try {
             setIsSaving(true);
             await configService.resetToDefaults();
@@ -220,7 +220,7 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                 <Card title="Meta Contenido">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <Input
-                            label="Tátulo Meta"
+                            label="Título Meta"
                             value={config.meta_title}
                             onChange={(e) => setConfig((prev: any) => ({ ...prev, meta_title: e.target.value }))}
                             placeholder="DropCost Master..."
@@ -274,7 +274,7 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                 </Card>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <Card title="Vista Previa de B├║squeda">
+                    <Card title="Vista Previa de Búsqueda">
                         <div
                             style={{
                                 padding: '32px',
@@ -286,7 +286,7 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                             className="shadow-sm"
                         >
                             <div className={`text-lg font-medium mb-2 truncate ${isDark ? 'text-[#8ab4f8]' : 'text-[#1a0dab]'}`}>
-                                {config.meta_title || 'Tátulo de ejemplo'}
+                                {config.meta_title || 'Título de ejemplo'}
                             </div>
                             <div className={`text-xs mb-2 truncate ${isDark ? 'text-[#34a853]' : 'text-[#006621]'}`}>
                                 {config.site_url || 'https://dropcostmaster.com'}
@@ -361,9 +361,9 @@ function SectionBranding({ config, setConfig }: any) {
             ]
         },
         {
-            title: 'Sem├ínticos',
+            title: 'Semánticos',
             colors: [
-                { key: 'color_success', label: 'Ëxito' },
+                { key: 'color_success', label: 'Éxito' },
                 { key: 'color_warning', label: 'Aviso' },
                 { key: 'color_error', label: 'Error' },
             ]
@@ -380,8 +380,8 @@ function SectionBranding({ config, setConfig }: any) {
         {
             title: 'Navegación',
             colors: [
-                { key: 'color_sidebar_bg', label: 'Men├║ Lat.' },
-                { key: 'color_sidebar_text', label: 'Texto Men├║' },
+                { key: 'color_sidebar_bg', label: 'Menú Lat.' },
+                { key: 'color_sidebar_text', label: 'Texto Menú' },
             ]
         }
     ];
@@ -431,7 +431,7 @@ function SectionBranding({ config, setConfig }: any) {
                         <div className="flex flex-col gap-3">
                             <span className="text-[10px] uppercase font-bold text-slate-400 text-center tracking-widest">Fondo Claro</span>
                             <div className="p-6 bg-white rounded-xl border border-slate-200 flex items-center justify-center min-h-[120px] shadow-sm">
-                                {config.logo_principal_url ? <img src={config.logo_principal_url} alt="Light" className="max-h-12 object-contain" /> : <div className="text-slate-200 uppercase font-black italic">Logo Vacáo</div>}
+                                {config.logo_principal_url ? <img src={config.logo_principal_url} alt="Light" className="max-h-12 object-contain" /> : <div className="text-slate-200 uppercase font-black italic">Logo Vacío</div>}
                             </div>
                         </div>
                         <div className="flex flex-col gap-3">
@@ -440,7 +440,7 @@ function SectionBranding({ config, setConfig }: any) {
                                 {config.logo_variante_url ? (
                                     <img src={config.logo_variante_url} alt="Dark" className="max-h-12 object-contain" />
                                 ) : (
-                                    <div className="text-slate-700 uppercase font-black italic">Logo Vacáo</div>
+                                    <div className="text-slate-700 uppercase font-black italic">Logo Vacío</div>
                                 )}
                             </div>
                         </div>
@@ -509,7 +509,7 @@ function SectionBranding({ config, setConfig }: any) {
                     >
                         <AlertCircle size={18} style={{ flexShrink: 0 }} />
                         <p style={{ fontSize: '12px', fontWeight: 600, margin: 0, lineHeight: '1.5' }}>
-                            Los colores se inyectan din├ímicamente en el tema de la plataforma.
+                            Los colores se inyectan dinámicamente en el tema de la plataforma.
                         </p>
                     </div>
                 </div>
@@ -523,7 +523,7 @@ function SectionTracking({ config, setConfig }: any) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <Card title="Inyección en HEAD">
                 <div className="space-y-4">
-                    <p className="text-sm text-[var(--text-secondary)]">Ideal para Páxeles, Tag Manager y Analytics.</p>
+                    <p className="text-sm text-[var(--text-secondary)]">Ideal para Píxeles, Tag Manager y Analytics.</p>
                     <textarea
                         value={config.codigo_head}
                         onChange={(e) => setConfig((prev: any) => ({ ...prev, codigo_head: e.target.value }))}
@@ -593,7 +593,7 @@ function SectionInfo({ config, setConfig }: any) {
                             onChange={(e) => setConfig((prev: any) => ({ ...prev, email_contacto: e.target.value }))}
                         />
                         <Input
-                            label="Lánea Teléfono/Whatsapp"
+                            label="Línea Teléfono/Whatsapp"
                             value={config.telefono}
                             onChange={(e) => setConfig((prev: any) => ({ ...prev, telefono: e.target.value }))}
                         />
@@ -612,7 +612,7 @@ function SectionInfo({ config, setConfig }: any) {
             <Card title="Recursos Legales">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <Input label="Términos y Condiciones" value={config.terminos_condiciones_url} onChange={(e) => setConfig((prev: any) => ({ ...prev, terminos_condiciones_url: e.target.value }))} placeholder="https://..." />
-                    <Input label="Polática de Privacidad" value={config.politica_privacidad_url} onChange={(e) => setConfig((prev: any) => ({ ...prev, politica_privacidad_url: e.target.value }))} placeholder="https://..." />
+                    <Input label="Política de Privacidad" value={config.politica_privacidad_url} onChange={(e) => setConfig((prev: any) => ({ ...prev, politica_privacidad_url: e.target.value }))} placeholder="https://..." />
                 </div>
             </Card>
         </div>
@@ -642,7 +642,7 @@ function AssetUploader({
 
         // Validar tamaño (ej. 2MB)
         if (file.size > 2 * 1024 * 1024) {
-            toast.error('Archivo muy grande', 'El tamaño m├íximo permitido es 2MB.');
+            toast.error('Archivo muy grande', 'El tamaño máximo permitido es 2MB.');
             if (fileInputRef.current) fileInputRef.current.value = '';
             return;
         }
@@ -651,10 +651,10 @@ function AssetUploader({
             setIsUploading(true);
             const url = await storageService.uploadBrandingFile(file, path);
             onUpload(url);
-            toast.success('┬íCompletado!', 'El archivo se ha subido correctamente.');
+            toast.success('¡Completado!', 'El archivo se ha subido correctamente.');
         } catch (error: any) {
             console.error('Upload error:', error);
-            toast.error('Error de subida', 'No se pudo subir el archivo. Aseg├║rate de que el bucket "branding" existe y es p├║blico en Supabase.');
+            toast.error('Error de subida', 'No se pudo subir el archivo. Asegúrate de que el bucket "branding" existe y es público en Supabase.');
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
