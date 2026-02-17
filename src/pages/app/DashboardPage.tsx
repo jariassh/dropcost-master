@@ -6,10 +6,10 @@ import { Card } from '@/components/common';
 import { BarChart3, TrendingUp, ShoppingBag, DollarSign, TrendingDown } from 'lucide-react';
 
 const kpiCards = [
-    { title: 'Ventas Totales', value: '$12,450', change: '+12.5%', positive: true, icon: DollarSign, color: '#0066FF' },
-    { title: 'CPA Promedio', value: '$3.80', change: '-8.2%', positive: true, icon: TrendingDown, color: '#10B981' },
-    { title: 'Productos Activos', value: '24', change: '+3', positive: true, icon: ShoppingBag, color: '#F59E0B' },
-    { title: 'Efectividad', value: '68%', change: '+5.1%', positive: true, icon: TrendingUp, color: '#8B5CF6' },
+    { title: 'Ventas Totales', value: '$0', change: '0%', positive: true, icon: DollarSign, color: '#0066FF' },
+    { title: 'CPA Promedio', value: '$0.00', change: '0%', positive: true, icon: TrendingDown, color: '#10B981' },
+    { title: 'Productos Activos', value: '0', change: '0', positive: true, icon: ShoppingBag, color: '#F59E0B' },
+    { title: 'Efectividad', value: '0%', change: '0%', positive: true, icon: TrendingUp, color: '#8B5CF6' },
 ];
 
 export function DashboardPage() {

@@ -8,11 +8,37 @@ export interface User {
     telefono?: string;
     pais?: string;
     planId?: string;
-    estadoSuscripcion?: 'activa' | 'cancelada' | 'suspendida';
+    plan?: {
+        name: string;
+        limits: {
+            stores: number;
+            costeos_limit?: number;
+            offers_limit?: number;
+            can_duplicate_costeos?: boolean;
+            can_delete_costeos?: boolean;
+            can_delete_offers?: boolean;
+            access_wallet?: boolean;
+            access_referrals?: boolean;
+            can_delete_stores?: boolean;
+            view_activity_history?: boolean;
+            [key: string]: number | boolean | undefined;
+        };
+    };
+    estadoSuscripcion?: 'activa' | 'cancelada' | 'suspendida' | 'trial' | 'inactiva';
     emailVerificado: boolean;
     twoFactorEnabled: boolean;
+    rol?: 'cliente' | 'lider' | 'admin' | 'superadmin';
     fechaRegistro: string;
     ultimaActividad?: string;
+    codigoReferido?: string;
+    wallet_saldo?: number;
+    bank_info?: {
+        banco_nombre: string;
+        cuenta_numero: string;
+        cuenta_tipo: string;
+        documento_id: string;
+        titular_nombre: string;
+    };
 }
 
 export interface LoginCredentials {
@@ -29,6 +55,7 @@ export interface RegisterData {
     apellidos: string;
     telefono?: string;
     pais: string;
+    referredBy?: string; // ID o Código del usuario que refiere
     acceptTerms: boolean;
 }
 
@@ -68,14 +95,23 @@ export interface AuthState {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
+    isInitializing: boolean;
     requiresOTP: boolean;
     sessionId: string | null;
     error: string | null;
-    login: (credentials: LoginCredentials) => Promise<void>;
-    register: (data: RegisterData) => Promise<void>;
+    login: (credentials: LoginCredentials) => Promise<boolean>;
+    register: (data: RegisterData) => Promise<boolean>;
     verifyEmail: (data: VerifyEmailData) => Promise<void>;
     verify2FA: (data: TwoFactorData) => Promise<void>;
-    requestPasswordReset: (data: PasswordResetRequest) => Promise<void>;
-    logout: () => void;
+    requestPasswordReset: (data: PasswordResetRequest) => Promise<boolean>;
+    updatePassword: (newPassword: string) => Promise<boolean>;
+    updateEmail: (newEmail: string) => Promise<boolean>;
+    updateProfile: (userData: Partial<User>) => Promise<boolean>;
+    request2FA: () => Promise<{ success: boolean; error?: string }>;
+    resend2FACode: () => Promise<boolean>;
+    confirm2FA: (code: string) => Promise<boolean>;
+    disable2FA: () => Promise<boolean>;
+    logout: () => Promise<void>;
+    initialize: () => Promise<void>;
     clearError: () => void;
 }

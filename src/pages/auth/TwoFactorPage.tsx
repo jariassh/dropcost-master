@@ -2,7 +2,7 @@
  * Página de verificación 2FA — Código de 6 dígitos.
  * Ícono de escudo, enlace a código de recuperación.
  */
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ShieldCheck, ArrowLeft } from 'lucide-react';
 import { Button, Alert } from '@/components/common';
@@ -28,7 +28,21 @@ export function TwoFactorPage() {
     const navigate = useNavigate();
     const location = useLocation();
     const sessionId = (location.state as { sessionId?: string })?.sessionId || '';
-    const { verify2FA, isLoading, error, clearError, isAuthenticated } = useAuthStore();
+    const { verify2FA, isLoading, error, clearError, isAuthenticated, resend2FACode } = useAuthStore();
+    const [cooldown, setCooldown] = useState(0);
+
+    useEffect(() => {
+        if (cooldown > 0) {
+            const timer = setTimeout(() => setCooldown(c => c - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [cooldown]);
+
+    const handleResend = async () => {
+        if (cooldown > 0 || isLoading) return;
+        setCooldown(60);
+        await resend2FACode();
+    };
 
     function handleChange(index: number, value: string) {
         if (!/^\d*$/.test(value)) return;
@@ -36,6 +50,11 @@ export function TwoFactorPage() {
         newCode[index] = value.slice(-1);
         setCode(newCode);
         if (value && index < 5) inputRefs.current[index + 1]?.focus();
+
+        // Auto-submit when all 6 digits are filled
+        if (newCode.every((d) => d !== '')) {
+            setTimeout(() => autoSubmit(newCode), 80);
+        }
     }
 
     function handleKeyDown(index: number, e: React.KeyboardEvent) {
@@ -51,6 +70,19 @@ export function TwoFactorPage() {
         for (let i = 0; i < pasted.length; i++) newCode[i] = pasted[i];
         setCode(newCode);
         inputRefs.current[Math.min(pasted.length, 5)]?.focus();
+
+        // Auto-submit when pasted code fills all 6 digits
+        if (newCode.every((d) => d !== '')) {
+            setTimeout(() => autoSubmit(newCode), 80);
+        }
+    }
+
+    /** Fires verification automatically once all digits are present */
+    async function autoSubmit(digits: string[]) {
+        const fullCode = digits.join('');
+        if (fullCode.length !== 6 || isLoading) return;
+        clearError();
+        await verify2FA({ code: fullCode, sessionId });
     }
 
     const handleSubmit = useCallback(async () => {
@@ -132,14 +164,31 @@ export function TwoFactorPage() {
                 Verificar
             </Button>
 
-            <div style={{ textAlign: 'center', marginTop: '24px' }}>
+            <div style={{ textAlign: 'center', marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <button
+                    onClick={handleResend}
+                    disabled={cooldown > 0 || isLoading}
                     style={{
-                        fontSize: '14px', color: 'var(--color-primary)', fontWeight: 500,
-                        background: 'none', border: 'none', cursor: 'pointer',
+                        fontSize: '14px',
+                        color: cooldown > 0 ? 'var(--text-tertiary)' : 'var(--color-primary)',
+                        fontWeight: 600,
+                        background: 'none',
+                        border: 'none',
+                        cursor: cooldown > 0 ? 'default' : 'pointer',
+                        transition: 'color 0.2s'
                     }}
                 >
-                    ¿Perdiste tu dispositivo? Usa un código de recuperación
+                    {cooldown > 0 ? `Reenviar código en ${cooldown}s` : '¿No recibiste el código? Reenviar'}
+                </button>
+
+                <button
+                    style={{
+                        fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 500,
+                        background: 'none', border: 'none', cursor: 'pointer',
+                    }}
+                    onClick={() => alert("Funcionalidad de recuperación en desarrollo. Contáctanos.")}
+                >
+                    ¿Perdiste tu dispositivo?
                 </button>
             </div>
         </div>

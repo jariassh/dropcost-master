@@ -1,0 +1,93 @@
+
+import { supabase } from '@/lib/supabase';
+
+export const paymentService = {
+    /**
+     * Creates a checkout preference in Mercado Pago via Edge Function
+     */
+    async createCheckoutSession(planId: string, period: 'monthly' | 'semiannual') {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User not authenticated');
+
+        // Use a test email if we're testing (or user's email)
+        // This is a temporary fix to allow testing even if user uses same email as MP account
+        const testEmail = `test_user_dropcost_${Date.now()}@testuser.com`;
+
+        const payload = { 
+            planId, 
+            period, 
+            userId: user.id, 
+            email: testEmail, // Sending test email to avoid "buyer = seller" error
+            returnUrl: window.location.origin 
+        };
+
+        console.log('Sending checkout payload:', payload);
+
+        // Direct fetch to avoid 401 auth issues
+        const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mercadopago?action=create_preference`;
+        
+        const response = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Function call failed:', response.status, errorText);
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+            console.error('Payment Service Error:', data);
+            throw new Error(data.error);
+        }
+
+        console.log('Payment Service Response:', data);
+
+        if (!data.init_point) {
+            console.error('Missing init_point in response:', data);
+            throw new Error('No se recibió el link de pago de Mercado Pago.');
+        }
+
+        return data.init_point;
+    },
+
+    /**
+     * Checks the status of a payment manually via Edge Function
+     * This acts as a fallback if webhooks fail or are delayed.
+     */
+    async checkPaymentStatus(paymentId: string) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User not authenticated');
+
+        console.log('Checking payment status manually:', paymentId);
+
+        const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mercadopago?action=check_payment`;
+        
+        const response = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({ paymentId })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Check Payment failed:', response.status, errorText);
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        const data = await response.json();
+        return data;
+    }
+};

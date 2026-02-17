@@ -2,6 +2,7 @@
  * Página de inicio de sesión.
  * Formulario con email + contraseña, validación Zod, social login.
  */
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -28,17 +29,40 @@ export function LoginPage() {
     const navigate = useNavigate();
     const { login, isLoading, error, requiresOTP, sessionId, clearError } = useAuthStore();
 
+    useEffect(() => {
+        // Solo limpiamos errores al montar el componente para evitar ver errores de una sesión anterior
+        clearError();
+    }, [clearError]);
+
     const {
         register,
         handleSubmit,
+        setValue,
         formState: { errors },
     } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
         defaultValues: { email: '', password: '', rememberMe: false },
     });
 
+    // Cargar email guardado si existe
+    useEffect(() => {
+        const savedEmail = localStorage.getItem('remember_email');
+        if (savedEmail) {
+            setValue('email', savedEmail);
+            setValue('rememberMe', true);
+        }
+    }, [setValue]);
+
     async function onSubmit(data: LoginFormData) {
         clearError();
+
+        // Manejar "Recuérdame"
+        if (data.rememberMe) {
+            localStorage.setItem('remember_email', data.email);
+        } else {
+            localStorage.removeItem('remember_email');
+        }
+
         await login({ email: data.email, password: data.password, rememberMe: data.rememberMe });
     }
 
