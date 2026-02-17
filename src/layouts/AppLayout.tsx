@@ -38,6 +38,8 @@ import { Tooltip } from '@/components/common/Tooltip';
 import { StoreSelector } from '@/components/layout/StoreSelector';
 import { useStoreStore } from '@/store/useStoreStore';
 import { useSessionEnforcer } from '@/hooks/useSessionEnforcer';
+import { useGlobalConfig } from '@/hooks/useGlobalConfig';
+import { configService } from '@/services/configService';
 
 const SIDEBAR_OPEN = 240;
 const SIDEBAR_COLLAPSED = 72;
@@ -68,9 +70,22 @@ export function AppLayout() {
     const { unreadCount, fetchNotifications } = useNotificationStore();
     const { tiendaActual } = useStoreStore();
     const navigate = useNavigate();
+    const [logos, setLogos] = useState<{ light: string | null; dark: string | null }>({ light: null, dark: null });
+
+    useEffect(() => {
+        configService.getConfig().then(config => {
+            setLogos({
+                light: config.logo_principal_url || null,
+                dark: config.logo_variante_url || null
+            });
+        });
+    }, []);
 
     // Enforce single session
     useSessionEnforcer();
+
+    // Apply global configuration (SEO, Colors, Tracking)
+    useGlobalConfig();
 
     useEffect(() => {
         fetchNotifications();
@@ -119,19 +134,30 @@ export function AppLayout() {
                 >
                     {!effectivelyCollapsed && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div
-                                style={{
-                                    width: '32px', height: '32px', flexShrink: 0,
-                                    backgroundColor: 'var(--color-primary)',
-                                    borderRadius: '8px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                }}
-                            >
-                                <BarChart3 size={16} color="#fff" />
-                            </div>
-                            <span style={{ color: '#fff', fontWeight: 700, fontSize: '16px', whiteSpace: 'nowrap' }}>
-                                DropCost<span style={{ color: 'var(--color-primary)' }}>Master</span>
-                            </span>
+                            {/* Priorizamos el logo oscuro/variante para la sidebar que siempre es oscura */}
+                            {logos.dark || logos.light ? (
+                                <img
+                                    src={logos.dark || logos.light || ''}
+                                    alt="DropCost Master"
+                                    style={{ maxHeight: '32px', objectFit: 'contain' }}
+                                />
+                            ) : (
+                                <>
+                                    <div
+                                        style={{
+                                            width: '32px', height: '32px', flexShrink: 0,
+                                            backgroundColor: 'var(--color-primary)',
+                                            borderRadius: '8px',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        }}
+                                    >
+                                        <BarChart3 size={16} color="#fff" />
+                                    </div>
+                                    <span style={{ color: '#fff', fontWeight: 700, fontSize: '16px', whiteSpace: 'nowrap' }}>
+                                        DropCost<span style={{ color: 'var(--color-primary)' }}>Master</span>
+                                    </span>
+                                </>
+                            )}
                         </div>
                     )}
 

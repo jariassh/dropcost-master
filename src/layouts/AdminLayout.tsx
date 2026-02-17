@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { configService } from '@/services/configService';
 import {
     Users,
     CreditCard,
@@ -26,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
+import { useGlobalConfig } from '@/hooks/useGlobalConfig';
 
 const SIDEBAR_OPEN = 260;
 const SIDEBAR_COLLAPSED = 72;
@@ -41,7 +43,7 @@ const adminNavItems = [
     { to: '/admin/withdrawals', icon: CreditCard, label: 'Gestión de Retiros' },
     { to: '/admin/promo-codes', icon: Ticket, label: 'Códigos Promocionales', disabled: true },
     { to: '/admin/logs', icon: History, label: 'Logs de Auditoría' },
-    { to: '/admin/settings', icon: Settings, label: 'Ajustes Globales', disabled: true },
+    { to: '/admin/settings', icon: Settings, label: 'Ajustes Globales' },
 ];
 
 export function AdminLayout() {
@@ -51,6 +53,19 @@ export function AdminLayout() {
     const { isDark, toggleTheme } = useTheme();
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
+    const [logos, setLogos] = useState<{ light: string | null; dark: string | null }>({ light: null, dark: null });
+
+    useEffect(() => {
+        configService.getConfig().then(config => {
+            setLogos({
+                light: config.logo_principal_url || null,
+                dark: config.logo_variante_url || null
+            });
+        });
+    }, []);
+
+    // Apply global configuration (SEO, Colors, Tracking)
+    useGlobalConfig();
 
     const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_OPEN;
     // En móvil (drawer abierto), siempre mostramos el contenido completo
@@ -94,20 +109,36 @@ export function AdminLayout() {
                     }}
                 >
                     {!effectivelyCollapsed && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div
-                                style={{
-                                    width: '32px', height: '32px',
-                                    backgroundColor: '#EF4444', // Red for admin
-                                    borderRadius: '8px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                }}
-                            >
-                                <ShieldCheck size={18} color="#fff" />
-                            </div>
-                            <span style={{ color: '#fff', fontWeight: 800, fontSize: '15px', letterSpacing: '0.02em' }}>
-                                ADMIN<span style={{ color: '#EF4444' }}>PANEL</span>
-                            </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            {logos.dark || logos.light ? (
+                                <img
+                                    src={logos.dark || logos.light || ''}
+                                    alt="Admin"
+                                    style={{
+                                        height: '32px',
+                                        width: 'auto',
+                                        maxWidth: '180px',
+                                        objectFit: 'contain'
+                                    }}
+                                />
+                            ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div
+                                        style={{
+                                            width: '32px', height: '32px',
+                                            backgroundColor: '#EF4444',
+                                            borderRadius: '8px',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            flexShrink: 0
+                                        }}
+                                    >
+                                        <ShieldCheck size={18} color="#fff" />
+                                    </div>
+                                    <span style={{ color: '#fff', fontWeight: 800, fontSize: '15px', letterSpacing: '0.02em' }}>
+                                        ADMIN<span style={{ color: '#EF4444' }}>PANEL</span>
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     )}
 

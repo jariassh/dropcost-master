@@ -1,13 +1,32 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>temp-vite-init</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <!-- Fast Favicon Load: Lee caché antes de que cargue React -->
+  <script>
+    (function () {
+      try {
+        const cache = localStorage.getItem('dc_global_config_cache');
+        if (cache) {
+          const config = JSON.parse(cache);
+          if (config.favicon_url) {
+            const link = document.createElement('link');
+            link.rel = 'icon';
+            link.href = config.favicon_url;
+            document.head.appendChild(link);
+          }
+        }
+      } catch (e) { }
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DropCost Master</title>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>
