@@ -76,6 +76,14 @@ Para ejecutar este proyecto localmente, sigue estos pasos:
 - **🛡️ Corrección de Identidad y Roles**: Desacoplamiento total de roles administrativos de los logros de red para asegurar que badges de "LÍDER" reflejen el éxito real en el sistema de referidos.
 - **👮 Gestión de Usuarios y Auditoría:** Nueva capacidad para suspender usuarios, reenviar correos de verificación y visualizar el estado real de las suscripciones. Implementación de rastreo de actividad detallado que captura IP y fecha de última interacción para una seguridad robusta.
 
+### [v1.2.0] - Febrero 2026 (Actual)
+- **🎨 Sistema de Branding Dinámico:** Implementación de carga y persistencia de logos variantes (claro/oscuro) y favicons gestionables desde el panel administrativo.
+- **⚡ Optimización de Carga Visual:** Implementación de caché de LocalStorage para activos de marca, reduciendo el tiempo de carga del favicon y logos a prácticamente cero.
+- **🌐 SEO y Metadatos Avanzados:** Módulo de configuración global para títulos, descripciones, palabras clave, URL del sitio y URL del sitemap dinámicos.
+- **💳 Mercado Pago V2:** Integración robusta de pagos con manejo mejorado de webhooks, validación de firmas y sincronización automática de suscripciones Pro.
+- **💰 Billetera y Wallet:** Sistema de gestión de saldo, retiros y comisiones por referidos totalmente funcional con estados de aprobación administrativa.
+- **🤝 Refinamiento de Referidos:** Corrección en el conteo de clicks, visualización en tiempo real de la red de invitados y asignación precisa de comisiones por niveles.
+
 ---
 
 ## 📐 Estructura del Proyecto
