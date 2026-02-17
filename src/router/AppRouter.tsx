@@ -101,12 +101,12 @@ export function AppRouter() {
             </Route >
 
             {/* Rutas de Administración (Independientes) */}
-            < Route
+            <Route
                 path="/admin"
                 element={
-                    < ProtectedRoute >
+                    <ProtectedRoute>
                         <AdminLayout />
-                    </ProtectedRoute >
+                    </ProtectedRoute>
                 }
             >
                 <Route index element={<AdminDashboard />} />
@@ -117,10 +117,10 @@ export function AppRouter() {
                 <Route path="promo-codes" element={<AdminDashboard />} />
                 <Route path="logs" element={<AdminAuditLogsPage />} />
                 <Route path="settings" element={<AdminSettingsPage />} />
-            </Route >
+            </Route>
 
             {/* Catch-all */}
-            < Route path="*" element={< Navigate to="/login" replace />} />
-        </Routes >
+            <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
     );
 }
