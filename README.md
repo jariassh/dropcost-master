@@ -83,6 +83,8 @@ Para ejecutar este proyecto localmente, sigue estos pasos:
 - **💳 Mercado Pago V2:** Integración robusta de pagos con manejo mejorado de webhooks, validación de firmas y sincronización automática de suscripciones Pro.
 - **💰 Billetera y Wallet:** Sistema de gestión de saldo, retiros y comisiones por referidos totalmente funcional con estados de aprobación administrativa.
 - **🤝 Refinamiento de Referidos:** Corrección en el conteo de clicks, visualización en tiempo real de la red de invitados y asignación precisa de comisiones por niveles.
+- **📧 Sistema de Plantillas de Email:** Módulo administrativo completo para gestionar correos transaccionales. Incluye editor HTML en vivo con previsualización responsive (móvil/pc), sistema de carpetas para organización y autocompletado de variables dinámicas ($tienda, $usuario, $codigo).
+- **🤖 Servicio de Correos Automático:** Implementación de Edge Function para el procesamiento y envío de emails personalizados mediante placeholders dinámicos.
 
 ---
 
