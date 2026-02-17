@@ -19,21 +19,15 @@ import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
 import { AdminPlansPage } from '@/pages/admin/AdminPlansPage';
 import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { AdminAuditLogsPage } from '@/pages/admin/AdminAuditLogsPage';
-<<<<<<< HEAD
 import { AdminReferralPage } from '@/pages/admin/AdminReferralPage';
 import { AdminWithdrawalsPage } from '@/pages/admin/AdminWithdrawalsPage';
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage';
-=======
->>>>>>> feat/audit-user-history
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { PricingPage } from '@/pages/PricingPage';
 import { useAuthStore } from '@/store/authStore';
 import UserAuditLogsPage from '@/pages/UserAuditLogsPage';
-<<<<<<< HEAD
 import { SubscriptionGuard } from '@/components/common/SubscriptionGuard';
 import { PaymentStatusPage } from '@/pages/app/PaymentStatusPage';
-=======
->>>>>>> feat/audit-user-history
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -100,16 +94,10 @@ export function AppRouter() {
                 <Route path="/analisis-regional" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
 
                 <Route path="/configuracion" element={<ConfiguracionPage />} />
-<<<<<<< HEAD
                 <Route path="/referidos" element={<SubscriptionGuard><ReferidosPage /></SubscriptionGuard>} />
                 <Route path="/billetera" element={<SubscriptionGuard><WalletPage /></SubscriptionGuard>} />
                 <Route path="/historial" element={<UserAuditLogsPage />} />
                 <Route path="/payment/status" element={<PaymentStatusPage />} />
-=======
-                <Route path="/referidos" element={<ReferidosPage />} />
-                <Route path="/billetera" element={<WalletPage />} />
-                <Route path="/historial" element={<UserAuditLogsPage />} />
->>>>>>> feat/audit-user-history
             </Route>
 
             {/* Rutas de Administración (Independientes) */}
@@ -128,11 +116,7 @@ export function AppRouter() {
                 <Route path="withdrawals" element={<AdminWithdrawalsPage />} />
                 <Route path="promo-codes" element={<AdminDashboard />} />
                 <Route path="logs" element={<AdminAuditLogsPage />} />
-<<<<<<< HEAD
                 <Route path="settings" element={<AdminSettingsPage />} />
-=======
-                <Route path="settings" element={<AdminDashboard />} />
->>>>>>> feat/audit-user-history
             </Route>
 
             {/* Catch-all */}
