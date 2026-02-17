@@ -2,7 +2,7 @@
  * Página de recuperación de contraseña.
  * Input email, estado de éxito tras envío.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, KeyRound } from 'lucide-react';
 import { Button, Input, Alert } from '@/components/common';
 import { useAuthStore } from '@/store/authStore';
+import { translateError } from '@/lib/errorTranslations';
 
 const resetSchema = z.object({
     email: z.string().min(1, 'El correo es requerido').email('Ingresa un correo válido'),
@@ -20,6 +21,11 @@ type ResetFormData = z.infer<typeof resetSchema>;
 export function PasswordResetPage() {
     const [sent, setSent] = useState(false);
     const { requestPasswordReset, isLoading, error, clearError } = useAuthStore();
+
+    useEffect(() => {
+        // Limpiamos errores al entrar a la página
+        clearError();
+    }, [clearError]);
 
     const {
         register,
@@ -33,8 +39,8 @@ export function PasswordResetPage() {
 
     async function onSubmit(data: ResetFormData) {
         clearError();
-        await requestPasswordReset({ email: data.email });
-        if (!error) setSent(true);
+        const success = await requestPasswordReset({ email: data.email });
+        if (success) setSent(true);
     }
 
     if (sent) {
@@ -49,14 +55,13 @@ export function PasswordResetPage() {
                     <Mail size={32} color="#10B981" />
                 </div>
                 <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                    ¡Correo enviado!
+                    Instrucciones enviadas
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '15px', lineHeight: '1.6' }}>
-                    Hemos enviado instrucciones para restablecer tu contraseña a{' '}
-                    <strong style={{ color: 'var(--text-primary)' }}>{getValues('email')}</strong>
+                    Si existe una cuenta registrada con el correo <strong style={{ color: 'var(--text-primary)' }}>{getValues('email')}</strong>, recibirás un enlace para restablecer tu contraseña en unos minutos.
                 </p>
                 <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '24px' }}>
-                    Si no recibes el correo en unos minutos, revisa tu carpeta de spam.
+                    Si no recibes nada, verifica que el correo sea correcto y revisa tu carpeta de spam.
                 </p>
                 <Link to="/login">
                     <Button variant="secondary" fullWidth>
@@ -100,7 +105,9 @@ export function PasswordResetPage() {
 
             {error && (
                 <div style={{ marginBottom: '20px' }}>
-                    <Alert type="error" dismissible onDismiss={clearError}>{error}</Alert>
+                    <Alert type="error" dismissible onDismiss={clearError}>
+                        {translateError(error)}
+                    </Alert>
                 </div>
             )}
 

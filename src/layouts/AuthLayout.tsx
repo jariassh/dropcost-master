@@ -6,9 +6,23 @@
 import { Outlet } from 'react-router-dom';
 import { BarChart3, ShieldCheck, Sun, Moon } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
+import { useGlobalConfig } from '@/hooks/useGlobalConfig';
+import { configService, GlobalConfig } from '@/services/configService';
+import { useState, useEffect } from 'react';
 
 export function AuthLayout() {
     const { isDark, toggleTheme } = useTheme();
+    const { applyConfig } = useGlobalConfig();
+    const [logos, setLogos] = useState<{ light: string | null; dark: string | null }>({ light: null, dark: null });
+
+    useEffect(() => {
+        configService.getConfig().then(config => {
+            setLogos({
+                light: config.logo_principal_url || null,
+                dark: config.logo_variante_url || null
+            });
+        });
+    }, []);
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -26,20 +40,30 @@ export function AuthLayout() {
                 }}
             >
                 {/* Logo */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div
-                        style={{
-                            width: '40px', height: '40px',
-                            backgroundColor: 'rgba(255,255,255,0.2)',
-                            borderRadius: '10px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}
-                    >
-                        <BarChart3 size={24} color="#fff" />
-                    </div>
-                    <span style={{ color: '#fff', fontSize: '20px', fontWeight: 700 }}>
-                        DropCost Master
-                    </span>
+                <div className="flex items-center gap-3">
+                    {logos.dark || logos.light ? (
+                        <img
+                            src={logos.dark || logos.light || ''}
+                            alt="DropCost Master"
+                            className="h-10 object-contain"
+                        />
+                    ) : (
+                        <>
+                            <div
+                                style={{
+                                    width: '40px', height: '40px',
+                                    backgroundColor: 'rgba(255,255,255,0.2)',
+                                    borderRadius: '10px',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}
+                            >
+                                <BarChart3 size={24} color="#fff" />
+                            </div>
+                            <span style={{ color: '#fff', fontSize: '20px', fontWeight: 700 }}>
+                                DropCost Master
+                            </span>
+                        </>
+                    )}
                 </div>
 
                 {/* Texto principal */}

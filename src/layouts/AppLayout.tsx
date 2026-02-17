@@ -3,7 +3,9 @@
  * Sidebar colapsable (íconos / íconos+labels) que EMPUJA el contenido.
  * Header con toggle tema, notificaciones y dropdown usuario premium.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNotificationStore } from '@/store/notificationStore';
+import { NotificationPanel } from '@/components/layout/NotificationPanel';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
     BarChart3,
@@ -19,34 +21,79 @@ import {
     LayoutDashboard,
     PanelLeftClose,
     PanelLeftOpen,
+    Menu,
     UserCircle,
+    Gift,
+    Share2,
+    Wallet,
+    Link2,
+    PieChart,
+    GraduationCap,
+    History as HistoryIcon,
+    X,
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
+import { Tooltip } from '@/components/common/Tooltip';
+import { StoreSelector } from '@/components/layout/StoreSelector';
+import { useStoreStore } from '@/store/useStoreStore';
+import { useSessionEnforcer } from '@/hooks/useSessionEnforcer';
+import { useGlobalConfig } from '@/hooks/useGlobalConfig';
+import { configService } from '@/services/configService';
 
 const SIDEBAR_OPEN = 240;
 const SIDEBAR_COLLAPSED = 72;
 
 const navItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/simulador', icon: Calculator, label: 'Simulador' },
-    { to: '/analisis-regional', icon: Map, label: 'Análisis Regional' },
-    { to: '/configuracion', icon: Settings, label: 'Configuración' },
+    { to: '/', icon: LayoutDashboard, label: 'Dashboard', active: false }, // Próximamente
+    { to: '/simulador', icon: Calculator, label: 'Simulador', active: true },
+    { to: '/ofertas', icon: Gift, label: 'Ofertas Irresistibles', active: true },
+    { to: '/referidos', icon: Share2, label: 'Sistema de Referidos', active: true },
+    { to: '/billetera', icon: Wallet, label: 'Billetera / Wallet', active: true },
+    { to: '/configuracion', icon: Settings, label: 'Configuración', active: true },
+    { to: '/analisis-regional', icon: Map, label: 'Análisis Regional', active: false },
+    { to: '/acortador', icon: Link2, label: 'Acortador URL', active: false },
+    { to: '/capacitacion', icon: GraduationCap, label: 'Capacitación', active: false },
+    { to: '/historial', icon: HistoryIcon, label: 'Historial de Actividad', active: true },
 ];
 
-const adminNavItems = [
-    { to: '/admin', icon: ShieldAlert, label: 'Administración' },
-];
+const adminLink = { to: '/admin', icon: ShieldAlert, label: 'Panel Administración' };
+
 
 export function AppLayout() {
     const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [notificationsOpen, setNotificationsOpen] = useState(false);
     const { isDark, toggleTheme } = useTheme();
     const { user, logout } = useAuthStore();
+    const { unreadCount, fetchNotifications } = useNotificationStore();
+    const { tiendaActual } = useStoreStore();
     const navigate = useNavigate();
+    const [logos, setLogos] = useState<{ light: string | null; dark: string | null }>({ light: null, dark: null });
+
+    useEffect(() => {
+        configService.getConfig().then(config => {
+            setLogos({
+                light: config.logo_principal_url || null,
+                dark: config.logo_variante_url || null
+            });
+        });
+    }, []);
+
+    // Enforce single session
+    useSessionEnforcer();
+
+    // Apply global configuration (SEO, Colors, Tracking)
+    useGlobalConfig();
+
+    useEffect(() => {
+        fetchNotifications();
+    }, [fetchNotifications]);
 
     const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_OPEN;
+    // Si el drawer está abierto en móvil, forzamos que NO esté colapsado para mostrar textos
+    const effectivelyCollapsed = collapsed && !mobileOpen;
 
     function handleLogout() {
         logout();
@@ -54,60 +101,78 @@ export function AppLayout() {
     }
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-primary)' }}>
+        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-primary)', '--sidebar-width': `${sidebarWidth}px` } as any}>
             {/* ─── Sidebar ─── */}
             <aside
                 style={{
                     position: 'fixed',
                     top: 0,
-                    left: 0,
+                    left: undefined,
                     bottom: 0,
-                    width: `${sidebarWidth}px`,
+                    width: mobileOpen ? '280px' : `${sidebarWidth}px`,
                     backgroundColor: 'var(--sidebar-bg)',
                     display: 'flex',
                     flexDirection: 'column',
-                    zIndex: 40,
-                    transition: 'width 250ms ease',
+                    zIndex: 50,
+                    transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
                     overflow: 'hidden',
+                    ...(mobileOpen ? { left: 0 } : {})
                 }}
-                className={mobileOpen ? '' : 'max-lg:hidden'}
+                className={`lg:left-0 ${!mobileOpen ? 'max-lg:-left-full' : ''}`}
             >
                 {/* Logo + Toggle */}
                 <div
                     style={{
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: collapsed ? 'center' : 'space-between',
-                        padding: collapsed ? '0' : '0 16px 0 20px',
+                        justifyContent: effectivelyCollapsed ? 'center' : 'space-between',
+                        padding: effectivelyCollapsed ? '0' : '0 16px 0 20px',
                         borderBottom: '1px solid rgba(255,255,255,0.1)',
                         height: '64px',
                         transition: 'padding 250ms ease',
                     }}
                 >
-                    {!collapsed && (
+                    {!effectivelyCollapsed && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div
-                                style={{
-                                    width: '32px', height: '32px', flexShrink: 0,
-                                    backgroundColor: 'var(--color-primary)',
-                                    borderRadius: '8px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                }}
-                            >
-                                <BarChart3 size={16} color="#fff" />
-                            </div>
-                            <span style={{ color: '#fff', fontWeight: 700, fontSize: '16px', whiteSpace: 'nowrap' }}>
-                                DropCost<span style={{ color: 'var(--color-primary)' }}>Master</span>
-                            </span>
+                            {/* Priorizamos el logo oscuro/variante para la sidebar que siempre es oscura */}
+                            {logos.dark || logos.light ? (
+                                <img
+                                    src={logos.dark || logos.light || ''}
+                                    alt="DropCost Master"
+                                    style={{ maxHeight: '32px', objectFit: 'contain' }}
+                                />
+                            ) : (
+                                <>
+                                    <div
+                                        style={{
+                                            width: '32px', height: '32px', flexShrink: 0,
+                                            backgroundColor: 'var(--color-primary)',
+                                            borderRadius: '8px',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        }}
+                                    >
+                                        <BarChart3 size={16} color="#fff" />
+                                    </div>
+                                    <span style={{ color: '#fff', fontWeight: 700, fontSize: '16px', whiteSpace: 'nowrap' }}>
+                                        DropCost<span style={{ color: 'var(--color-primary)' }}>Master</span>
+                                    </span>
+                                </>
+                            )}
                         </div>
                     )}
 
                     {/* Toggle collapse */}
                     <button
-                        onClick={() => setCollapsed((v) => !v)}
+                        onClick={() => {
+                            if (window.innerWidth < 1024) {
+                                setMobileOpen(false);
+                            } else {
+                                setCollapsed((v) => !v);
+                            }
+                        }}
                         style={{
                             padding: '8px',
-                            borderRadius: '8px',
+                            borderRadius: '88px',
                             background: 'none',
                             border: 'none',
                             color: 'rgba(255,255,255,0.4)',
@@ -117,24 +182,64 @@ export function AppLayout() {
                         }}
                         onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
-                        aria-label={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+                        aria-label={effectivelyCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
                     >
-                        {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+                        {window.innerWidth < 1024 ? <X size={20} /> : (effectivelyCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />)}
                     </button>
                 </div>
 
-                {/* Navegación */}
-                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', padding: collapsed ? '12px 8px' : '16px 12px' }}>
-                    {navItems.map((item) => (
-                        <SidebarNavItem key={item.to} {...item} collapsed={collapsed} end={item.to === '/'} onClick={() => setMobileOpen(false)} />
-                    ))}
+                {/* Selector de Tienda */}
+                <div style={{ marginTop: '16px' }}>
+                    <StoreSelector collapsed={effectivelyCollapsed} />
+                </div>
 
-                    {/* Admin section */}
-                    <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                        {adminNavItems.map((item) => (
-                            <SidebarNavItem key={item.to} {...item} collapsed={collapsed} onClick={() => setMobileOpen(false)} />
+                {/* Navegación */}
+                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', padding: effectivelyCollapsed ? '4px 8px 12px' : '0 12px 16px' }}>
+                    {/* Módulos Activos */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {navItems.filter(i => i.active).map((item) => {
+                            const isRestricted = !tiendaActual && (item.to === '/simulador' || item.to === '/ofertas');
+
+                            return (
+                                <SidebarNavItem
+                                    key={item.to}
+                                    {...item}
+                                    collapsed={effectivelyCollapsed}
+                                    end={item.to === '/'}
+                                    onClick={() => setMobileOpen(false)}
+                                    disabled={isRestricted}
+                                    tooltip={isRestricted ? "Selecciona o crea una tienda para acceder" : undefined}
+                                />
+                            );
+                        })}
+                    </div>
+
+                    {/* Módulos Próximamente */}
+                    <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {!effectivelyCollapsed && (
+                            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '14px', marginBottom: '8px' }}>
+                                Próximamente
+                            </span>
+                        )}
+                        {navItems.filter(i => !i.active).map((item) => (
+                            <SidebarNavItem key={item.to} {...item} collapsed={effectivelyCollapsed} disabled onClick={() => setMobileOpen(false)} />
                         ))}
                     </div>
+
+                    {/* Admin section - Solo si es admin */}
+                    {(user?.rol === 'admin' || user?.rol === 'superadmin') && (
+                        <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                            <SidebarNavItem
+                                {...adminLink}
+                                collapsed={effectivelyCollapsed}
+                                onClick={() => setMobileOpen(false)}
+                                style={{
+                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                    color: '#EF4444'
+                                }}
+                            />
+                        </div>
+                    )}
                 </nav>
             </aside>
 
@@ -154,8 +259,8 @@ export function AppLayout() {
                     display: 'flex',
                     flexDirection: 'column',
                     minWidth: 0,
-                    marginLeft: `${sidebarWidth}px`,
-                    transition: 'margin-left 250ms ease',
+                    marginLeft: 'var(--sidebar-width, 0px)',
+                    transition: 'margin-left 300ms ease',
                 }}
                 className="max-lg:!ml-0"
             >
@@ -178,15 +283,10 @@ export function AppLayout() {
                         {/* Hamburger — solo visible en mobile */}
                         <button
                             onClick={() => setMobileOpen((v) => !v)}
-                            className="lg:hidden"
-                            style={{
-                                padding: '8px', borderRadius: '8px',
-                                color: 'var(--text-secondary)', background: 'none', border: 'none',
-                                cursor: 'pointer',
-                            }}
+                            className="flex lg:hidden items-center justify-center dc-hamburger-button"
                             aria-label="Menú"
                         >
-                            <PanelLeftOpen size={20} />
+                            <Menu size={20} />
                         </button>
                     </div>
 
@@ -197,17 +297,29 @@ export function AppLayout() {
                         </HeaderButton>
 
                         {/* Notificaciones */}
-                        <HeaderButton label="Notificaciones">
-                            <Bell size={18} />
-                            <span
-                                style={{
-                                    position: 'absolute', top: '6px', right: '6px',
-                                    width: '8px', height: '8px',
-                                    backgroundColor: 'var(--color-error)',
-                                    borderRadius: '50%',
-                                }}
-                            />
-                        </HeaderButton>
+                        <div style={{ position: 'relative' }}>
+                            <HeaderButton
+                                onClick={() => setNotificationsOpen(v => !v)}
+                                label="Notificaciones"
+                            >
+                                <Bell size={18} />
+                                {unreadCount > 0 && (
+                                    <span
+                                        style={{
+                                            position: 'absolute', top: '6px', right: '6px',
+                                            width: '8px', height: '8px',
+                                            backgroundColor: 'var(--color-error)',
+                                            borderRadius: '50%',
+                                            border: '2px solid var(--bg-primary)',
+                                        }}
+                                    />
+                                )}
+                            </HeaderButton>
+
+                            {notificationsOpen && (
+                                <NotificationPanel onClose={() => setNotificationsOpen(false)} />
+                            )}
+                        </div>
 
                         {/* Avatar / menú usuario */}
                         <div style={{ position: 'relative', marginLeft: '4px' }}>
@@ -298,16 +410,21 @@ export function AppLayout() {
                                                     textTransform: 'uppercase',
                                                 }}
                                             >
-                                                Plan Pro
+                                                {user?.plan?.name || (user?.planId === 'plan_free' ? 'Plan Gratis' : user?.planId === 'plan_pro' ? 'Plan Pro' : user?.planId === 'plan_enterprise' ? 'Plan Enterprise' : 'Plan Básico')}
                                             </span>
                                         </div>
 
                                         {/* Acciones */}
                                         <div style={{ padding: '8px', borderTop: '1px solid var(--border-color)' }}>
                                             <DropdownItem
-                                                icon={<UserCircle size={17} />}
-                                                label="Mi Perfil"
-                                                onClick={() => { setUserMenuOpen(false); navigate('/perfil'); }}
+                                                icon={<Settings size={17} />}
+                                                label="Configuración"
+                                                onClick={() => { setUserMenuOpen(false); navigate('/configuracion'); }}
+                                            />
+                                            <DropdownItem
+                                                icon={<Wallet size={17} />}
+                                                label="Mi Billetera"
+                                                onClick={() => { setUserMenuOpen(false); navigate('/billetera'); }}
                                             />
                                             <DropdownItem
                                                 icon={<LogOut size={17} />}
@@ -327,7 +444,7 @@ export function AppLayout() {
                 <main
                     style={{
                         flex: 1,
-                        padding: '28px 32px',
+                        padding: 'var(--main-padding)',
                         maxWidth: '1600px',
                         width: '100%',
                         margin: '0 auto',
@@ -399,6 +516,18 @@ function DropdownItem({
     );
 }
 
+interface SidebarNavItemProps {
+    to: string;
+    icon: React.ComponentType<{ size: number; style?: React.CSSProperties }>;
+    label: string;
+    collapsed: boolean;
+    end?: boolean;
+    onClick?: () => void;
+    disabled?: boolean;
+    tooltip?: string;
+    style?: React.CSSProperties;
+}
+
 function SidebarNavItem({
     to,
     icon: Icon,
@@ -406,15 +535,43 @@ function SidebarNavItem({
     collapsed,
     end,
     onClick,
-}: {
-    to: string;
-    icon: React.ComponentType<{ size: number; style?: React.CSSProperties }>;
-    label: string;
-    collapsed: boolean;
-    end?: boolean;
-    onClick?: () => void;
-}) {
+    disabled,
+    tooltip,
+    style: customStyle,
+}: SidebarNavItemProps) {
     const [hovered, setHovered] = useState(false);
+
+    if (disabled) {
+        return (
+            <Tooltip content={tooltip || "Próximamente disponible"} position="right" delay={50} offset={-14}>
+                <div
+                    onMouseEnter={() => setHovered(true)}
+                    onMouseLeave={() => setHovered(false)}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: collapsed ? 'center' : 'flex-start',
+                        gap: '12px',
+                        padding: collapsed ? '12px' : '10px 14px',
+                        borderRadius: '10px',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        cursor: 'not-allowed',
+                        opacity: 0.4,
+                        color: 'var(--sidebar-text)',
+                        transition: 'all 150ms ease',
+                        position: 'relative',
+                        ...customStyle
+                    }}
+                >
+                    <Icon size={18} style={{ flexShrink: 0 }} />
+                    {!collapsed && label}
+                </div>
+            </Tooltip>
+        );
+    }
 
     return (
         <NavLink
@@ -444,6 +601,7 @@ function SidebarNavItem({
                         : 'transparent',
                 color: isActive ? '#fff' : hovered ? '#fff' : 'var(--sidebar-text)',
                 transform: hovered && !isActive ? 'translateX(2px)' : 'none',
+                ...customStyle
             })}
         >
             <Icon size={18} style={{ flexShrink: 0 }} />

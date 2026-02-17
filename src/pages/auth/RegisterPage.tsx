@@ -3,14 +3,15 @@
  * Formulario completo con validación Zod: nombre, apellido, email,
  * contraseña con fortaleza, teléfono, país, términos.
  */
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState, useEffect, useRef } from 'react';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Phone, Globe, ChevronDown } from 'lucide-react';
-import { Button, Input, Alert } from '@/components/common';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Mail, Lock, User, Phone, Globe, ChevronDown, Sparkles, RefreshCw, CheckCircle2, UserPlus } from 'lucide-react';
+import { Button, Input, Alert, SmartPhoneInput } from '@/components/common';
 import { useAuthStore } from '@/store/authStore';
+import { getReferrerNameByCode, incrementReferralClicks } from '@/services/referralService';
 
 const registerSchema = z
     .object({
@@ -38,32 +39,46 @@ const registerSchema = z
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
-const PAISES = [
-    { value: '', label: 'Selecciona tu país' },
-    { value: 'CO', label: '🇨🇴 Colombia' },
-    { value: 'MX', label: '🇲🇽 México' },
-    { value: 'PE', label: '🇵🇪 Perú' },
-    { value: 'CL', label: '🇨🇱 Chile' },
-    { value: 'AR', label: '🇦🇷 Argentina' },
-    { value: 'EC', label: '🇪🇨 Ecuador' },
-    { value: 'VE', label: '🇻🇪 Venezuela' },
-    { value: 'CR', label: '🇨🇷 Costa Rica' },
-    { value: 'PA', label: '🇵🇦 Panamá' },
-    { value: 'DO', label: '🇩🇴 República Dominicana' },
-];
+// Eliminamos PAISES ya que SmartPhoneInput lo maneja internamente
 
 export function RegisterPage() {
     const [registered, setRegistered] = useState(false);
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const referralCode = searchParams.get('ref') || '';
+    const [referrerName, setReferrerName] = useState<string | null>(null);
     const { register: registerUser, isLoading, error, clearError } = useAuthStore();
+
+    const trackRef = useRef(false);
+
+    useEffect(() => {
+        if (referralCode) {
+            getReferrerNameByCode(referralCode).then(name => {
+                if (name) setReferrerName(name);
+            });
+
+            // Evitar conteo doble en desarrollo (StrictMode) sin bloquear recargas manuales
+            if (!trackRef.current) {
+                incrementReferralClicks(referralCode);
+                trackRef.current = true;
+            }
+        }
+    }, [referralCode]);
+
+    useEffect(() => {
+        clearError();
+    }, [clearError]);
 
     const {
         register,
         handleSubmit,
         watch,
+        setValue,
+        control,
         formState: { errors },
     } = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema),
+        mode: 'onChange',
         defaultValues: {
             nombres: '',
             apellidos: '',
@@ -71,10 +86,33 @@ export function RegisterPage() {
             password: '',
             confirmPassword: '',
             telefono: '',
-            pais: '',
+            pais: 'CO',
             acceptTerms: false,
         },
     });
+
+    const [suggestedPassword, setSuggestedPassword] = useState('');
+    const [copied, setCopied] = useState(false);
+
+    const generatePassword = () => {
+        const length = 14;
+        const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+        let retVal = "";
+        for (let i = 0, n = charset.length; i < length; ++i) {
+            retVal += charset.charAt(Math.floor(Math.random() * n));
+        }
+        // Asegurar que cumpla con los requisitos (al menos uno de cada)
+        if (!(/[A-Z]/.test(retVal) && /[a-z]/.test(retVal) && /[0-9]/.test(retVal) && /[^A-Za-z0-9]/.test(retVal))) {
+            return generatePassword();
+        }
+        setSuggestedPassword(retVal);
+    };
+
+    const useSuggested = () => {
+        setValue('password', suggestedPassword, { shouldValidate: true });
+        setValue('confirmPassword', suggestedPassword, { shouldValidate: true });
+        setSuggestedPassword('');
+    };
 
     const password = watch('password', '');
 
@@ -96,7 +134,7 @@ export function RegisterPage() {
 
     async function onSubmit(data: RegisterFormData) {
         clearError();
-        await registerUser({
+        const success = await registerUser({
             email: data.email,
             password: data.password,
             confirmPassword: data.confirmPassword,
@@ -104,12 +142,13 @@ export function RegisterPage() {
             apellidos: data.apellidos,
             telefono: data.telefono,
             pais: data.pais,
+            referredBy: referralCode,
             acceptTerms: data.acceptTerms,
         });
 
-        if (!error) {
+        if (success) {
             setRegistered(true);
-            setTimeout(() => navigate('/verificar-email'), 2000);
+            setTimeout(() => navigate('/login'), 4000);
         }
     }
 
@@ -133,15 +172,60 @@ export function RegisterPage() {
                 <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     ¡Cuenta creada!
                 </h2>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
-                    Te hemos enviado un correo de verificación. Revisa tu bandeja de entrada.
+                <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '16px' }}>
+                    Te hemos enviado un correo de verificación con un enlace para activar tu cuenta. Revisa tu bandeja de entrada.
                 </p>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)', fontSize: '14px', fontWeight: 600 }}>
+                    <RefreshCw size={14} className="animate-spin" />
+                    Redirigiendo al inicio de sesión...
+                </div>
             </div>
         );
     }
 
     return (
         <div style={{ animation: 'fadeIn 300ms ease-out' }}>
+            {referralCode && (
+                <div style={{
+                    marginBottom: '28px',
+                    padding: '18px',
+                    backgroundColor: 'rgba(0, 102, 255, 0.04)',
+                    border: '1px solid rgba(0, 102, 255, 0.15)',
+                    borderRadius: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        right: 0,
+                        width: '40px',
+                        height: '40px',
+                        backgroundColor: 'var(--color-primary)',
+                        opacity: 0.03,
+                        borderRadius: '0 0 0 100%'
+                    }} />
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)' }}>
+                        <Sparkles size={16} fill="currentColor" style={{ opacity: 0.5 }} />
+                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            Beneficio DropCost
+                        </span>
+                    </div>
+
+                    <p style={{ margin: 0, fontSize: '15px', color: 'var(--text-primary)', lineHeight: '1.5' }}>
+                        {referrerName ? (
+                            <>¡Genial! <b>{referrerName}</b> te ha invitado. Al registrarte con este link, tendrás soporte prioritario en tu configuración inicial.</>
+                        ) : (
+                            <>Has sido invitado por <b>{referralCode}</b>. ¡Únete a la comunidad de Dropshippers más avanzada y optimiza tus costos hoy!</>
+                        )}
+                    </p>
+                </div>
+            )}
+
             <h2 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
                 Crear cuenta
             </h2>
@@ -185,7 +269,7 @@ export function RegisterPage() {
                     {...register('email')}
                 />
 
-                <div>
+                <div style={{ position: 'relative' }}>
                     <Input
                         label="Contraseña"
                         type="password"
@@ -194,27 +278,135 @@ export function RegisterPage() {
                         showPasswordToggle
                         error={errors.password?.message}
                         autoComplete="new-password"
-                        {...register('password')}
+                        onFocus={() => {
+                            if (!password && !suggestedPassword) {
+                                generatePassword();
+                            }
+                        }}
+                        {...register('password', {
+                            onBlur: () => setTimeout(() => setSuggestedPassword(''), 200)
+                        })}
                     />
-                    {password.length > 0 && (
-                        <div style={{ marginTop: '8px' }}>
-                            <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+
+                    {/* Popover de Sugerencia Flotante */}
+                    {suggestedPassword && (
+                        <div
+                            onMouseDown={(e) => e.preventDefault()}
+                            style={{
+                                position: 'absolute',
+                                bottom: 'calc(100% - 10px)',
+                                right: '0',
+                                width: '280px',
+                                zIndex: 100,
+                                padding: '12px',
+                                backgroundColor: 'var(--card-bg)',
+                                borderRadius: '12px',
+                                border: '1.5px solid var(--color-primary-light)',
+                                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                                animation: 'scaleIn 200ms ease-out',
+                            }}
+                        >
+                            {/* Triángulo del tooltip */}
+                            <div style={{
+                                position: 'absolute',
+                                bottom: '-6px',
+                                right: '20px',
+                                width: '12px',
+                                height: '12px',
+                                backgroundColor: 'var(--card-bg)',
+                                borderRight: '1.5px solid var(--color-primary-light)',
+                                borderBottom: '1.5px solid var(--color-primary-light)',
+                                transform: 'rotate(45deg)',
+                                zIndex: -1
+                            }} />
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                <div style={{
+                                    padding: '5px',
+                                    backgroundColor: 'var(--color-primary-light)',
+                                    borderRadius: '6px',
+                                    color: 'var(--color-primary)',
+                                    display: 'flex'
+                                }}>
+                                    <Sparkles size={14} />
+                                </div>
+                                <p style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: 700, margin: 0 }}>
+                                    Contraseña Sugerida
+                                </p>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                                <code style={{
+                                    flex: 1,
+                                    padding: '8px',
+                                    backgroundColor: 'var(--bg-primary)',
+                                    borderRadius: '8px',
+                                    fontSize: '13px',
+                                    color: 'var(--color-primary)',
+                                    fontWeight: 700,
+                                    textAlign: 'center',
+                                    border: '1px solid var(--border-color)',
+                                    letterSpacing: '0.5px'
+                                }}>
+                                    {suggestedPassword}
+                                </code>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        generatePassword();
+                                    }}
+                                    style={{
+                                        padding: '8px',
+                                        backgroundColor: 'var(--bg-secondary)',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: '8px',
+                                        color: 'var(--text-secondary)',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        transition: 'all 200ms'
+                                    }}
+                                >
+                                    <RefreshCw size={14} />
+                                </button>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                                <Button size="sm" fullWidth onClick={useSuggested} style={{ height: '32px', fontSize: '12px' }}>
+                                    Usar
+                                </Button>
+                                <Button size="sm" variant="secondary" fullWidth onClick={() => setSuggestedPassword('')} style={{ height: '32px', fontSize: '12px' }}>
+                                    Omitir
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {password.length > 0 && !suggestedPassword && (
+                        <div style={{ marginTop: '8px', animation: 'fadeIn 200ms ease-out' }}>
+                            <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
                                 {[1, 2, 3, 4, 5].map((i) => (
                                     <div
                                         key={i}
                                         style={{
-                                            height: '5px',
+                                            height: '6px',
                                             flex: 1,
                                             borderRadius: '9999px',
-                                            transition: 'background-color 200ms',
+                                            transition: 'all 300ms ease',
                                             backgroundColor: i <= strength.level ? strength.color : 'var(--border-color)',
+                                            boxShadow: i <= strength.level ? `0 0 8px ${strength.color}40` : 'none',
                                         }}
                                     />
                                 ))}
                             </div>
-                            <p style={{ fontSize: '12px', color: strength.color, margin: 0 }}>
-                                {strength.label}
-                            </p>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <p style={{ fontSize: '12px', color: strength.color, fontWeight: 600, margin: 0 }}>
+                                    Seguridad: {strength.label}
+                                </p>
+                                <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: 0 }}>
+                                    {password.length} caracteres
+                                </p>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -230,82 +422,21 @@ export function RegisterPage() {
                     {...register('confirmPassword')}
                 />
 
-                <Input
-                    label="Teléfono (opcional)"
-                    type="tel"
-                    placeholder="+57 300 123 4567"
-                    leftIcon={<Phone size={18} />}
-                    error={errors.telefono?.message}
-                    {...register('telefono')}
-                />
-
-                {/* Select País */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>
-                        País
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                        <Globe
-                            size={18}
-                            style={{
-                                position: 'absolute',
-                                left: '14px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                color: 'var(--text-tertiary)',
-                                pointerEvents: 'none',
-                                zIndex: 1,
+                <Controller
+                    name="telefono"
+                    control={control}
+                    render={({ field }) => (
+                        <SmartPhoneInput
+                            label="Teléfono Móvil"
+                            value={field.value || ''}
+                            onChange={(fullValue, iso) => {
+                                field.onChange(fullValue);
+                                setValue('pais', iso); // Sincronizamos el país automáticamente
                             }}
+                            error={errors.telefono?.message}
                         />
-                        <ChevronDown
-                            size={16}
-                            style={{
-                                position: 'absolute',
-                                right: '14px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                color: 'var(--text-tertiary)',
-                                pointerEvents: 'none',
-                            }}
-                        />
-                        <select
-                            {...register('pais')}
-                            style={{
-                                width: '100%',
-                                padding: '12px 40px 12px 44px',
-                                fontSize: '14px',
-                                lineHeight: '1.5',
-                                borderRadius: '10px',
-                                backgroundColor: 'var(--bg-primary)',
-                                color: 'var(--text-primary)',
-                                border: `1.5px solid ${errors.pais ? 'var(--color-error)' : 'var(--border-color)'}`,
-                                outline: 'none',
-                                appearance: 'none',
-                                cursor: 'pointer',
-                                transition: 'all 200ms ease',
-                            }}
-                            onFocus={(e) => {
-                                e.target.style.borderColor = 'var(--color-primary)';
-                                e.target.style.boxShadow = '0 0 0 4px rgba(0,102,255,0.15)';
-                            }}
-                            onBlur={(e) => {
-                                e.target.style.borderColor = errors.pais ? 'var(--color-error)' : 'var(--border-color)';
-                                e.target.style.boxShadow = 'none';
-                            }}
-                        >
-                            {PAISES.map((p) => (
-                                <option key={p.value} value={p.value}>
-                                    {p.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    {errors.pais && (
-                        <p style={{ fontSize: '12px', color: 'var(--color-error)', margin: 0 }}>
-                            {errors.pais.message}
-                        </p>
                     )}
-                </div>
+                />
 
                 {/* Términos */}
                 <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>

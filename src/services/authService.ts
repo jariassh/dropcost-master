@@ -1,8 +1,6 @@
-/**
- * Servicio de autenticación — wrapper sobre la capa de datos.
- * Implementación placeholder que simula comportamiento async.
- * Será reemplazado por Supabase Auth en fase posterior.
- */
+import { supabase } from '@/lib/supabase';
+import { translateError } from '@/lib/errorTranslations';
+import { auditService } from './auditService';
 import type {
     LoginCredentials,
     RegisterData,
@@ -13,87 +11,303 @@ import type {
     User,
 } from '@/types/auth.types';
 
-// Simula latencia de red
-function simulateDelay(ms = 1000): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-// Usuario mock para desarrollo
-const MOCK_USER: User = {
-    id: 'usr_mock_001',
-    email: 'demo@dropcostmaster.com',
-    nombres: 'Juan',
-    apellidos: 'Pérez',
-    telefono: '+57 300 123 4567',
-    pais: 'CO',
-    planId: 'plan_pro',
-    estadoSuscripcion: 'activa',
-    emailVerificado: true,
-    twoFactorEnabled: true,
-    fechaRegistro: '2026-01-15T10:00:00Z',
-    ultimaActividad: new Date().toISOString(),
-};
-
 export async function loginUser(credentials: LoginCredentials): Promise<AuthResponse> {
-    await simulateDelay();
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+    });
 
-    // Simulación: cualquier email/password pasa, excepto "error@test.com"
-    if (credentials.email === 'error@test.com') {
-        return { success: false, error: 'Credenciales inválidas. Verifica tu correo y contraseña.' };
+    if (error) {
+        return { success: false, error: translateError(error.message) };
+    }
+
+    // Check if user is suspended
+    const { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select('estado_suscripcion')
+        .eq('id', data.user?.id)
+        .maybeSingle();
+
+    if (profile?.estado_suscripcion === 'suspendida') {
+        // Sign out immediately if suspended
+        await supabase.auth.signOut();
+        return { 
+            success: false, 
+            error: 'Tu cuenta ha sido suspendida. Contacta al administrador para más información.' 
+        };
+    }
+
+    // Single Session Enforcement: Generate new token
+    const newSessionToken = crypto.randomUUID();
+    
+    // Update DB
+    const { error: sessionError } = await supabase
+        .from('users')
+        .update({ session_token: newSessionToken } as any)
+        .eq('id', data.user?.id);
+
+    if (sessionError) {
+        console.error("Error setting session token:", sessionError);
+        // We log but don't block login
+    } else {
+        localStorage.setItem('dc_session_token', newSessionToken);
+        
+        // Registrar actividad de login (esto actualizará ultima_actividad y capturará IP)
+        await auditService.recordLog({
+            accion: 'LOGIN',
+            entidad: 'USER',
+            entidad_id: data.user?.id,
+            detalles: { method: 'email', success: true }
+        });
     }
 
     return {
         success: true,
         data: {
-            requiresOTP: true,
-            sessionId: `session_${Date.now()}`,
+            userId: data.user?.id,
+            accessToken: data.session?.access_token,
+            refreshToken: data.session?.refresh_token,
         },
     };
 }
 
 export async function registerUser(data: RegisterData): Promise<AuthResponse> {
-    await simulateDelay(1500);
+    const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+            data: {
+                nombres: data.nombres,
+                apellidos: data.apellidos,
+                pais: data.pais,
+                telefono: data.telefono,
+                referred_by: data.referredBy,
+                rol: 'cliente',
+            }
+        }
+    });
 
-    if (data.email === 'exists@test.com') {
-        return { success: false, error: 'Este correo ya está registrado.' };
+    if (error) {
+        return { success: false, error: translateError(error.message) };
+    }
+
+    // Initialize session token for new user if auto-login happens
+    if (authData.user) {
+         const newSessionToken = crypto.randomUUID();
+         if (authData.session) {
+             const { error: updateError } = await supabase
+                .from('users')
+                .update({ session_token: newSessionToken } as any)
+                .eq('id', authData.user.id);
+             
+             if (!updateError) {
+                localStorage.setItem('dc_session_token', newSessionToken);
+             }
+         }
     }
 
     return {
         success: true,
-        data: { userId: `usr_${Date.now()}` },
+        data: { userId: authData.user?.id },
     };
 }
 
-export async function verifyEmail(_data: VerifyEmailData): Promise<AuthResponse> {
-    await simulateDelay(800);
-    return { success: true };
-}
+// Restored Functions
 
-export async function verify2FA(_data: TwoFactorData): Promise<AuthResponse> {
-    await simulateDelay(800);
-
-    return {
-        success: true,
-        data: {
-            accessToken: `jwt_mock_${Date.now()}`,
-            refreshToken: `refresh_mock_${Date.now()}`,
-        },
-    };
-}
-
-export async function requestPasswordReset(_data: PasswordResetRequest): Promise<AuthResponse> {
-    await simulateDelay();
-    return { success: true };
+export async function verifyEmail(data: VerifyEmailData): Promise<AuthResponse> {
+    // Usually handled by link, but if code is provided:
+    // Requires email which we might not have if only userId is passed.
+    // Assuming this might be used in a flow where we know the email or checks session.
+    // For now, returning success false as placeholder if not implemented properly in original.
+    // Most auth flows use link clicking which Supabase handles globally.
+    return { success: false, error: "Verificación por código no soportada en este método." };
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-    await simulateDelay(500);
-    const token = localStorage.getItem('dropcost-access-token');
-    return token ? MOCK_USER : null;
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error || !user) {
+        return null;
+    }
+
+    // Get public profile with plan details
+    // 1. Intentar obtener el perfil SIN el join problemático primero
+    const { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (profileError) {
+        console.error("Error fetching user profile (Retry without join):", profileError);
+    }
+
+    // 2. Si tenemos perfil y plan_id, buscamos los detalles del plan por separado
+    let planDetails = null;
+    if (profile?.plan_id) {
+        const { data: planData, error: planError } = await supabase
+            .from('plans')
+            .select('name, limits')
+            .eq('slug', profile.plan_id)
+            .maybeSingle();
+        
+        // Si falla por slug, intentamos por id (backup strategy)
+        if (planError || !planData) {
+             const { data: planDataById } = await supabase
+                .from('plans')
+                .select('name, limits')
+                .eq('id', profile.plan_id)
+                .maybeSingle();
+             planDetails = planDataById;
+        } else {
+             planDetails = planData;
+        }
+    }
+
+    return {
+        id: user.id,
+        email: user.email!,
+        nombres: profile?.nombres || (user.user_metadata?.nombres as string) || '',
+        apellidos: profile?.apellidos || (user.user_metadata?.apellidos as string) || '',
+        telefono: profile?.telefono || (user.user_metadata?.telefono as string),
+        pais: profile?.pais || (user.user_metadata?.pais as string),
+        rol: (profile?.rol || user.user_metadata?.rol || 'cliente') as any,
+        estadoSuscripcion: (profile?.estado_suscripcion || 'pendiente') as any,
+        emailVerificado: !!user.email_confirmed_at,
+        twoFactorEnabled: profile?.['2fa_habilitado'] || false,
+        fechaRegistro: user.created_at,
+        codigoReferido: profile?.codigo_referido_personal || undefined,
+        planId: profile?.plan_id || 'plan_free',
+        plan: planDetails ? {
+            name: planDetails.name,
+            limits: planDetails.limits as any
+        } : undefined
+    };
+}
+
+export async function requestPasswordReset(data: PasswordResetRequest): Promise<AuthResponse> {
+    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/actualizar-contrasena`,
+    });
+
+    if (error) {
+        return { success: false, error: translateError(error.message) };
+    }
+
+    return { success: true };
+}
+
+export async function updatePassword(newPassword: string): Promise<AuthResponse> {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+    if (error) {
+        return { success: false, error: translateError(error.message) };
+    }
+
+    return { success: true };
+}
+
+export async function updateEmail(newEmail: string): Promise<AuthResponse> {
+    const { error } = await supabase.auth.updateUser({ email: newEmail });
+
+    if (error) {
+        return { success: false, error: translateError(error.message) };
+    }
+
+    return { success: true };
+}
+
+/**
+ * Reenvía el email de verificación a un usuario.
+ */
+export async function resendVerificationEmail(email: string): Promise<AuthResponse> {
+    const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+    });
+
+    if (error) {
+        return { success: false, error: translateError(error.message) };
+    }
+
+    return { success: true };
+}
+
+// 2FA Functions using Edge Function
+
+async function invoke2FA(action: string, extra: any = {}): Promise<AuthResponse> {
+    const { data, error } = await supabase.functions.invoke('auth-2fa', {
+        body: { action, ...extra }
+    });
+
+    if (error) {
+        return { success: false, error: translateError(error.message) };
+    }
+    
+    // Edge function returns standard JSON format
+    return data; 
+}
+
+export async function request2FAActivation(): Promise<AuthResponse> {
+    return invoke2FA('request');
+}
+
+export async function confirm2FAActivation(code: string): Promise<AuthResponse> {
+    return invoke2FA('verify', { code });
+}
+
+export async function request2FALogin(): Promise<AuthResponse> {
+    // Reuses request logic (sends code to email)
+    return invoke2FA('request'); 
+}
+
+export async function verify2FALogin(code: string): Promise<AuthResponse> {
+    return invoke2FA('verify_login', { code });
+}
+
+export async function disable2FA(): Promise<AuthResponse> {
+    return invoke2FA('disable');
 }
 
 export async function logoutUser(): Promise<void> {
-    await simulateDelay(300);
-    localStorage.removeItem('dropcost-access-token');
-    localStorage.removeItem('dropcost-refresh-token');
+    localStorage.removeItem('dc_session_token');
+    await supabase.auth.signOut();
+}
+
+/**
+ * Actualiza el perfil del usuario (metadatos y tabla public.users).
+ */
+export async function updateUserProfile(userData: Partial<User>): Promise<AuthResponse> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Sesión no encontrada' };
+
+    // 1. Actualizar metadata de Auth
+    const { error: authError } = await supabase.auth.updateUser({
+        data: {
+            nombres: userData.nombres,
+            apellidos: userData.apellidos,
+            telefono: userData.telefono,
+            pais: userData.pais
+        }
+    });
+
+    if (authError) return { success: false, error: translateError(authError.message) };
+
+    // 2. Actualizar tabla public.users
+    const updates: any = {
+        nombres: userData.nombres,
+        apellidos: userData.apellidos,
+        telefono: userData.telefono,
+        pais: userData.pais,
+        codigo_referido_personal: userData.codigoReferido
+    };
+
+    const { error: profileError } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', user.id);
+
+    if (profileError) return { success: false, error: translateError(profileError.message) };
+
+    return { success: true };
 }

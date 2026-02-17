@@ -5,7 +5,7 @@ import type { ModalSize } from '@/types/common.types';
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
-    title?: string;
+    title?: ReactNode;
     size?: ModalSize;
     children: ReactNode;
     footer?: ReactNode;
@@ -73,7 +73,11 @@ export function Modal({
           shadow-[var(--shadow-xl)] p-8
           ${size === 'sm' ? 'p-6' : ''}
         `.trim()}
-                style={{ animation: 'scaleIn 200ms ease-out' }}
+                style={{
+                    animation: 'scaleIn 200ms ease-out',
+                    padding: '32px',
+                    maxHeight: '90vh',
+                }}
             >
                 {/* Cabecera */}
                 {title && (

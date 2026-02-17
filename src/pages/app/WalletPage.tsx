@@ -1,0 +1,426 @@
+import React, { useState, useEffect } from 'react';
+import {
+    Wallet,
+    TrendingUp,
+    ArrowUpRight,
+    History,
+    Plus,
+    Search,
+    Download,
+    Eye,
+    ChevronRight,
+    LucideIcon
+} from 'lucide-react';
+import { Card } from '@/components/common/Card';
+import { Button } from '@/components/common/Button';
+import { Badge } from '@/components/common/Badge';
+import { Spinner } from '@/components/common/Spinner';
+import { walletService, WalletBalance, WalletMovement, WithdrawalRequest } from '@/services/walletService';
+import { formatCurrency } from '@/lib/format';
+import { fetchExchangeRates, convertPrice } from '@/utils/currencyUtils';
+import { useAuthStore } from '@/store/authStore';
+import { WithdrawalModal } from '@/components/referidos/WithdrawalModal';
+import { supabase } from '@/lib/supabase';
+
+export const WalletPage: React.FC = () => {
+    const { user } = useAuthStore();
+    const [balance, setBalance] = useState<WalletBalance | null>(null);
+    const [movements, setMovements] = useState<WalletMovement[]>([]);
+    const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
+    const [displayCurrency, setDisplayCurrency] = useState<string>('COP');
+    const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+    const [minimumWithdrawal, setMinimumWithdrawal] = useState<number>(10);
+    const [retentionDays, setRetentionDays] = useState<number>(30);
+
+    const loadData = async () => {
+        try {
+            // 1. Cargar balances, movimientos y configuración
+            const [balanceData, movementsData, withdrawalsData, rates, minWithdrawal] = await Promise.all([
+                walletService.getBalance(),
+                walletService.getMovements(),
+                walletService.getWithdrawals(),
+                fetchExchangeRates('USD'),
+                walletService.getMinimumWithdrawal()
+            ]);
+
+            // 2. Obtener días de retención desde la configuración
+            const { data: config } = await supabase
+                .from('sistema_referidos_config' as any)
+                .select('dias_retencion_comision')
+                .order('fecha_actualizacion', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            const days = config?.dias_retencion_comision ?? 30;
+
+            setBalance(balanceData);
+            setMovements(movementsData);
+            setWithdrawals(withdrawalsData);
+            setExchangeRates(rates);
+            setMinimumWithdrawal(minWithdrawal);
+            setRetentionDays(days);
+
+            // Determinar moneda de visualización
+            if (user?.pais === 'MX') setDisplayCurrency('MXN');
+            else if (user?.pais === 'EC') setDisplayCurrency('USD');
+            else setDisplayCurrency('COP');
+
+        } catch (error) {
+            console.error('Error loading wallet data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        setLoading(true);
+        loadData();
+    }, [user]);
+
+    const getConverted = (amountUsd: number) => {
+        if (!exchangeRates) return amountUsd;
+        return convertPrice(amountUsd, displayCurrency, exchangeRates);
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <Spinner size="lg" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="dc-wallet-container" style={{ display: 'flex', flexDirection: 'column', gap: '64px', padding: '20px 0 60px 0' }}>
+            {/* Header section */}
+            <div className="dc-wallet-header">
+                <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>Mi Billetera</h1>
+                <p style={{ color: 'var(--text-tertiary)', fontSize: '15px' }}>Gestiona tus comisiones y solicita retiros de forma segura.</p>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <BalanceCard
+                    title="Saldo Disponible"
+                    amount={getConverted(balance?.available_balance || 0)}
+                    currency={displayCurrency}
+                    icon={Wallet}
+                    color="var(--color-primary)"
+                    subtitle="Dinero listo para retirar"
+                />
+                <BalanceCard
+                    title="Total Generado"
+                    amount={getConverted(balance?.total_earned || 0)}
+                    currency={displayCurrency}
+                    icon={TrendingUp}
+                    color="var(--color-success)"
+                    subtitle="Histórico de ganancias"
+                />
+                <BalanceCard
+                    title="En Revisión"
+                    amount={getConverted(balance?.pending_commissions || 0)}
+                    currency={displayCurrency}
+                    icon={History}
+                    color="var(--color-warning)"
+                    subtitle={`Comisiones pendientes (< ${retentionDays} días)`}
+                />
+            </div>
+
+            {/* Main Content Area */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                {/* Left: Movements Table */}
+                <div className="xl:col-span-2" style={{ display: 'flex', flexDirection: 'column', gap: '64px' }}>
+                    <Card title="Movimientos Recientes">
+                        <div className="overflow-x-auto">
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                        <th style={tableHeaderStyle}>Concepto</th>
+                                        <th style={tableHeaderStyle}>Tipo</th>
+                                        <th style={tableHeaderStyle}>Fecha</th>
+                                        <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {movements.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                                                No hay movimientos registrados.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        movements.map((move) => (
+                                            <tr key={move.id} style={tableRowStyle}>
+                                                <td style={tableCellStyle}>
+                                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{move.description}</span>
+                                                </td>
+                                                <td style={tableCellStyle}>
+                                                    <Badge variant={move.type === 'withdrawal' ? 'modern-error' : 'modern-success'}>
+                                                        {move.type === 'referral_bonus' ? 'Comisión' :
+                                                            move.type === 'withdrawal' ? 'Retiro' : 'Ajuste'}
+                                                    </Badge>
+                                                </td>
+                                                <td style={tableCellStyle}>
+                                                    <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                                                        {new Date(move.created_at).toLocaleDateString()}
+                                                    </span>
+                                                </td>
+                                                <td style={{ ...tableCellStyle, textAlign: 'right' }}>
+                                                    <span style={{
+                                                        fontWeight: 700,
+                                                        color: move.type === 'withdrawal' ? 'var(--color-error)' : 'var(--color-success)'
+                                                    }}>
+                                                        {move.type === 'withdrawal' ? '-' : '+'}
+                                                        {formatCurrency(getConverted(move.amount), displayCurrency)}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+
+                    <Card title="Estado de Retiros">
+                        <div className="overflow-x-auto">
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                        <th style={tableHeaderStyle}>ID</th>
+                                        <th style={tableHeaderStyle}>Monto Local</th>
+                                        <th style={tableHeaderStyle}>Estado</th>
+                                        <th style={tableHeaderStyle}>Banco</th>
+                                        <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {withdrawals.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                                                No has solicitado retiros aún.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        withdrawals.map((req) => (
+                                            <tr key={req.id} style={tableRowStyle}>
+                                                <td style={tableCellStyle}>
+                                                    <span style={{ fontSize: '12px', fontFamily: 'monospace', color: 'var(--text-tertiary)' }}>
+                                                        {req.id.split('-')[0]}...
+                                                    </span>
+                                                </td>
+                                                <td style={tableCellStyle}>
+                                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                                                        {formatCurrency(req.monto_local, req.moneda_destino)}
+                                                    </span>
+                                                </td>
+                                                <td style={tableCellStyle}>
+                                                    <Badge variant={
+                                                        req.estado === 'completado' ? 'modern-success' :
+                                                            req.estado === 'en_proceso' ? 'pill-info' :
+                                                                req.estado === 'rechazado' ? 'modern-error' : 'pill-warning'
+                                                    }>
+                                                        {req.estado === 'completado' ? 'Completado' :
+                                                            req.estado === 'en_proceso' ? 'En Proceso' :
+                                                                req.estado === 'rechazado' ? 'Rechazado' : 'Pendiente'}
+                                                    </Badge>
+                                                </td>
+                                                <td style={tableCellStyle}>
+                                                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{req.banco_nombre}</span>
+                                                </td>
+                                                <td style={{ ...tableCellStyle, textAlign: 'right' }}>
+                                                    <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                                                        {new Date(req.fecha_solicitud).toLocaleDateString()}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+                </div>
+
+                {/* Right: Actions and Bank Info */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                    <Card>
+                        <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                            <div style={{
+                                width: '60px', height: '60px',
+                                backgroundColor: 'rgba(0, 102, 255, 0.1)',
+                                borderRadius: '16px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                margin: '0 auto 20px',
+                                color: 'var(--color-primary)'
+                            }}>
+                                <ArrowUpRight size={32} />
+                            </div>
+                            <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px' }}>Solicitar Retiro</h3>
+                            <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginBottom: '24px' }}>
+                                Retira tus ganancias de forma rápida a tu cuenta bancaria.
+                                <br /> <span style={{ fontSize: '14px', color: 'var(--color-primary)', fontWeight: 800, display: 'block', marginTop: '12px' }}>
+                                    {displayCurrency === 'COP' ? (
+                                        `Mínimo de retiro: $ ${new Intl.NumberFormat('es-CO').format(Math.round(((exchangeRates?.['COP'] || 3950) * minimumWithdrawal) / 100) * 100)} (~${minimumWithdrawal} USD)`
+                                    ) : (
+                                        `Mínimo de retiro: ${formatCurrency(getConverted(minimumWithdrawal), displayCurrency)} (~${minimumWithdrawal} USD)`
+                                    )}
+                                </span>
+                            </p>
+
+                            <Button
+                                className="w-full"
+                                leftIcon={<Plus size={18} />}
+                                disabled={(balance?.available_balance ?? 0) < minimumWithdrawal}
+                                onClick={() => setIsWithdrawModalOpen(true)}
+                            >
+                                Iniciar Retiro
+                            </Button>
+                        </div>
+                    </Card>
+
+                    <Card title="Información Bancaria">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                                Vincula tu cuenta para recibir tus pagos automáticamente.
+                            </p>
+
+                            {user?.bank_info ? (
+                                <div style={{
+                                    padding: '16px',
+                                    backgroundColor: 'var(--bg-secondary)',
+                                    borderRadius: '12px',
+                                    border: '1px solid var(--border-color)'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Banco</span>
+                                        <span style={{ fontSize: '13px', fontWeight: 600 }}>{user.bank_info.banco_nombre}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Cuenta</span>
+                                        <span style={{ fontSize: '13px', fontWeight: 600 }}>****{user.bank_info.cuenta_numero?.slice(-4)}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Titular</span>
+                                        <span style={{ fontSize: '13px', fontWeight: 600 }}>{user.bank_info.titular_nombre}</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{ padding: '20px', textAlign: 'center', border: '2px dashed var(--border-color)', borderRadius: '12px' }}>
+                                    <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Sin cuenta vinculada</span>
+                                </div>
+                            )}
+
+                            <Button variant="ghost" size="sm" className="w-full">
+                                {user?.bank_info ? 'Cambiar cuenta' : 'Vincular cuenta'}
+                            </Button>
+                        </div>
+                    </Card>
+
+                    <Card title="Información de Wise">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'start' }}>
+                                <div style={{ color: 'var(--color-primary)' }}><Eye size={18} /></div>
+                                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                                    Los retiros se procesan todos los <strong>viernes</strong>.
+                                </p>
+                            </div>
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'start' }}>
+                                <div style={{ color: 'var(--color-primary)' }}><Download size={18} /></div>
+                                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                                    Se aplica un cargo de gestión del <strong>3%</strong> por transferencia.
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            </div>
+
+            {/* Withdraw Modal */}
+            <WithdrawalModal
+                isOpen={isWithdrawModalOpen}
+                onClose={() => setIsWithdrawModalOpen(false)}
+                onSuccess={loadData}
+                availableBalanceUsd={balance?.available_balance || 0}
+                exchangeRate={exchangeRates?.[displayCurrency] || 1}
+                currency={displayCurrency}
+                existingBankInfo={user?.bank_info}
+                minimumWithdrawalUsd={minimumWithdrawal}
+            />
+        </div>
+    );
+};
+
+/* Styles & Sub-components */
+
+const BalanceCard: React.FC<{
+    title: string;
+    amount: number;
+    currency: string;
+    icon: LucideIcon;
+    color: string;
+    subtitle: string;
+}> = ({ title, amount, currency, icon: Icon, color, subtitle }) => (
+    <div style={{
+        backgroundColor: 'var(--card-bg)',
+        borderRadius: '20px',
+        padding: '24px',
+        border: '1px solid var(--border-color)',
+        boxShadow: 'var(--shadow-sm)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px'
+    }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+            <div style={{
+                width: '44px', height: '44px',
+                backgroundColor: `${color}15`,
+                borderRadius: '12px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: color
+            }}>
+                <Icon size={24} />
+            </div>
+            <div style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                backgroundColor: 'var(--bg-secondary)',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                color: 'var(--text-tertiary)',
+                textTransform: 'uppercase'
+            }}>
+                {currency}
+            </div>
+        </div>
+        <div>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>{title}</p>
+            <h2 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                {formatCurrency(amount, currency)}
+            </h2>
+            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '6px' }}>{subtitle}</p>
+        </div>
+    </div>
+);
+
+const tableHeaderStyle: React.CSSProperties = {
+    padding: '16px 20px',
+    textAlign: 'left',
+    fontSize: '11px',
+    fontWeight: 700,
+    color: 'var(--text-tertiary)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em'
+};
+
+const tableCellStyle: React.CSSProperties = {
+    padding: '16px 20px',
+    fontSize: '14px'
+};
+
+const tableRowStyle: React.CSSProperties = {
+    borderBottom: '1px solid var(--border-color)',
+    transition: 'background-color 0.2s'
+};
