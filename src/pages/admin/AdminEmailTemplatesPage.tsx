@@ -1,7 +1,7 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
-import { useToast, Badge, Modal, Input, Spinner } from '@/components/common';
+import { useToast, Badge, Modal, Input, Spinner, ConfirmDialog } from '@/components/common';
 import {
     Mail,
     Save,
@@ -24,12 +24,20 @@ import {
     Search,
     ArrowLeft,
     MoreHorizontal,
-    ChevronRight
+    ChevronRight,
+    Copy,
+    Trash2,
+    Archive,
+    ExternalLink,
+    MoveUp,
+    FolderInput,
+    Edit3
 } from 'lucide-react';
 import { configService } from '@/services/configService';
 
 interface EmailItem {
     id: string;
+    name: string;
     slug: string;
     subject: string;
     html_content: string;
@@ -39,6 +47,7 @@ interface EmailItem {
     is_folder?: boolean;
     parent_id?: string | null;
     status: 'activo' | 'archivado';
+    trigger_event?: string;
     updated_by_name?: string;
 }
 
@@ -61,10 +70,28 @@ export function AdminEmailTemplatesPage() {
     // Create States
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
-    const [newItem, setNewItem] = useState({ slug: '', description: '', subject: '' });
+    const [newItem, setNewItem] = useState({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
     const [isCreating, setIsCreating] = useState(false);
 
+    // Actions State
+    const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+    const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+    const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
+    const [itemToManage, setItemToManage] = useState<EmailItem | null>(null);
+    const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+
     const toast = useToast();
+
+    const generateSlug = (text: string) => {
+        return text
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]/g, "_")
+            .replace(/_{2,}/g, "_")
+            .replace(/^_|_$/g, "")
+            .toUpperCase();
+    };
 
     const insertVariable = (field: 'subject' | 'html_content', variableName: string) => {
         if (!selectedTemplate) return;
@@ -286,12 +313,12 @@ export function AdminEmailTemplatesPage() {
                 variables: [],
                 is_folder: false,
                 parent_id: navigationPath.length > 0 ? navigationPath[navigationPath.length - 1] : null
-            });
+            }) as any;
             setTemplates([...templates, data]);
             setIsCreateModalOpen(false);
-            setNewItem({ slug: '', description: '', subject: '' });
+            setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
             toast.success('¡Creado!', 'La plantilla se ha creado correctamente.');
-            setSelectedTemplate(data);
+            setSelectedTemplate(data as any);
         } catch (error) {
             toast.error('Error', 'No se pudo crear la plantilla.');
         } finally {
@@ -304,6 +331,7 @@ export function AdminEmailTemplatesPage() {
         try {
             setIsCreating(true);
             const data = await configService.createEmailTemplate({
+                name: newItem.name,
                 slug: newItem.slug,
                 description: newItem.description,
                 subject: 'Carpeta',
@@ -311,10 +339,10 @@ export function AdminEmailTemplatesPage() {
                 variables: [],
                 is_folder: true,
                 parent_id: navigationPath.length > 0 ? navigationPath[navigationPath.length - 1] : null
-            });
+            }) as any;
             setTemplates([...templates, data]);
             setIsFolderModalOpen(false);
-            setNewItem({ slug: '', description: '', subject: '' });
+            setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
             toast.success('¡Creado!', 'La carpeta se ha creado correctamente.');
         } catch (error) {
             toast.error('Error', 'No se pudo crear la carpeta.');
@@ -322,6 +350,237 @@ export function AdminEmailTemplatesPage() {
             setIsCreating(false);
         }
     }
+
+    async function handleClone(item: EmailItem) {
+        try {
+            const data = await configService.createEmailTemplate({
+                slug: `${item.slug}_copy`,
+                description: `Copia de ${item.description}`,
+                subject: item.subject,
+                html_content: item.html_content,
+                variables: item.variables,
+                is_folder: false,
+                parent_id: item.parent_id
+            }) as any;
+            setTemplates([...templates, data]);
+            toast.success('¡Clonado!', 'La plantilla se ha clonado correctamente.');
+        } catch (error) {
+            toast.error('Error', 'No se pudo clonar la plantilla.');
+        }
+    }
+
+    async function handleArchive(item: EmailItem) {
+        try {
+            const newStatus = item.status === 'activo' ? 'archivado' : 'activo';
+            await configService.updateEmailTemplate(item.id, { status: newStatus });
+            setTemplates(templates.map(t => t.id === item.id ? { ...t, status: newStatus } : t));
+            toast.success(newStatus === 'archivado' ? 'Archivado' : 'Activado', `Plantilla ${newStatus === 'archivado' ? 'archivada' : 'activada'} correctamente.`);
+        } catch (error) {
+            toast.error('Error', 'No se pudo actualizar el estado.');
+        }
+    }
+
+    async function handleDelete(item: EmailItem) {
+        setItemToManage(item);
+        setIsConfirmDeleteOpen(true);
+        setActiveMenuId(null);
+    }
+
+    async function confirmDelete() {
+        if (!itemToManage) return;
+        try {
+            setIsCreating(true);
+            await configService.deleteEmailTemplate(itemToManage.id);
+            setTemplates(templates.filter(t => t.id !== itemToManage.id));
+            toast.success('Borrado', `${itemToManage.is_folder ? 'Carpeta' : 'Plantilla'} eliminada correctamente.`);
+            setIsConfirmDeleteOpen(false);
+            setItemToManage(null);
+        } catch (error) {
+            toast.error('Error', 'No se pudo borrar el elemento.');
+        } finally {
+            setIsCreating(false);
+        }
+    }
+
+    async function handleRenameSubmit() {
+        if (!itemToManage || !newItem.slug) return;
+        try {
+            setIsCreating(true);
+            await configService.updateEmailTemplate(itemToManage.id, {
+                name: newItem.name,
+                slug: newItem.slug,
+                description: newItem.description,
+                trigger_event: newItem.trigger_event
+            });
+            setTemplates(templates.map(t => t.id === itemToManage.id ? {
+                ...t,
+                name: newItem.name,
+                slug: newItem.slug,
+                description: newItem.description,
+                trigger_event: newItem.trigger_event
+            } : t));
+            setIsRenameModalOpen(false);
+            setItemToManage(null);
+            setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+            toast.success('¡Actualizado!', 'Se ha actualizado la información correctamente.');
+        } catch (error) {
+            toast.error('Error', 'No se pudo actualizar.');
+        } finally {
+            setIsCreating(false);
+        }
+    }
+
+    async function handleMoveSubmit(targetParentId: string | null) {
+        if (!itemToManage) return;
+        try {
+            setIsCreating(true);
+            await configService.updateEmailTemplate(itemToManage.id, { parent_id: targetParentId });
+            setTemplates(templates.map(t => t.id === itemToManage.id ? { ...t, parent_id: targetParentId } : t));
+            setIsMoveModalOpen(false);
+            setItemToManage(null);
+            toast.success('Movido', 'Elemento movido correctamente.');
+        } catch (error) {
+            toast.error('Error', 'No se pudo mover el elemento.');
+        } finally {
+            setIsCreating(false);
+        }
+    }
+
+    // Cerrar menú al hacer clic fuera
+    useEffect(() => {
+        const handleClickOutside = () => setActiveMenuId(null);
+        if (activeMenuId) window.addEventListener('click', handleClickOutside);
+        return () => window.removeEventListener('click', handleClickOutside);
+    }, [activeMenuId]);
+
+    const ActionMenu = ({ item }: { item: EmailItem }) => (
+        <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveMenuId(activeMenuId === item.id ? null : item.id);
+                }}
+                style={{
+                    width: '38px',
+                    height: '38px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '12px',
+                    backgroundColor: 'transparent',
+                    border: '1px solid transparent',
+                    color: 'var(--text-tertiary)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                    e.currentTarget.style.borderColor = 'var(--border-color)';
+                    e.currentTarget.style.color = 'var(--color-primary)';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.borderColor = 'transparent';
+                    e.currentTarget.style.color = 'var(--text-tertiary)';
+                }}
+            >
+                <MoreVertical size={20} />
+            </button>
+
+            {activeMenuId === item.id && (
+                <div
+                    className="absolute right-0 top-full mt-2 w-64 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-xl z-[100] animate-in fade-in zoom-in-95 duration-200"
+                    style={{
+                        filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.15))',
+                        padding: '8px'
+                    }}
+                >
+                    {item.is_folder ? (
+                        <>
+                            <button
+                                onClick={() => {
+                                    setItemToManage(item);
+                                    setNewItem({ name: item.name || '', slug: item.slug, description: item.description || '', subject: '', trigger_event: '' });
+                                    setIsRenameModalOpen(true);
+                                    setActiveMenuId(null);
+                                }}
+                                className="flex items-center w-full text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--color-primary)] rounded-xl transition-colors text-left border-none cursor-pointer"
+                                style={{ padding: '14px 24px', gap: '16px' }}
+                            >
+                                <Edit3 size={18} /> Renombrar carpeta
+                            </button>
+                            <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '4px 8px' }} />
+                            <button
+                                onClick={() => {
+                                    handleDelete(item);
+                                }}
+                                className="flex items-center w-full text-sm font-semibold text-[var(--color-error)] hover:bg-[var(--color-error)]/10 rounded-xl transition-colors text-left border-none cursor-pointer"
+                                style={{ padding: '14px 24px', gap: '16px' }}
+                            >
+                                <Trash2 size={18} /> Borrar Carpeta
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button
+                                onClick={() => {
+                                    setItemToManage(item);
+                                    setNewItem({ name: item.name || '', slug: item.slug, description: item.description || '', subject: item.subject, trigger_event: item.trigger_event || '' });
+                                    setIsRenameModalOpen(true);
+                                    setActiveMenuId(null);
+                                }}
+                                className="flex items-center w-full text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--color-primary)] rounded-xl transition-colors text-left border-none cursor-pointer"
+                                style={{ padding: '14px 24px', gap: '16px' }}
+                            >
+                                <Edit3 size={18} /> Editar Información
+                            </button>
+                            <button
+                                onClick={() => {
+                                    handleClone(item);
+                                    setActiveMenuId(null);
+                                }}
+                                className="flex items-center w-full text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--color-primary)] rounded-xl transition-colors text-left border-none cursor-pointer"
+                                style={{ padding: '14px 24px', gap: '16px' }}
+                            >
+                                <Copy size={18} /> Clonar Plantilla
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setItemToManage(item);
+                                    setIsMoveModalOpen(true);
+                                    setActiveMenuId(null);
+                                }}
+                                className="flex items-center w-full text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--color-primary)] rounded-xl transition-colors text-left border-none cursor-pointer"
+                                style={{ padding: '14px 24px', gap: '16px' }}
+                            >
+                                <FolderInput size={18} /> Mover a Carpeta
+                            </button>
+                            <button
+                                onClick={() => {
+                                    handleArchive(item);
+                                    setActiveMenuId(null);
+                                }}
+                                className="flex items-center w-full text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--color-primary)] rounded-xl transition-colors text-left border-none cursor-pointer"
+                                style={{ padding: '14px 24px', gap: '16px' }}
+                            >
+                                <Archive size={18} /> {item.status === 'activo' ? 'Archivar Plantilla' : 'Reactivar Plantilla'}
+                            </button>
+                            <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '4px 8px' }} />
+                            <button
+                                onClick={() => {
+                                    handleDelete(item);
+                                }}
+                                className="flex items-center w-full text-sm font-semibold text-[var(--color-error)] hover:bg-[var(--color-error)]/10 rounded-xl transition-colors text-left border-none cursor-pointer"
+                                style={{ padding: '14px 24px', gap: '16px' }}
+                            >
+                                <Trash2 size={18} /> Eliminar Permanente
+                            </button>
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
+    );
 
     // Renderizador de previsualización simple
     const renderPreview = (content: string) => {
@@ -341,8 +600,11 @@ export function AdminEmailTemplatesPage() {
     const filteredItems = templates.filter(item => {
         const itemStatus = item.status || 'activo';
         const matchesStatus = statusFilter === 'all' || itemStatus === statusFilter;
-        const matchesSearch = item.slug.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.subject.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch =
+            item.slug.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (item.description || '').toLowerCase().includes(searchQuery.toLowerCase());
         const matchesPath = (item.parent_id || null) === currentFolderId;
 
         if (viewMode === 'recent') return matchesStatus && matchesSearch;
@@ -351,7 +613,7 @@ export function AdminEmailTemplatesPage() {
         if (viewMode === 'recent') return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
         if (a.is_folder && !b.is_folder) return -1;
         if (!a.is_folder && b.is_folder) return 1;
-        return a.slug.localeCompare(b.slug);
+        return (a.name || a.slug).localeCompare(b.name || b.slug);
     });
 
     return (
@@ -370,49 +632,54 @@ export function AdminEmailTemplatesPage() {
 
             {!selectedTemplate ? (
                 <React.Fragment>
-                    {/* Toolbar alineada con Usuarios */}
+                    {/* Toolbar más espaciosa */}
                     <div style={{
                         display: 'flex',
                         flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        gap: '16px',
-                        flexWrap: 'wrap'
+                        gap: '24px',
+                        flexWrap: 'wrap',
+                        marginBottom: '8px'
                     }}>
-                        <div style={{ display: 'flex', gap: '12px', flex: 1, maxWidth: '650px' }}>
+                        <div style={{ display: 'flex', gap: '16px', flex: 1, maxWidth: '700px' }}>
                             <div style={{ position: 'relative', flex: 2 }}>
-                                <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+                                <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
                                 <input
                                     type="text"
-                                    placeholder="Buscar por nombre, asunto..."
+                                    placeholder="Buscar por nombre, asunto o descripción..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     style={{
                                         width: '100%',
-                                        padding: '12px 12px 12px 42px',
+                                        padding: '14px 14px 14px 48px',
                                         backgroundColor: 'var(--bg-primary)',
                                         border: '1.5px solid var(--border-color)',
-                                        borderRadius: '12px',
+                                        borderRadius: '14px',
                                         fontSize: '14px',
                                         color: 'var(--text-primary)',
                                         outline: 'none',
-                                        transition: 'all 0.2s ease'
+                                        transition: 'all 0.2s ease',
+                                        boxShadow: 'var(--shadow-sm)'
                                     }}
                                 />
                             </div>
 
                             <select
                                 style={{
-                                    padding: '10px 16px',
+                                    padding: '0 16px',
+                                    height: '52px',
                                     backgroundColor: 'var(--bg-primary)',
                                     border: '1.5px solid var(--border-color)',
-                                    borderRadius: '12px',
+                                    borderRadius: '14px',
                                     fontSize: '14px',
+                                    fontWeight: 500,
                                     color: 'var(--text-primary)',
                                     cursor: 'pointer',
                                     outline: 'none',
                                     flex: 1,
-                                    minWidth: '150px'
+                                    minWidth: '160px',
+                                    boxShadow: 'var(--shadow-sm)'
                                 }}
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value as any)}
@@ -423,192 +690,350 @@ export function AdminEmailTemplatesPage() {
                             </select>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', justifyContent: 'space-between' }} className="w-full sm:w-auto">
-                            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                                {filteredItems.length} plantillas
-                            </p>
-                            <div style={{ display: 'flex', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }} className="w-full sm:w-auto">
+                            <div style={{ display: 'flex', gap: '4px', backgroundColor: 'var(--bg-secondary)', padding: '4px', borderRadius: '12px' }}>
                                 <button
                                     onClick={() => setViewMode('recent')}
                                     style={{
-                                        padding: '8px 12px',
-                                        border: '1px solid var(--border-color)',
-                                        borderTopLeftRadius: '8px',
-                                        borderBottomLeftRadius: '8px',
-                                        backgroundColor: viewMode === 'recent' ? 'var(--bg-secondary)' : 'var(--bg-primary)',
+                                        padding: '8px 16px',
+                                        border: 'none',
+                                        borderRadius: '10px',
+                                        backgroundColor: viewMode === 'recent' ? 'var(--bg-primary)' : 'transparent',
                                         color: viewMode === 'recent' ? 'var(--color-primary)' : 'var(--text-tertiary)',
+                                        boxShadow: viewMode === 'recent' ? 'var(--shadow-sm)' : 'none',
                                         cursor: 'pointer',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '8px'
+                                        gap: '8px',
+                                        fontSize: '11px',
+                                        fontWeight: 800,
+                                        transition: 'all 0.2s'
                                     }}
                                 >
-                                    <Clock size={16} />
-                                    <span style={{ fontSize: '11px', fontWeight: 700 }}>RECIENTES</span>
+                                    <Clock size={16} /> RECIENTES
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
                                     style={{
-                                        padding: '8px 12px',
-                                        border: '1px solid var(--border-color)',
-                                        borderTopRightRadius: '8px',
-                                        borderBottomRightRadius: '8px',
-                                        backgroundColor: viewMode === 'list' ? 'var(--bg-secondary)' : 'var(--bg-primary)',
+                                        padding: '8px 16px',
+                                        border: 'none',
+                                        borderRadius: '10px',
+                                        backgroundColor: viewMode === 'list' ? 'var(--bg-primary)' : 'transparent',
                                         color: viewMode === 'list' ? 'var(--color-primary)' : 'var(--text-tertiary)',
+                                        boxShadow: viewMode === 'list' ? 'var(--shadow-sm)' : 'none',
                                         cursor: 'pointer',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '8px'
+                                        gap: '8px',
+                                        fontSize: '11px',
+                                        fontWeight: 800,
+                                        transition: 'all 0.2s'
                                     }}
                                 >
-                                    <ListIcon size={16} />
-                                    <span style={{ fontSize: '11px', fontWeight: 700 }}>LISTADO</span>
+                                    <ListIcon size={16} /> LISTADO
                                 </button>
                             </div>
-                            <Button
-                                variant="secondary"
-                                onClick={() => setIsFolderModalOpen(true)}
-                                style={{ borderRadius: '12px', padding: '0 20px', height: '44px' }}
-                            >
-                                <Folder size={18} style={{ marginRight: '8px' }} /> Carpeta
-                            </Button>
-                            <Button
-                                onClick={() => setIsCreateModalOpen(true)}
-                                style={{ borderRadius: '12px', padding: '0 20px', height: '44px' }}
-                                className="w-full sm:w-auto"
-                            >
-                                <Plus size={18} style={{ marginRight: '8px' }} /> Nuevo
-                            </Button>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => setIsFolderModalOpen(true)}
+                                    leftIcon={<Folder size={18} />}
+                                    style={{ height: '52px', borderRadius: '14px', padding: '0 24px' }}
+                                >
+                                    Carpeta
+                                </Button>
+                                <Button
+                                    onClick={() => setIsCreateModalOpen(true)}
+                                    leftIcon={<Plus size={18} />}
+                                    style={{ height: '52px', borderRadius: '14px', padding: '0 24px' }}
+                                >
+                                    Nuevo
+                                </Button>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Tabla alineada con Usuarios */}
-                    <Card noPadding style={{ overflow: 'hidden', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border-color)', marginTop: '8px' }}>
-                        {navigationPath.length > 0 && (
-                            <div className="flex items-center gap-2 px-6 py-3 bg-[var(--bg-tertiary)]/20 text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] border-b border-[var(--border-color)]">
-                                <span className="hover:text-[var(--color-primary)] cursor-pointer" onClick={() => setNavigationPath([])}>Volver al Inicio</span>
-                                {navigationPath.map((id, index) => {
-                                    const folder = templates.find(t => t.id === id);
-                                    return (
-                                        <React.Fragment key={id}>
-                                            <ChevronRight size={10} className="opacity-50" />
-                                            <span
-                                                className="hover:text-[var(--color-primary)] cursor-pointer"
-                                                onClick={() => setNavigationPath(navigationPath.slice(0, index + 1))}
-                                            >
-                                                {folder?.slug || 'Carpeta'}
-                                            </span>
-                                        </React.Fragment>
-                                    );
-                                })}
-                            </div>
-                        )}
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                                <thead>
-                                    <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
-                                        <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plantilla</th>
-                                        <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tipo</th>
-                                        <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Estado</th>
-                                        <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actualizado el</th>
-                                        <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Autor</th>
-                                        <th style={{ padding: '16px 24px' }}></th>
-                                    </tr>
-                                </thead>
-                                <tbody style={{ backgroundColor: 'var(--card-bg)' }}>
-                                    {filteredItems.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={6} style={{ padding: '60px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
-                                                <div className="flex flex-col items-center gap-4">
-                                                    <Mail size={40} className="text-[var(--border-color)]" />
-                                                    <p className="text-sm font-medium">No se encontraron plantillas en esta ubicación.</p>
-                                                </div>
-                                            </td>
+                    {/* Breadcrumbs con aire */}
+                    {navigationPath.length > 0 && (
+                        <div className="flex items-center gap-3 px-2 py-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] animate-in fade-in slide-in-from-left-2 duration-300">
+                            <span className="hover:text-[var(--color-primary)] cursor-pointer transition-colors" onClick={() => setNavigationPath([])}>DIRECTORIO RAÍZ</span>
+                            {navigationPath.map((id, index) => {
+                                const folder = templates.find(t => t.id === id);
+                                return (
+                                    <React.Fragment key={id}>
+                                        <ChevronRight size={12} className="opacity-40" />
+                                        <span
+                                            className="hover:text-[var(--color-primary)] cursor-pointer transition-colors text-[var(--text-secondary)]"
+                                            onClick={() => setNavigationPath(navigationPath.slice(0, index + 1))}
+                                        >
+                                            {folder?.name || folder?.slug || 'CARPETA'}
+                                        </span>
+                                    </React.Fragment>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Tabla de Plantillas - Elevada y Espaciosa */}
+                    <div style={{ position: 'relative', zIndex: 10 }}>
+                        <Card noPadding style={{
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '18px',
+                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                            backgroundColor: 'var(--card-bg)',
+                            overflow: 'visible' // Permitir desbordamiento del menú
+                        }}>
+                            <div style={{ borderRadius: '18px', minHeight: '450px', overflow: 'visible' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1000px' }}>
+                                    <thead style={{ position: 'sticky', top: 0, zIndex: 20 }}>
+                                        <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1.5px solid var(--border-color)' }}>
+                                            <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', borderTopLeftRadius: '18px' }}>Identificación</th>
+                                            <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tipo / Disparador</th>
+                                            <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'center' }}>Estado</th>
+                                            <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Última Actividad</th>
+                                            <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Responsable</th>
+                                            <th style={{ padding: '24px', width: '80px', borderTopRightRadius: '18px' }}></th>
                                         </tr>
-                                    ) : (
-                                        filteredItems.map((item) => (
-                                            <tr
-                                                key={item.id}
-                                                onClick={() => item.is_folder ? setNavigationPath([...navigationPath, item.id]) : setSelectedTemplate(item)}
-                                                style={{
-                                                    borderBottom: '1px solid var(--border-color)',
-                                                    cursor: 'pointer',
-                                                    transition: 'background-color 0.2s ease'
-                                                }}
-                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
-                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                            >
-                                                <td style={{ padding: '16px 24px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                                        <div style={{
-                                                            width: '42px',
-                                                            height: '42px',
-                                                            borderRadius: '12px',
-                                                            background: item.is_folder ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, var(--color-primary), #6366f1)',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            color: 'white',
-                                                            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
-                                                        }}>
-                                                            {item.is_folder ? <Folder size={20} fill="white" /> : <FileEdit size={20} />}
-                                                        </div>
-                                                        <div>
-                                                            <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{item.slug.toUpperCase()}</div>
-                                                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                                {item.description}
-                                                            </div>
-                                                        </div>
+                                    </thead>
+                                    <tbody style={{ backgroundColor: 'var(--card-bg)' }}>
+                                        {filteredItems.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={6} style={{ padding: '100px 24px', textAlign: 'center' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', opacity: 0.4 }}>
+                                                        <Mail size={56} strokeWidth={1.5} color="var(--text-tertiary)" />
+                                                        <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-secondary)' }}>Sin elementos en esta ubicación</p>
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: '16px 24px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                                                        {item.is_folder ? <Folder size={14} className="text-amber-500" /> : <Zap size={14} className="text-[var(--color-primary)]" />}
-                                                        {item.is_folder ? 'Carpeta' : 'Diseño Transaccional'}
-                                                    </div>
-                                                </td>
-                                                <td style={{ padding: '16px 24px' }}>
-                                                    <Badge variant={(item.status || 'activo') === 'activo' ? 'modern-success' : 'pill-secondary'}>
-                                                        {(item.status || 'activo') === 'activo' ? 'ACTIVA' : 'ARCHIVADA'}
-                                                    </Badge>
-                                                </td>
-                                                <td style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                                                    {new Date(item.updated_at).toLocaleDateString()}
-                                                </td>
-                                                <td style={{ padding: '16px 24px' }}>
-                                                    {item.updated_by_name ? (
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            </tr>
+                                        ) : (
+                                            filteredItems.map((item) => (
+                                                <tr
+                                                    key={item.id}
+                                                    onClick={() => item.is_folder ? setNavigationPath([...navigationPath, item.id]) : setSelectedTemplate(item)}
+                                                    style={{
+                                                        borderBottom: '1px solid var(--border-color)',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.25s ease'
+                                                    }}
+                                                    className="group hover:bg-[var(--bg-tertiary)]"
+                                                >
+                                                    <td style={{ padding: '24px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
                                                             <div style={{
-                                                                width: '28px',
-                                                                height: '28px',
-                                                                borderRadius: '8px',
-                                                                backgroundColor: 'var(--bg-secondary)',
-                                                                border: '1px solid var(--border-color)',
+                                                                width: '46px',
+                                                                height: '46px',
+                                                                borderRadius: '12px',
+                                                                background: item.is_folder ? 'linear-gradient(135deg, #FFB800, #FF8A00)' : 'linear-gradient(135deg, #0066FF, #0047BB)',
                                                                 display: 'flex',
                                                                 alignItems: 'center',
                                                                 justifyContent: 'center',
-                                                                fontSize: '10px',
-                                                                fontWeight: 800,
-                                                                color: 'var(--color-primary)'
-                                                            }}>
-                                                                {item.updated_by_name.charAt(0).toUpperCase()}
+                                                                color: 'white',
+                                                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                                                transition: 'transform 0.2s ease'
+                                                            }} className="group-hover:scale-110">
+                                                                {item.is_folder ? <Folder size={22} fill="white" /> : <FileEdit size={22} />}
                                                             </div>
-                                                            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>{item.updated_by_name}</span>
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                                <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+                                                                    {item.name || item.slug}
+                                                                </span>
+                                                                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 500, maxWidth: '280px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                    {item.description || (item.is_folder ? 'Carpeta organizada' : 'Sin descripción adicional')}
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                    ) : (
-                                                        <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600 }}>SISTEMA</span>
-                                                    )}
-                                                </td>
-                                                <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                                                    <ChevronRight size={18} style={{ color: 'var(--text-tertiary)' }} />
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                                                    </td>
+                                                    <td style={{ padding: '24px' }}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 700 }}>
+                                                                {item.is_folder ? (
+                                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#FF8A00' }}>
+                                                                        <Folder size={14} /> Directorio
+                                                                    </span>
+                                                                ) : (
+                                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-primary)' }}>
+                                                                        <Zap size={14} /> Transaccional
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            {!item.is_folder && item.trigger_event && (
+                                                                <div style={{
+                                                                    fontSize: '10px',
+                                                                    fontWeight: 900,
+                                                                    color: 'var(--color-primary)',
+                                                                    backgroundColor: 'var(--color-primary-light)',
+                                                                    padding: '2px 8px',
+                                                                    borderRadius: '6px',
+                                                                    alignSelf: 'flex-start',
+                                                                    textTransform: 'uppercase'
+                                                                }}>
+                                                                    Event: {item.trigger_event}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '24px', textAlign: 'center' }}>
+                                                        <Badge variant={(item.status || 'activo') === 'activo' ? 'modern-success' : 'pill-secondary'}>
+                                                            {(item.status || 'activo') === 'activo' ? 'ACTIVA' : 'ARCHIVADA'}
+                                                        </Badge>
+                                                    </td>
+                                                    <td style={{ padding: '24px' }}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                                                                {new Date(item.updated_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
+                                                            </span>
+                                                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600 }}>
+                                                                {new Date(item.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '24px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                            <div style={{
+                                                                width: '32px',
+                                                                height: '32px',
+                                                                borderRadius: '10px',
+                                                                backgroundColor: 'var(--color-primary-light)',
+                                                                border: '1.5px solid var(--color-primary)',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                fontSize: '11px',
+                                                                fontWeight: 900,
+                                                                color: 'var(--color-primary)',
+                                                                boxShadow: '0 2px 4px rgba(0,102,255,0.1)'
+                                                            }}>
+                                                                {(item.updated_by_name || 'S').charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                                                    {item.updated_by_name || 'SISTEMA'}
+                                                                </span>
+                                                                <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Editor Admin</span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '24px', textAlign: 'right' }}>
+                                                        <ActionMenu item={item} />
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </Card>
+                    </div>
+
+                    <Modal
+                        isOpen={isRenameModalOpen}
+                        onClose={() => setIsRenameModalOpen(false)}
+                        title={itemToManage?.is_folder ? "Editar Carpeta" : "Editar Información"}
+                    >
+                        <div className="flex flex-col gap-6">
+                            {itemToManage?.is_folder ? (
+                                <>
+                                    <Input
+                                        label="Nombre de la Carpeta"
+                                        value={newItem.slug}
+                                        onChange={(e) => setNewItem({ ...newItem, slug: e.target.value })}
+                                        placeholder="Ej: Marketing, Sistema..."
+                                    />
+                                    <Input
+                                        label="Descripción (Opcional)"
+                                        value={newItem.description}
+                                        onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                                        placeholder="¿Para qué sirve esta carpeta?"
+                                    />
+                                </>
+                            ) : (
+                                <>
+                                    <Input
+                                        label="Nombre Visual"
+                                        value={newItem.name}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setNewItem({ ...newItem, name: val, slug: generateSlug(val) });
+                                        }}
+                                        placeholder="Ej: Bienvenida"
+                                    />
+
+                                    <div className="space-y-1.5">
+                                        <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Disparador (Trigger)</label>
+                                        <select
+                                            value={newItem.trigger_event}
+                                            onChange={(e) => setNewItem({ ...newItem, trigger_event: e.target.value })}
+                                            className="w-full h-11 px-4 rounded-[10px] bg-[var(--bg-primary)] border-[1.5px] border-[var(--border-color)] text-sm focus:ring-2 focus:ring-[var(--color-primary)]/20 outline-none transition-all appearance-none cursor-pointer"
+                                            style={{
+                                                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                                                backgroundRepeat: 'no-repeat',
+                                                backgroundPosition: 'right 16px center',
+                                                backgroundSize: '16px',
+                                                paddingLeft: '16px'
+                                            }}
+                                        >
+                                            <option value="">Sin Disparador Automático</option>
+                                            <option value="user_registration">Registro de Usuario</option>
+                                            <option value="password_reset">Recuperación de Contraseña</option>
+                                            <option value="order_created">Pedido Creado</option>
+                                            <option value="order_shipped">Pedido Enviado</option>
+                                            <option value="subscription_active">Suscripción Activada</option>
+                                            <option value="payment_failed">Pago Fallido</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Slug (ID del Sistema)</label>
+                                        <div className="bg-[var(--bg-secondary)] border-[1.5px] border-[var(--border-color)] border-dashed" style={{ padding: '12px 16px', borderRadius: '10px' }}>
+                                            <code className="text-[11px] text-[var(--color-primary)] font-bold tracking-widest uppercase">{newItem.slug || '...'}</code>
+                                        </div>
+                                    </div>
+
+                                    <Input
+                                        label="Descripción"
+                                        value={newItem.description}
+                                        onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                                        placeholder="Para qué sirve esta plantilla..."
+                                    />
+                                </>
+                            )}
+
+                            <div className="flex justify-end gap-3 pt-4">
+                                <Button variant="secondary" onClick={() => setIsRenameModalOpen(false)}>Cancelar</Button>
+                                <Button onClick={handleRenameSubmit} isLoading={isCreating}>Guardar Cambios</Button>
+                            </div>
                         </div>
-                    </Card>
+                    </Modal>
+
+                    <Modal
+                        isOpen={isMoveModalOpen}
+                        onClose={() => setIsMoveModalOpen(false)}
+                        title="Mover a Carpeta"
+                    >
+                        <div className="flex flex-col gap-5">
+                            <p className="text-sm text-[var(--text-secondary)] mb-2">Selecciona la carpeta de destino para <b>{itemToManage?.slug}</b></p>
+                            <div className="max-h-60 overflow-y-auto border border-[var(--border-color)] rounded-xl divide-y divide-[var(--border-color)]">
+                                <button
+                                    onClick={() => handleMoveSubmit(null)}
+                                    className="flex items-center gap-3 w-full p-4 text-sm hover:bg-[var(--bg-secondary)] transition-colors text-left"
+                                >
+                                    <MoveUp size={16} className="text-[var(--text-tertiary)]" /> Raíz (Inicio)
+                                </button>
+                                {templates.filter(t => t.is_folder && t.id !== itemToManage?.id).map(folder => (
+                                    <button
+                                        key={folder.id}
+                                        onClick={() => handleMoveSubmit(folder.id)}
+                                        className="flex items-center gap-3 w-full p-4 text-sm hover:bg-[var(--bg-secondary)] transition-colors text-left"
+                                    >
+                                        <Folder size={16} className="text-amber-500" /> {folder.slug}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="flex justify-end pt-2">
+                                <Button variant="secondary" onClick={() => setIsMoveModalOpen(false)}>Cancelar</Button>
+                            </div>
+                        </div>
+                    </Modal>
                 </React.Fragment>
             ) : (
                 /* Editor y Vista Previa en Vivo */
@@ -952,27 +1377,62 @@ export function AdminEmailTemplatesPage() {
                 title="Crear Nueva Plantilla"
                 size="sm"
             >
-                <div className="space-y-5">
-                    <Input
-                        label="Nombre Único (slug)"
-                        placeholder="ej: BIENVENIDA_CLIENTE"
-                        value={newItem.slug}
-                        onChange={(e) => setNewItem({ ...newItem, slug: e.target.value })}
-                    />
-                    <Input
-                        label="Asunto del Correo"
-                        placeholder="ej: ¡Bienvenido a nuestra tienda!"
-                        value={newItem.subject}
-                        onChange={(e) => setNewItem({ ...newItem, subject: e.target.value })}
-                    />
-                    <Input
-                        label="Descripción"
-                        placeholder="¿Para qué sirve esta plantilla?"
-                        value={newItem.description}
-                        onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                    />
+                <div className="flex flex-col gap-6">
+                    <div className="space-y-4">
+                        <Input
+                            label="Nombre Visual"
+                            placeholder="Ej: Bienvenida Cliente Nuevo"
+                            value={newItem.name}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setNewItem({ ...newItem, name: val, slug: generateSlug(val) });
+                            }}
+                        />
+                        <div className="space-y-1.5">
+                            <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Slug Automático (ID del Sistema)</label>
+                            <div className="bg-[var(--bg-secondary)] border-[1.5px] border-[var(--border-color)] border-dashed" style={{ padding: '12px 16px', borderRadius: '10px' }}>
+                                <code className="text-[11px] text-[var(--color-primary)] font-bold tracking-widest uppercase">{newItem.slug || 'ESPERANDO NOMBRE...'}</code>
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Disparador (Trigger)</label>
+                            <select
+                                value={newItem.trigger_event}
+                                onChange={(e) => setNewItem({ ...newItem, trigger_event: e.target.value })}
+                                className="w-full h-11 px-4 rounded-[10px] bg-[var(--bg-primary)] border-[1.5px] border-[var(--border-color)] text-sm focus:ring-2 focus:ring-[var(--color-primary)]/20 outline-none transition-all appearance-none cursor-pointer"
+                                style={{
+                                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                                    backgroundRepeat: 'no-repeat',
+                                    backgroundPosition: 'right 16px center',
+                                    backgroundSize: '16px',
+                                    paddingLeft: '16px'
+                                }}
+                            >
+                                <option value="">Sin Disparador Automático</option>
+                                <option value="user_registration">Registro de Usuario</option>
+                                <option value="password_reset">Recuperación de Contraseña</option>
+                                <option value="order_created">Pedido Creado</option>
+                                <option value="order_shipped">Pedido Enviado</option>
+                                <option value="subscription_active">Suscripción Activada</option>
+                                <option value="payment_failed">Pago Fallido</option>
+                            </select>
+                            <p className="text-[10px] text-[var(--text-tertiary)] italic">El disparador automatiza el envío cuando sucede el evento.</p>
+                        </div>
+
+
+                        <Input
+                            label="Descripción"
+                            placeholder="¿Para qué sirve esta plantilla?"
+                            value={newItem.description}
+                            onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                        />
+                    </div>
                     <div className="flex gap-3 pt-2">
-                        <Button variant="secondary" fullWidth onClick={() => setIsCreateModalOpen(false)}>Cancelar</Button>
+                        <Button variant="secondary" fullWidth onClick={() => {
+                            setIsCreateModalOpen(false);
+                            setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+                        }}>Cancelar</Button>
                         <Button fullWidth onClick={handleCreateTemplate} isLoading={isCreating}>Crear Plantilla</Button>
                     </div>
                 </div>
@@ -984,7 +1444,7 @@ export function AdminEmailTemplatesPage() {
                 title="Nueva Carpeta"
                 size="sm"
             >
-                <div className="space-y-5">
+                <div className="flex flex-col gap-5">
                     <Input
                         label="Nombre de la Carpeta"
                         placeholder="ej: Marketing, Sistema..."
@@ -1002,6 +1462,21 @@ export function AdminEmailTemplatesPage() {
                     </div>
                 </div>
             </Modal>
-        </div >
+
+            <ConfirmDialog
+                isOpen={isConfirmDeleteOpen}
+                title={itemToManage?.is_folder ? '¿Eliminar carpeta?' : '¿Eliminar plantilla?'}
+                description={itemToManage?.is_folder
+                    ? `Esta acción eliminará la carpeta "${itemToManage.slug}" y todo su contenido de forma permanente.`
+                    : `¿Estás seguro de que deseas eliminar la plantilla "${itemToManage?.name || itemToManage?.slug}"? Esta acción no se puede deshacer.`}
+                confirmLabel="Eliminar"
+                onConfirm={confirmDelete}
+                onCancel={() => {
+                    setIsConfirmDeleteOpen(false);
+                    setItemToManage(null);
+                }}
+                isLoading={isCreating}
+            />
+        </div>
     );
 }

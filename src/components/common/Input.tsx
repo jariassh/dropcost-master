@@ -7,6 +7,7 @@ interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'>
     helperText?: string;
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;
+    rightElement?: React.ReactNode;
     showPasswordToggle?: boolean;
 }
 
@@ -18,6 +19,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             helperText,
             leftIcon,
             rightIcon,
+            rightElement,
             showPasswordToggle = false,
             type = 'text',
             id,
@@ -33,7 +35,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         const isPassword = type === 'password';
         const resolvedType = isPassword && showPassword ? 'text' : type;
         const hasError = Boolean(error);
-        const hasRightAddon = rightIcon || (isPassword && showPasswordToggle);
+        const hasRightAddon = rightIcon || rightElement || (isPassword && showPasswordToggle);
 
         const borderColor = hasError ? 'var(--color-error)' : 'var(--border-color)';
         const focusBorderColor = hasError ? 'var(--color-error)' : 'var(--color-primary)';
@@ -123,6 +125,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                                 display: 'flex',
                                 alignItems: 'center',
                                 transition: 'color 150ms ease',
+                                zIndex: 2
                             }}
                             tabIndex={-1}
                             aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
@@ -136,7 +139,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                     )}
-                    {rightIcon && !isPassword && (
+                    {(rightIcon || rightElement) && !isPassword && (
                         <span
                             style={{
                                 position: 'absolute',
@@ -146,10 +149,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                                 color: 'var(--text-tertiary)',
                                 display: 'flex',
                                 alignItems: 'center',
-                                pointerEvents: 'none',
+                                pointerEvents: rightElement ? 'auto' : 'none',
+                                zIndex: 2
                             }}
                         >
-                            {rightIcon}
+                            {rightElement || rightIcon}
                         </span>
                     )}
                 </div>
