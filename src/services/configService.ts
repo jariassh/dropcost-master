@@ -234,39 +234,57 @@ export const configService = {
     async getEmailTemplates() {
         const { data, error } = await supabase
             .from('email_templates' as any)
-            .select('*')
-            .order('slug', { ascending: true });
+            .select('*, updated_by_user:users(nombres, apellidos)')
+            .order('is_folder', { ascending: false }) // Folders first
+            .order('name', { ascending: true });
+        
         if (error) throw error;
-        return data;
+        
+        return (data as any[]).map(item => ({
+            ...item,
+            updated_by_name: item.updated_by_user ? `${item.updated_by_user.nombres || ''} ${item.updated_by_user.apellidos || ''}`.trim() : 'SISTEMA'
+        }));
     },
 
     async updateEmailTemplate(id: string, updates: any) {
+        const { data: { user } } = await supabase.auth.getUser();
         const { data, error } = await supabase
             .from('email_templates' as any)
             .update({
                 ...updates,
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
+                updated_by: user?.id
             })
             .eq('id', id)
-            .select()
+            .select('*')
             .single();
         if (error) throw error;
         return data;
     },
 
     async createEmailTemplate(template: any) {
+        const { data: { user } } = await supabase.auth.getUser();
         const { data, error } = await supabase
             .from('email_templates' as any)
             .insert({
                 ...template,
                 status: template.status || 'activo',
                 created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
+                updated_by: user?.id
             })
-            .select()
+            .select('*')
             .single();
         if (error) throw error;
         return data;
+    },
+
+    async deleteEmailTemplate(id: string) {
+        const { error } = await supabase
+            .from('email_templates' as any)
+            .delete()
+            .eq('id', id);
+        if (error) throw error;
     }
 };
 
