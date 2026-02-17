@@ -36,14 +36,14 @@ const SIDEBAR_COLLAPSED = 72;
 const adminNavItems = [
     { to: '/admin', icon: LayoutDashboard, label: 'Admin Dashboard', end: true },
     { to: '/admin/users', icon: Users, label: 'Gestión Usuarios' },
-    { to: '/admin/traffic', icon: PieChart, label: 'An├ílisis de Tr├ífico', disabled: true },
+    { to: '/admin/traffic', icon: PieChart, label: 'Análisis de Tráfico', disabled: true },
     { to: '/admin/shortener', icon: Link2, label: 'Acortador de Enlaces', disabled: true },
     { to: '/admin/ads', icon: Megaphone, label: 'Ads & Creatividades', disabled: true },
-    { to: '/admin/plans', icon: CreditCard, label: 'Planes y Membresáas' },
+    { to: '/admin/plans', icon: CreditCard, label: 'Planes y Membresías' },
     { to: '/admin/referrals', icon: Share, label: 'Sistema de Referidos' },
     { to: '/admin/withdrawals', icon: CreditCard, label: 'Gestión de Retiros' },
     { to: '/admin/promo-codes', icon: Ticket, label: 'Códigos Promocionales', disabled: true },
-    { to: '/admin/logs', icon: History, label: 'Logs de Auditoráa' },
+    { to: '/admin/logs', icon: History, label: 'Logs de Auditoría' },
     { to: '/admin/settings', icon: Settings, label: 'Ajustes Globales' },
     { to: '/admin/email-templates', icon: Mail, label: 'Plantillas de Email' },
 ];
