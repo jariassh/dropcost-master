@@ -256,10 +256,14 @@ export const configService = {
                 updated_by: user?.id
             })
             .eq('id', id)
-            .select('*')
+            .select('*, updated_by_user:users(nombres, apellidos)')
             .single();
         if (error) throw error;
-        return data;
+        const result = data as any;
+        return {
+            ...result,
+            updated_by_name: result.updated_by_user ? `${result.updated_by_user.nombres || ''} ${result.updated_by_user.apellidos || ''}`.trim() : 'SISTEMA'
+        };
     },
 
     async createEmailTemplate(template: any) {
@@ -273,10 +277,14 @@ export const configService = {
                 updated_at: new Date().toISOString(),
                 updated_by: user?.id
             })
-            .select('*')
+            .select('*, updated_by_user:users(nombres, apellidos)')
             .single();
         if (error) throw error;
-        return data;
+        const result = data as any;
+        return {
+            ...result,
+            updated_by_name: result.updated_by_user ? `${result.updated_by_user.nombres || ''} ${result.updated_by_user.apellidos || ''}`.trim() : 'SISTEMA'
+        };
     },
 
     async deleteEmailTemplate(id: string) {
