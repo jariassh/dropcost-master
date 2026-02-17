@@ -14,3 +14,13 @@ entrypoint = "./functions/auth-2fa/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/mercadopago/index.ts"
+
+[functions.robots]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/robots/index.ts"
+
+[functions.sitemap]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/sitemap/index.ts"

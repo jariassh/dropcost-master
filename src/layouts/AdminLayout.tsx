@@ -24,6 +24,7 @@ import {
     Share,
     Menu,
     X,
+    Mail,
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
@@ -44,6 +45,7 @@ const adminNavItems = [
     { to: '/admin/promo-codes', icon: Ticket, label: 'Códigos Promocionales', disabled: true },
     { to: '/admin/logs', icon: History, label: 'Logs de Auditoría' },
     { to: '/admin/settings', icon: Settings, label: 'Ajustes Globales' },
+    { to: '/admin/email-templates', icon: Mail, label: 'Plantillas de Email' },
 ];
 
 export function AdminLayout() {

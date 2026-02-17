@@ -22,6 +22,7 @@ import { AdminAuditLogsPage } from '@/pages/admin/AdminAuditLogsPage';
 import { AdminReferralPage } from '@/pages/admin/AdminReferralPage';
 import { AdminWithdrawalsPage } from '@/pages/admin/AdminWithdrawalsPage';
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage';
+import { AdminEmailTemplatesPage } from '@/pages/admin/AdminEmailTemplatesPage';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { PricingPage } from '@/pages/PricingPage';
 import { useAuthStore } from '@/store/authStore';
@@ -117,6 +118,7 @@ export function AppRouter() {
                 <Route path="promo-codes" element={<AdminDashboard />} />
                 <Route path="logs" element={<AdminAuditLogsPage />} />
                 <Route path="settings" element={<AdminSettingsPage />} />
+                <Route path="email-templates" element={<AdminEmailTemplatesPage />} />
             </Route>
 
             {/* Catch-all */}
