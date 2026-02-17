@@ -79,6 +79,8 @@ export function AdminEmailTemplatesPage() {
     const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
     const [itemToManage, setItemToManage] = useState<EmailItem | null>(null);
     const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+    const [folderSearchQuery, setFolderSearchQuery] = useState('');
+    const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
     const toast = useToast();
 
@@ -736,14 +738,20 @@ export function AdminEmailTemplatesPage() {
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <Button
                                     variant="secondary"
-                                    onClick={() => setIsFolderModalOpen(true)}
+                                    onClick={() => {
+                                        setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+                                        setIsFolderModalOpen(true);
+                                    }}
                                     leftIcon={<Folder size={18} />}
                                     style={{ height: '52px', borderRadius: '14px', padding: '0 24px' }}
                                 >
                                     Carpeta
                                 </Button>
                                 <Button
-                                    onClick={() => setIsCreateModalOpen(true)}
+                                    onClick={() => {
+                                        setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+                                        setIsCreateModalOpen(true);
+                                    }}
                                     leftIcon={<Plus size={18} />}
                                     style={{ height: '52px', borderRadius: '14px', padding: '0 24px' }}
                                 >
@@ -788,7 +796,7 @@ export function AdminEmailTemplatesPage() {
                                     <thead style={{ position: 'sticky', top: 0, zIndex: 20 }}>
                                         <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1.5px solid var(--border-color)' }}>
                                             <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', borderTopLeftRadius: '18px' }}>Identificación</th>
-                                            <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tipo / Disparador</th>
+                                            <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tipo</th>
                                             <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'center' }}>Estado</th>
                                             <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Última Actividad</th>
                                             <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Responsable</th>
@@ -852,7 +860,7 @@ export function AdminEmailTemplatesPage() {
                                                                     </span>
                                                                 ) : (
                                                                     <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-primary)' }}>
-                                                                        <Zap size={14} /> Transaccional
+                                                                        <Zap size={14} /> Plantilla
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -1007,30 +1015,85 @@ export function AdminEmailTemplatesPage() {
 
                     <Modal
                         isOpen={isMoveModalOpen}
-                        onClose={() => setIsMoveModalOpen(false)}
+                        onClose={() => {
+                            setIsMoveModalOpen(false);
+                            setFolderSearchQuery('');
+                            setSelectedFolderId(null);
+                        }}
                         title="Mover a Carpeta"
+                        size="sm"
                     >
-                        <div className="flex flex-col gap-5">
-                            <p className="text-sm text-[var(--text-secondary)] mb-2">Selecciona la carpeta de destino para <b>{itemToManage?.slug}</b></p>
-                            <div className="max-h-60 overflow-y-auto border border-[var(--border-color)] rounded-xl divide-y divide-[var(--border-color)]">
-                                <button
-                                    onClick={() => handleMoveSubmit(null)}
-                                    className="flex items-center gap-3 w-full p-4 text-sm hover:bg-[var(--bg-secondary)] transition-colors text-left"
-                                >
-                                    <MoveUp size={16} className="text-[var(--text-tertiary)]" /> Raíz (Inicio)
-                                </button>
-                                {templates.filter(t => t.is_folder && t.id !== itemToManage?.id).map(folder => (
-                                    <button
-                                        key={folder.id}
-                                        onClick={() => handleMoveSubmit(folder.id)}
-                                        className="flex items-center gap-3 w-full p-4 text-sm hover:bg-[var(--bg-secondary)] transition-colors text-left"
-                                    >
-                                        <Folder size={16} className="text-amber-500" /> {folder.slug}
-                                    </button>
-                                ))}
+                        <div className="flex flex-col gap-6">
+                            <div>
+                                <p className="text-[10px] text-[var(--text-tertiary)] uppercase font-bold tracking-widest mb-4 opacity-70">
+                                    Destino para: {itemToManage?.name || itemToManage?.slug}
+                                </p>
+                                <Input
+                                    placeholder="Buscar carpeta..."
+                                    value={folderSearchQuery}
+                                    onChange={(e) => setFolderSearchQuery(e.target.value)}
+                                    autoFocus
+                                />
                             </div>
-                            <div className="flex justify-end pt-2">
-                                <Button variant="secondary" onClick={() => setIsMoveModalOpen(false)}>Cancelar</Button>
+
+                            <div className="max-h-60 overflow-y-auto pr-1 flex flex-col gap-1.5 custom-scrollbar" style={{ minHeight: '180px' }}>
+                                {/* Opción Raíz */}
+                                {(!folderSearchQuery || 'inicio raíz'.includes(folderSearchQuery.toLowerCase())) && (
+                                    <button
+                                        onClick={() => setSelectedFolderId(null)}
+                                        className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all text-left border-[1.5px] ${selectedFolderId === null ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5' : 'border-transparent hover:bg-[var(--bg-secondary)]'}`}
+                                    >
+                                        <div className={`flex items-center justify-center rounded-lg`} style={{ width: '32px', height: '32px', minWidth: '32px', backgroundColor: selectedFolderId === null ? 'var(--color-primary)' : 'var(--bg-secondary)', color: selectedFolderId === null ? 'white' : 'var(--text-tertiary)' }}>
+                                            <Layout size={16} />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className={`text-sm font-bold ${selectedFolderId === null ? 'text-[var(--color-primary)]' : 'text-[var(--text-primary)]'}`}>Raíz / Inicio</span>
+                                        </div>
+                                    </button>
+                                )}
+
+                                {templates
+                                    .filter(t => t.is_folder && t.id !== itemToManage?.id && (t.name || t.slug).toLowerCase().includes(folderSearchQuery.toLowerCase()))
+                                    .map(folder => {
+                                        const isSelected = selectedFolderId === folder.id;
+                                        return (
+                                            <button
+                                                key={folder.id}
+                                                onClick={() => setSelectedFolderId(folder.id)}
+                                                className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all text-left border-[1.5px] ${isSelected ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5' : 'border-transparent hover:bg-[var(--bg-secondary)]'}`}
+                                            >
+                                                <div className={`flex items-center justify-center rounded-lg`} style={{ width: '32px', height: '32px', minWidth: '32px', backgroundColor: isSelected ? 'var(--color-primary)' : 'rgba(245, 158, 11, 0.1)', color: isSelected ? 'white' : '#F59E0B' }}>
+                                                    <Folder size={16} />
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className={`text-sm font-bold ${isSelected ? 'text-[var(--color-primary)]' : 'text-[var(--text-primary)]'}`}>{folder.name || folder.slug}</span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })
+                                }
+
+                                {templates.filter(t => t.is_folder && t.id !== itemToManage?.id && (t.name || t.slug).toLowerCase().includes(folderSearchQuery.toLowerCase())).length === 0 && folderSearchQuery && (
+                                    <div className="py-8 text-center text-[var(--text-tertiary)]">
+                                        <p className="text-sm">No se encontraron carpetas</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <Button variant="secondary" fullWidth onClick={() => {
+                                    setIsMoveModalOpen(false);
+                                    setFolderSearchQuery('');
+                                    setSelectedFolderId(null);
+                                }}>Cancelar</Button>
+                                <Button
+                                    fullWidth
+                                    onClick={() => handleMoveSubmit(selectedFolderId)}
+                                    disabled={selectedFolderId === itemToManage?.parent_id}
+                                    isLoading={isCreating}
+                                >
+                                    Mover Aquí
+                                </Button>
                             </div>
                         </div>
                     </Modal>
@@ -1043,7 +1106,7 @@ export function AdminEmailTemplatesPage() {
                             <div className="p-2 bg-[var(--color-primary-light)] text-[var(--color-primary)] rounded-lg">
                                 <Mail size={18} />
                             </div>
-                            <span className="text-lg font-bold">Editando Plantilla: {selectedTemplate.slug.toUpperCase()}</span>
+                            <span className="text-lg font-bold">Editando Plantilla: {selectedTemplate?.slug.toUpperCase()}</span>
                         </div>
                         <div className="flex gap-3">
                             <Button variant="secondary" onClick={() => setSelectedTemplate(null)} style={{ borderRadius: '10px' }}>Cancelar</Button>
@@ -1061,8 +1124,8 @@ export function AdminEmailTemplatesPage() {
                                         <Input
                                             id="subject-input"
                                             label="Asunto del Correo"
-                                            value={selectedTemplate.subject}
-                                            onChange={(e) => setSelectedTemplate({ ...selectedTemplate, subject: e.target.value })}
+                                            value={selectedTemplate?.subject || ''}
+                                            onChange={(e) => selectedTemplate && setSelectedTemplate({ ...selectedTemplate, subject: e.target.value })}
                                             placeholder="Ej: Bienvenido a la plataforma"
                                             leftIcon={<Type size={16} />}
                                             rightElement={
@@ -1145,8 +1208,8 @@ export function AdminEmailTemplatesPage() {
 
                                         <textarea
                                             id="body-textarea"
-                                            value={selectedTemplate.html_content}
-                                            onChange={(e) => setSelectedTemplate({ ...selectedTemplate, html_content: e.target.value })}
+                                            value={selectedTemplate?.html_content || ''}
+                                            onChange={(e) => selectedTemplate && setSelectedTemplate({ ...selectedTemplate, html_content: e.target.value })}
                                             style={{
                                                 width: '100%',
                                                 padding: '24px',
@@ -1178,7 +1241,7 @@ export function AdminEmailTemplatesPage() {
                                         </h5>
                                         <div style={{ padding: '24px', backgroundColor: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
                                             <p className="text-sm text-[var(--text-secondary)] leading-relaxed font-medium">
-                                                {selectedTemplate.description}
+                                                {selectedTemplate?.description}
                                             </p>
                                         </div>
                                     </div>
@@ -1188,7 +1251,7 @@ export function AdminEmailTemplatesPage() {
                                             <Code size={14} /> Variables Soportadas (Obligatorias)
                                         </h5>
                                         <div className="flex flex-wrap gap-3">
-                                            {selectedTemplate.variables.map(v => (
+                                            {selectedTemplate?.variables.map(v => (
                                                 <div
                                                     key={v}
                                                     style={{
@@ -1361,7 +1424,7 @@ export function AdminEmailTemplatesPage() {
                                         backgroundColor: '#ffffff',
                                         overflowX: 'hidden'
                                     }}
-                                    dangerouslySetInnerHTML={{ __html: renderPreview(selectedTemplate.html_content) }}
+                                    dangerouslySetInnerHTML={{ __html: selectedTemplate ? renderPreview(selectedTemplate.html_content) : '' }}
                                 />
                             </div>
                         </div>
@@ -1373,34 +1436,37 @@ export function AdminEmailTemplatesPage() {
             {/* Modales de Creación */}
             <Modal
                 isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
+                onClose={() => {
+                    setIsCreateModalOpen(false);
+                    setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+                }}
                 title="Crear Nueva Plantilla"
                 size="sm"
             >
-                <div className="flex flex-col gap-6">
-                    <div className="space-y-4">
+                <div className="flex flex-col gap-7">
+                    <div className="flex flex-col gap-5">
                         <Input
                             label="Nombre Visual"
                             placeholder="Ej: Bienvenida Cliente Nuevo"
                             value={newItem.name}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                setNewItem({ ...newItem, name: val, slug: generateSlug(val) });
+                                setNewItem(prev => ({ ...prev, name: val, slug: generateSlug(val) }));
                             }}
                         />
-                        <div className="space-y-1.5">
-                            <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Slug Automático (ID del Sistema)</label>
-                            <div className="bg-[var(--bg-secondary)] border-[1.5px] border-[var(--border-color)] border-dashed" style={{ padding: '12px 16px', borderRadius: '10px' }}>
+                        <div className="flex flex-col gap-2.5">
+                            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Slug Automático (ID del Sistema)</label>
+                            <div className="bg-[var(--bg-secondary)] border-[1.5px] border-[var(--border-color)] border-dashed" style={{ padding: '14px 18px', borderRadius: '12px' }}>
                                 <code className="text-[11px] text-[var(--color-primary)] font-bold tracking-widest uppercase">{newItem.slug || 'ESPERANDO NOMBRE...'}</code>
                             </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                            <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Disparador (Trigger)</label>
+                        <div className="flex flex-col gap-2.5">
+                            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Disparador (Trigger)</label>
                             <select
                                 value={newItem.trigger_event}
-                                onChange={(e) => setNewItem({ ...newItem, trigger_event: e.target.value })}
-                                className="w-full h-11 px-4 rounded-[10px] bg-[var(--bg-primary)] border-[1.5px] border-[var(--border-color)] text-sm focus:ring-2 focus:ring-[var(--color-primary)]/20 outline-none transition-all appearance-none cursor-pointer"
+                                onChange={(e) => setNewItem(prev => ({ ...prev, trigger_event: e.target.value }))}
+                                className="w-full h-12 px-4 rounded-[12px] bg-[var(--bg-primary)] border-[1.5px] border-[var(--border-color)] text-sm focus:ring-2 focus:ring-[var(--color-primary)]/20 outline-none transition-all appearance-none cursor-pointer"
                                 style={{
                                     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                                     backgroundRepeat: 'no-repeat',
@@ -1440,7 +1506,10 @@ export function AdminEmailTemplatesPage() {
 
             <Modal
                 isOpen={isFolderModalOpen}
-                onClose={() => setIsFolderModalOpen(false)}
+                onClose={() => {
+                    setIsFolderModalOpen(false);
+                    setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+                }}
                 title="Nueva Carpeta"
                 size="sm"
             >
@@ -1449,15 +1518,19 @@ export function AdminEmailTemplatesPage() {
                         label="Nombre de la Carpeta"
                         placeholder="ej: Marketing, Sistema..."
                         value={newItem.slug}
-                        onChange={(e) => setNewItem({ ...newItem, slug: e.target.value })}
+                        onChange={(e) => setNewItem(prev => ({ ...prev, slug: e.target.value }))}
                     />
                     <Input
                         label="Descripción (Opcional)"
+                        placeholder="¿Para qué sirve esta carpeta?"
                         value={newItem.description}
-                        onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                        onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
                     />
                     <div className="flex gap-3 pt-2">
-                        <Button variant="secondary" fullWidth onClick={() => setIsFolderModalOpen(false)}>Cancelar</Button>
+                        <Button variant="secondary" fullWidth onClick={() => {
+                            setIsFolderModalOpen(false);
+                            setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+                        }}>Cancelar</Button>
                         <Button fullWidth onClick={handleCreateFolder} isLoading={isCreating}>Crear Carpeta</Button>
                     </div>
                 </div>
@@ -1477,6 +1550,6 @@ export function AdminEmailTemplatesPage() {
                 }}
                 isLoading={isCreating}
             />
-        </div>
+        </div >
     );
 }
