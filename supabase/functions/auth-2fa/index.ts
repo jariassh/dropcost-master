@@ -56,11 +56,23 @@ serve(async (req) => {
       
       console.log("Código insertado en DB, enviando email...");
 
-      // --- ENVÍO DE EMAIL CON RESEND ---
+      // --- ENVÍO DE EMAIL CON PLANTILLA DINÁMICA ---
       const resendKey = Deno.env.get('RESEND_API_KEY')
       if (resendKey) {
         try {
-            console.log("Enviando via Resend...");
+            console.log("Cargando plantilla 2FA...");
+            const { data: template } = await adminClient
+                .from('email_templates')
+                .select('*')
+                .eq('slug', '2fa')
+                .maybeSingle()
+            
+            if (!template) throw new Error("Plantilla '2fa' no encontrada en la base de datos")
+
+            const renderedSubject = template.subject.replace('{{codigo}}', otp)
+            const renderedHtml = template.html_content.replace('{{codigo}}', otp)
+
+            console.log("Enviando via Resend API...");
             const res = await fetch('https://api.resend.com/emails', {
                 method: 'POST',
                 headers: {
@@ -68,38 +80,25 @@ serve(async (req) => {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    from: 'Security <security@dropcost.jariash.com>',
+                    from: 'Seguridad DropCost <security@dropcost.jariash.com>',
                     to: [user.email],
-                    subject: `${otp} es tu código de verificación 2FA`,
-                    html: `
-                    <div style="font-family: sans-serif; padding: 20px; color: #333;">
-                        <h2 style="color: #0066FF;">Activa tu Seguridad de Dos Factores</h2>
-                        <p>Hola,</p>
-                        <p>Has solicitado activar el 2FA en DropCost Master. Usa el siguiente código para confirmar tu identidad:</p>
-                        <div style="background: #f4f7ff; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
-                        <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #0066FF;">${otp}</span>
-                        </div>
-                        <p style="font-size: 12px; color: #666;">Este código expirará en 5 minutos. Si no solicitaste esto, ignora este correo.</p>
-                    </div>
-                    `
+                    subject: renderedSubject,
+                    html: renderedHtml
                 })
             })
 
             if (!res.ok) {
                 const errorText = await res.text()
                 console.error("Resend API Error:", errorText)
-                // No lanzar error para no bloquear el flujo si solo falla el email (opcional, pero mejor mostrar error)
                 throw new Error(`Error enviando email: ${errorText}`)
             }
 
-            const resData = await res.json()
-            console.log("Resend response:", resData)
+            console.log("Email 2FA enviado correctamente");
 
         } catch (emailError) {
              console.error("Fallo envío email:", emailError)
-             // Limpiar código generado si falla el envío para no dejar estados zombie
              await adminClient.from('auth_codes').delete().eq('code_hash', otp)
-             throw new Error("No se pudo enviar el correo de verificación. Verifica configuración SMTP/Resend.") 
+             throw new Error(`No se pudo enviar el correo de verificación: ${emailError.message}`) 
         }
       } else {
         console.log("AVISO: RESEND_API_KEY no configurada. Código generado:", otp)

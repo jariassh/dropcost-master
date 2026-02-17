@@ -3,6 +3,7 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Spinner } from '@/components/common/Spinner';
+import { Toggle } from '@/components/common/Toggle';
 import { Alert, useToast } from '@/components/common';
 import {
     Search,
@@ -59,7 +60,7 @@ export function AdminSettingsPage() {
                 logo_variante_url: data.logo_variante_url || '',
                 logo_footer_url: data.logo_footer_url || '',
                 site_url: data.site_url || '',
-                sitemap_url: data.sitemap_url || ''
+
             };
 
             setConfig(sanitized);
@@ -260,6 +261,7 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                                 onChange={(e) => setConfig((prev: any) => ({ ...prev, site_url: e.target.value }))}
                                 placeholder="https://dropcostmaster.com"
                             />
+<<<<<<< Updated upstream
                             <Input
                                 label="URL del Sitemap"
                                 value={config.sitemap_url}
@@ -267,6 +269,9 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                                 placeholder="https://dropcostmaster.com/sitemap.xml"
                                 leftIcon={<MapPin size={16} />}
                             />
+=======
+
+>>>>>>> Stashed changes
                         </div>
 
                         <Input
@@ -303,25 +308,28 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                     </Card>
 
                     <Card title="Configuración de Robots">
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer border border-transparent hover:border-[var(--border-color)]">
-                                <input
-                                    type="checkbox"
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px' }}>
+                            <div className="flex items-center justify-between p-2 rounded-xl hover:bg-[var(--bg-tertiary)] transition-all">
+                                <div>
+                                    <p className="text-sm font-bold text-[var(--text-primary)]">Permitir Indexación (Index)</p>
+                                    <p className="text-[11px] text-[var(--text-secondary)]">Indica a los buscadores si pueden mostrar tu sitio.</p>
+                                </div>
+                                <Toggle
                                     checked={config.permitir_indexacion}
-                                    onChange={(e) => setConfig((prev: any) => ({ ...prev, permitir_indexacion: e.target.checked }))}
-                                    className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--color-primary)] bg-[var(--bg-primary)]"
+                                    onChange={(checked) => setConfig((prev: any) => ({ ...prev, permitir_indexacion: checked }))}
                                 />
-                                <span className="text-sm font-semibold text-[var(--text-primary)]">Permitir Indexación (Index)</span>
-                            </label>
-                            <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer border border-transparent hover:border-[var(--border-color)]">
-                                <input
-                                    type="checkbox"
+                            </div>
+
+                            <div className="flex items-center justify-between p-2 rounded-xl hover:bg-[var(--bg-tertiary)] transition-all">
+                                <div>
+                                    <p className="text-sm font-bold text-[var(--text-primary)]">Seguir Enlaces (Follow)</p>
+                                    <p className="text-[11px] text-[var(--text-secondary)]">Indica si los buscadores deben rastrear los links internos.</p>
+                                </div>
+                                <Toggle
                                     checked={config.permitir_seguimiento}
-                                    onChange={(e) => setConfig((prev: any) => ({ ...prev, permitir_seguimiento: e.target.checked }))}
-                                    className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--color-primary)] bg-[var(--bg-primary)]"
+                                    onChange={(checked) => setConfig((prev: any) => ({ ...prev, permitir_seguimiento: checked }))}
                                 />
-                                <span className="text-sm font-semibold text-[var(--text-primary)]">Seguir Enlaces (Follow)</span>
-                            </label>
+                            </div>
                         </div>
                     </Card>
 
