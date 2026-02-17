@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { useToast, Badge, Modal, Input, Spinner } from '@/components/common';
@@ -86,7 +86,7 @@ export function AdminEmailTemplatesPage() {
             [field]: newText
         });
 
-        // Cerrar menús
+        // Cerrar men├║s
         setShowVariablesSubject(false);
         setShowVariablesBody(false);
 
@@ -103,36 +103,36 @@ export function AdminEmailTemplatesPage() {
             { name: 'nombres', label: 'Nombres del Usuario' },
             { name: 'apellidos', label: 'Apellidos del Usuario' },
             { name: 'email', label: 'Email Principal' },
-            { name: 'telefono', label: 'Teléfono de Contacto' },
-            { name: 'pais', label: 'País de Residencia' },
+            { name: 'telefono', label: 'Tel├®fono de Contacto' },
+            { name: 'pais', label: 'Pa├¡s de Residencia' },
             { name: 'wallet_saldo', label: 'Saldo en Wallet' },
-            { name: 'codigo_referido_personal', label: 'Su Código de Invitación' },
+            { name: 'codigo_referido_personal', label: 'Su C├│digo de Invitaci├│n' },
             { name: 'fecha_registro', label: 'Fecha de Registro' }
         ],
-        'Suscripción': [
+        'Suscripci├│n': [
             { name: 'plan_nombre', label: 'Nombre del Plan Actual' },
             { name: 'plan_precio', label: 'Precio del Plan' },
-            { name: 'plan_expiracion', label: 'Fecha de Expiración' },
+            { name: 'plan_expiracion', label: 'Fecha de Expiraci├│n' },
             { name: 'estado_suscripcion', label: 'Estado (Activa/Pendiente)' }
         ],
         'Tienda': [
             { name: 'tienda_nombre', label: 'Nombre de la Tienda' },
-            { name: 'tienda_pais', label: 'País de la Tienda' },
+            { name: 'tienda_pais', label: 'Pa├¡s de la Tienda' },
             { name: 'tienda_moneda', label: 'Moneda (COP, USD, etc)' }
         ],
         'Financiero': [
-            { name: 'producto_nombre', label: 'Nombre del Producto (Último)' },
+            { name: 'producto_nombre', label: 'Nombre del Producto (├Ültimo)' },
             { name: 'producto_sku', label: 'SKU del Producto' },
             { name: 'producto_precio_sugerido', label: 'Precio Sugerido' },
             { name: 'producto_utilidad_neta', label: 'Utilidad Neta Estimada' }
         ],
         'Referidos': [
-            { name: 'lider_nombre', label: 'Nombre de su Líder' },
+            { name: 'lider_nombre', label: 'Nombre de su L├¡der' },
             { name: 'total_referidos', label: 'Total de Invitados' },
             { name: 'total_comisiones', label: 'Comisiones Totales' }
         ],
         'Seguridad': [
-            { name: 'codigo', label: 'Código de Verificación (OTP)' }
+            { name: 'codigo', label: 'C├│digo de Verificaci├│n (OTP)' }
         ]
     };
 
@@ -153,7 +153,7 @@ export function AdminEmailTemplatesPage() {
                 className="absolute right-0 top-full mt-2 w-80 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
                 style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
             >
-                {/* Buscador Dinámico */}
+                {/* Buscador Din├ímico */}
                 <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
                     <div className="relative">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
@@ -268,7 +268,7 @@ export function AdminEmailTemplatesPage() {
 
             setTemplates(prev => prev.map(t => t.id === selectedTemplate.id ? selectedTemplate : t));
 
-            toast.success('¡Guardado!', 'La plantilla se ha actualizado correctamente.');
+            toast.success('┬íGuardado!', 'La plantilla se ha actualizado correctamente.');
         } catch (error) {
             toast.error('Error', 'No se pudo guardar la plantilla.');
         } finally {
@@ -290,7 +290,7 @@ export function AdminEmailTemplatesPage() {
             setTemplates([...templates, data]);
             setIsCreateModalOpen(false);
             setNewItem({ slug: '', description: '', subject: '' });
-            toast.success('¡Creado!', 'La plantilla se ha creado correctamente.');
+            toast.success('┬íCreado!', 'La plantilla se ha creado correctamente.');
             setSelectedTemplate(data);
         } catch (error) {
             toast.error('Error', 'No se pudo crear la plantilla.');
@@ -315,7 +315,7 @@ export function AdminEmailTemplatesPage() {
             setTemplates([...templates, data]);
             setIsFolderModalOpen(false);
             setNewItem({ slug: '', description: '', subject: '' });
-            toast.success('¡Creado!', 'La carpeta se ha creado correctamente.');
+            toast.success('┬íCreado!', 'La carpeta se ha creado correctamente.');
         } catch (error) {
             toast.error('Error', 'No se pudo crear la carpeta.');
         } finally {
@@ -323,7 +323,7 @@ export function AdminEmailTemplatesPage() {
         }
     }
 
-    // Renderizador de previsualización simple
+    // Renderizador de previsualizaci├│n simple
     const renderPreview = (content: string) => {
         let rendered = content;
         selectedTemplate?.variables.forEach(v => {
@@ -360,10 +360,10 @@ export function AdminEmailTemplatesPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 mb-2">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                        Plantillas de correo electrónico
+                        Plantillas de correo electr├│nico
                     </h1>
                     <p className="mt-2 text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Cree y gestione plantillas para todos sus correos electrónicos transaccionales.
+                        Cree y gestione plantillas para todos sus correos electr├│nicos transaccionales.
                     </p>
                 </div>
             </div>
@@ -521,7 +521,7 @@ export function AdminEmailTemplatesPage() {
                                             <td colSpan={6} style={{ padding: '60px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
                                                 <div className="flex flex-col items-center gap-4">
                                                     <Mail size={40} className="text-[var(--border-color)]" />
-                                                    <p className="text-sm font-medium">No se encontraron plantillas en esta ubicación.</p>
+                                                    <p className="text-sm font-medium">No se encontraron plantillas en esta ubicaci├│n.</p>
                                                 </div>
                                             </td>
                                         </tr>
@@ -564,7 +564,7 @@ export function AdminEmailTemplatesPage() {
                                                 <td style={{ padding: '16px 24px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                                                         {item.is_folder ? <Folder size={14} className="text-amber-500" /> : <Zap size={14} className="text-[var(--color-primary)]" />}
-                                                        {item.is_folder ? 'Carpeta' : 'Diseño Transaccional'}
+                                                        {item.is_folder ? 'Carpeta' : 'Dise├▒o Transaccional'}
                                                     </div>
                                                 </td>
                                                 <td style={{ padding: '16px 24px' }}>
@@ -626,7 +626,7 @@ export function AdminEmailTemplatesPage() {
                         </div>
                     </div>
 
-                    {/* Sección Superior: Editor de Código e Info Lateral */}
+                    {/* Secci├│n Superior: Editor de C├│digo e Info Lateral */}
                     <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
                         {/* Editor Principal */}
                         <div className="xl:col-span-8">
@@ -745,11 +745,11 @@ export function AdminEmailTemplatesPage() {
 
                         {/* Info y Variables Side */}
                         <div className="xl:col-span-4 flex flex-col gap-6">
-                            <Card title="Guía del Desarrollador">
+                            <Card title="Gu├¡a del Desarrollador">
                                 <div className="flex flex-col gap-8 p-2">
                                     <div className="space-y-3">
                                         <h5 className="text-[11px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-2">
-                                            <Info size={14} /> Función del Email
+                                            <Info size={14} /> Funci├│n del Email
                                         </h5>
                                         <div style={{ padding: '24px', backgroundColor: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
                                             <p className="text-sm text-[var(--text-secondary)] leading-relaxed font-medium">
@@ -789,7 +789,7 @@ export function AdminEmailTemplatesPage() {
                                             style={{ padding: '24px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '16px', border: '1px dashed var(--border-color)' }}
                                         >
                                             <p className="text-[12px] text-[var(--text-tertiary)] leading-normal italic">
-                                                Estas variables son fundamentales para que este email funcione correctamente. El autocompletador incluye además campos generales de usuario y tienda.
+                                                Estas variables son fundamentales para que este email funcione correctamente. El autocompletador incluye adem├ís campos generales de usuario y tienda.
                                             </p>
                                         </div>
                                     </div>
@@ -810,13 +810,13 @@ export function AdminEmailTemplatesPage() {
                             >
                                 <Info size={24} className="shrink-0 text-[var(--color-primary)]" />
                                 <p style={{ color: 'var(--color-primary)', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.6', margin: 0 }}>
-                                    Tip: Usa estilos inline siempre. El diseño de abajo se actualiza mientras escribes.
+                                    Tip: Usa estilos inline siempre. El dise├▒o de abajo se actualiza mientras escribes.
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    {/* SECCIÓN VISTA PREVIA: Siempre visible y Responsiva */}
+                    {/* SECCI├ôN VISTA PREVIA: Siempre visible y Responsiva */}
                     <div className="flex flex-col gap-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -826,7 +826,7 @@ export function AdminEmailTemplatesPage() {
                                 <h3 className="text-xl font-bold text-[var(--text-primary)]">Vista Previa en Vivo</h3>
                             </div>
 
-                            {/* Selector de Dispositivo (Resizer) - Calibración Final */}
+                            {/* Selector de Dispositivo (Resizer) - Calibraci├│n Final */}
                             <div style={{ display: 'flex', gap: '4px', padding: '4px', backgroundColor: 'var(--bg-secondary)', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
                                 <button
                                     onClick={() => setPreviewDevice('mobile')}
@@ -843,7 +843,7 @@ export function AdminEmailTemplatesPage() {
                                         justifyContent: 'center',
                                         boxShadow: previewDevice === 'mobile' ? '0 2px 6px rgba(0,0,0,0.06)' : 'none'
                                     }}
-                                    title="Vista Móvil (375px)"
+                                    title="Vista M├│vil (375px)"
                                 >
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="10" height="18" x="7" y="3" rx="2" ry="2" /><path d="M12 18h.01" /></svg>
                                 </button>
@@ -888,7 +888,7 @@ export function AdminEmailTemplatesPage() {
                             </div>
                         </div>
 
-                        {/* Canvas de Previsualización */}
+                        {/* Canvas de Previsualizaci├│n */}
                         <div
                             style={{
                                 display: 'flex',
@@ -945,7 +945,7 @@ export function AdminEmailTemplatesPage() {
             )
             }
 
-            {/* Modales de Creación */}
+            {/* Modales de Creaci├│n */}
             <Modal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
@@ -954,20 +954,20 @@ export function AdminEmailTemplatesPage() {
             >
                 <div className="space-y-5">
                     <Input
-                        label="Nombre Único (slug)"
+                        label="Nombre ├Ünico (slug)"
                         placeholder="ej: BIENVENIDA_CLIENTE"
                         value={newItem.slug}
                         onChange={(e) => setNewItem({ ...newItem, slug: e.target.value })}
                     />
                     <Input
                         label="Asunto del Correo"
-                        placeholder="ej: ¡Bienvenido a nuestra tienda!"
+                        placeholder="ej: ┬íBienvenido a nuestra tienda!"
                         value={newItem.subject}
                         onChange={(e) => setNewItem({ ...newItem, subject: e.target.value })}
                     />
                     <Input
-                        label="Descripción"
-                        placeholder="¿Para qué sirve esta plantilla?"
+                        label="Descripci├│n"
+                        placeholder="┬┐Para qu├® sirve esta plantilla?"
                         value={newItem.description}
                         onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
                     />
@@ -992,7 +992,7 @@ export function AdminEmailTemplatesPage() {
                         onChange={(e) => setNewItem({ ...newItem, slug: e.target.value })}
                     />
                     <Input
-                        label="Descripción (Opcional)"
+                        label="Descripci├│n (Opcional)"
                         value={newItem.description}
                         onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
                     />

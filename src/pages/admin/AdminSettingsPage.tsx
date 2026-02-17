@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Spinner } from '@/components/common/Spinner';
-import { Toggle } from '@/components/common/Toggle';
 import { Alert, useToast } from '@/components/common';
 import {
     Search,
@@ -60,12 +59,12 @@ export function AdminSettingsPage() {
                 logo_variante_url: data.logo_variante_url || '',
                 logo_footer_url: data.logo_footer_url || '',
                 site_url: data.site_url || '',
-
+                sitemap_url: data.sitemap_url || ''
             };
 
             setConfig(sanitized);
         } catch (error) {
-            toast.error('Error', 'No se pudo cargar la configuración global.');
+            toast.error('Error', 'No se pudo cargar la configuraci├│n global.');
         } finally {
             setIsLoading(false);
         }
@@ -81,10 +80,10 @@ export function AdminSettingsPage() {
 
             const updated = await configService.updateConfig(payload);
 
-            // Si llegamos aquí, la DB aceptó el cambio
+            // Si llegamos aqu├¡, la DB acept├│ el cambio
             setConfig(updated);
             await applyConfig(updated);
-            toast.success('¡Guardado!', 'La configuración global se ha actualizado correctamente.');
+            toast.success('┬íGuardado!', 'La configuraci├│n global se ha actualizado correctamente.');
         } catch (error: any) {
             console.error('Save error:', error);
             toast.error('Error de Guardado', error.message || 'Hubo un problema al guardar los cambios.');
@@ -94,12 +93,12 @@ export function AdminSettingsPage() {
     }
 
     async function handleReset() {
-        if (!window.confirm('¿Estás seguro de que deseas restaurar los valores por defecto?')) return;
+        if (!window.confirm('┬┐Est├ís seguro de que deseas restaurar los valores por defecto?')) return;
         try {
             setIsSaving(true);
             await configService.resetToDefaults();
             await loadConfig();
-            await applyConfig(); // Volver a los defaults en la pestaña
+            await applyConfig(); // Volver a los defaults en la pesta├▒a
             toast.success('Restaurado', 'Se han restablecido los valores por defecto.');
         } catch (error) {
             toast.error('Error', 'No se pudieron restaurar los valores.');
@@ -112,9 +111,9 @@ export function AdminSettingsPage() {
 
     const tabs = [
         { id: 'seo', label: 'SEO & Metadatos', icon: Search },
-        { id: 'branding', label: 'Branding & Diseño', icon: Palette },
+        { id: 'branding', label: 'Branding & Dise├▒o', icon: Palette },
         { id: 'tracking', label: 'Tracking & Scripts', icon: Code },
-        { id: 'info', label: 'Información Base', icon: Info },
+        { id: 'info', label: 'Informaci├│n Base', icon: Info },
     ];
 
     return (
@@ -123,7 +122,7 @@ export function AdminSettingsPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
-                        Administración Global
+                        Administraci├│n Global
                     </h1>
                     <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                         Gestiona la identidad visual, SEO y scripts estructurales de la plataforma.
@@ -220,7 +219,7 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                 <Card title="Meta Contenido">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <Input
-                            label="Título Meta"
+                            label="T├¡tulo Meta"
                             value={config.meta_title}
                             onChange={(e) => setConfig((prev: any) => ({ ...prev, meta_title: e.target.value }))}
                             placeholder="DropCost Master..."
@@ -228,7 +227,7 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                         />
 
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-[var(--text-primary)]">Descripción Meta</label>
+                            <label className="text-sm font-bold text-[var(--text-primary)]">Descripci├│n Meta</label>
                             <textarea
                                 value={config.meta_description}
                                 onChange={(e) => setConfig((prev: any) => ({ ...prev, meta_description: e.target.value }))}
@@ -254,24 +253,22 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             <Input
                                 label="URL del Sitio"
                                 value={config.site_url}
                                 onChange={(e) => setConfig((prev: any) => ({ ...prev, site_url: e.target.value }))}
                                 placeholder="https://dropcostmaster.com"
                             />
-<<<<<<< Updated upstream
-                            <Input
-                                label="URL del Sitemap"
-                                value={config.sitemap_url}
-                                onChange={(e) => setConfig((prev: any) => ({ ...prev, sitemap_url: e.target.value }))}
-                                placeholder="https://dropcostmaster.com/sitemap.xml"
-                                leftIcon={<MapPin size={16} />}
-                            />
-=======
-
->>>>>>> Stashed changes
+                            <div className="space-y-1">
+                                <label className="text-sm font-bold text-[var(--text-primary)]">URL del Sitemap</label>
+                                <AssetUploader
+                                    value={config.sitemap_url}
+                                    onUpload={(url) => setConfig((prev: any) => ({ ...prev, sitemap_url: url }))}
+                                    path="sitemap.xml"
+                                    accept=".xml"
+                                />
+                            </div>
                         </div>
 
                         <Input
@@ -284,7 +281,7 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                 </Card>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <Card title="Vista Previa de Búsqueda">
+                    <Card title="Vista Previa de B├║squeda">
                         <div
                             style={{
                                 padding: '32px',
@@ -296,40 +293,37 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                             className="shadow-sm"
                         >
                             <div className={`text-lg font-medium mb-2 truncate ${isDark ? 'text-[#8ab4f8]' : 'text-[#1a0dab]'}`}>
-                                {config.meta_title || 'Título de ejemplo'}
+                                {config.meta_title || 'T├¡tulo de ejemplo'}
                             </div>
                             <div className={`text-xs mb-2 truncate ${isDark ? 'text-[#34a853]' : 'text-[#006621]'}`}>
                                 {config.site_url || 'https://dropcostmaster.com'}
                             </div>
                             <div className={`text-sm leading-relaxed ${isDark ? 'text-[#bdc1c6]' : 'text-[#4d5156]'} line-clamp-2`}>
-                                {config.meta_description || 'Descripción ejemplo...'}
+                                {config.meta_description || 'Descripci├│n ejemplo...'}
                             </div>
                         </div>
                     </Card>
 
-                    <Card title="Configuración de Robots">
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px' }}>
-                            <div className="flex items-center justify-between p-2 rounded-xl hover:bg-[var(--bg-tertiary)] transition-all">
-                                <div>
-                                    <p className="text-sm font-bold text-[var(--text-primary)]">Permitir Indexación (Index)</p>
-                                    <p className="text-[11px] text-[var(--text-secondary)]">Indica a los buscadores si pueden mostrar tu sitio.</p>
-                                </div>
-                                <Toggle
+                    <Card title="Configuraci├│n de Robots">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer border border-transparent hover:border-[var(--border-color)]">
+                                <input
+                                    type="checkbox"
                                     checked={config.permitir_indexacion}
-                                    onChange={(checked) => setConfig((prev: any) => ({ ...prev, permitir_indexacion: checked }))}
+                                    onChange={(e) => setConfig((prev: any) => ({ ...prev, permitir_indexacion: e.target.checked }))}
+                                    className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--color-primary)] bg-[var(--bg-primary)]"
                                 />
-                            </div>
-
-                            <div className="flex items-center justify-between p-2 rounded-xl hover:bg-[var(--bg-tertiary)] transition-all">
-                                <div>
-                                    <p className="text-sm font-bold text-[var(--text-primary)]">Seguir Enlaces (Follow)</p>
-                                    <p className="text-[11px] text-[var(--text-secondary)]">Indica si los buscadores deben rastrear los links internos.</p>
-                                </div>
-                                <Toggle
+                                <span className="text-sm font-semibold text-[var(--text-primary)]">Permitir Indexaci├│n (Index)</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer border border-transparent hover:border-[var(--border-color)]">
+                                <input
+                                    type="checkbox"
                                     checked={config.permitir_seguimiento}
-                                    onChange={(checked) => setConfig((prev: any) => ({ ...prev, permitir_seguimiento: checked }))}
+                                    onChange={(e) => setConfig((prev: any) => ({ ...prev, permitir_seguimiento: e.target.checked }))}
+                                    className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--color-primary)] bg-[var(--bg-primary)]"
                                 />
-                            </div>
+                                <span className="text-sm font-semibold text-[var(--text-primary)]">Seguir Enlaces (Follow)</span>
+                            </label>
                         </div>
                     </Card>
 
@@ -342,11 +336,12 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                                 value={config.og_image_url}
                                 onUpload={(url) => setConfig((prev: any) => ({ ...prev, og_image_url: url }))}
                                 path="og-image.png"
+                                layout="column"
                             />
                             {config.og_image_url && (
                                 <div
                                     style={{ marginTop: '8px' }}
-                                    className="aspect-video rounded-xl overflow-hidden border border-[var(--border-color)] bg-[var(--bg-tertiary)] shadow-sm max-w-[70%] mx-auto"
+                                    className="aspect-video rounded-xl overflow-hidden border border-[var(--border-color)] bg-[var(--bg-tertiary)] shadow-sm w-full"
                                 >
                                     <img src={config.og_image_url} alt="OG" className="w-full h-full object-cover" />
                                 </div>
@@ -370,9 +365,9 @@ function SectionBranding({ config, setConfig }: any) {
             ]
         },
         {
-            title: 'Semánticos',
+            title: 'Sem├ínticos',
             colors: [
-                { key: 'color_success', label: 'Éxito' },
+                { key: 'color_success', label: '├ëxito' },
                 { key: 'color_warning', label: 'Aviso' },
                 { key: 'color_error', label: 'Error' },
             ]
@@ -387,10 +382,10 @@ function SectionBranding({ config, setConfig }: any) {
             ]
         },
         {
-            title: 'Navegación',
+            title: 'Navegaci├│n',
             colors: [
-                { key: 'color_sidebar_bg', label: 'Menú Lat.' },
-                { key: 'color_sidebar_text', label: 'Texto Menú' },
+                { key: 'color_sidebar_bg', label: 'Men├║ Lat.' },
+                { key: 'color_sidebar_text', label: 'Texto Men├║' },
             ]
         }
     ];
@@ -440,7 +435,7 @@ function SectionBranding({ config, setConfig }: any) {
                         <div className="flex flex-col gap-3">
                             <span className="text-[10px] uppercase font-bold text-slate-400 text-center tracking-widest">Fondo Claro</span>
                             <div className="p-6 bg-white rounded-xl border border-slate-200 flex items-center justify-center min-h-[120px] shadow-sm">
-                                {config.logo_principal_url ? <img src={config.logo_principal_url} alt="Light" className="max-h-12 object-contain" /> : <div className="text-slate-200 uppercase font-black italic">Logo Vacío</div>}
+                                {config.logo_principal_url ? <img src={config.logo_principal_url} alt="Light" className="max-h-12 object-contain" /> : <div className="text-slate-200 uppercase font-black italic">Logo Vac├¡o</div>}
                             </div>
                         </div>
                         <div className="flex flex-col gap-3">
@@ -449,7 +444,7 @@ function SectionBranding({ config, setConfig }: any) {
                                 {config.logo_variante_url ? (
                                     <img src={config.logo_variante_url} alt="Dark" className="max-h-12 object-contain" />
                                 ) : (
-                                    <div className="text-slate-700 uppercase font-black italic">Logo Vacío</div>
+                                    <div className="text-slate-700 uppercase font-black italic">Logo Vac├¡o</div>
                                 )}
                             </div>
                         </div>
@@ -518,7 +513,7 @@ function SectionBranding({ config, setConfig }: any) {
                     >
                         <AlertCircle size={18} style={{ flexShrink: 0 }} />
                         <p style={{ fontSize: '12px', fontWeight: 600, margin: 0, lineHeight: '1.5' }}>
-                            Los colores se inyectan dinámicamente en el tema de la plataforma.
+                            Los colores se inyectan din├ímicamente en el tema de la plataforma.
                         </p>
                     </div>
                 </div>
@@ -530,9 +525,9 @@ function SectionBranding({ config, setConfig }: any) {
 function SectionTracking({ config, setConfig }: any) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            <Card title="Inyección en HEAD">
+            <Card title="Inyecci├│n en HEAD">
                 <div className="space-y-4">
-                    <p className="text-sm text-[var(--text-secondary)]">Ideal para Píxeles, Tag Manager y Analytics.</p>
+                    <p className="text-sm text-[var(--text-secondary)]">Ideal para P├¡xeles, Tag Manager y Analytics.</p>
                     <textarea
                         value={config.codigo_head}
                         onChange={(e) => setConfig((prev: any) => ({ ...prev, codigo_head: e.target.value }))}
@@ -556,7 +551,7 @@ function SectionTracking({ config, setConfig }: any) {
                 </div>
             </Card>
 
-            <Card title="Inyección en FOOTER">
+            <Card title="Inyecci├│n en FOOTER">
                 <div className="space-y-4">
                     <p className="text-sm text-[var(--text-secondary)]">Ideal para Widgets de Chat y scripts de carga diferida.</p>
                     <textarea
@@ -602,7 +597,7 @@ function SectionInfo({ config, setConfig }: any) {
                             onChange={(e) => setConfig((prev: any) => ({ ...prev, email_contacto: e.target.value }))}
                         />
                         <Input
-                            label="Línea Teléfono/Whatsapp"
+                            label="L├¡nea Tel├®fono/Whatsapp"
                             value={config.telefono}
                             onChange={(e) => setConfig((prev: any) => ({ ...prev, telefono: e.target.value }))}
                         />
@@ -620,15 +615,27 @@ function SectionInfo({ config, setConfig }: any) {
 
             <Card title="Recursos Legales">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <Input label="Términos y Condiciones" value={config.terminos_condiciones_url} onChange={(e) => setConfig((prev: any) => ({ ...prev, terminos_condiciones_url: e.target.value }))} placeholder="https://..." />
-                    <Input label="Política de Privacidad" value={config.politica_privacidad_url} onChange={(e) => setConfig((prev: any) => ({ ...prev, politica_privacidad_url: e.target.value }))} placeholder="https://..." />
+                    <Input label="T├®rminos y Condiciones" value={config.terminos_condiciones_url} onChange={(e) => setConfig((prev: any) => ({ ...prev, terminos_condiciones_url: e.target.value }))} placeholder="https://..." />
+                    <Input label="Pol├¡tica de Privacidad" value={config.politica_privacidad_url} onChange={(e) => setConfig((prev: any) => ({ ...prev, politica_privacidad_url: e.target.value }))} placeholder="https://..." />
                 </div>
             </Card>
         </div>
     );
 }
 
-function AssetUploader({ value, onUpload, path }: { value: string, onUpload: (url: string) => void, path: string }) {
+function AssetUploader({
+    value,
+    onUpload,
+    path,
+    accept = ".png,.jpg,.jpeg,.svg,.webp,.ico",
+    layout = 'row'
+}: {
+    value: string,
+    onUpload: (url: string) => void,
+    path: string,
+    accept?: string,
+    layout?: 'row' | 'column'
+}) {
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const toast = useToast();
@@ -637,9 +644,9 @@ function AssetUploader({ value, onUpload, path }: { value: string, onUpload: (ur
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validar tamaño (ej. 2MB)
+        // Validar tama├▒o (ej. 2MB)
         if (file.size > 2 * 1024 * 1024) {
-            toast.error('Archivo muy grande', 'El tamaño máximo permitido es 2MB.');
+            toast.error('Archivo muy grande', 'El tama├▒o m├íximo permitido es 2MB.');
             if (fileInputRef.current) fileInputRef.current.value = '';
             return;
         }
@@ -648,50 +655,79 @@ function AssetUploader({ value, onUpload, path }: { value: string, onUpload: (ur
             setIsUploading(true);
             const url = await storageService.uploadBrandingFile(file, path);
             onUpload(url);
-            toast.success('¡Completado!', 'El archivo se ha subido correctamente.');
+            toast.success('┬íCompletado!', 'El archivo se ha subido correctamente.');
         } catch (error: any) {
             console.error('Upload error:', error);
-            toast.error('Error de subida', 'No se pudo subir el archivo. Asegúrate de que el bucket "branding" existe y es público en Supabase.');
+            toast.error('Error de subida', 'No se pudo subir el archivo. Aseg├║rate de que el bucket "branding" existe y es p├║blico en Supabase.');
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
         }
     }
 
+    const clearButton = value ? (
+        <button
+            onClick={() => onUpload('')}
+            style={{
+                color: 'var(--text-tertiary)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                transition: 'all 150ms ease'
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--color-error)';
+                e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.1)';
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--text-tertiary)';
+                e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+            title="Limpiar campo"
+            type="button"
+        >
+            <X size={16} />
+        </button>
+    ) : null;
+
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div className="flex-1">
+        <div style={{ display: 'flex', flexDirection: layout === 'column' ? 'column' : 'row', alignItems: layout === 'column' ? 'stretch' : 'center', gap: '12px', width: '100%' }}>
+            <div style={{ flex: 1 }}>
                 <Input
                     value={value || ''}
                     onChange={(e) => onUpload(e.target.value)}
                     placeholder="https://..."
                     leftIcon={<Globe size={16} />}
+                    rightElement={clearButton}
                 />
             </div>
+
             <input
                 type="file"
                 ref={fileInputRef}
-                className="hidden"
-                accept=".png,.jpg,.jpeg,.svg,.webp,.ico"
+                style={{ display: 'none' }}
+                accept={accept}
                 onChange={handleFileChange}
                 disabled={isUploading}
             />
-            <Button
-                variant="secondary"
-                onClick={() => fileInputRef.current?.click()}
-                isLoading={isUploading}
-                leftIcon={<Upload size={16} />}
-            >
-                Subir
-            </Button>
-            {value && (
-                <button
-                    onClick={() => onUpload('')}
-                    className="p-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-color)] text-[var(--color-error)] rounded-xl hover:bg-[var(--color-error)] hover:text-white transition-all shadow-sm"
+
+            <div style={{ width: layout === 'column' ? '100%' : 'auto' }}>
+                <Button
+                    variant="secondary"
+                    onClick={() => fileInputRef.current?.click()}
+                    isLoading={isUploading}
+                    leftIcon={<Upload size={16} />}
+                    className={layout === 'column' ? 'w-full' : ''}
+                    style={layout === 'column' ? { width: '100%', justifyContent: 'center' } : {}}
                 >
-                    <X size={16} />
-                </button>
-            )}
+                    Subir
+                </Button>
+            </div>
         </div>
     );
 }
