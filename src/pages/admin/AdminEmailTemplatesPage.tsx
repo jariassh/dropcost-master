@@ -1147,8 +1147,8 @@ export function AdminEmailTemplatesPage() {
                 html_content: finalHtml,
                 mjml_content: selectedTemplate.mjml_content,
                 description: selectedTemplate.description,
-                sender_prefix: selectedTemplate.sender_prefix,
-                sender_name: selectedTemplate.sender_name
+                sender_prefix: selectedTemplate.sender_prefix ?? null,
+                sender_name: selectedTemplate.sender_name ?? null
             };
 
             await configService.updateEmailTemplate(selectedTemplate.id, updatedData);
