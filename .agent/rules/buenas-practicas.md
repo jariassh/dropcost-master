@@ -2,90 +2,415 @@
 trigger: always_on
 ---
 
-DIRECTRICES DropCost Master - WORKSPACE SPECIFIC
-Proyecto: Aplicación de costeo para dropshippers COD (Pago Contra Entrega) en Latinoamérica.
-Stack: React + Supabase serverless + TypeScript. Multitenancy (tiendas independientes).
+# DIRECTRICES DEL PROYECTO - DropCost Master
+**Versión 1.0** | Reglas específicas + arquitectura global integrada
 
-I. DISEÑO: TOKENIZACIÓN ATÓMICA (DropCost Vibe)
-Paleta Principal: Azul #0066FF (primario), Verde #10B981 (éxito), Rojo #EF4444 (error), Gris #6B7280 (neutro).
-Sin Magic Numbers: Nunca hardcodees colores/tamaños. Usa variables (Colors.primary, Spacing.lg).
-Tipografía: Inter font. H1=32px bold, Body=14px regular.
-Componentización: Si reutilizable 2+ veces o >20 líneas, extrae componente.
-Estados: Todo componente maneja Loading, Error, Empty, DataOverflow.
-Dark Mode: Toggle siempre soportado (CSS variables + localStorage).
+---
 
-II. SEGURIDAD (CRÍTICO - Datos financieros + Integraciones)
-Secretos: NUNCA en código. Variables entorno (process.env/Deno.env).
-Validación: Frontend + Backend siempre. Usa Zod para schemas.
-SQL: Queries PARAMETRIZADAS siempre. Sin concatenación strings.
-Datos Sensibles: Encriptados en reposo (tokens API, passwords hashed con bcrypt).
-Logs: NUNCA loguees passwords, tokens, números tarjeta, CVV. Sanitiza datos.
-RLS: Row Level Security en BD (usuario solo ve sus tiendas). Testa antes deploy.
-JWT: Tokens con expiración 30d. Refresh tokens en httpOnly cookies.
-2FA: Código email 10 minutos validez. Reintentos limitados (máx 3).
-HTTPS: Obligatorio. Headers seguridad (CSP, X-Frame-Options, etc).
+## I. FLUJO DE COMPONENTES UI (IRONCLAD)
 
-III. AISLAMIENTO MULTITENANCY (THE CORE)
-Filtro tienda_id: TODA query filtra por tienda_id Y usuario_id. Nunca SELECT sin WHERE.
-RLS Validation: Cada tabla nueva → RLS policy antes de usar.
-Tests Aislamiento: Validar User A NO ve costeos/tiendas de User B.
-Admin Exception: Solo admin role puede ver todo. Verificar role en backend.
+**ANTES de crear CUALQUIER componente UI, ejecuta este checklist:**
 
-IV. CÁLCULOS FINANCIEROS (Exactitud crítica)
-Fórmula Costeo: (CostoProducto + Flete + OtrosGastos + CPA + Margen) / (1 - Devoluciones%).
-Unit Tests: TODOS los casos (positivos, negativos, edge cases con devoluciones 100%, margen 0).
-Precisión: Usar números con 2 decimales. Redondeo bancario (ROUND_HALF_UP).
-Validación Input: Margen >0, Costo >0, no NaN/Infinity.
+```
+1️⃣ ¿EXISTE EN src/components/?
+   └─ SÍ → Úsalo. No crees duplicado.
+   └─ NO → Continúa paso 2
 
-V. INTEGRACIONES EXTERNAS (Meta, Dropi, Shopify, Pasarelas)
-Tokens Encriptados: Guardar siempre encriptados en BD (AES-256).
-Sync Automático: Meta (1h), Dropi (30min), Shopify (1h).
-Fallback CSV: Si integración falla, usuario puede subir CSV manualmente.
-Webhook Validación: Validar firma webhook antes procesar (Meta, Stripe, Mercado Pago).
-Reintentos: Implementar exponential backoff para fallas temporales.
-Mocks Tests: Todos endpoints externos mocked en tests (no llamadas reales).
+2️⃣ ¿EXISTE REFERENCIA EN SOLICITUD?
+   └─ SÍ (imagen, template, spec) → Úsala
+   └─ NO → Continúa paso 3
 
-VI. PERFORMANCE (Dashboard debe cargar <3s)
-Índices BD: tienda_id, usuario_id, fecha en todas las queries de filtrado.
-Caching: KPIs/Regiones (cambian poco) → cachear 1h. Invalidar manual si es necesario.
-Paginación: Costeos/usuarios >50 rows → obligatoria. Limit/offset en queries.
-Lazy Load: Dashboard cards <fold se cargan con observer.
-API Pagination: GET /costeos?limit=20&skip=0. Total count en response.
-Lighthouse: >80 score. Bundle <500KB gzip.
+3️⃣ ¿EXISTE EN DISEÑO_UIUX.md (Sección 2)?
+   └─ SÍ → Síguelo línea por línea
+   └─ NO → Continúa paso 4
 
-VII. TESTING ESPECÍFICO DropCost
-Critical Flows: (1) Registro → Crear tienda → Costeo, (2) Conectar Meta Ads, (3) Cambiar plan.
-Cálculos: Unit tests completos para calcularPrecio (mínimo 10 casos).
-Aislamiento: Tests verifican User A no ve tienda User B.
-Integraciones: Mock Meta/Dropi/Shopify. Webhook tests con sig validation.
-E2E: 5 flujos críticos mínimo en Playwright.
-Coverage: >70% código crítico (auth, simulador, dashboard, integraciones).
+4️⃣ CREAR COMPONENTE NUEVO:
+   ├─ Seguir DISEÑO_UIUX.md exacto
+   ├─ Variables CSS (NUNCA #FFFFFF hardcoded)
+   ├─ Espaciado obligatorio: 4, 8, 12, 16, 24, 32px
+   ├─ Dark mode funciona
+   ├─ Guardar: src/components/common/[Nombre].tsx
+   └─ Commit: feat(components): agregar [Nombre]
+```
 
-VIII. DATOS Y OBSERVABILIDAD
-Logs Estructurados: { timestamp, level, userId, tiendaId, feature, message }.
-Errores Críticos: Auth fails → Sentry. Cálculos erróneos → investigation.
-Performance: Log queries >200ms. API calls >500ms.
-Auditoría: Log cambios a datos críticos (plan changes, costeos editados).
-Retention: Logs 30 días, alertas activas 24/7.
+---
 
-IX. FLUJOS USUARIO ESPECÍFICOS
-Onboarding: 3 pasos (crear tienda → dato referencia → primer costeo).
-Dashboard: Selector tienda siempre visible. Filtro fecha por defecto últimos 30 días.
-Costeo: Guardar siempre con tienda_id + id_campana_meta (puede ser NULL).
-Config Tienda: Edit nombre/logo (país read-only). Gestionar integraciones. Ver estadísticas.
+## II. REFERENCIAS COMPONENTES EXISTENTES
 
-X. DEPLOYMENT Y DATOS
-Ambiente Staging: Copia anónima de producción. Testear integraciones antes prod.
-Backups: Diarios (7d), semanales (4w), mensuales (12m). Validar restore.
-RTO/RPO: Máximo 2h recuperar, máximo 24h sin perder datos.
-Variables Env: Todos los secretos en variables, NUNCA hardcoded.
-Migraciones: Rollback plan siempre. Test en staging primero.
+| Componente | Úsalo para | NUNCA duplicar |
+|---|---|---|
+| Button | Botones (primary, secondary, danger) | Sí |
+| Input | Campos texto, email, número | Sí |
+| Card | Contenedores, KPIs, costeos | Sí |
+| Alert | Notificaciones (success, error, warning, info) | Sí |
+| Modal | Diálogos, overlays, confirmaciones | Sí |
+| Badge | Tags, estados, etiquetas | Sí |
+| CountrySelect | Selector país | Sí |
+| CurrencyInput | Input moneda | Modificar Input.tsx |
 
-XI. NOMENCLATURA PROYECTO
-Código: Inglés (calcularPrecio, fetchMetaData, tiendaId).
-APIs: Inglés (POST /simulador/calcular-precio, GET /tiendas).
-BD: snake_case inglés (data_meta_ads, costeos, integraciones, no costos).
-Comments: Lógica negocio en español si es clara, técnico en inglés.
-Commits: feat(simulador), fix(auth), docs(api).
+**Si necesitas variante (ej: Input con máscara):** Modifica componente existente, NO crees nuevo.
 
-META: Para DropCost, prioridad: (1) Seguridad, (2) Exactitud cálculos, (3) Aislamiento tiendas, (4) Performance, (5) Testing.
+---
+
+## III. ESTRUCTURA CARPETAS - RESPETA ESTO
+
+```
+src/
+├── components/
+│  ├── common/
+│  │  ├── Button.tsx
+│  │  ├── Input.tsx
+│  │  ├── Card.tsx
+│  │  ├── Alert.tsx
+│  │  ├── Modal.tsx
+│  │  ├── Badge.tsx
+│  │  ├── CountrySelect.tsx
+│  │  ├── CurrencyInput.tsx
+│  │  ├── FormattedInput.tsx
+│  │  ├── ConfirmDialog.tsx
+│  │  ├── EmptyState.tsx
+│  │  ├── PremiumFeatureGuard.tsx
+│  │  └── index.ts (exports centralizados)
+│  ├── admin/ (componentes admin-only)
+│  └── layouts/ (MainLayout, AdminLayout)
+├── hooks/ (custom hooks - lógica reutilizable)
+├── services/ (lógica de negocio)
+├── utils/ (helpers puros)
+├── types/ (TypeScript interfaces)
+├── pages/ (orquestadores)
+└── styles/ (CSS global, variables)
+```
+
+**NUNCA crees carpeta nueva sin validación previa.**
+
+---
+
+## IV. PALETA DE COLORES - VARIABLES CSS OBLIGATORIO
+
+**NUNCA hardcodees colores. SIEMPRE variables CSS:**
+
+```css
+:root {
+  /* Colores - SIEMPRE variables */
+  --primary: #0066FF;
+  --success: #10B981;
+  --error: #EF4444;
+  --warning: #F59E0B;
+  
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F9FAFB;
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --border-color: #E5E7EB;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #1F2937;
+  --bg-secondary: #111827;
+  --text-primary: #F9FAFB;
+  --border-color: #374151;
+}
+```
+
+**En React:**
+```typescript
+<button style={{ backgroundColor: 'var(--primary)' }}>Guardar</button>
+// ✅ CORRECTO
+
+<button style={{ backgroundColor: '#0066FF' }}>Guardar</button>
+// ❌ INCORRECTO
+```
+
+---
+
+## V. ESPACIADO OBLIGATORIO
+
+Escala fija: **4, 8, 12, 16, 24, 32, 48, 64px**
+
+```
+Inputs padding:        12px 16px
+Modal padding:         24px
+Card padding:          16px
+Button padding:        12px 24px
+Border radius inputs:  10px
+Border radius buttons: 8px
+Border radius cards:   12px
+
+Gap flex/grid:         12px o 16px
+Margin entre grupos:   24px o 32px
+```
+
+**NUNCA 15px, 18px, 25px, etc. Solo de la escala.**
+
+---
+
+## VI. TIPOGRAFÍA OBLIGATORIA
+
+```
+H1: 32px, bold (700), line-height 1.2
+H2: 28px, bold (700), line-height 1.3
+H3: 24px, semibold (600), line-height 1.3
+Body: 14px, regular (400), line-height 1.5
+Caption: 12px, medium (500), line-height 1.4
+```
+
+---
+
+## VII. DARK MODE OBLIGATORIO
+
+Todo componente debe funcionar en dark mode.
+
+```typescript
+// ✅ CORRECTO
+<div style={{
+  backgroundColor: 'var(--bg-primary)',  // Cambia con tema
+  color: 'var(--text-primary)',
+  borderColor: 'var(--border-color)',
+}}>
+  Contenido
+</div>
+
+// ❌ INCORRECTO
+<div style={{
+  backgroundColor: '#FFFFFF',   // Hardcoded, no cambia
+  color: '#1F2937',
+}}>
+  Contenido
+</div>
+```
+
+---
+
+## VIII. SEGURIDAD (CRÍTICO)
+
+### Autenticación
+- JWT con expiración 30 días
+- Refresh tokens en httpOnly cookies
+- 2FA obligatorio para cambios sensibles
+- Código 2FA válido 10 minutos, máx 3 intentos
+
+### Datos Sensibles
+- NUNCA en logs: passwords, tokens, números tarjeta, CVV
+- Encripción en reposo (AES-256)
+- Passwords hasheados (bcrypt)
+
+### Row Level Security (RLS)
+TODA query filtra por tienda_id Y usuario_id.
+```sql
+-- ✅ CORRECTO
+SELECT * FROM costeos WHERE tienda_id = ? AND usuario_id = ?
+
+-- ❌ INCORRECTO
+SELECT * FROM costeos -- Sin WHERE tienda_id
+```
+
+### Validación
+Frontend + Backend SIEMPRE.
+```typescript
+// Backend SIEMPRE valida, no confíes en frontend
+const { error, data } = CosteoSchema.safeParse(input);
+if (error) throw new ValidationError(error);
+```
+
+---
+
+## IX. CÁLCULOS FINANCIEROS (EXACTITUD CRÍTICA)
+
+**Fórmula costeo:**
+```
+(CostoProducto + Flete + GastosAdicionales + CPA + Margen) / (1 - %Devoluciones)
+```
+
+**Tests obligatorios:**
+- Costeo normal
+- Con devoluciones 100%
+- Margen 0%
+- Valores extremos
+- Precisión 2 decimales (redondeo bancario)
+
+```typescript
+// Tests
+test('costeo con margen 30%', () => {
+  expect(calcularCosteo({ costo: 100, margen: 0.3 }))
+    .toBe(142.86);
+});
+
+test('costeo con devoluciones 50%', () => {
+  expect(calcularCosteo({ costo: 100, devoluciones: 0.5 }))
+    .toBe(200);
+});
+```
+
+---
+
+## X. INTEGRACIONES EXTERNAS
+
+### Tokens Encriptados
+```typescript
+// ✅ CORRECTO
+const encrypted = encrypt(apiKey, 'AES-256');
+await db.integraciones.insert({ encrypted_key: encrypted });
+
+// ❌ INCORRECTO
+await db.integraciones.insert({ api_key: apiKey }); // Plaintext
+```
+
+### Webhooks Validados
+Siempre valida firma antes de procesar.
+```typescript
+const isValid = validateWebhookSignature(payload, signature, secret);
+if (!isValid) throw new Error('Invalid signature');
+```
+
+### Sync Automático
+- Meta Ads: cada 1 hora
+- Dropi: cada 30 minutos
+- Shopify: cada 1 hora
+
+### Fallback CSV
+Si integración falla, usuario puede subir CSV manualmente.
+
+---
+
+## XI. MULTITENANCY (CORE)
+
+**Aislamiento tiendas:**
+```
+Filtro obligatorio: tienda_id + usuario_id en TODA query
+User A NUNCA ve tiendas/costeos de User B
+Admin SOLO si rol='admin'
+```
+
+**Tests aislamiento:**
+```typescript
+test('User A no ve costeos de User B', async () => {
+  const costeoA = await getCosteos(userA.id, tiendaA.id);
+  const costeoB = await getCosteos(userB.id, tiendaB.id);
+  
+  expect(costeoA).not.toContain(costeoB);
+});
+```
+
+---
+
+## XII. PERFORMANCE
+
+### Índices BD
+```sql
+CREATE INDEX idx_costeos_tienda_id ON costeos(tienda_id);
+CREATE INDEX idx_costeos_usuario_id ON costeos(usuario_id);
+CREATE INDEX idx_costeos_fecha ON costeos(fecha);
+```
+
+### Lazy Loading Components
+```typescript
+const AdminPanel = lazy(() => import('@/pages/AdminPanel'));
+
+<Suspense fallback={<Loading />}>
+  <AdminPanel />
+</Suspense>
+```
+
+### Cache
+- KPIs: cachear 1 hora
+- Regiones: cachear 2 horas
+- Invalidar manual si es necesario
+
+---
+
+## XIII. TESTING DROPCOST
+
+### Critical Flows
+1. Registro → Crear tienda → Primer costeo
+2. Conectar Meta Ads → Sincronizar datos
+3. Cambiar plan → Nuevo límite costeos
+
+### Cálculos
+Mínimo 10 casos (normal, extremos, edge cases)
+
+### Aislamiento
+Tests verifican User A no ve tienda User B
+
+### Integraciones
+Mock Meta, Dropi, Shopify. NUNCA llamadas reales.
+
+### E2E
+Mínimo 5 flujos críticos con Playwright
+
+### Coverage
+>70% código crítico (auth, simulador, dashboard)
+
+---
+
+## XIV. OBSERVABILIDAD DROPCOST
+
+### Logs Críticos
+```json
+{
+  "timestamp": "...",
+  "level": "INFO",
+  "userId": "...",
+  "tiendaId": "...",
+  "feature": "simulador",
+  "action": "calcularCosteo",
+  "message": "Costeo calculado exitosamente",
+  "duration": "234ms"
+}
+```
+
+### Errores a Trackear
+- Auth fails → Sentry
+- Cálculos erróneos → Investigation
+- Integraciones Meta fallidas → Alert
+- Queries >500ms → Performance log
+
+---
+
+## XV. VALIDACIÓN PRE-COMMIT
+
+```
+[ ] ¿Usé componente existente o lo repliqué exacto?
+[ ] ¿Variables CSS, no hardcodes?
+[ ] ¿Espaciado en escala (4,8,12,16...)?
+[ ] ¿Tipografía sigue DISEÑO_UIUX.md?
+[ ] ¿Dark mode funciona?
+[ ] ¿Datos seguros (no hardcoded tokens)?
+[ ] ¿RLS en queries BD (tienda_id + usuario_id)?
+[ ] ¿Tests >70% si es crítico?
+[ ] ¿Commit bien formado: feat(scope): mensaje?
+[ ] ¿Sin console.logs?
+```
+
+**Sin esto: PR rechazada.**
+
+---
+
+## XVI. DEPLOYMENT
+
+### Staging
+Copia anónima de producción. Testea integraciones antes prod.
+
+### Backups
+- Diarios: 7 días
+- Semanales: 4 semanas
+- Mensuales: 12 meses
+
+### RTO/RPO
+- RTO (Recovery Time Objective): máximo 2 horas
+- RPO (Recovery Point Objective): máximo 24 horas sin perder datos
+
+---
+
+## XVII. NOMENCLATURA
+
+**Código:** Inglés (calcularPrecio, fetchMetaData, tiendaId)  
+**APIs:** Inglés (POST /api/v1/costeos)  
+**BD:** snake_case inglés (data_meta_ads, user_profiles)  
+**Documentación:** Español Latino  
+**Commits:** feat(scope): descripción
+
+---
+
+**META FINAL:** Seguridad > Exactitud cálculos > Aislamiento tiendas > Performance > Testing
+
+---
