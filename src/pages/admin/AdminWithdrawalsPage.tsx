@@ -10,8 +10,12 @@ import {
     AlertCircle,
     TrendingUp,
     Users,
-    Download
+    Download,
+    Globe
 } from 'lucide-react';
+import { cargarPaises, Pais } from '@/services/paisesService';
+import { Card } from '@/components/common/Card';
+import { StatsCard } from '@/components/common/StatsCard';
 import { Spinner } from '@/components/common/Spinner';
 import { useToast } from '@/components/common/Toast';
 import { walletService, WithdrawalRequest } from '@/services/walletService';
@@ -29,6 +33,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
     const [displayCurrency, setDisplayCurrency] = useState<string>('USD');
+    const [allCountries, setAllCountries] = useState<Pais[]>([]);
     const toast = useToast();
 
     const loadWithdrawals = async () => {
@@ -48,7 +53,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
             // Obtener datos de usuarios
             const { data: usersData, error: usersError } = await supabase
                 .from('users')
-                .select('id, email, nombres, apellidos')
+                .select('id, email, nombres, apellidos, pais')
                 .in('id', userIds);
 
             if (usersError) throw usersError;
@@ -70,6 +75,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
 
     useEffect(() => {
         const init = async () => {
+            cargarPaises().then(setAllCountries);
             await loadWithdrawals();
 
             // Cargar tasas de cambio y determinar moneda del admin
@@ -175,33 +181,31 @@ export const AdminWithdrawalsPage: React.FC = () => {
                 <StatsCard
                     title="Solicitudes Pendientes"
                     value={stats.pending}
-                    icon={Clock}
+                    icon={<Clock size={28} />}
                     color="var(--color-warning)"
-                    bgColor="rgba(245, 158, 11, 0.1)"
                 />
                 <StatsCard
                     title="Monto Pendiente"
-                    value={formatCurrency(stats.pendingAmount, displayCurrency)}
-                    icon={DollarSign}
+                    value={stats.pendingAmount}
+                    currency={displayCurrency}
+                    icon={<DollarSign size={28} />}
                     color="var(--color-primary)"
-                    bgColor="rgba(0, 102, 255, 0.1)"
                 />
                 <StatsCard
                     title="Total Pagado"
-                    value={formatCurrency(stats.totalAmount, displayCurrency)}
-                    icon={TrendingUp}
+                    value={stats.totalAmount}
+                    currency={displayCurrency}
+                    icon={<TrendingUp size={28} />}
                     color="var(--color-success)"
-                    bgColor="rgba(16, 185, 129, 0.1)"
                 />
             </div>
 
             {/* Main Card */}
-            <div style={{
-                backgroundColor: 'var(--card-bg)',
+            <Card noPadding style={{
                 border: '1px solid var(--border-color)',
-                borderRadius: '20px',
+                borderRadius: '16px',
                 overflow: 'hidden',
-                boxShadow: 'var(--shadow-sm)'
+                boxShadow: 'var(--shadow-lg)'
             }}>
                 {/* Filters */}
                 <div style={{
@@ -313,7 +317,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
                                             borderBottom: '1px solid var(--border-color)',
                                             transition: 'background-color 0.2s'
                                         }}
-                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
+                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
                                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                     >
                                         <td style={tableCellStyle}>
@@ -328,21 +332,32 @@ export const AdminWithdrawalsPage: React.FC = () => {
                                                     justifyContent: 'center',
                                                     color: '#fff',
                                                     fontSize: '14px',
-                                                    fontWeight: 700
+                                                    fontWeight: 600
                                                 }}>
                                                     {((w as any).users?.nombres?.charAt(0) || '') + ((w as any).users?.apellidos?.charAt(0) || 'U')}
                                                 </div>
                                                 <div>
-                                                    <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                                    <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>
                                                         {(w as any).users?.nombres} {(w as any).users?.apellidos}
                                                     </div>
-                                                    <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
+                                                    <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                         {(w as any).users?.email}
+                                                        {(w as any).users?.pais && (
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.8 }}>
+                                                                <span style={{ color: 'var(--text-tertiary)', fontSize: '10px' }}>•</span>
+                                                                <img
+                                                                    src={`https://flagcdn.com/w40/${(w as any).users.pais.toLowerCase()}.png`}
+                                                                    alt={(w as any).users.pais}
+                                                                    style={{ width: '14px', height: '10px', borderRadius: '1px', objectFit: 'cover' }}
+                                                                    title={allCountries.find(p => p.codigo_iso_2.toUpperCase() === (w as any).users.pais.toUpperCase())?.nombre_es || (w as any).users.pais}
+                                                                />
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td style={{ ...tableCellStyle, fontWeight: 600 }}>
+                                        <td style={{ ...tableCellStyle, fontWeight: 500 }}>
                                             {formatCurrency(w.monto_local, w.moneda_destino)}
                                         </td>
                                         <td style={{ ...tableCellStyle, color: 'var(--text-secondary)' }}>
@@ -350,7 +365,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
                                         </td>
                                         <td style={tableCellStyle}>
                                             <div style={{ fontSize: '13px' }}>
-                                                <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '2px' }}>
+                                                <div style={{ fontWeight: 500, color: 'var(--text-primary)', marginBottom: '2px' }}>
                                                     {w.banco_nombre}
                                                 </div>
                                                 <div style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>
@@ -431,63 +446,12 @@ export const AdminWithdrawalsPage: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </Card>
         </div>
     );
 };
 
-const StatsCard: React.FC<{
-    title: string;
-    value: string | number;
-    icon: any;
-    color: string;
-    bgColor: string;
-}> = ({ title, value, icon: Icon, color, bgColor }) => (
-    <div style={{
-        backgroundColor: 'var(--card-bg)',
-        border: '1px solid var(--border-color)',
-        borderRadius: '20px',
-        padding: '24px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '16px',
-        boxShadow: 'var(--shadow-sm)'
-    }}>
-        <div style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '16px',
-            backgroundColor: bgColor,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: color,
-            flexShrink: 0
-        }}>
-            <Icon size={28} />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{
-                fontSize: '12px',
-                fontWeight: 700,
-                color: 'var(--text-tertiary)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                marginBottom: '4px'
-            }}>
-                {title}
-            </p>
-            <p style={{
-                fontSize: '24px',
-                fontWeight: 800,
-                color: 'var(--text-primary)',
-                margin: 0
-            }}>
-                {value}
-            </p>
-        </div>
-    </div>
-);
+
 
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     const config = {
@@ -502,7 +466,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
             padding: '6px 12px',
             borderRadius: '8px',
             fontSize: '12px',
-            fontWeight: 700,
+            fontWeight: 600,
             backgroundColor: config.bg,
             color: config.color,
             textTransform: 'uppercase',
@@ -515,17 +479,17 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
 };
 
 const tableHeaderStyle: React.CSSProperties = {
-    padding: '16px 20px',
+    padding: '16px 24px',
     textAlign: 'left',
-    fontSize: '11px',
-    fontWeight: 700,
-    color: 'var(--text-tertiary)',
+    fontSize: '12px',
+    fontWeight: 500,
+    color: 'var(--text-secondary)',
     textTransform: 'uppercase',
     letterSpacing: '0.05em'
 };
 
 const tableCellStyle: React.CSSProperties = {
-    padding: '16px 20px',
+    padding: '16px 24px',
     fontSize: '14px',
     color: 'var(--text-primary)'
 };
