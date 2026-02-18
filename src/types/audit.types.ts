@@ -32,6 +32,7 @@ export interface AuditLog {
     nombres: string;
     apellidos: string;
     email: string;
+    pais: string;
   };
 }
 
