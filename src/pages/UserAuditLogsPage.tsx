@@ -22,16 +22,19 @@ const UserAuditLogsPage: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <div style={{
                         padding: '12px',
-                        borderRadius: '16px',
+                        borderRadius: '12px', // Standard radius for medium elements
                         backgroundColor: 'var(--color-primary)',
                         color: '#FFF',
-                        boxShadow: '0 8px 16px rgba(0,102,255,0.2)'
+                        boxShadow: '0 4px 12px rgba(0,102,255,0.3)', // Slightly softer shadow
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
                     }}>
                         <History size={24} />
                     </div>
                     <div>
-                        <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Historial de Actividad</h1>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginTop: '4px' }}>
+                        <h1 style={{ fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, lineHeight: '1.2' }}>Historial de Actividad</h1>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px', lineHeight: '1.5' }}>
                             Revisa el registro cronológico de todas las acciones realizadas en tu cuenta.
                         </p>
                     </div>

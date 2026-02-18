@@ -287,9 +287,11 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                                     style={{
-                                        padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)',
-                                        backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '14px', width: '100%', boxSizing: 'border-box'
+                                        padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--border-color)',
+                                        backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '14px', width: '100%', boxSizing: 'border-box', outline: 'none', transition: 'all 200ms ease'
                                     }}
+                                    onFocus={(e) => { e.target.style.borderColor = 'var(--color-primary)'; e.target.style.boxShadow = '0 0 0 4px rgba(0,102,255,0.1)'; }}
+                                    onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none'; }}
                                     placeholder="Ej. Plan Pro"
                                 />
                             </div>
@@ -301,9 +303,11 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                     value={formData.slug}
                                     onChange={handleSlugChange}
                                     style={{
-                                        padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)',
-                                        backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '14px', width: '100%', boxSizing: 'border-box'
+                                        padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--border-color)',
+                                        backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '14px', width: '100%', boxSizing: 'border-box', outline: 'none', transition: 'all 200ms ease'
                                     }}
+                                    onFocus={(e) => { e.target.style.borderColor = 'var(--color-primary)'; e.target.style.boxShadow = '0 0 0 4px rgba(0,102,255,0.1)'; }}
+                                    onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none'; }}
                                     placeholder="Ej. plan_pro"
                                 />
                                 <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
@@ -318,10 +322,12 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                 value={formData.description}
                                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                                 style={{
-                                    padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)',
-                                    backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '14px',
-                                    minHeight: '80px', resize: 'vertical', width: '100%', boxSizing: 'border-box'
+                                    padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--border-color)',
+                                    backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '14px',
+                                    minHeight: '80px', resize: 'vertical', width: '100%', boxSizing: 'border-box', outline: 'none', transition: 'all 200ms ease'
                                 }}
+                                onFocus={(e) => { e.target.style.borderColor = 'var(--color-primary)'; e.target.style.boxShadow = '0 0 0 4px rgba(0,102,255,0.1)'; }}
+                                onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none'; }}
                                 placeholder="Descripción corta de los beneficios..."
                             />
                         </div>
@@ -336,10 +342,12 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                     value={formData.currency}
                                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
                                     style={{
-                                        padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)',
+                                        padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--border-color)',
                                         backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '14px',
-                                        width: '100%', cursor: 'pointer'
+                                        width: '100%', cursor: 'pointer', outline: 'none', transition: 'all 200ms ease'
                                     }}
+                                    onFocus={(e) => { e.target.style.borderColor = 'var(--color-primary)'; e.target.style.boxShadow = '0 0 0 4px rgba(0,102,255,0.1)'; }}
+                                    onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none'; }}
                                 >
                                     <option value="COP">Peso Colombiano (COP)</option>
                                     <option value="USD">Dólar Estadounidense (USD)</option>
@@ -647,10 +655,14 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                 </div>
 
                 <div style={{
-                    padding: '20px 24px', borderTop: '1px solid var(--border-color)',
-                    display: 'flex', justifyContent: 'flex-end', gap: '12px'
+                    padding: '16px 24px',
+                    borderTop: '1px solid var(--border-color)',
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    gap: '12px',
+                    backgroundColor: 'var(--card-bg)'
                 }}>
-                    <Button variant="secondary" onClick={onClose} disabled={isLoading}>
+                    <Button variant="secondary" onClick={onClose} disabled={isLoading} style={{ borderColor: 'var(--border-color)' }}>
                         Cancelar
                     </Button>
                     <Button type="submit" form="plan-form" isLoading={isLoading} leftIcon={<Save size={18} />}>
