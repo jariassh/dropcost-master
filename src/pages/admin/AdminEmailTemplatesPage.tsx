@@ -36,11 +36,13 @@ import {
     Send,
     User,
     X,
-    Loader2
+    Loader2,
+    AlignLeft
 } from 'lucide-react';
 import { configService, GlobalConfig } from '@/services/configService';
 import { userService } from '@/services/userService';
 import * as mjmlModule from 'mjml-browser';
+import { MJMLAttributeModal } from './components/MJMLAttributeModal';
 const mjml2html = (mjmlModule as any).default || mjmlModule;
 
 interface EmailItem {
@@ -61,6 +63,897 @@ interface EmailItem {
     trigger_event?: string;
     updated_by_name?: string;
 }
+
+const categorizedVariables = {
+    'Usuario': [
+        { name: 'nombres', label: 'Nombres del Usuario' },
+        { name: 'apellidos', label: 'Apellidos del Usuario' },
+        { name: 'email', label: 'Email Principal' },
+        { name: 'telefono', label: 'Teléfono de Contacto' },
+        { name: 'pais', label: 'País de Residencia' },
+        { name: 'wallet_saldo', label: 'Saldo en Wallet' },
+        { name: 'codigo_referido_personal', label: 'Su Código de Invitación' },
+        { name: 'fecha_registro', label: 'Fecha de Registro' }
+    ],
+    'Suscripción': [
+        { name: 'plan_nombre', label: 'Nombre del Plan Actual' },
+        { name: 'plan_precio', label: 'Precio del Plan' },
+        { name: 'plan_expiracion', label: 'Fecha de Expiración' },
+        { name: 'estado_suscripcion', label: 'Estado (Activa/Pendiente)' }
+    ],
+    'Tienda': [
+        { name: 'tienda_nombre', label: 'Nombre de la Tienda' },
+        { name: 'tienda_pais', label: 'País de la Tienda' },
+        { name: 'tienda_moneda', label: 'Moneda (COP, USD, etc)' }
+    ],
+    'Financiero': [
+        { name: 'producto_nombre', label: 'Nombre del Producto (Último)' },
+        { name: 'producto_sku', label: 'SKU del Producto' },
+        { name: 'producto_precio_sugerido', label: 'Precio Sugerido' },
+        { name: 'producto_utilidad_neta', label: 'Utilidad Neta Estimada' }
+    ],
+    'Referidos': [
+        { name: 'lider_nombre', label: 'Nombre de su Líder' },
+        { name: 'total_referidos', label: 'Total de Invitados' },
+        { name: 'total_comisiones', label: 'Comisiones Totales' }
+    ],
+    'Seguridad': [
+        { name: 'codigo', label: 'Código de Verificación (OTP)' }
+    ]
+};
+
+const categorizedMJMLComponents: Record<string, any[]> = {
+    'Estructura (Root)': [
+        {
+            name: 'mjml',
+            label: 'Raíz MJML',
+            tagName: 'mjml',
+            defaultAttributes: {},
+            allowedAttributes: [],
+            template: (_: any, content: string) => `<mjml>\n  <mj-head>\n    <mj-title>Nuevo Correo</mj-title>\n    <mj-attributes>\n      <mj-all font-family="Arial" />\n    </mj-attributes>\n  </mj-head>\n  <mj-body>\n    ${content || '<mj-section><mj-column><mj-text>Hola mundo</mj-text></mj-column></mj-section>'}\n  </mj-body>\n</mjml>`,
+            defaultContent: ''
+        },
+        {
+            name: 'mj-head',
+            label: 'Cabecera (Head)',
+            tagName: 'mj-head',
+            defaultAttributes: {},
+            allowedAttributes: [],
+            defaultContent: '<mj-title>Asunto</mj-title>\n<mj-attributes>\n  <mj-all font-family="Helvetica" />\n</mj-attributes>'
+        },
+        {
+            name: 'mj-body',
+            label: 'Cuerpo (Body)',
+            tagName: 'mj-body',
+            defaultAttributes: { 'background-color': '#f0f0f0', width: '600px' },
+            allowedAttributes: [
+                { name: 'background-color', label: 'Color Fondo', type: 'color' },
+                { name: 'width', label: 'Ancho Máximo', type: 'text', defaultValue: '600px' }
+            ],
+            defaultContent: ''
+        }
+    ],
+    'Layout (Diseño)': [
+        {
+            name: 'mj-section',
+            label: 'Sección',
+            tagName: 'mj-section',
+            defaultAttributes: { 'background-color': '#ffffff', 'padding': '20px' },
+            allowedAttributes: [
+                { name: 'background-color', label: 'Color Fondo', type: 'color' },
+                { name: 'padding', label: 'Relleno (Padding)', type: 'text', defaultValue: '20px' },
+                { name: 'border-radius', label: 'Bordes Redondeados', type: 'text' },
+                { name: 'text-align', label: 'Alineación', type: 'select', options: ['left', 'center', 'right'] }
+            ],
+            defaultContent: '<mj-column>\n    <mj-text>Contenido de columna...</mj-text>\n  </mj-column>'
+        },
+        {
+            name: 'mj-column',
+            label: 'Columna',
+            tagName: 'mj-column',
+            defaultAttributes: { 'width': '', 'vertical-align': 'top' },
+            allowedAttributes: [
+                { name: 'width', label: 'Ancho (ej: 50%)', type: 'text' },
+                { name: 'vertical-align', label: 'Alineación Vert.', type: 'select', options: ['top', 'middle', 'bottom'] },
+                { name: 'background-color', label: 'Color Fondo', type: 'color' },
+                { name: 'padding', label: 'Padding', type: 'text' }
+            ],
+            defaultContent: '<mj-text>Texto columna</mj-text>'
+        },
+        {
+            name: 'mj-group',
+            label: 'Grupo Columnas',
+            tagName: 'mj-group',
+            defaultAttributes: { 'width': '100%' },
+            allowedAttributes: [
+                { name: 'width', label: 'Ancho', type: 'text' },
+                { name: 'background-color', label: 'Color Fondo', type: 'color' }
+            ],
+            defaultContent: '<mj-column><mj-text>Col 1</mj-text></mj-column><mj-column><mj-text>Col 2</mj-text></mj-column>'
+        },
+        {
+            name: 'mj-hero',
+            label: 'Hero Image',
+            tagName: 'mj-hero',
+            defaultAttributes: {
+                'mode': 'fixed-height',
+                'height': '400px',
+                'background-width': '600px',
+                'background-height': '400px',
+                'background-url': 'https://cloud.githubusercontent.com/assets/1830348/15354890/1442159a-1cf0-11e6-92b1-b861dadf1750.jpg',
+                'background-color': '#2a3448'
+            },
+            allowedAttributes: [
+                { name: 'mode', label: 'Modo', type: 'select', options: ['fluid-height', 'fixed-height'] },
+                { name: 'height', label: 'Altura', type: 'text' },
+                { name: 'background-url', label: 'URL Imagen Fondo', type: 'url' },
+                { name: 'background-color', label: 'Color Fondo', type: 'color' }
+            ],
+            defaultContent: '<mj-text color="#ffffff">TEXTO SOBRE IMAGEN</mj-text>'
+        }
+    ],
+    'Contenido': [
+        {
+            name: 'mj-text',
+            label: 'Texto / Párrafo',
+            tagName: 'mj-text',
+            defaultAttributes: { 'color': '#55575d', 'font-family': 'Arial', 'font-size': '13px', 'line-height': '22px' },
+            allowedAttributes: [
+                { name: 'color', label: 'Color Texto', type: 'color' },
+                { name: 'font-size', label: 'Tamaño Fuente', type: 'text', defaultValue: '13px' },
+                { name: 'font-weight', label: 'Peso Fuente', type: 'select', options: ['300', '400', '600', '700', '900'] },
+                { name: 'align', label: 'Alineación', type: 'select', options: ['left', 'center', 'right', 'justify'] },
+                { name: 'line-height', label: 'Altura Línea', type: 'text' },
+                { name: 'font-family', label: 'Tipografía', type: 'text' }
+            ],
+            defaultContent: 'Escriba su texto aquí...'
+        },
+        {
+            name: 'mj-button',
+            label: 'Botón CTA',
+            tagName: 'mj-button',
+            defaultAttributes: { 'background-color': '#414141', 'color': '#ffffff', 'href': '#', 'border-radius': '3px' },
+            allowedAttributes: [
+                { name: 'background-color', label: 'Color Fondo', type: 'color' },
+                { name: 'color', label: 'Color Texto', type: 'color' },
+                { name: 'href', label: 'Enlace (URL)', type: 'url' },
+                { name: 'border-radius', label: 'Radio Borde', type: 'text', defaultValue: '3px' },
+                { name: 'width', label: 'Ancho (opcional)', type: 'text' },
+                { name: 'font-size', label: 'Tamaño Fuente', type: 'text' }
+            ],
+            defaultContent: 'Haga clic aquí'
+        },
+        {
+            name: 'mj-image',
+            label: 'Imagen',
+            tagName: 'mj-image',
+            defaultAttributes: { 'src': 'https://placehold.co/600x400', 'width': '300px' },
+            allowedAttributes: [
+                { name: 'src', label: 'URL Imagen', type: 'url' },
+                { name: 'href', label: 'Enlace al hacer click', type: 'url' },
+                { name: 'width', label: 'Ancho', type: 'text' },
+                { name: 'alt', label: 'Texto Alternativo', type: 'text' },
+                { name: 'border-radius', label: 'Radio Borde', type: 'text' }
+            ]
+        },
+        {
+            name: 'mj-divider',
+            label: 'Separador',
+            tagName: 'mj-divider',
+            defaultAttributes: { 'border-width': '1px', 'border-color': '#E0E0E0' },
+            allowedAttributes: [
+                { name: 'border-color', label: 'Color Línea', type: 'color' },
+                { name: 'border-width', label: 'Grosor', type: 'text' },
+                { name: 'padding', label: 'Espaciado', type: 'text' }
+            ]
+        },
+        {
+            name: 'mj-spacer',
+            label: 'Espacio Vacío',
+            tagName: 'mj-spacer',
+            defaultAttributes: { 'height': '20px' },
+            allowedAttributes: [
+                { name: 'height', label: 'Altura', type: 'text', defaultValue: '20px' }
+            ]
+        },
+        {
+            name: 'mj-table',
+            label: 'Tabla',
+            tagName: 'mj-table',
+            defaultAttributes: {},
+            allowedAttributes: [
+                { name: 'color', label: 'Color Texto', type: 'color' },
+                { name: 'font-size', label: 'Tamaño Fuente', type: 'text' }
+            ],
+            defaultContent: '<tr>\n  <td style="padding: 0 15px 0 0;">Año 2024</td>\n  <td style="padding: 0 15px;">Ventas</td>\n  <td style="padding: 0 0 0 15px;">$500k</td>\n</tr>'
+        }
+    ],
+    'Navegación y Social': [
+        {
+            name: 'mj-navbar',
+            label: 'Menú Navegación',
+            tagName: 'mj-navbar',
+            defaultAttributes: { 'hamburger': 'hamburger', 'ico-color': '#444444' },
+            allowedAttributes: [
+                { name: 'hamburger', label: 'Botón Móvil', type: 'select', options: ['hamburger', 'none'] },
+                { name: 'ico-color', label: 'Color Ícono', type: 'color' }
+            ],
+            defaultContent: '<mj-navbar-link href="/home">Inicio</mj-navbar-link>\n<mj-navbar-link href="/products">Productos</mj-navbar-link>\n<mj-navbar-link href="/contact">Contacto</mj-navbar-link>'
+        },
+        {
+            name: 'mj-social',
+            label: 'Redes Sociales',
+            tagName: 'mj-social',
+            defaultAttributes: { 'font-size': '15px', 'icon-size': '30px', 'mode': 'horizontal' },
+            allowedAttributes: [
+                { name: 'icon-size', label: 'Tamaño Ícono', type: 'text' },
+                { name: 'mode', label: 'Modo', type: 'select', options: ['horizontal', 'vertical'] },
+                { name: 'color', label: 'Color', type: 'color' }
+            ],
+            defaultContent: '<mj-social-element name="facebook" href="#" />\n<mj-social-element name="instagram" href="#" />\n<mj-social-element name="twitter" href="#" />'
+        }
+    ],
+    'Avanzado / Meta': [
+        {
+            name: 'mj-raw',
+            label: 'HTML Puro (Raw)',
+            tagName: 'mj-raw',
+            defaultAttributes: {},
+            allowedAttributes: [],
+            defaultContent: '<!-- HTML personalizado que no será procesado por MJML -->'
+        },
+        {
+            name: 'mj-style',
+            label: 'Estilos CSS',
+            tagName: 'mj-style',
+            defaultAttributes: { 'inline': 'inline' },
+            allowedAttributes: [
+                { name: 'inline', label: 'Inline', type: 'select', options: ['inline', ''] }
+            ],
+            defaultContent: '.clase-ejemplo { color: blue; }'
+        },
+        {
+            name: 'mj-class',
+            label: 'Clase CSS (mj-class)',
+            tagName: 'mj-class',
+            defaultAttributes: { 'name': 'big', 'font-size': '20px' },
+            allowedAttributes: [
+                { name: 'name', label: 'Nombre Clase', type: 'text' },
+                { name: 'color', label: 'Color', type: 'color' },
+                { name: 'font-size', label: 'Tamaño Fuente', type: 'text' }
+            ]
+        }
+    ]
+};
+
+const MJMLComponentList = ({ onSelect }: { onSelect: (component: any) => void }) => {
+    const [search, setSearch] = useState('');
+
+    const filteredCategories = Object.entries(categorizedMJMLComponents).reduce((acc, [category, comps]) => {
+        const matches = comps.filter(c =>
+            c.label.toLowerCase().includes(search.toLowerCase()) ||
+            c.tagName.toLowerCase().includes(search.toLowerCase())
+        );
+        if (matches.length > 0) acc[category] = matches;
+        return acc;
+    }, {} as any);
+
+    return (
+        <div
+            className="absolute right-0 top-full mt-2 w-80 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
+        >
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                <div className="relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+                    <input
+                        type="text"
+                        placeholder="Buscar componente..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        style={{
+                            width: '100%',
+                            padding: '10px 12px 10px 36px',
+                            borderRadius: '10px',
+                            border: '1px solid var(--border-color)',
+                            backgroundColor: 'var(--bg-primary)',
+                            fontSize: '12px',
+                            color: 'var(--text-primary)',
+                            outline: 'none'
+                        }}
+                        className="focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
+                        autoFocus
+                    />
+                </div>
+            </div>
+
+            <div className="max-h-[400px] overflow-y-auto scrollbar-custom">
+                {Object.entries(filteredCategories).length > 0 ? (
+                    Object.entries(filteredCategories).map(([category, comps]: [string, any]) => (
+                        <div key={category} className="border-b border-[var(--border-color)] last:border-0">
+                            <div style={{ padding: '10px 24px', backgroundColor: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', opacity: 0.8 }}>
+                                <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{category}</span>
+                            </div>
+                            {comps.map((c: any) => (
+                                <button
+                                    key={c.name}
+                                    onClick={() => onSelect(c)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '14px 24px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '14px',
+                                        backgroundColor: 'transparent',
+                                        cursor: 'pointer',
+                                        transition: 'all 200ms ease',
+                                        border: 'none',
+                                        textAlign: 'left'
+                                    }}
+                                    className="group hover:bg-[var(--color-primary-light)]"
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
+                                        <div style={{ padding: '7px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="group-hover:bg-white transition-colors">
+                                            <Layout size={13} className="text-[var(--color-primary)]" />
+                                        </div>
+                                        <div className="flex flex-col items-start">
+                                            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }} className="group-hover:text-[var(--color-primary)]">
+                                                {c.label}
+                                            </span>
+                                            <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontFamily: 'monospace' }}>
+                                                {`control + space`}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <Plus size={12} className="opacity-0 group-hover:opacity-40 text-[var(--color-primary)] transition-opacity" />
+                                </button>
+                            ))}
+                        </div>
+                    ))
+                ) : (
+                    <div className="p-12 text-center space-y-3">
+                        <div className="inline-flex p-3 bg-[var(--bg-secondary)] rounded-full border border-[var(--border-color)]">
+                            <Search size={24} className="text-[var(--text-tertiary)]" />
+                        </div>
+                        <p className="text-sm text-[var(--text-tertiary)] font-medium">No encontramos componentes con "{search}"</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const VariableList = ({ onSelect }: { onSelect: (v: string) => void }) => {
+    const [search, setSearch] = useState('');
+
+    const filteredCategories = Object.entries(categorizedVariables).reduce((acc, [category, vars]) => {
+        const matches = vars.filter(v =>
+            v.label.toLowerCase().includes(search.toLowerCase()) ||
+            v.name.toLowerCase().includes(search.toLowerCase())
+        );
+        if (matches.length > 0) acc[category] = matches;
+        return acc;
+    }, {} as any);
+
+    return (
+        <div
+            className="absolute right-0 top-full mt-2 w-80 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
+        >
+            {/* Buscador Dinámico */}
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                <div className="relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+                    <input
+                        type="text"
+                        placeholder="Buscar campo (ej: nombre...)"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        style={{
+                            width: '100%',
+                            padding: '10px 12px 10px 36px',
+                            borderRadius: '10px',
+                            border: '1px solid var(--border-color)',
+                            backgroundColor: 'var(--bg-primary)',
+                            fontSize: '12px',
+                            color: 'var(--text-primary)',
+                            outline: 'none'
+                        }}
+                        className="focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
+                        autoFocus
+                    />
+                </div>
+            </div>
+
+            <div className="max-h-[400px] overflow-y-auto scrollbar-custom">
+                {Object.entries(filteredCategories).length > 0 ? (
+                    Object.entries(filteredCategories).map(([category, vars]: [string, any]) => (
+                        <div key={category} className="border-b border-[var(--border-color)] last:border-0">
+                            <div style={{ padding: '10px 24px', backgroundColor: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', opacity: 0.8 }}>
+                                <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{category}</span>
+                            </div>
+                            {vars.map((v: any) => (
+                                <button
+                                    key={v.name}
+                                    onClick={() => onSelect(v.name)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '14px 24px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '14px',
+                                        backgroundColor: 'transparent',
+                                        cursor: 'pointer',
+                                        transition: 'all 200ms ease',
+                                        border: 'none',
+                                        textAlign: 'left'
+                                    }}
+                                    className="group hover:bg-[var(--color-primary-light)]"
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
+                                        <div style={{ padding: '7px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="group-hover:bg-white transition-colors">
+                                            <Zap size={13} className="text-[var(--color-primary)]" />
+                                        </div>
+                                        <div className="flex flex-col items-start">
+                                            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }} className="group-hover:text-[var(--color-primary)]">
+                                                {v.label}
+                                            </span>
+                                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'monospace', marginTop: '2px' }}>
+                                                {'{'}{v.name}{'}'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <Tag size={12} className="opacity-0 group-hover:opacity-40 text-[var(--color-primary)] transition-opacity" />
+                                </button>
+                            ))}
+                        </div>
+                    ))
+                ) : (
+                    <div className="p-12 text-center space-y-3">
+                        <div className="inline-flex p-3 bg-[var(--bg-secondary)] rounded-full border border-[var(--border-color)]">
+                            <Search size={24} className="text-[var(--text-tertiary)]" />
+                        </div>
+                        <p className="text-sm text-[var(--text-tertiary)] font-medium">No encontramos campos con "{search}"</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const AddSenderModal = ({ isOpen, onClose, onSave, defaultName, domain }: any) => {
+    const [name, setName] = useState(defaultName || '');
+    const [prefix, setPrefix] = useState('');
+
+    useEffect(() => {
+        if (isOpen) {
+            setName(defaultName || '');
+            setPrefix('');
+        }
+    }, [isOpen, defaultName]);
+
+    return (
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Nuevo Remitente"
+            size="sm"
+        >
+            <div className="flex flex-col gap-6">
+                <Input
+                    label="Nombre Visible"
+                    placeholder="Ej: DropCost Soporte"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                />
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Dirección de Correo</label>
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            width: '100%',
+                            borderRadius: '10px',
+                            border: '1.5px solid var(--border-color)',
+                            backgroundColor: 'var(--bg-primary)',
+                            overflow: 'hidden',
+                            transition: 'all 200ms ease',
+                        }}
+                        className="focus-within:border-[var(--color-primary)] focus-within:ring-4 focus-within:ring-[rgba(0,102,255,0.15)]"
+                    >
+                        <input
+                            type="text"
+                            value={prefix}
+                            onChange={(e) => setPrefix(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ''))}
+                            placeholder="ej: ventas"
+                            style={{
+                                flex: 1,
+                                border: 'none',
+                                outline: 'none',
+                                padding: '12px 16px',
+                                fontSize: '14px',
+                                color: 'var(--text-primary)',
+                                backgroundColor: 'transparent',
+                                minWidth: 0
+                            }}
+                        />
+                        <div style={{
+                            padding: '12px 16px',
+                            backgroundColor: 'var(--bg-secondary)',
+                            borderLeft: '1px solid var(--border-color)',
+                            color: 'var(--text-tertiary)',
+                            fontSize: '14px',
+                            fontWeight: 500,
+                            userSelect: 'none',
+                            whiteSpace: 'nowrap'
+                        }}>
+                            @{domain || 'dropcost.com'}
+                        </div>
+                    </div>
+                    <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: 0, fontStyle: 'italic' }}>
+                        Solo se permiten letras minúsculas, números, puntos y guiones.
+                    </p>
+                </div>
+
+                <div style={{
+                    marginTop: '16px',
+                    paddingTop: '16px',
+                    borderTop: '1px solid var(--border-color)',
+                    display: 'flex',
+                    gap: '12px',
+                    justifyContent: 'flex-end'
+                }}>
+                    <Button variant="secondary" onClick={onClose} style={{ borderColor: 'var(--border-color)' }}>Cancelar</Button>
+                    <Button onClick={() => onSave(name, prefix)} disabled={!name || !prefix}>Guardar Remitente</Button>
+                </div>
+            </div>
+        </Modal >
+    );
+};
+
+const SenderSelector = ({ currentName, currentPrefix, domain, onSelect, templates, globalConfig }: any) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [search, setSearch] = useState('');
+    const [showAddModal, setShowAddModal] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Click outside handler
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Extraer remitentes únicos de todas las plantillas existentes
+    const uniqueSenders = React.useMemo(() => {
+        const senders = new Map();
+        templates.forEach((t: any) => {
+            if (t.sender_prefix) {
+                const key = `${t.sender_prefix}@${domain}`;
+                if (!senders.has(key)) {
+                    senders.set(key, {
+                        name: t.sender_name || globalConfig?.nombre_empresa || 'Remitente',
+                        prefix: t.sender_prefix
+                    });
+                }
+            }
+        });
+        return Array.from(senders.values());
+    }, [templates, domain, globalConfig]);
+
+    const filteredSenders = uniqueSenders.filter(s =>
+        s.name.toLowerCase().includes(search.toLowerCase()) ||
+        s.prefix.toLowerCase().includes(search.toLowerCase())
+    );
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <div
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-full h-auto min-h-[56px] px-4 py-3 rounded-[12px] border-[1.5px] transition-all cursor-pointer group select-none flex items-center justify-between ${isOpen
+                    ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20 bg-[var(--bg-primary)]'
+                    : 'border-[var(--border-color)] bg-[var(--bg-primary)] hover:border-[var(--color-primary)]/50'
+                    }`}
+            >
+                <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isOpen ? 'bg-[var(--color-primary)] text-white' : 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+                        }`}>
+                        <Mail size={20} />
+                    </div>
+                    <div>
+                        <div className="text-sm font-bold text-[var(--text-primary)]">
+                            {currentName || globalConfig?.nombre_empresa || 'Seleccionar Remitente'}
+                        </div>
+                        <div className="text-xs text-[var(--text-tertiary)] font-mono mt-0.5">
+                            {currentPrefix ? `${currentPrefix}@${domain}` : 'Configurar dirección...'}
+                        </div>
+                    </div>
+                </div>
+                <ChevronDown size={16} className={`text-[var(--text-tertiary)] transition-transform duration-200 ${isOpen ? 'rotate-180 text-[var(--color-primary)]' : ''}`} />
+            </div>
+
+            {isOpen && (
+                <div
+                    className="absolute left-0 right-0 top-full mt-2 w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                    style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
+                >
+                    <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                        <div className="relative">
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+                            <input
+                                type="text"
+                                placeholder="Buscar remitente..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '10px 12px 10px 36px',
+                                    borderRadius: '10px',
+                                    border: '1px solid var(--border-color)',
+                                    backgroundColor: 'var(--bg-primary)',
+                                    fontSize: '12px',
+                                    color: 'var(--text-primary)',
+                                    outline: 'none'
+                                }}
+                                className="focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
+                                autoFocus
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="overflow-y-auto scrollbar-custom" style={{ minHeight: '140px', maxHeight: '240px' }}>
+                        {filteredSenders.map((sender) => (
+                            <button
+                                key={sender.prefix}
+                                onClick={() => {
+                                    onSelect(sender.name, sender.prefix);
+                                    setIsOpen(false);
+                                }}
+                                style={{
+                                    width: '100%',
+                                    padding: '14px 24px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '14px',
+                                    backgroundColor: 'transparent',
+                                    cursor: 'pointer',
+                                    transition: 'all 200ms ease',
+                                    border: 'none',
+                                    textAlign: 'left',
+                                    borderBottom: '1px solid var(--border-color)'
+                                }}
+                                className="group hover:bg-[var(--color-primary-light)] last:border-0"
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
+                                    <div style={{ padding: '7px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="group-hover:bg-white transition-colors">
+                                        <Mail size={13} className="text-[var(--text-secondary)] group-hover:text-[var(--color-primary)]" />
+                                    </div>
+                                    <div className="flex flex-col items-start">
+                                        <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }} className="group-hover:text-[var(--color-primary)]">
+                                            {sender.name}
+                                        </span>
+                                        <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'monospace', marginTop: '2px' }}>
+                                            {sender.prefix}@{domain}
+                                        </span>
+                                    </div>
+                                </div>
+                                <CheckCircle2 size={14} className="opacity-0 group-hover:opacity-40 text-[var(--color-primary)] transition-opacity" />
+                            </button>
+                        ))}
+
+                        {filteredSenders.length === 0 && search && (
+                            <div className="flex flex-col items-center justify-center p-12 text-center text-[var(--text-tertiary)]" style={{ minHeight: '140px' }}>
+                                <Search size={32} className="mb-3 opacity-20" />
+                                <span className="text-xs font-medium">No se encontraron resultados</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowAddModal(true);
+                            }}
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                borderRadius: '10px',
+                                border: '1.5px dashed var(--border-color)',
+                                backgroundColor: 'var(--bg-primary)',
+                                color: 'var(--text-secondary)',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                cursor: 'pointer',
+                                transition: 'all 200ms ease'
+                            }}
+                            className="hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-light)]"
+                        >
+                            <Plus size={14} /> Crear Nuevo Remitente
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            <AddSenderModal
+                isOpen={showAddModal}
+                onClose={() => setShowAddModal(false)}
+                onSave={(name: string, prefix: string) => {
+                    onSelect(name, prefix);
+                    setShowAddModal(false);
+                }}
+                defaultName={globalConfig?.nombre_empresa}
+                domain={domain}
+            />
+        </div>
+    );
+};
+
+const TestUserSelector = ({ onSelect, selectedUser }: any) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [search, setSearch] = useState('');
+    const [users, setUsers] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        if (isOpen && search.length >= 0) {
+            const fetchUsers = async () => {
+                setLoading(true);
+                try {
+                    const { data } = await userService.fetchUsers(1, 10, { search });
+                    setUsers(data || []);
+                } catch (error) {
+                    console.error("Error searching users", error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const timeoutId = setTimeout(fetchUsers, 300);
+            return () => clearTimeout(timeoutId);
+        }
+    }, [isOpen, search]);
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <div
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-full h-auto min-h-[56px] px-4 py-3 rounded-[12px] border-[1.5px] transition-all cursor-pointer group select-none flex items-center justify-between ${isOpen
+                    ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20 bg-[var(--bg-primary)]'
+                    : 'border-[var(--border-color)] bg-[var(--bg-primary)] hover:border-[var(--color-primary)]/50'
+                    }`}
+            >
+                <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isOpen ? 'bg-[var(--color-primary)] text-white' : 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+                        }`}>
+                        <User size={20} />
+                    </div>
+                    <div>
+                        <div className="text-sm font-bold text-[var(--text-primary)]">
+                            {selectedUser ? `${selectedUser.nombres} ${selectedUser.apellidos}` : 'Seleccionar Usuario de Prueba'}
+                        </div>
+                        <div className="text-xs text-[var(--text-tertiary)] font-mono mt-0.5">
+                            {selectedUser ? selectedUser.email : 'Buscar por nombre o email...'}
+                        </div>
+                    </div>
+                </div>
+                <ChevronDown size={16} className={`text-[var(--text-tertiary)] transition-transform duration-200 ${isOpen ? 'rotate-180 text-[var(--color-primary)]' : ''}`} />
+            </div>
+
+            {isOpen && (
+                <div
+                    className="absolute left-0 right-0 top-full mt-2 w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                    style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
+                >
+                    <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                        <div className="relative">
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+                            <input
+                                type="text"
+                                placeholder="Buscar usuario..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '10px 12px 10px 36px',
+                                    borderRadius: '10px',
+                                    border: '1px solid var(--border-color)',
+                                    backgroundColor: 'var(--bg-primary)',
+                                    fontSize: '12px',
+                                    color: 'var(--text-primary)',
+                                    outline: 'none'
+                                }}
+                                className="focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
+                                autoFocus
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                            {loading && <div className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-[var(--color-primary)]"><Loader2 size={14} /></div>}
+                        </div>
+                    </div>
+
+                    <div className="overflow-y-auto scrollbar-custom" style={{ minHeight: '140px', maxHeight: '240px' }}>
+                        {users.map((user) => {
+                            const isSelected = selectedUser?.id === user.id;
+                            return (
+                                <button
+                                    key={user.id}
+                                    onClick={() => {
+                                        onSelect(user);
+                                        setIsOpen(false);
+                                    }}
+                                    style={{
+                                        width: '100%',
+                                        padding: '14px 24px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        backgroundColor: isSelected ? 'var(--color-primary-light)' : 'transparent',
+                                        cursor: 'pointer',
+                                        transition: 'all 200ms ease',
+                                        border: 'none',
+                                        textAlign: 'left',
+                                        borderBottom: '1px solid var(--border-color)'
+                                    }}
+                                    className="group hover:bg-[var(--color-primary-light)] last:border-0"
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
+                                        <div style={{
+                                            padding: '7px',
+                                            backgroundColor: isSelected ? 'white' : 'var(--bg-secondary)',
+                                            borderRadius: '8px',
+                                            border: '1px solid var(--border-color)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }} className="group-hover:bg-white transition-colors">
+                                            <User size={13} className={isSelected ? 'text-[var(--color-primary)]' : 'text-[var(--text-secondary)]'} />
+                                        </div>
+                                        <div className="flex flex-col items-start">
+                                            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }} className="group-hover:text-[var(--color-primary)]">
+                                                {user.nombres} {user.apellidos}
+                                            </span>
+                                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'monospace', marginTop: '2px' }}>
+                                                {user.email}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {isSelected && <CheckCircle2 size={14} className="text-[var(--color-primary)]" />}
+                                </button>
+                            );
+                        })}
+
+                        {users.length === 0 && !loading && (
+                            <div className="flex flex-col items-center justify-center p-12 text-center text-[var(--text-tertiary)]" style={{ minHeight: '140px' }}>
+                                <User size={32} className="mb-3 opacity-20" />
+                                <span className="text-xs font-medium">No se encontraron usuarios</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 export function AdminEmailTemplatesPage() {
     const [templates, setTemplates] = useState<EmailItem[]>([]);
@@ -101,6 +994,7 @@ export function AdminEmailTemplatesPage() {
     const [selectedTestUser, setSelectedTestUser] = useState<any | null>(null);
     const [isSendingTest, setIsSendingTest] = useState(false);
     const [currentTipIndex, setCurrentTipIndex] = useState(0);
+    const [mjmlModalComponent, setMjmlModalComponent] = useState<any | null>(null);
 
     const mjmlTips = [
         "Jerarquía MJML: <mjml> -> <mj-body> -> <mj-section> -> <mj-column> -> <mj-text>.",
@@ -165,684 +1059,7 @@ export function AdminEmailTemplatesPage() {
         }, 10);
     };
 
-    const categorizedVariables = {
-        'Usuario': [
-            { name: 'nombres', label: 'Nombres del Usuario' },
-            { name: 'apellidos', label: 'Apellidos del Usuario' },
-            { name: 'email', label: 'Email Principal' },
-            { name: 'telefono', label: 'Teléfono de Contacto' },
-            { name: 'pais', label: 'País de Residencia' },
-            { name: 'wallet_saldo', label: 'Saldo en Wallet' },
-            { name: 'codigo_referido_personal', label: 'Su Código de Invitación' },
-            { name: 'fecha_registro', label: 'Fecha de Registro' }
-        ],
-        'Suscripción': [
-            { name: 'plan_nombre', label: 'Nombre del Plan Actual' },
-            { name: 'plan_precio', label: 'Precio del Plan' },
-            { name: 'plan_expiracion', label: 'Fecha de Expiración' },
-            { name: 'estado_suscripcion', label: 'Estado (Activa/Pendiente)' }
-        ],
-        'Tienda': [
-            { name: 'tienda_nombre', label: 'Nombre de la Tienda' },
-            { name: 'tienda_pais', label: 'País de la Tienda' },
-            { name: 'tienda_moneda', label: 'Moneda (COP, USD, etc)' }
-        ],
-        'Financiero': [
-            { name: 'producto_nombre', label: 'Nombre del Producto (Último)' },
-            { name: 'producto_sku', label: 'SKU del Producto' },
-            { name: 'producto_precio_sugerido', label: 'Precio Sugerido' },
-            { name: 'producto_utilidad_neta', label: 'Utilidad Neta Estimada' }
-        ],
-        'Referidos': [
-            { name: 'lider_nombre', label: 'Nombre de su Líder' },
-            { name: 'total_referidos', label: 'Total de Invitados' },
-            { name: 'total_comisiones', label: 'Comisiones Totales' }
-        ],
-        'Seguridad': [
-            { name: 'codigo', label: 'Código de Verificación (OTP)' }
-        ]
-    };
 
-    const categorizedMJMLComponents = {
-        'Diseño (Layout)': [
-            { name: 'full-section', label: 'Sección completa', code: '<mj-section backgroundColor="#ffffff">\n  <mj-column>\n    <mj-text>Contenido...</mj-text>\n  </mj-column>\n</mj-section>' },
-            { name: 'two-columns', label: 'Dos columnas', code: '<mj-section>\n  <mj-column>\n    <mj-text>Columna 1</mj-text>\n  </mj-column>\n  <mj-column>\n    <mj-text>Columna 2</mj-text>\n  </mj-column>\n</mj-section>' }
-        ],
-        'Contenido': [
-            { name: 'button', label: 'Botón Primario', code: '<mj-button backgroundColor="var(--color-primary)" color="white" borderRadius="10px" href="#">\n  Haga clic aquí\n</mj-button>' },
-            { name: 'image', label: 'Imagen con Link', code: '<mj-image width="300px" src="URL_IMAGEN" href="#" />' },
-            { name: 'text', label: 'Texto Párrafo', code: '<mj-text font-size="16px" color="#4a5568" line-height="24px">\n  Escriba su mensaje aquí...\n</mj-text>' },
-            { name: 'divider', label: 'Separador', code: '<mj-divider border-width="1px" border-color="#e2e8f0" />' },
-            { name: 'spacer', label: 'Espaciador', code: '<mj-spacer height="20px" />' }
-        ],
-        'Interactivos': [
-            { name: 'social', label: 'Redes Sociales', code: '<mj-social font-size="15px" icon-size="30px" mode="horizontal">\n  <mj-social-element name="facebook" href="#" />\n  <mj-social-element name="instagram" href="#" />\n  <mj-social-element name="twitter" href="#" />\n</mjml-social>' }
-        ]
-    };
-
-    const MJMLComponentList = ({ onSelect }: { onSelect: (code: string) => void }) => {
-        const [search, setSearch] = useState('');
-
-        const filteredCategories = Object.entries(categorizedMJMLComponents).reduce((acc, [category, comps]) => {
-            const matches = comps.filter(c =>
-                c.label.toLowerCase().includes(search.toLowerCase())
-            );
-            if (matches.length > 0) acc[category] = matches;
-            return acc;
-        }, {} as any);
-
-        return (
-            <div
-                className="absolute right-0 top-full mt-2 w-80 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-                style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
-            >
-                <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
-                    <div className="relative">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
-                        <input
-                            type="text"
-                            placeholder="Buscar componente..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            style={{
-                                width: '100%',
-                                padding: '10px 12px 10px 36px',
-                                borderRadius: '10px',
-                                border: '1px solid var(--border-color)',
-                                backgroundColor: 'var(--bg-primary)',
-                                fontSize: '12px',
-                                color: 'var(--text-primary)',
-                                outline: 'none'
-                            }}
-                            className="focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
-                            autoFocus
-                        />
-                    </div>
-                </div>
-
-                <div className="max-h-[400px] overflow-y-auto scrollbar-custom">
-                    {Object.entries(filteredCategories).length > 0 ? (
-                        Object.entries(filteredCategories).map(([category, comps]: [string, any]) => (
-                            <div key={category} className="border-b border-[var(--border-color)] last:border-0">
-                                <div style={{ padding: '10px 24px', backgroundColor: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', opacity: 0.8 }}>
-                                    <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{category}</span>
-                                </div>
-                                {comps.map((c: any) => (
-                                    <button
-                                        key={c.name}
-                                        onClick={() => onSelect(c.code)}
-                                        style={{
-                                            width: '100%',
-                                            padding: '14px 24px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '14px',
-                                            backgroundColor: 'transparent',
-                                            cursor: 'pointer',
-                                            transition: 'all 200ms ease',
-                                            border: 'none',
-                                            textAlign: 'left'
-                                        }}
-                                        className="group hover:bg-[var(--color-primary-light)]"
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
-                                            <div style={{ padding: '7px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="group-hover:bg-white transition-colors">
-                                                <Layout size={13} className="text-[var(--color-primary)]" />
-                                            </div>
-                                            <div className="flex flex-col items-start">
-                                                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }} className="group-hover:text-[var(--color-primary)]">
-                                                    {c.label}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <Plus size={12} className="opacity-0 group-hover:opacity-40 text-[var(--color-primary)] transition-opacity" />
-                                    </button>
-                                ))}
-                            </div>
-                        ))
-                    ) : (
-                        <div className="p-12 text-center space-y-3">
-                            <div className="inline-flex p-3 bg-[var(--bg-secondary)] rounded-full border border-[var(--border-color)]">
-                                <Search size={24} className="text-[var(--text-tertiary)]" />
-                            </div>
-                            <p className="text-sm text-[var(--text-tertiary)] font-medium">No encontramos componentes con "{search}"</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    };
-
-    const VariableList = ({ onSelect }: { onSelect: (v: string) => void }) => {
-        const [search, setSearch] = useState('');
-
-        const filteredCategories = Object.entries(categorizedVariables).reduce((acc, [category, vars]) => {
-            const matches = vars.filter(v =>
-                v.label.toLowerCase().includes(search.toLowerCase()) ||
-                v.name.toLowerCase().includes(search.toLowerCase())
-            );
-            if (matches.length > 0) acc[category] = matches;
-            return acc;
-        }, {} as any);
-
-        return (
-            <div
-                className="absolute right-0 top-full mt-2 w-80 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-                style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
-            >
-                {/* Buscador Dinámico */}
-                <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
-                    <div className="relative">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
-                        <input
-                            type="text"
-                            placeholder="Buscar campo (ej: nombre...)"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            style={{
-                                width: '100%',
-                                padding: '10px 12px 10px 36px',
-                                borderRadius: '10px',
-                                border: '1px solid var(--border-color)',
-                                backgroundColor: 'var(--bg-primary)',
-                                fontSize: '12px',
-                                color: 'var(--text-primary)',
-                                outline: 'none'
-                            }}
-                            className="focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
-                            autoFocus
-                        />
-                    </div>
-                </div>
-
-                <div className="max-h-[400px] overflow-y-auto scrollbar-custom">
-                    {Object.entries(filteredCategories).length > 0 ? (
-                        Object.entries(filteredCategories).map(([category, vars]: [string, any]) => (
-                            <div key={category} className="border-b border-[var(--border-color)] last:border-0">
-                                <div style={{ padding: '10px 24px', backgroundColor: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', opacity: 0.8 }}>
-                                    <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{category}</span>
-                                </div>
-                                {vars.map((v: any) => (
-                                    <button
-                                        key={v.name}
-                                        onClick={() => onSelect(v.name)}
-                                        style={{
-                                            width: '100%',
-                                            padding: '14px 24px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '14px',
-                                            backgroundColor: 'transparent',
-                                            cursor: 'pointer',
-                                            transition: 'all 200ms ease',
-                                            border: 'none',
-                                            textAlign: 'left'
-                                        }}
-                                        className="group hover:bg-[var(--color-primary-light)]"
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
-                                            <div style={{ padding: '7px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="group-hover:bg-white transition-colors">
-                                                <Zap size={13} className="text-[var(--color-primary)]" />
-                                            </div>
-                                            <div className="flex flex-col items-start">
-                                                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }} className="group-hover:text-[var(--color-primary)]">
-                                                    {v.label}
-                                                </span>
-                                                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'monospace', marginTop: '2px' }}>
-                                                    {'{'}{v.name}{'}'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <Tag size={12} className="opacity-0 group-hover:opacity-40 text-[var(--color-primary)] transition-opacity" />
-                                    </button>
-                                ))}
-                            </div>
-                        ))
-                    ) : (
-                        <div className="p-12 text-center space-y-3">
-                            <div className="inline-flex p-3 bg-[var(--bg-secondary)] rounded-full border border-[var(--border-color)]">
-                                <Search size={24} className="text-[var(--text-tertiary)]" />
-                            </div>
-                            <p className="text-sm text-[var(--text-tertiary)] font-medium">No encontramos campos con "{search}"</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    };
-
-    // --- NUEVO: Componentes de Remitente ---
-
-    const AddSenderModal = ({ isOpen, onClose, onSave, defaultName, domain }: any) => {
-        const [name, setName] = useState(defaultName || '');
-        const [prefix, setPrefix] = useState('');
-
-        useEffect(() => {
-            if (isOpen) {
-                setName(defaultName || '');
-                setPrefix('');
-            }
-        }, [isOpen, defaultName]);
-
-        return (
-            <Modal
-                isOpen={isOpen}
-                onClose={onClose}
-                title="Nuevo Remitente"
-                size="sm"
-            >
-                <div className="flex flex-col gap-6">
-                    <Input
-                        label="Nombre Visible"
-                        placeholder="Ej: DropCost Soporte"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                    />
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Dirección de Correo</label>
-                        <div
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                width: '100%',
-                                borderRadius: '10px',
-                                border: '1.5px solid var(--border-color)',
-                                backgroundColor: 'var(--bg-primary)',
-                                overflow: 'hidden',
-                                transition: 'all 200ms ease',
-                            }}
-                            className="focus-within:border-[var(--color-primary)] focus-within:ring-4 focus-within:ring-[rgba(0,102,255,0.15)]"
-                        >
-                            <input
-                                type="text"
-                                value={prefix}
-                                onChange={(e) => setPrefix(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ''))}
-                                placeholder="ej: ventas"
-                                style={{
-                                    flex: 1,
-                                    border: 'none',
-                                    outline: 'none',
-                                    padding: '12px 16px',
-                                    fontSize: '14px',
-                                    color: 'var(--text-primary)',
-                                    backgroundColor: 'transparent',
-                                    minWidth: 0
-                                }}
-                            />
-                            <div style={{
-                                padding: '12px 16px',
-                                backgroundColor: 'var(--bg-secondary)',
-                                borderLeft: '1px solid var(--border-color)',
-                                color: 'var(--text-tertiary)',
-                                fontSize: '14px',
-                                fontWeight: 500,
-                                userSelect: 'none',
-                                whiteSpace: 'nowrap'
-                            }}>
-                                @{domain || 'dropcost.com'}
-                            </div>
-                        </div>
-                        <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: 0, fontStyle: 'italic' }}>
-                            Solo se permiten letras minúsculas, números, puntos y guiones.
-                        </p>
-                    </div>
-
-                    <div style={{
-                        marginTop: '16px',
-                        paddingTop: '16px',
-                        borderTop: '1px solid var(--border-color)',
-                        display: 'flex',
-                        gap: '12px',
-                        justifyContent: 'flex-end'
-                    }}>
-                        <Button variant="secondary" onClick={onClose} style={{ borderColor: 'var(--border-color)' }}>Cancelar</Button>
-                        <Button onClick={() => onSave(name, prefix)} disabled={!name || !prefix}>Guardar Remitente</Button>
-                    </div>
-                </div>
-            </Modal >
-        );
-    };
-
-    const SenderSelector = ({ currentName, currentPrefix, domain, onSelect }: any) => {
-        const [isOpen, setIsOpen] = useState(false);
-        const [search, setSearch] = useState('');
-        const [showAddModal, setShowAddModal] = useState(false);
-        const dropdownRef = useRef<HTMLDivElement>(null);
-
-        // Click outside handler
-        useEffect(() => {
-            const handleClickOutside = (event: MouseEvent) => {
-                if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                    setIsOpen(false);
-                }
-            };
-            document.addEventListener('mousedown', handleClickOutside);
-            return () => document.removeEventListener('mousedown', handleClickOutside);
-        }, []);
-
-        // Extraer remitentes únicos de todas las plantillas existentes
-        const uniqueSenders = React.useMemo(() => {
-            const senders = new Map();
-            templates.forEach(t => {
-                if (t.sender_prefix) {
-                    const key = `${t.sender_prefix}@${domain}`;
-                    if (!senders.has(key)) {
-                        senders.set(key, {
-                            name: t.sender_name || globalConfig?.nombre_empresa || 'Remitente',
-                            prefix: t.sender_prefix
-                        });
-                    }
-                }
-            });
-            return Array.from(senders.values());
-        }, [templates, domain, globalConfig]);
-
-        const filteredSenders = uniqueSenders.filter(s =>
-            s.name.toLowerCase().includes(search.toLowerCase()) ||
-            s.prefix.toLowerCase().includes(search.toLowerCase())
-        );
-
-        return (
-            <div className="relative" ref={dropdownRef}>
-                <div
-                    onClick={() => setIsOpen(!isOpen)}
-                    className={`w-full h-auto min-h-[56px] px-4 py-3 rounded-[12px] border-[1.5px] transition-all cursor-pointer group select-none flex items-center justify-between ${isOpen
-                        ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20 bg-[var(--bg-primary)]'
-                        : 'border-[var(--border-color)] bg-[var(--bg-primary)] hover:border-[var(--color-primary)]/50'
-                        }`}
-                >
-                    <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isOpen ? 'bg-[var(--color-primary)] text-white' : 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
-                            }`}>
-                            <User size={20} />
-                        </div>
-                        <div>
-                            <div className="text-sm font-bold text-[var(--text-primary)]">
-                                {currentName || 'Seleccionar Remitente'}
-                            </div>
-                            <div className="text-xs text-[var(--text-tertiary)] font-mono mt-0.5 flex items-center gap-1">
-                                {currentPrefix || '...'}@{domain}
-                            </div>
-                        </div>
-                    </div>
-                    <ChevronDown size={16} className={`text-[var(--text-tertiary)] transition-transform duration-200 ${isOpen ? 'rotate-180 text-[var(--color-primary)]' : ''}`} />
-                </div>
-
-                {isOpen && (
-                    <div
-                        className="absolute left-0 right-0 top-full mt-2 w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-                        style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
-                    >
-                        {/* Buscador Estilo VariableList */}
-                        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
-                            <div className="relative">
-                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
-                                <input
-                                    type="text"
-                                    placeholder="Buscar remitente..."
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px 12px 10px 36px',
-                                        borderRadius: '10px',
-                                        border: '1px solid var(--border-color)',
-                                        backgroundColor: 'var(--bg-primary)',
-                                        fontSize: '12px',
-                                        color: 'var(--text-primary)',
-                                        outline: 'none'
-                                    }}
-                                    className="focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
-                                    autoFocus
-                                    onClick={(e) => e.stopPropagation()}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="overflow-y-auto scrollbar-custom" style={{ minHeight: '140px', maxHeight: '240px' }}>
-                            {filteredSenders.map((sender) => {
-                                const isSelected = currentPrefix === sender.prefix;
-                                return (
-                                    <button
-                                        key={sender.prefix}
-                                        onClick={() => {
-                                            onSelect(sender.name, sender.prefix);
-                                            setIsOpen(false);
-                                        }}
-                                        style={{
-                                            width: '100%',
-                                            padding: '14px 24px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            backgroundColor: isSelected ? 'var(--color-primary-light)' : 'transparent',
-                                            cursor: 'pointer',
-                                            transition: 'all 200ms ease',
-                                            border: 'none',
-                                            textAlign: 'left',
-                                            borderBottom: '1px solid var(--border-color)'
-                                        }}
-                                        className="group hover:bg-[var(--color-primary-light)] last:border-0"
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
-                                            <div style={{
-                                                padding: '7px',
-                                                backgroundColor: isSelected ? 'white' : 'var(--bg-secondary)',
-                                                borderRadius: '8px',
-                                                border: '1px solid var(--border-color)',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }} className="group-hover:bg-white transition-colors">
-                                                <User size={13} className={isSelected ? 'text-[var(--color-primary)]' : 'text-[var(--text-secondary)]'} />
-                                            </div>
-                                            <div className="flex flex-col items-start">
-                                                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }} className="group-hover:text-[var(--color-primary)]">
-                                                    {sender.name}
-                                                </span>
-                                                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'monospace', marginTop: '2px' }}>
-                                                    {sender.prefix}@{domain}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        {isSelected && <CheckCircle2 size={14} className="text-[var(--color-primary)]" />}
-                                    </button>
-                                );
-                            })}
-
-                            {filteredSenders.length === 0 && (
-                                <div className="flex flex-col items-center justify-center p-12 text-center text-[var(--text-tertiary)]" style={{ minHeight: '140px' }}>
-                                    <User size={32} className="mb-3 opacity-20" />
-                                    <span className="text-xs font-medium">No se encontraron remitentes</span>
-                                </div>
-                            )}
-
-                        </div>
-                        {/* Fixed Footer */}
-                        <div className="p-3 bg-[var(--bg-tertiary)] border-t border-[var(--border-color)]">
-                            <button
-                                onClick={() => {
-                                    setIsOpen(false);
-                                    setShowAddModal(true);
-                                }}
-                                className="w-full h-9 flex items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-xs font-bold hover:bg-[var(--color-primary)] hover:text-white transition-all border border-[var(--color-primary)]/20 hover:border-[var(--color-primary)]"
-                            >
-                                <Plus size={14} />
-                                Crear Nuevo Remitente
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                <AddSenderModal
-                    isOpen={showAddModal}
-                    onClose={() => setShowAddModal(false)}
-                    onSave={(name: string, prefix: string) => {
-                        onSelect(name, prefix);
-                        setShowAddModal(false);
-                    }}
-                    defaultName={globalConfig?.nombre_empresa}
-                    domain={domain}
-                />
-            </div>
-        );
-    };
-
-    const TestUserSelector = ({ onSelect, selectedUser }: any) => {
-        const [isOpen, setIsOpen] = useState(false);
-        const [search, setSearch] = useState('');
-        const [users, setUsers] = useState<any[]>([]);
-        const [loading, setLoading] = useState(false);
-        const dropdownRef = useRef<HTMLDivElement>(null);
-
-        useEffect(() => {
-            const handleClickOutside = (event: MouseEvent) => {
-                if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                    setIsOpen(false);
-                }
-            };
-            document.addEventListener('mousedown', handleClickOutside);
-            return () => document.removeEventListener('mousedown', handleClickOutside);
-        }, []);
-
-        useEffect(() => {
-            if (isOpen && search.length >= 0) {
-                const fetchUsers = async () => {
-                    setLoading(true);
-                    try {
-                        const { data } = await userService.fetchUsers(1, 10, { search });
-                        setUsers(data || []);
-                    } catch (error) {
-                        console.error("Error searching users", error);
-                    } finally {
-                        setLoading(false);
-                    }
-                };
-
-                const timeoutId = setTimeout(fetchUsers, 300);
-                return () => clearTimeout(timeoutId);
-            }
-        }, [isOpen, search]);
-
-        return (
-            <div className="relative" ref={dropdownRef}>
-                <div
-                    onClick={() => setIsOpen(!isOpen)}
-                    className={`w-full h-auto min-h-[56px] px-4 py-3 rounded-[12px] border-[1.5px] transition-all cursor-pointer group select-none flex items-center justify-between ${isOpen
-                        ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20 bg-[var(--bg-primary)]'
-                        : 'border-[var(--border-color)] bg-[var(--bg-primary)] hover:border-[var(--color-primary)]/50'
-                        }`}
-                >
-                    <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isOpen ? 'bg-[var(--color-primary)] text-white' : 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
-                            }`}>
-                            <User size={20} />
-                        </div>
-                        <div>
-                            <div className="text-sm font-bold text-[var(--text-primary)]">
-                                {selectedUser ? `${selectedUser.nombres} ${selectedUser.apellidos}` : 'Seleccionar Usuario de Prueba'}
-                            </div>
-                            <div className="text-xs text-[var(--text-tertiary)] font-mono mt-0.5">
-                                {selectedUser ? selectedUser.email : 'Buscar por nombre o email...'}
-                            </div>
-                        </div>
-                    </div>
-                    <ChevronDown size={16} className={`text-[var(--text-tertiary)] transition-transform duration-200 ${isOpen ? 'rotate-180 text-[var(--color-primary)]' : ''}`} />
-                </div>
-
-                {isOpen && (
-                    <div
-                        className="absolute left-0 right-0 top-full mt-2 w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-                        style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
-                    >
-                        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
-                            <div className="relative">
-                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
-                                <input
-                                    type="text"
-                                    placeholder="Buscar usuario..."
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px 12px 10px 36px',
-                                        borderRadius: '10px',
-                                        border: '1px solid var(--border-color)',
-                                        backgroundColor: 'var(--bg-primary)',
-                                        fontSize: '12px',
-                                        color: 'var(--text-primary)',
-                                        outline: 'none'
-                                    }}
-                                    className="focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
-                                    autoFocus
-                                    onClick={(e) => e.stopPropagation()}
-                                />
-                                {loading && <div className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-[var(--color-primary)]"><Loader2 size={14} /></div>}
-                            </div>
-                        </div>
-
-                        <div className="overflow-y-auto scrollbar-custom" style={{ minHeight: '140px', maxHeight: '240px' }}>
-                            {users.map((user) => {
-                                const isSelected = selectedUser?.id === user.id;
-                                return (
-                                    <button
-                                        key={user.id}
-                                        onClick={() => {
-                                            onSelect(user);
-                                            setIsOpen(false);
-                                        }}
-                                        style={{
-                                            width: '100%',
-                                            padding: '14px 24px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            backgroundColor: isSelected ? 'var(--color-primary-light)' : 'transparent',
-                                            cursor: 'pointer',
-                                            transition: 'all 200ms ease',
-                                            border: 'none',
-                                            textAlign: 'left',
-                                            borderBottom: '1px solid var(--border-color)'
-                                        }}
-                                        className="group hover:bg-[var(--color-primary-light)] last:border-0"
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
-                                            <div style={{
-                                                padding: '7px',
-                                                backgroundColor: isSelected ? 'white' : 'var(--bg-secondary)',
-                                                borderRadius: '8px',
-                                                border: '1px solid var(--border-color)',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }} className="group-hover:bg-white transition-colors">
-                                                <User size={13} className={isSelected ? 'text-[var(--color-primary)]' : 'text-[var(--text-secondary)]'} />
-                                            </div>
-                                            <div className="flex flex-col items-start">
-                                                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }} className="group-hover:text-[var(--color-primary)]">
-                                                    {user.nombres} {user.apellidos}
-                                                </span>
-                                                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'monospace', marginTop: '2px' }}>
-                                                    {user.email}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        {isSelected && <CheckCircle2 size={14} className="text-[var(--color-primary)]" />}
-                                    </button>
-                                );
-                            })}
-
-                            {users.length === 0 && !loading && (
-                                <div className="flex flex-col items-center justify-center p-12 text-center text-[var(--text-tertiary)]" style={{ minHeight: '140px' }}>
-                                    <User size={32} className="mb-3 opacity-20" />
-                                    <span className="text-xs font-medium">No se encontraron usuarios</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
-    };
 
     async function handleSearchUsers(query: string) {
         setTestUserSearch(query);
@@ -1228,12 +1445,85 @@ export function AdminEmailTemplatesPage() {
 
     // Renderizador de previsualización simple
     const renderPreview = (content: string) => {
+        if (!selectedTemplate) return content;
         let rendered = content;
-        selectedTemplate?.variables.forEach(v => {
-            const mockValue = v === 'codigo' ? '123456' : v === 'link' ? '#' : `[${v}]`;
+        selectedTemplate.variables.forEach(v => {
+            let mockValue = `[${v}]`;
+
+            // Si hay usuario de prueba seleccionado, intentamos usar sus datos
+            if (selectedTestUser) {
+                if (v === 'nombres') mockValue = selectedTestUser.nombres;
+                else if (v === 'apellidos') mockValue = selectedTestUser.apellidos;
+                else if (v === 'email') mockValue = selectedTestUser.email;
+                else if (v === 'id' || v === 'user_id') mockValue = selectedTestUser.id.toString();
+                else if (v === 'nombre_completo') mockValue = `${selectedTestUser.nombres} ${selectedTestUser.apellidos}`;
+            } else {
+                // Valores por defecto si no hay usuario
+                if (v === 'nombres') mockValue = 'Juan';
+                else if (v === 'apellidos') mockValue = 'Pérez';
+                else if (v === 'email') mockValue = 'juan@ejemplo.com';
+            }
+
+            // Valores especiales que siempre son iguales o simulados
+            if (v === 'codigo') mockValue = '123456';
+            if (v === 'link') mockValue = '#';
+            if (v === 'url') mockValue = 'https://ejemplo.com';
+            if (v === 'empresa') mockValue = globalConfig?.nombre_empresa || 'Mi Empresa';
+
             rendered = rendered.replace(new RegExp(`\\{\\{\\s*${v}\\s*\\}\\}`, 'g'), mockValue);
         });
         return rendered;
+    };
+
+    /**
+     * Formatea el código MJML con indentación simple
+     */
+    const formatMJML = () => {
+        if (!selectedTemplate || selectedTemplate.mjml_content === undefined) return;
+
+        try {
+            const mjml = selectedTemplate.mjml_content;
+            let formatted = '';
+            let pad = 0;
+
+            // Dividir por etiquetas, manteniendo el contenido de texto intacto lo mejor posible
+            // Esta es una implementación simple. Para algo robusto se necesitaría un parser real.
+            // Para fines de UX rápido, esto funciona para estructuras limpias.
+            const lines = mjml
+                .replace(/>\s*</g, '>\n<') // Romper líneas entre etiquetas
+                .split('\n');
+
+            lines.forEach(line => {
+                let indent = 0;
+                const trimmed = line.trim();
+
+                if (!trimmed) return;
+
+                // Disminuir indentación si es etiqueta de cierre
+                if (trimmed.match(/^<\//)) {
+                    pad = Math.max(0, pad - 1);
+                }
+
+                indent = pad;
+
+                // Aumentar indentación si es etiqueta de apertura pero no autocierre
+                if (trimmed.match(/^<[^/].*[^/]>/) && !trimmed.match(/\/>$/) && !trimmed.match(/^<.*>.*<\/.*>$/)) {
+                    pad += 1;
+                }
+
+                formatted += '  '.repeat(indent) + trimmed + '\n';
+            });
+
+            setSelectedTemplate({
+                ...selectedTemplate,
+                mjml_content: formatted.trim()
+            });
+
+            toast.success('Formato aplicado', 'El código se ha reordenado correctamente.');
+        } catch (error) {
+            console.error('Error formatting MJML:', error);
+            toast.error('Error', 'No se pudo formatear el código.');
+        }
     };
 
     if (isLoading) return <div className="flex justify-center p-24"><Spinner size="lg" /></div>;
@@ -1526,10 +1816,10 @@ export function AdminEmailTemplatesPage() {
                                                                 {item.is_folder ? <Folder size={22} fill="white" /> : <FileEdit size={22} />}
                                                             </div>
                                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                                <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+                                                                <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                                                                     {item.name || item.slug}
                                                                 </span>
-                                                                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 500, maxWidth: '280px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                <span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 400, maxWidth: '280px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                                     {item.description || (item.is_folder ? 'Carpeta organizada' : 'Sin descripción adicional')}
                                                                 </span>
                                                             </div>
@@ -1537,14 +1827,14 @@ export function AdminEmailTemplatesPage() {
                                                     </td>
                                                     <td style={{ padding: '16px 24px' }}>
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 700 }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                                                                 {item.is_folder ? (
                                                                     <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#FF8A00' }}>
-                                                                        <Folder size={14} /> Directorio
+                                                                        <Folder size={16} /> Directorio
                                                                     </span>
                                                                 ) : (
                                                                     <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-primary)' }}>
-                                                                        <Zap size={14} /> Plantilla
+                                                                        <Zap size={16} /> Plantilla
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -1571,10 +1861,10 @@ export function AdminEmailTemplatesPage() {
                                                     </td>
                                                     <td style={{ padding: '16px 24px' }}>
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                                                            <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)' }}>
                                                                 {new Date(item.updated_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
                                                             </span>
-                                                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600 }}>
+                                                            <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 400 }}>
                                                                 {new Date(item.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                             </span>
                                                         </div>
@@ -1590,18 +1880,18 @@ export function AdminEmailTemplatesPage() {
                                                                 display: 'flex',
                                                                 alignItems: 'center',
                                                                 justifyContent: 'center',
-                                                                fontSize: '11px',
-                                                                fontWeight: 900,
+                                                                fontSize: '12px',
+                                                                fontWeight: 600,
                                                                 color: 'var(--color-primary)',
                                                                 boxShadow: '0 2px 4px rgba(0,102,255,0.1)'
                                                             }}>
                                                                 {(item.updated_by_name || 'S').charAt(0).toUpperCase()}
                                                             </div>
                                                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                                                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                                                                     {item.updated_by_name || 'SISTEMA'}
                                                                 </span>
-                                                                <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Editor Admin</span>
+                                                                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 400 }}>Editor Admin</span>
                                                             </div>
                                                         </div>
                                                     </td>
@@ -1800,10 +2090,12 @@ export function AdminEmailTemplatesPage() {
                         <div className="xl:col-span-8">
                             <Card title="Editor de Plantilla">
                                 <div className="flex flex-col gap-8">
-                                    <div className="relative">
+                                    <div className="flex flex-col gap-3">
+                                        <label htmlFor="subject-input" className="text-sm font-bold text-[var(--text-primary)]">
+                                            Asunto del Correo
+                                        </label>
                                         <Input
                                             id="subject-input"
-                                            label="Asunto del Correo"
                                             value={selectedTemplate?.subject || ''}
                                             onChange={(e) => selectedTemplate && setSelectedTemplate({ ...selectedTemplate, subject: e.target.value })}
                                             placeholder="Ej: Bienvenido a la plataforma"
@@ -1851,7 +2143,37 @@ export function AdminEmailTemplatesPage() {
                                                 {selectedTemplate?.mjml_content !== undefined ? 'Editor de Estructura (MJML)' : 'Cuerpo del Mensaje (HTML)'}
                                             </label>
 
-                                            <div className="flex items-center gap-3 relative">
+                                            <div className="flex items-center gap-2 relative">
+                                                {/* Botón de Auto-Formato */}
+                                                {selectedTemplate?.mjml_content !== undefined && (
+                                                    <button
+                                                        onClick={formatMJML}
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            width: '36px',
+                                                            height: '36px',
+                                                            borderRadius: '10px',
+                                                            backgroundColor: 'var(--bg-primary)',
+                                                            border: '1px solid var(--border-color)',
+                                                            color: 'var(--text-tertiary)',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 200ms ease'
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.borderColor = 'var(--color-primary)';
+                                                            e.currentTarget.style.color = 'var(--color-primary)';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.borderColor = 'var(--border-color)';
+                                                            e.currentTarget.style.color = 'var(--text-tertiary)';
+                                                        }}
+                                                        title="Auto-formato (Prettier)"
+                                                    >
+                                                        <AlignLeft size={16} />
+                                                    </button>
+                                                )}
                                                 {/* Biblioteca de Componentes MJML (Solo si es MJML) */}
                                                 {selectedTemplate?.mjml_content !== undefined && (
                                                     <div className="relative">
@@ -1884,11 +2206,24 @@ export function AdminEmailTemplatesPage() {
                                                         </button>
                                                         {showMJMLComponents && (
                                                             <div className="absolute right-0 top-full z-[110]">
-                                                                <MJMLComponentList onSelect={(code) => insertContent('mjml_content', code, false)} />
+                                                                <MJMLComponentList onSelect={(component) => {
+                                                                    setMjmlModalComponent(component);
+                                                                    setShowMJMLComponents(false);
+                                                                }} />
                                                             </div>
                                                         )}
                                                     </div>
                                                 )}
+
+                                                <MJMLAttributeModal
+                                                    isOpen={!!mjmlModalComponent}
+                                                    onClose={() => setMjmlModalComponent(null)}
+                                                    component={mjmlModalComponent}
+                                                    onInsert={(code) => {
+                                                        insertContent('mjml_content', code, false);
+                                                        setMjmlModalComponent(null);
+                                                    }}
+                                                />
 
                                                 <button
                                                     onClick={() => setShowVariablesBody(!showVariablesBody)}
@@ -1965,7 +2300,7 @@ export function AdminEmailTemplatesPage() {
                                 <div className="flex flex-col gap-8 p-2">
                                     {/* Configuración del Remitente */}
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-2 mb-2">
+                                        <div className="flex items-center gap-2" style={{ marginBottom: '12px' }}>
                                             <Mail size={16} className="text-[var(--text-tertiary)]" />
                                             <span className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Remitente Transaccional</span>
                                         </div>
@@ -1973,7 +2308,9 @@ export function AdminEmailTemplatesPage() {
                                         <SenderSelector
                                             currentName={selectedTemplate?.sender_name}
                                             currentPrefix={selectedTemplate?.sender_prefix}
-                                            domain={globalConfig?.email_domain}
+                                            domain={globalConfig?.site_url ? globalConfig.site_url.replace(/^https?:\/\//, '').replace(/\/$/, '') : 'dropcost.com'}
+                                            templates={templates}
+                                            globalConfig={globalConfig}
                                             onSelect={(name: string, prefix: string) => {
                                                 if (selectedTemplate) {
                                                     const updated = {
@@ -1996,7 +2333,7 @@ export function AdminEmailTemplatesPage() {
                                     <div className="space-y-4 pt-6 border-t border-[var(--border-color)] border-dashed">
                                         <h5
                                             className="text-[11px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-2"
-                                            style={{ marginTop: '16px' }}
+                                            style={{ marginTop: '16px', marginBottom: '12px' }}
                                         >
                                             <Send size={14} /> Probar envío Real
                                         </h5>
@@ -2025,7 +2362,7 @@ export function AdminEmailTemplatesPage() {
                                     <div className="space-y-4 pt-6 border-t border-[var(--border-color)] border-dashed">
                                         <h5
                                             className="text-[11px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-2"
-                                            style={{ marginTop: '16px' }}
+                                            style={{ marginTop: '16px', marginBottom: '12px' }}
                                         >
                                             <Code size={14} /> Variables Soportadas
                                         </h5>
@@ -2261,7 +2598,7 @@ export function AdminEmailTemplatesPage() {
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                             <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 500, minWidth: '60px' }}>Asunto:</span>
-                                            <span style={{ fontSize: '13px', color: '#1e293b', fontWeight: 700 }}>{selectedTemplate.subject || '(Sin Asunto)'}</span>
+                                            <span style={{ fontSize: '13px', color: '#1e293b', fontWeight: 700 }}>{renderPreview(selectedTemplate.subject || '(Sin Asunto)')}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -2275,13 +2612,41 @@ export function AdminEmailTemplatesPage() {
                                         overflowX: 'hidden'
                                     }}
                                     dangerouslySetInnerHTML={{
-                                        __html: selectedTemplate
-                                            ? renderPreview(
-                                                selectedTemplate.mjml_content
-                                                    ? mjml2html(selectedTemplate.mjml_content).html
-                                                    : selectedTemplate.html_content
-                                            )
-                                            : ''
+                                        __html: (() => {
+                                            if (!selectedTemplate) return '';
+
+                                            let contentToRender = selectedTemplate.html_content;
+
+                                            if (selectedTemplate.mjml_content) {
+                                                try {
+                                                    const { html, errors } = mjml2html(selectedTemplate.mjml_content);
+                                                    if (errors && errors.length > 0) {
+                                                        console.warn('MJML Validation Errors:', errors);
+                                                    }
+                                                    contentToRender = html;
+                                                } catch (error: any) {
+                                                    // Si falla por falta de root tags, intentamos envolverlo para preview
+                                                    if (error.message && error.message.includes('enclosed in <mjml> tags')) {
+                                                        try {
+                                                            const wrapped = `<mjml><mj-body>${selectedTemplate.mjml_content}</mj-body></mjml>`;
+                                                            contentToRender = mjml2html(wrapped).html;
+                                                        } catch (retryError) {
+                                                            return `<div style="padding: 20px; text-align: center; color: #EF4444;">
+                                                                <h3 style="margin-bottom: 8px;">Error de Estructura MJML</h3>
+                                                                <p style="font-size: 12px; opacity: 0.8;">El código no es válido. Revisa las etiquetas de apertura/cierre.</p>
+                                                            </div>`;
+                                                        }
+                                                    } else {
+                                                        return `<div style="padding: 20px; text-align: center; color: #EF4444;">
+                                                            <h3 style="margin-bottom: 8px;">Error de Renderizado</h3>
+                                                            <p style="font-size: 12px; opacity: 0.8;">${error.message}</p>
+                                                        </div>`;
+                                                    }
+                                                }
+                                            }
+
+                                            return renderPreview(contentToRender);
+                                        })()
                                     }}
                                 />
                             </div>
