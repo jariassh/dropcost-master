@@ -52,7 +52,7 @@ export const getLogs = async (filters: AuditFilters = {}, page = 1, limit = 50):
       .from('audit_logs')
       .select(`
         *,
-        usuario:users(nombres, apellidos, email)
+        usuario:users(nombres, apellidos, email, pais)
       `, { count: 'exact' });
 
     if (filters.usuario_id) query = query.eq('usuario_id', filters.usuario_id);
@@ -97,14 +97,14 @@ export const fetchUserActivityLogs = async (limit = 20): Promise<AuditLog[]> => 
             .from('audit_logs')
             .select(`
                 *,
-                usuario:users(nombres, apellidos, email)
+                usuario:users(nombres, apellidos, email, pais)
             `)
             .eq('usuario_id', user.id)
             .order('created_at', { ascending: false })
             .limit(limit);
 
         if (error) throw error;
-        return (data || []) as AuditLog[];
+        return (data as unknown) as AuditLog[];
     } catch (error) {
         console.error('AuditService: Error al obtener actividad personal:', error);
         return [];
