@@ -6,6 +6,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Helper: disparar trigger de email (fire-and-forget)
+async function dispararTrigger(supabaseUrl: string, serviceKey: string, codigo_evento: string, datos: Record<string, string>) {
+    try {
+        await fetch(`${supabaseUrl}/functions/v1/email-trigger-dispatcher`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` },
+            body: JSON.stringify({ codigo_evento, datos }),
+        });
+    } catch (e) {
+        console.error(`[email-trigger] Error disparando ${codigo_evento}:`, e);
+    }
+}
+
 console.log("Edge Function auth-2fa iniciada")
 
 serve(async (req) => {
@@ -170,6 +183,13 @@ serve(async (req) => {
         // 2. Limpiar códigos del usuario
         await adminClient.from('auth_codes').delete().eq('user_id', user.id)
 
+        // EMAIL TRIGGER: 2FA_ACTIVADO
+        dispararTrigger(supabaseUrl, supabaseServiceKey, '2FA_ACTIVADO', {
+            usuario_id: user.id,
+            usuario_email: user.email ?? '',
+            usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
+        });
+
         console.log("[VERIFY] 2FA Activated successfully.");
         return new Response(JSON.stringify({ success: true }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -248,6 +268,13 @@ serve(async (req) => {
         .eq('id', user.id)
 
       if (updateError) throw updateError
+
+      // EMAIL TRIGGER: 2FA_DESACTIVADO
+      dispararTrigger(supabaseUrl, supabaseServiceKey, '2FA_DESACTIVADO', {
+          usuario_id: user.id,
+          usuario_email: user.email ?? '',
+          usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
+      });
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

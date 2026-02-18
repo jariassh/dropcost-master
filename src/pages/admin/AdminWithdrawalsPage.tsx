@@ -24,6 +24,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { fetchExchangeRates, convertPrice, getDisplayCurrency } from '@/utils/currencyUtils';
 import { obtenerPaisPorCodigo } from '@/services/paisesService';
+import { dispararTriggerEmail } from '@/utils/emailTrigger';
 
 export const AdminWithdrawalsPage: React.FC = () => {
     const { user } = useAuthStore();
@@ -111,6 +112,33 @@ export const AdminWithdrawalsPage: React.FC = () => {
                 .eq('id', id);
 
             if (error) throw error;
+
+            // Disparar trigger de email según el nuevo estado
+            const retiro = withdrawals.find(w => w.id === id) as any;
+            if (retiro) {
+                const userData = retiro.users;
+                const datosBase = {
+                    usuario_id: retiro.user_id || '',
+                    usuario_nombre: userData ? `${userData.nombres || ''} ${userData.apellidos || ''}`.trim() : '',
+                    usuario_email: userData?.email || '',
+                    monto_pago: String(retiro.monto_usd || 0),
+                    banco_nombre: retiro.banco_nombre || '',
+                    numero_cuenta: retiro.numero_cuenta || '',
+                };
+
+                if (newStatus === 'aprobado') {
+                    dispararTriggerEmail('PAGO_COMISIONES_APROBADO', {
+                        ...datosBase,
+                        fecha_aprobacion: new Date().toISOString().split('T')[0],
+                    });
+                } else if (newStatus === 'completado') {
+                    dispararTriggerEmail('PAGO_COMISIONES_PROCESADO', {
+                        ...datosBase,
+                        fecha_procesado: new Date().toISOString().split('T')[0],
+                        referencia_pago: reason || '',
+                    });
+                }
+            }
 
             toast.success('Éxito', `Retiro marcado como ${newStatus}`);
             loadWithdrawals();

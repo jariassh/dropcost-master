@@ -7,6 +7,19 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper: disparar trigger de email (fire-and-forget)
+async function dispararTrigger(supabaseUrl: string, serviceKey: string, codigo_evento: string, datos: Record<string, string>) {
+    try {
+        await fetch(`${supabaseUrl}/functions/v1/email-trigger-dispatcher`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` },
+            body: JSON.stringify({ codigo_evento, datos }),
+        });
+    } catch (e) {
+        console.error(`[email-trigger] Error disparando ${codigo_evento}:`, e);
+    }
+}
+
 // Helper function to process approved payment
 async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClient) {
     const dataId = String(paymentData.id);
@@ -90,6 +103,19 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
         detalles: { plan_id: planId, expires_at: expiresAt.toISOString() }
     }).catch(e => console.error("Audit Log Error:", e));
 
+    // EMAIL TRIGGER: SUSCRIPCION_ACTIVADA
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    const { data: userData2 } = await supabase.from('users').select('nombres, apellidos, email').eq('id', userId).maybeSingle();
+    dispararTrigger(supabaseUrl, serviceKey, 'SUSCRIPCION_ACTIVADA', {
+        usuario_id: userId,
+        usuario_nombre: `${userData2?.nombres || ''} ${userData2?.apellidos || ''}`.trim(),
+        usuario_email: userData2?.email || '',
+        plan_nombre: planId,
+        fecha_vencimiento: expiresAt.toISOString().split('T')[0],
+        periodo: period === 'monthly' ? 'Mensual' : 'Semestral',
+    });
+
     // 3. COMMISSION LOGIC (Referrals)
     try {
         const { data: referral } = await supabase
@@ -165,6 +191,19 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
                 const newTotal = Math.round(((Number(leadStats?.total_comisiones_generadas) || 0) + commissionAmountUSD) * 100) / 100;
                 
                 await supabase.from('referidos_lideres').update({ total_comisiones_generadas: newTotal }).eq('id', leader.id);
+
+                // EMAIL TRIGGER: REFERIDO_PRIMER_PAGO (notificar al líder)
+                const { data: leaderUser } = await supabase.from('users').select('nombres, apellidos, email').eq('id', leader.user_id).maybeSingle();
+                const { data: referidoUser } = await supabase.from('users').select('nombres, apellidos, email').eq('id', userId).maybeSingle();
+                dispararTrigger(supabaseUrl, serviceKey, 'REFERIDO_PRIMER_PAGO', {
+                    usuario_id: leader.user_id,
+                    usuario_nombre: `${leaderUser?.nombres || ''} ${leaderUser?.apellidos || ''}`.trim(),
+                    usuario_email: leaderUser?.email || '',
+                    referido_nombre: `${referidoUser?.nombres || ''} ${referidoUser?.apellidos || ''}`.trim(),
+                    referido_email: referidoUser?.email || '',
+                    monto_comision: commissionAmountUSD.toFixed(2),
+                    plan_nombre: planId,
+                });
             }
         }
     } catch (refError) {

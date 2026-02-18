@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { useToast, Badge, Modal, Input, Spinner, ConfirmDialog } from '@/components/common';
+import { enviarPruebaPlantilla } from '@/utils/emailTrigger';
 import {
     Mail,
     Save,
@@ -41,6 +42,7 @@ import {
 } from 'lucide-react';
 import { configService, GlobalConfig } from '@/services/configService';
 import { userService } from '@/services/userService';
+import { supabase } from '@/lib/supabase';
 import * as mjmlModule from 'mjml-browser';
 import { MJMLAttributeModal } from './components/MJMLAttributeModal';
 const mjml2html = (mjmlModule as any).default || mjmlModule;
@@ -978,9 +980,11 @@ export function AdminEmailTemplatesPage() {
     const [newItem, setNewItem] = useState({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
     const [isCreating, setIsCreating] = useState(false);
     const [globalConfig, setGlobalConfig] = useState<GlobalConfig | null>(null);
+    const [availableTriggers, setAvailableTriggers] = useState<{ id: string; nombre_trigger: string; codigo_evento: string; categoria: string }[]>([]);
 
     // Actions State
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+    const [menuPosition, setMenuPosition] = useState<{ top?: number; bottom?: number; right: number } | null>(null);
     const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
     const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
     const [itemToManage, setItemToManage] = useState<EmailItem | null>(null);
@@ -1084,8 +1088,71 @@ export function AdminEmailTemplatesPage() {
 
         try {
             setIsSendingTest(true);
-            // Simular envío de prueba (integrar con notificationService después si es necesario)
-            toast.success('¡Enviado!', `Correo de prueba enviado a ${selectedTestUser.email}`);
+
+            // Compilar MJML a HTML si aplica
+            let htmlFinal = selectedTemplate.html_content || '';
+            if (selectedTemplate.mjml_content) {
+                try {
+                    const result = mjml2html(selectedTemplate.mjml_content);
+                    htmlFinal = result.html;
+                } catch (mjError) {
+                    console.error('MJML compile error en prueba:', mjError);
+                    // Usar HTML previo si falla la compilación
+                }
+            }
+
+            // Construir datos del usuario de prueba para reemplazo de variables
+            const datosUsuario: Record<string, string> = {
+                usuario_id: selectedTestUser.id || '',
+                usuario_nombre: `${selectedTestUser.nombres || ''} ${selectedTestUser.apellidos || ''}`.trim(),
+                usuario_email: selectedTestUser.email || '',
+                fecha_registro: selectedTestUser.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+                codigo_referido: selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA',
+                // Variables de prueba genéricas para triggers que las necesiten
+                reset_link: `${window.location.origin}/actualizar-contrasena?token=PRUEBA`,
+                expira_en: '10 minutos',
+                codigo_2fa: '123456',
+                plan_nombre: selectedTestUser.plan_id || 'Plan Pro',
+                fecha_inicio: new Date().toISOString().split('T')[0],
+                fecha_vencimiento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                dias_restantes: '3',
+                monto_comision: '25.00',
+                fecha_expiracion: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                monto_pago: '100.00',
+                banco_nombre: 'Banco de Prueba',
+                numero_cuenta: '****1234',
+                referencia_pago: 'REF-PRUEBA-001',
+                total_referidos: '5',
+                referidos_para_siguiente_hito: '5',
+                siguiente_hito: '10',
+                lider_nombre: `${selectedTestUser.nombres || ''} ${selectedTestUser.apellidos || ''}`.trim(),
+                lider_email: selectedTestUser.email || '',
+                referido_nombre: 'Usuario Referido (Prueba)',
+                referido_email: 'referido@prueba.com',
+                fecha_cancelacion: new Date().toISOString().split('T')[0],
+                fecha_activacion: new Date().toISOString().split('T')[0],
+                fecha_desactivacion: new Date().toISOString().split('T')[0],
+                fecha_actualizacion: new Date().toISOString().split('T')[0],
+                fecha_aprobacion: new Date().toISOString().split('T')[0],
+                fecha_procesado: new Date().toISOString().split('T')[0],
+                email_nuevo: selectedTestUser.email || '',
+                email_anterior: 'anterior@ejemplo.com',
+                fecha_cambio: new Date().toISOString().split('T')[0],
+                fecha_pago: new Date().toISOString().split('T')[0],
+                fecha_ascenso: new Date().toISOString().split('T')[0],
+            };
+
+            const resultado = await enviarPruebaPlantilla({
+                plantilla_id: selectedTemplate.id,
+                email_destino: selectedTestUser.email,
+                datos_usuario: datosUsuario,
+            });
+
+            if (resultado.success) {
+                toast.success('¡Enviado!', `Correo de prueba enviado a ${selectedTestUser.email}`);
+            } else {
+                toast.error('Error al enviar', resultado.error || 'No se pudo enviar el correo de prueba.');
+            }
         } catch (error) {
             toast.error('Error', 'No se pudo enviar el correo de prueba.');
         } finally {
@@ -1096,14 +1163,29 @@ export function AdminEmailTemplatesPage() {
     useEffect(() => {
         loadTemplates();
         loadGlobalConfig();
+        loadAvailableTriggers();
     }, []);
 
     async function loadGlobalConfig() {
         try {
             const config = await configService.getConfig();
-            setGlobalConfig(config);
+            setGlobalConfig(config as any);
         } catch (error) {
             console.error('Error loading config:', error);
+        }
+    }
+
+    async function loadAvailableTriggers() {
+        try {
+            const { data } = await (supabase as any)
+                .from('email_triggers')
+                .select('id, nombre_trigger, codigo_evento, categoria')
+                .eq('activo', true)
+                .order('categoria')
+                .order('nombre_trigger');
+            setAvailableTriggers(data || []);
+        } catch (e) {
+            console.error('Error cargando triggers:', e);
         }
     }
 
@@ -1153,7 +1235,7 @@ export function AdminEmailTemplatesPage() {
 
             await configService.updateEmailTemplate(selectedTemplate.id, updatedData);
 
-            const updatedTemplate = { ...selectedTemplate, ...updatedData };
+            const updatedTemplate = { ...selectedTemplate, ...updatedData } as EmailItem;
             setTemplates(prev => prev.map(t => t.id === selectedTemplate.id ? updatedTemplate : t));
             setSelectedTemplate(updatedTemplate);
             toast.success('¡Guardado!', 'La plantilla se ha actualizado correctamente.');
@@ -1175,6 +1257,21 @@ export function AdminEmailTemplatesPage() {
                 is_folder: false,
                 parent_id: navigationPath.length > 0 ? navigationPath[navigationPath.length - 1] : null
             }) as any;
+
+            // Si se seleccionó un trigger, crear la asociación en email_plantillas_triggers
+            if (newItem.trigger_event && data?.id) {
+                const trigger = availableTriggers.find(t => t.codigo_evento === newItem.trigger_event);
+                if (trigger) {
+                    await (supabase as any)
+                        .from('email_plantillas_triggers')
+                        .insert({
+                            plantilla_id: data.id,
+                            trigger_id: trigger.id,
+                            activo: true,
+                        });
+                }
+            }
+
             setTemplates([...templates, data]);
             setIsCreateModalOpen(false);
             setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
@@ -1319,7 +1416,21 @@ export function AdminEmailTemplatesPage() {
             <button
                 onClick={(e) => {
                     e.stopPropagation();
-                    setActiveMenuId(activeMenuId === item.id ? null : item.id);
+                    if (activeMenuId === item.id) {
+                        setActiveMenuId(null);
+                        setMenuPosition(null);
+                    } else {
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                        const MENU_HEIGHT = 320; // altura estimada del dropdown
+                        const spaceBelow = window.innerHeight - rect.bottom;
+                        const openUpward = spaceBelow < MENU_HEIGHT;
+                        setMenuPosition(
+                            openUpward
+                                ? { bottom: window.innerHeight - rect.top + 8, right: window.innerWidth - rect.right }
+                                : { top: rect.bottom + 8, right: window.innerWidth - rect.right }
+                        );
+                        setActiveMenuId(item.id);
+                    }
                 }}
                 style={{
                     width: '38px',
@@ -1348,12 +1459,21 @@ export function AdminEmailTemplatesPage() {
                 <MoreVertical size={20} />
             </button>
 
-            {activeMenuId === item.id && (
+            {activeMenuId === item.id && menuPosition && (
                 <div
-                    className="absolute right-0 top-full mt-2 w-64 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-xl z-[100] animate-in fade-in zoom-in-95 duration-200"
+                    onClick={(e) => e.stopPropagation()}
                     style={{
-                        filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.15))',
-                        padding: '8px'
+                        position: 'fixed',
+                        ...(menuPosition.top !== undefined ? { top: menuPosition.top } : { bottom: menuPosition.bottom }),
+                        right: menuPosition.right,
+                        width: '256px',
+                        backgroundColor: 'var(--bg-primary)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '16px',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+                        zIndex: 9999,
+                        padding: '8px',
+                        filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.15))'
                     }}
                 >
                     {item.is_folder ? (
@@ -1364,6 +1484,7 @@ export function AdminEmailTemplatesPage() {
                                     setNewItem({ name: item.name || '', slug: item.slug, description: item.description || '', subject: '', trigger_event: '', mjml_content: item.mjml_content || '', sender_prefix: item.sender_prefix || 'support' });
                                     setIsRenameModalOpen(true);
                                     setActiveMenuId(null);
+                                    setMenuPosition(null);
                                 }}
                                 className="flex items-center w-full text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--color-primary)] rounded-xl transition-colors text-left border-none cursor-pointer"
                                 style={{ padding: '14px 24px', gap: '16px' }}
@@ -1389,6 +1510,7 @@ export function AdminEmailTemplatesPage() {
                                     setNewItem({ name: item.name || '', slug: item.slug, description: item.description || '', subject: item.subject, trigger_event: item.trigger_event || '', mjml_content: item.mjml_content || '', sender_prefix: item.sender_prefix || 'support' });
                                     setIsRenameModalOpen(true);
                                     setActiveMenuId(null);
+                                    setMenuPosition(null);
                                 }}
                                 className="flex items-center w-full text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--color-primary)] rounded-xl transition-colors text-left border-none cursor-pointer"
                                 style={{ padding: '14px 24px', gap: '16px' }}
@@ -1399,6 +1521,7 @@ export function AdminEmailTemplatesPage() {
                                 onClick={() => {
                                     handleClone(item);
                                     setActiveMenuId(null);
+                                    setMenuPosition(null);
                                 }}
                                 className="flex items-center w-full text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--color-primary)] rounded-xl transition-colors text-left border-none cursor-pointer"
                                 style={{ padding: '14px 24px', gap: '16px' }}
@@ -1410,6 +1533,7 @@ export function AdminEmailTemplatesPage() {
                                     setItemToManage(item);
                                     setIsMoveModalOpen(true);
                                     setActiveMenuId(null);
+                                    setMenuPosition(null);
                                 }}
                                 className="flex items-center w-full text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--color-primary)] rounded-xl transition-colors text-left border-none cursor-pointer"
                                 style={{ padding: '14px 24px', gap: '16px' }}
@@ -1420,6 +1544,7 @@ export function AdminEmailTemplatesPage() {
                                 onClick={() => {
                                     handleArchive(item);
                                     setActiveMenuId(null);
+                                    setMenuPosition(null);
                                 }}
                                 className="flex items-center w-full text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--color-primary)] rounded-xl transition-colors text-left border-none cursor-pointer"
                                 style={{ padding: '14px 24px', gap: '16px' }}
@@ -1751,10 +1876,17 @@ export function AdminEmailTemplatesPage() {
                             borderRadius: '16px',
                             boxShadow: 'var(--shadow-lg)',
                             backgroundColor: 'var(--card-bg)',
-                            overflow: 'visible' // Permitir desbordamiento del menú
+                            overflow: 'visible'
                         }}>
-                            <div style={{ borderRadius: '16px', minHeight: '450px', overflow: 'visible' }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1000px' }}>
+                            {/* Wrapper con scroll horizontal interno - no afecta el dropdown */}
+                            <div style={{
+                                borderRadius: '16px',
+                                minHeight: '450px',
+                                overflowX: 'auto',
+                                overflowY: 'visible',
+                                WebkitOverflowScrolling: 'touch'
+                            } as React.CSSProperties}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '900px' }}>
                                     <thead style={{ position: 'sticky', top: 0, zIndex: 20 }}>
                                         <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
                                             <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', borderTopLeftRadius: '16px' }}>Identificación</th>
@@ -2698,13 +2830,36 @@ export function AdminEmailTemplatesPage() {
                                 }}
                             >
                                 <option value="">Sin Disparador Automático</option>
-                                <option value="user_registration">Registro de Usuario</option>
-                                <option value="password_reset">Recuperación de Contraseña</option>
-                                <option value="order_created">Pedido Creado</option>
-                                <option value="order_shipped">Pedido Enviado</option>
-                                <option value="subscription_active">Suscripción Activada</option>
-                                <option value="payment_failed">Pago Fallido</option>
+                                {availableTriggers.length === 0 ? (
+                                    <option disabled>Cargando triggers...</option>
+                                ) : (
+                                    [
+                                        { key: 'usuario', label: '👤 Usuario' },
+                                        { key: 'referido', label: '🤝 Referidos' },
+                                        { key: 'pago', label: '💳 Pagos' },
+                                    ].map(({ key, label }) => {
+                                        const group = availableTriggers.filter(t => t.categoria === key);
+                                        if (group.length === 0) return null;
+                                        return (
+                                            <optgroup key={key} label={label}>
+                                                {group.map(t => (
+                                                    <option key={t.id} value={t.codigo_evento}>
+                                                        {t.nombre_trigger}
+                                                    </option>
+                                                ))}
+                                            </optgroup>
+                                        );
+                                    })
+                                )}
                             </select>
+                            {newItem.trigger_event && (() => {
+                                const selected = availableTriggers.find(t => t.codigo_evento === newItem.trigger_event);
+                                return selected ? (
+                                    <p className="text-[11px]" style={{ color: 'var(--primary)', fontWeight: 500 }}>
+                                        ⚡ Código: <code style={{ fontFamily: 'monospace' }}>{selected.codigo_evento}</code>
+                                    </p>
+                                ) : null;
+                            })()}
                             <p className="text-[10px] text-[var(--text-tertiary)] italic">El disparador automatiza el envío cuando sucede el evento.</p>
                         </div>
 
