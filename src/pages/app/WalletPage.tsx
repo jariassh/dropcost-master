@@ -2,14 +2,10 @@ import React, { useState, useEffect } from 'react';
 import {
     Wallet,
     TrendingUp,
-    ArrowUpRight,
     History,
     Plus,
-    Search,
     Download,
     Eye,
-    ChevronRight,
-    LucideIcon,
     Landmark,
     X
 } from 'lucide-react';
@@ -473,64 +469,6 @@ export const WalletPage: React.FC = () => {
 };
 
 /* Styles & Sub-components */
-
-const BalanceCard: React.FC<{
-    title: string;
-    amount: number;
-    currency: string;
-    icon: LucideIcon;
-    color: string;
-    subtitle: string;
-    action?: React.ReactNode;
-}> = ({ title, amount, currency, icon: Icon, color, subtitle, action }) => (
-    <div style={{
-        backgroundColor: 'var(--card-bg)',
-        borderRadius: '20px',
-        padding: '24px',
-        border: '1px solid var(--border-color)',
-        boxShadow: 'var(--shadow-sm)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px'
-    }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-            <div style={{
-                width: '44px', height: '44px',
-                backgroundColor: `${color}15`,
-                borderRadius: '12px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: color
-            }}>
-                <Icon size={24} />
-            </div>
-
-            {action ? (
-                <div>
-                    {action}
-                </div>
-            ) : (
-                <div style={{
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    backgroundColor: 'var(--bg-secondary)',
-                    padding: '4px 10px',
-                    borderRadius: '8px',
-                    color: 'var(--text-tertiary)',
-                    textTransform: 'uppercase'
-                }}>
-                    {currency}
-                </div>
-            )}
-        </div>
-        <div>
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>{title}</p>
-            <h2 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                {formatCurrency(amount, currency)}
-            </h2>
-            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '6px' }}>{subtitle}</p>
-        </div>
-    </div>
-);
 
 const tableHeaderStyle: React.CSSProperties = {
     padding: '16px 24px',

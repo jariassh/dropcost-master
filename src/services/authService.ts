@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { translateError } from '@/lib/errorTranslations';
 import { auditService } from './auditService';
+import { dispararTriggerEmail } from '@/utils/emailTrigger';
 import type {
     LoginCredentials,
     RegisterData,
@@ -56,7 +57,7 @@ export async function loginUser(credentials: LoginCredentials): Promise<AuthResp
         await auditService.recordLog({
             accion: 'LOGIN',
             entidad: 'USER',
-            entidad_id: data.user?.id,
+            entidadId: data.user?.id,
             detalles: { method: 'email', success: true }
         });
     }
@@ -103,6 +104,26 @@ export async function registerUser(data: RegisterData): Promise<AuthResponse> {
              if (!updateError) {
                 localStorage.setItem('dc_session_token', newSessionToken);
              }
+         }
+
+         // Disparar trigger USUARIO_REGISTRADO (fire-and-forget)
+         dispararTriggerEmail('USUARIO_REGISTRADO', {
+             usuario_id: authData.user.id,
+             usuario_nombre: `${data.nombres} ${data.apellidos}`.trim(),
+             usuario_email: data.email,
+             fecha_registro: new Date().toISOString().split('T')[0],
+             codigo_referido: data.referredBy || '',
+         });
+
+         // Si se registró con código de referido, disparar REFERIDO_REGISTRADO
+         if (data.referredBy) {
+             dispararTriggerEmail('REFERIDO_REGISTRADO', {
+                 usuario_id: authData.user.id,
+                 usuario_nombre: `${data.nombres} ${data.apellidos}`.trim(),
+                 usuario_email: data.email,
+                 codigo_referido: data.referredBy,
+                 fecha_registro: new Date().toISOString().split('T')[0],
+             });
          }
     }
 
@@ -209,10 +230,30 @@ export async function updatePassword(newPassword: string): Promise<AuthResponse>
 }
 
 export async function updateEmail(newEmail: string): Promise<AuthResponse> {
+    const { data: { user } } = await supabase.auth.getUser();
+    const previousEmail = user?.email || '';
+
     const { error } = await supabase.auth.updateUser({ email: newEmail });
 
     if (error) {
         return { success: false, error: translateError(error.message) };
+    }
+
+    // Disparar trigger EMAIL_CAMBIADO (fire-and-forget)
+    if (user) {
+        const { data: profile } = await supabase
+            .from('users')
+            .select('nombres, apellidos')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        dispararTriggerEmail('EMAIL_CAMBIADO', {
+            usuario_id: user.id,
+            usuario_nombre: `${profile?.nombres || ''} ${profile?.apellidos || ''}`.trim(),
+            email_nuevo: newEmail,
+            email_anterior: previousEmail,
+            fecha_cambio: new Date().toISOString().split('T')[0],
+        });
     }
 
     return { success: true };
@@ -309,6 +350,14 @@ export async function updateUserProfile(userData: Partial<User>): Promise<AuthRe
         .eq('id', user.id);
 
     if (profileError) return { success: false, error: translateError(profileError.message) };
+
+    // Disparar trigger PERFIL_ACTUALIZADO (fire-and-forget)
+    dispararTriggerEmail('PERFIL_ACTUALIZADO', {
+        usuario_id: user.id,
+        usuario_nombre: `${userData.nombres || ''} ${userData.apellidos || ''}`.trim(),
+        usuario_email: user.email || '',
+        fecha_actualizacion: new Date().toISOString().split('T')[0],
+    });
 
     return { success: true };
 }

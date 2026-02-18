@@ -25,6 +25,7 @@ import {
     Menu,
     X,
     Mail,
+    Zap,
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
@@ -40,6 +41,7 @@ const adminNavItems = [
     // GESTIÓN DE USUARIOS
     { to: '/admin/users', icon: Users, label: 'Gestión Usuarios', active: true },
     { to: '/admin/email-templates', icon: Mail, label: 'Plantillas de Email', active: true },
+    { to: '/admin/email-triggers', icon: Zap, label: 'Triggers de Email', active: true },
 
     // FINANCIERO & CRECIMIENTO
     { to: '/admin/plans', icon: CreditCard, label: 'Planes y Membresías', active: true },
@@ -265,6 +267,7 @@ export function AdminLayout() {
                     minWidth: 0,
                     marginLeft: 'var(--sidebar-width, 0px)',
                     transition: 'margin-left 300ms ease',
+                    backgroundColor: 'var(--bg-primary)',
                 }}
                 className="max-lg:!ml-0"
             >
