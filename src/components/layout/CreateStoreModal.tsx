@@ -134,8 +134,15 @@ export function CreateStoreModal({ isOpen, onClose }: CreateStoreModalProps) {
                     />
                 </div>
 
-                <div style={{ marginTop: '12px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                    <Button variant="secondary" onClick={onClose} disabled={isLoading}>
+                <div style={{
+                    marginTop: '16px',
+                    paddingTop: '16px',
+                    borderTop: '1px solid var(--border-color)',
+                    display: 'flex',
+                    gap: '12px',
+                    justifyContent: 'flex-end'
+                }}>
+                    <Button variant="secondary" onClick={onClose} disabled={isLoading} style={{ borderColor: 'var(--border-color)' }}>
                         Cancelar
                     </Button>
                     <Button type="submit" isLoading={isLoading}>

@@ -23,13 +23,13 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onS
             padding: '32px',
             backgroundColor: 'var(--card-bg)',
             border: isCurrent ? '2px solid var(--color-primary)' : '1px solid var(--border-color)',
-            borderRadius: '24px',
+            borderRadius: '16px', // Standardized from 24px
             display: 'flex',
             flexDirection: 'column',
             gap: '24px',
             position: 'relative',
-            boxShadow: isCurrent ? '0 10px 30px -10px rgba(0, 102, 255, 0.15)' : 'var(--shadow-sm)',
-            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+            boxShadow: isCurrent ? '0 10px 30px -10px rgba(0, 102, 255, 0.2)' : 'var(--shadow-sm)',
+            transition: 'all 0.3s ease', // Smoother transition
             height: '100%',
             flex: 1
         }}
@@ -37,12 +37,14 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onS
                 if (!isCurrent) {
                     e.currentTarget.style.transform = 'translateY(-4px)';
                     e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                    e.currentTarget.style.borderColor = 'var(--color-primary-light, #60A5FA)'; // Subtle border highlight
                 }
             }}
             onMouseLeave={(e) => {
                 if (!isCurrent) {
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                    e.currentTarget.style.borderColor = 'var(--border-color)';
                 }
             }}
         >

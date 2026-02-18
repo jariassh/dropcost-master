@@ -145,20 +145,28 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                                         placeholder="0.00"
                                         style={{
                                             width: '100%',
-                                            padding: '16px 20px',
+                                            padding: '12px 16px',
                                             paddingRight: '60px',
-                                            borderRadius: '12px',
-                                            backgroundColor: 'var(--bg-secondary)',
-                                            border: '2px solid var(--border-color)',
-                                            fontSize: '18px',
-                                            fontWeight: 600,
+                                            borderRadius: '10px',
+                                            backgroundColor: 'var(--bg-primary)',
+                                            border: '1px solid var(--border-color)',
+                                            fontSize: '14px',
                                             color: 'var(--text-primary)',
-                                            outline: 'none'
+                                            outline: 'none',
+                                            transition: 'all 200ms ease'
+                                        }}
+                                        onFocus={(e) => {
+                                            e.currentTarget.style.borderColor = 'var(--color-primary)';
+                                            e.currentTarget.style.boxShadow = '0 0 0 4px rgba(0,102,255,0.1)';
+                                        }}
+                                        onBlur={(e) => {
+                                            e.currentTarget.style.borderColor = 'var(--border-color)';
+                                            e.currentTarget.style.boxShadow = 'none';
                                         }}
                                     />
                                     <span style={{
-                                        position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)',
-                                        fontSize: '14px', fontWeight: 700, color: 'var(--text-tertiary)'
+                                        position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)',
+                                        fontSize: '14px', fontWeight: 500, color: 'var(--text-tertiary)'
                                     }}>
                                         {currency}
                                     </span>
@@ -235,9 +243,20 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                                 </div>
                             )}
 
-                            <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-                                <Button variant="ghost" className="flex-1" onClick={() => setStep(1)}>Atrás</Button>
-                                <Button className="flex-1" onClick={handleSubmit} isLoading={loading}>Confirmar Retiro</Button>
+                            <div style={{
+                                marginTop: '16px',
+                                paddingTop: '16px',
+                                borderTop: '1px solid var(--border-color)',
+                                display: 'flex',
+                                gap: '12px',
+                                justifyContent: 'flex-end'
+                            }}>
+                                <Button variant="secondary" onClick={() => setStep(1)} style={{ borderColor: 'var(--border-color)' }}>
+                                    Atrás
+                                </Button>
+                                <Button onClick={handleSubmit} isLoading={loading}>
+                                    Confirmar Retiro
+                                </Button>
                             </div>
                         </div>
                     )}
@@ -279,7 +298,7 @@ const IconInput: React.FC<{
         <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{label}</label>
         <div style={{ position: 'relative' }}>
             <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }}>
-                <Icon size={16} />
+                <Icon size={18} />
             </div>
             <input
                 type="text"
@@ -288,13 +307,22 @@ const IconInput: React.FC<{
                 placeholder={placeholder}
                 style={{
                     width: '100%',
-                    padding: '12px 14px 12px 40px',
+                    padding: '12px 16px 12px 44px',
                     borderRadius: '10px',
-                    backgroundColor: 'var(--bg-secondary)',
+                    backgroundColor: 'var(--bg-primary)',
                     border: '1px solid var(--border-color)',
                     fontSize: '14px',
                     color: 'var(--text-primary)',
-                    outline: 'none'
+                    outline: 'none',
+                    transition: 'all 200ms ease'
+                }}
+                onFocus={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--color-primary)';
+                    e.currentTarget.style.boxShadow = '0 0 0 4px rgba(0,102,255,0.1)';
+                }}
+                onBlur={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--border-color)';
+                    e.currentTarget.style.boxShadow = 'none';
                 }}
             />
         </div>

@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Badge, EmptyState, useToast, ConfirmDialog } from '@/components/common';
+import { Card } from '@/components/common/Card';
 import { OfertaDetailPanel } from './components/OfertaDetailPanel';
 import type { Oferta, StrategyType, OfertaStatus } from '@/types/ofertas';
 import { STRATEGIES } from '@/types/ofertas';
@@ -141,30 +142,34 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                 ))}
             </div>
 
+            import {Card} from '@/components/common/Card';
+
+            // ... (imports remain)
+
+            // ... inside the component ...
+
             {/* Table (desktop) */}
-            <div
-                style={{
-                    borderRadius: '12px',
-                    border: '1px solid var(--card-border)',
-                    overflow: 'hidden',
-                }}
-            >
+            <Card noPadding style={{
+                boxShadow: 'var(--shadow-lg)',
+                borderRadius: '16px',
+                border: '1px solid var(--border-color)',
+                overflow: 'hidden'
+            }}>
                 <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                         <thead>
-                            <tr style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                            <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
                                 {['Producto', 'Estrategia', 'Ganancia Est.', 'Estado', 'Acciones'].map((col) => (
                                     <th
                                         key={col}
                                         style={{
-                                            padding: '12px 16px',
+                                            padding: '16px 24px',
                                             textAlign: 'left',
                                             fontWeight: 600,
                                             color: 'var(--text-secondary)',
                                             fontSize: '12px',
                                             textTransform: 'uppercase',
                                             letterSpacing: '0.05em',
-                                            borderBottom: '1px solid var(--border-color)',
                                         }}
                                     >
                                         {col}
@@ -178,25 +183,25 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                                 return (
                                     <tr
                                         key={o.id}
-                                        style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 100ms' }}
-                                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-secondary)')}
+                                        style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.2s' }}
+                                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)')}
                                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                                     >
-                                        <td style={{ padding: '14px 16px', fontWeight: 600 }}>{o.productName}</td>
-                                        <td style={{ padding: '14px 16px' }}>
+                                        <td style={{ padding: '16px 24px', fontWeight: 600 }}>{o.productName}</td>
+                                        <td style={{ padding: '16px 24px' }}>
                                             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                 {info.icon} {info.label}
                                             </span>
                                         </td>
-                                        <td style={{ padding: '14px 16px', fontWeight: 600, color: 'var(--color-success)' }}>
+                                        <td style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--color-success)' }}>
                                             {formatCurrency(o.estimatedProfit)}
                                         </td>
-                                        <td style={{ padding: '14px 16px' }}>
+                                        <td style={{ padding: '16px 24px' }}>
                                             <Badge variant={o.status === 'activa' ? 'modern-success' : 'modern-warning'}>
                                                 {o.status === 'activa' ? 'Activa' : 'Pausada'}
                                             </Badge>
                                         </td>
-                                        <td style={{ padding: '14px 16px' }}>
+                                        <td style={{ padding: '16px 24px' }}>
                                             <div style={{ display: 'flex', gap: '6px' }}>
                                                 <ActionBtn icon={<Eye size={14} />} title="Ver" onClick={() => setDetailOferta(o)} />
                                                 <ActionBtn
@@ -213,7 +218,7 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </Card>
 
             {filtered.length === 0 && ofertas.length > 0 && (
                 <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>

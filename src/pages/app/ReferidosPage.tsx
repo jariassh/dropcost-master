@@ -20,6 +20,8 @@ import {
     Mail,
     History
 } from 'lucide-react';
+import { Card } from '@/components/common/Card';
+import { StatsCard } from '@/components/common/StatsCard';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import {
@@ -292,52 +294,53 @@ export function ReferidosPage() {
             {/* Estadísticas */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '32px' }}>
                 <StatsCard
-                    label="Interés Generado"
+                    title="Interés Generado"
                     value={stats?.totalClicks || 0}
-                    icon={<TrendingUp size={20} />}
+                    icon={<TrendingUp size={24} />}
                     color="var(--color-primary)"
-                    suffix="clics en tu enlace"
+                    subtitle="clics en tu enlace"
                 />
                 <StatsCard
-                    label="Amigos Registrados"
+                    title="Amigos Registrados"
                     value={stats?.totalReferred || 0}
-                    icon={<Users2 size={20} />}
+                    icon={<Users2 size={24} />}
                     color="var(--color-success)"
-                    suffix="en tu primer nivel"
+                    subtitle="en tu primer nivel"
                 />
                 <StatsCard
-                    label="Ganancias Totales"
+                    title="Ganancias Totales"
                     value={convertValue(stats?.totalEarned || 0)}
-                    icon={<DollarSign size={20} />}
+                    icon={<DollarSign size={24} />}
                     color="#f59e0b"
-                    suffix="disponibles para retirar - Ver Historial"
+                    subtitle="disponibles para retirar - Ver Historial"
                     onClick={handleOpenHistory}
                 />
             </div>
 
             {/* Tabs para Líderes (Existing Code) */}
             {canSeeLevel2 && (
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
                     <button onClick={() => setActiveTab('nivel1')} style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer', backgroundColor: activeTab === 'nivel1' ? 'var(--color-primary)' : 'var(--bg-tertiary)', color: activeTab === 'nivel1' ? '#fff' : 'var(--text-secondary)' }}>Amigos Directos (Nivel 1)</button>
                     <button onClick={() => setActiveTab('nivel2')} style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer', backgroundColor: activeTab === 'nivel2' ? 'var(--color-primary)' : 'var(--bg-tertiary)', color: activeTab === 'nivel2' ? '#fff' : 'var(--text-secondary)' }}>Red de Amigos (Nivel 2)</button>
                 </div>
             )}
 
-            {/* Listado de Referidos (Existing Code) */}
-            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-                <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>{activeTab === 'nivel1' ? 'Tus Referidos Directos' : 'Red Secundaria'}</h3>
-                    <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 500 }}>{(activeTab === 'nivel1' ? referredUsers : level2Users).length} {(activeTab === 'nivel1' ? referredUsers : level2Users).length === 1 ? 'amigo' : 'amigos'} en total</div>
-                </div>
+            {/* Listado de Referidos */}
+            <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>{activeTab === 'nivel1' ? 'Tus Referidos Directos' : 'Red Secundaria'}</h3>
+                <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 500 }}>{(activeTab === 'nivel1' ? referredUsers : level2Users).length} {(activeTab === 'nivel1' ? referredUsers : level2Users).length === 1 ? 'amigo' : 'amigos'} en total</div>
+            </div>
+
+            <Card noPadding style={{ boxShadow: 'var(--shadow-lg)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
                 <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
-                            <tr style={{ textAlign: 'left', backgroundColor: 'var(--bg-tertiary)' }}>
-                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Usuario</th>
-                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{activeTab === 'nivel1' ? 'Plan' : 'Invitado Por'}</th>
-                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Verificación</th>
-                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Registro</th>
-                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Detalles</th>
+                            <tr style={{ textAlign: 'left', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Usuario</th>
+                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{activeTab === 'nivel1' ? 'Plan' : 'Invitado Por'}</th>
+                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Verificación</th>
+                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Registro</th>
+                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Detalles</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -350,7 +353,12 @@ export function ReferidosPage() {
                                 </tr>
                             ) : (
                                 (activeTab === 'nivel1' ? referredUsers : level2Users).map((r) => (
-                                    <tr key={r.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                    <tr
+                                        key={r.id}
+                                        style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.2s' }}
+                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                    >
                                         <td style={{ padding: '16px 24px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                 <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, var(--color-primary), #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '14px', flexShrink: 0 }}>
@@ -376,7 +384,7 @@ export function ReferidosPage() {
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </Card>
 
             <OnboardingModal isOpen={showOnboarding} onClose={closeOnboarding} stats={stats} />
             <DetailsModal
@@ -400,46 +408,7 @@ export function ReferidosPage() {
     );
 }
 
-function StatsCard({ label, value, icon, color, suffix, onClick }: { label: string, value: string | number, icon: React.ReactNode, color: string, suffix?: string, onClick?: () => void }) {
-    return (
-        <div
-            onClick={onClick}
-            style={{
-                backgroundColor: 'var(--card-bg)',
-                border: '1px solid var(--card-border)',
-                borderRadius: '16px',
-                padding: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
-                cursor: onClick ? 'pointer' : 'default',
-                transition: 'transform 0.2s, box-shadow 0.2s'
-            }}
-            onMouseEnter={e => {
-                if (onClick) {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.05)';
-                }
-            }}
-            onMouseLeave={e => {
-                if (onClick) {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.02)';
-                }
-            }}
-        >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ color: 'var(--text-tertiary)', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
-                <div style={{ backgroundColor: `${color}15`, color, padding: '8px', borderRadius: '10px' }}>{icon}</div>
-            </div>
-            <div>
-                <div style={{ fontSize: '24px', fontWeight: 800 }}>{value}</div>
-                {suffix && <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>{suffix}</div>}
-            </div>
-        </div>
-    );
-}
+
 
 function CommissionHistoryModal({ isOpen, onClose, history, isLoading, convertValue }: any) {
     if (!isOpen) return null;
