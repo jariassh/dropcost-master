@@ -42,6 +42,7 @@ const hoverBgMap: Record<ButtonVariant, string> = {
 };
 
 const sizeMap: Record<ButtonSize, React.CSSProperties> = {
+    xs: { padding: '6px 12px', fontSize: '11px', gap: '4px' },
     sm: { padding: '8px 16px', fontSize: '12px', gap: '6px' },
     md: { padding: '12px 28px', fontSize: '14px', gap: '8px' },
     lg: { padding: '14px 32px', fontSize: '15px', gap: '10px' },

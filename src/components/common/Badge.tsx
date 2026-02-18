@@ -37,16 +37,16 @@ export function Badge({ variant = 'info', children, className = '' }: BadgeProps
             style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                padding: '6px 14px',
+                padding: '4px 10px',
                 borderRadius: '6px',
                 fontSize: '11px',
-                fontWeight: 800,
+                fontWeight: 600,
                 textTransform: 'uppercase',
-                letterSpacing: '0.05em',
+                letterSpacing: '0.02em',
                 backgroundColor: colors.bg,
                 color: colors.text,
-                border: `1px solid ${colors.border}33`,
-                lineHeight: 1,
+                border: 'none',
+                lineHeight: 1.4,
                 whiteSpace: 'nowrap'
             }}
             className={className}
