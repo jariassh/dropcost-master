@@ -22,6 +22,14 @@ import {
     X,
     Layout,
     Type,
+    Building2,
+    Mail,
+    Phone,
+    Instagram,
+    Linkedin,
+    Youtube,
+    FileText,
+    Shield
 } from 'lucide-react';
 import { configService, GlobalConfig } from '@/services/configService';
 import { storageService } from '@/services/storageService';
@@ -213,6 +221,38 @@ export function AdminSettingsPage() {
     );
 }
 
+function ClearButton({ onClick }: { onClick: () => void }) {
+    return (
+        <button
+            onClick={onClick}
+            style={{
+                color: 'var(--text-tertiary)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                transition: 'all 150ms ease'
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--color-error)';
+                e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.1)';
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--text-tertiary)';
+                e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+            title="Limpiar campo"
+            type="button"
+        >
+            <X size={16} />
+        </button>
+    );
+}
+
 function SectionSEO({ config, setConfig, isDark }: any) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -225,6 +265,7 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                             onChange={(e) => setConfig((prev: any) => ({ ...prev, meta_title: e.target.value }))}
                             placeholder="DropCost Master..."
                             helperText={`${config.meta_title?.length || 0}/60 caracteres`}
+                            rightElement={config.meta_title ? <ClearButton onClick={() => setConfig((prev: any) => ({ ...prev, meta_title: '' }))} /> : null}
                         />
 
                         <div className="space-y-2">
@@ -260,6 +301,8 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                                 value={config.site_url}
                                 onChange={(e) => setConfig((prev: any) => ({ ...prev, site_url: e.target.value }))}
                                 placeholder="https://dropcostmaster.com"
+                                leftIcon={<Globe size={16} />}
+                                rightElement={config.site_url ? <ClearButton onClick={() => setConfig((prev: any) => ({ ...prev, site_url: '' }))} /> : null}
                             />
 
                         </div>
@@ -269,6 +312,7 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                             value={config.meta_keywords}
                             onChange={(e) => setConfig((prev: any) => ({ ...prev, meta_keywords: e.target.value }))}
                             leftIcon={<Hash size={16} />}
+                            rightElement={config.meta_keywords ? <ClearButton onClick={() => setConfig((prev: any) => ({ ...prev, meta_keywords: '' }))} /> : null}
                         />
                     </div>
                 </Card>
@@ -586,33 +630,74 @@ function SectionInfo({ config, setConfig }: any) {
                             label="Nombre de la Empresa"
                             value={config.nombre_empresa}
                             onChange={(e) => setConfig((prev: any) => ({ ...prev, nombre_empresa: e.target.value }))}
+                            leftIcon={<Building2 size={16} />}
+                            rightElement={config.nombre_empresa ? <ClearButton onClick={() => setConfig((prev: any) => ({ ...prev, nombre_empresa: '' }))} /> : null}
                         />
                         <Input
                             label="Email Soporte"
                             value={config.email_contacto}
                             onChange={(e) => setConfig((prev: any) => ({ ...prev, email_contacto: e.target.value }))}
+                            leftIcon={<Mail size={16} />}
+                            rightElement={config.email_contacto ? <ClearButton onClick={() => setConfig((prev: any) => ({ ...prev, email_contacto: '' }))} /> : null}
                         />
                         <Input
                             label="Línea Teléfono/Whatsapp"
                             value={config.telefono}
                             onChange={(e) => setConfig((prev: any) => ({ ...prev, telefono: e.target.value }))}
+                            leftIcon={<Phone size={16} />}
+                            rightElement={config.telefono ? <ClearButton onClick={() => setConfig((prev: any) => ({ ...prev, telefono: '' }))} /> : null}
                         />
                     </div>
                 </Card>
 
                 <Card title="Redes Sociales">
                     <div className="grid grid-cols-1 gap-6">
-                        <Input label="Instagram" value={config.instagram_url} onChange={(e) => setConfig((prev: any) => ({ ...prev, instagram_url: e.target.value }))} placeholder="https://..." />
-                        <Input label="LinkedIn" value={config.linkedin_url} onChange={(e) => setConfig((prev: any) => ({ ...prev, linkedin_url: e.target.value }))} placeholder="https://..." />
-                        <Input label="YouTube" value={config.youtube_url} onChange={(e) => setConfig((prev: any) => ({ ...prev, youtube_url: e.target.value }))} placeholder="https://..." />
+                        <Input
+                            label="Instagram"
+                            value={config.instagram_url}
+                            onChange={(e) => setConfig((prev: any) => ({ ...prev, instagram_url: e.target.value }))}
+                            placeholder="https://..."
+                            leftIcon={<Instagram size={16} />}
+                            rightElement={config.instagram_url ? <ClearButton onClick={() => setConfig((prev: any) => ({ ...prev, instagram_url: '' }))} /> : null}
+                        />
+                        <Input
+                            label="LinkedIn"
+                            value={config.linkedin_url}
+                            onChange={(e) => setConfig((prev: any) => ({ ...prev, linkedin_url: e.target.value }))}
+                            placeholder="https://..."
+                            leftIcon={<Linkedin size={16} />}
+                            rightElement={config.linkedin_url ? <ClearButton onClick={() => setConfig((prev: any) => ({ ...prev, linkedin_url: '' }))} /> : null}
+                        />
+                        <Input
+                            label="YouTube"
+                            value={config.youtube_url}
+                            onChange={(e) => setConfig((prev: any) => ({ ...prev, youtube_url: e.target.value }))}
+                            placeholder="https://..."
+                            leftIcon={<Youtube size={16} />}
+                            rightElement={config.youtube_url ? <ClearButton onClick={() => setConfig((prev: any) => ({ ...prev, youtube_url: '' }))} /> : null}
+                        />
                     </div>
                 </Card>
             </div>
 
             <Card title="Recursos Legales">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <Input label="Términos y Condiciones" value={config.terminos_condiciones_url} onChange={(e) => setConfig((prev: any) => ({ ...prev, terminos_condiciones_url: e.target.value }))} placeholder="https://..." />
-                    <Input label="Política de Privacidad" value={config.politica_privacidad_url} onChange={(e) => setConfig((prev: any) => ({ ...prev, politica_privacidad_url: e.target.value }))} placeholder="https://..." />
+                    <Input
+                        label="Términos y Condiciones"
+                        value={config.terminos_condiciones_url}
+                        onChange={(e) => setConfig((prev: any) => ({ ...prev, terminos_condiciones_url: e.target.value }))}
+                        placeholder="https://..."
+                        leftIcon={<FileText size={16} />}
+                        rightElement={config.terminos_condiciones_url ? <ClearButton onClick={() => setConfig((prev: any) => ({ ...prev, terminos_condiciones_url: '' }))} /> : null}
+                    />
+                    <Input
+                        label="Política de Privacidad"
+                        value={config.politica_privacidad_url}
+                        onChange={(e) => setConfig((prev: any) => ({ ...prev, politica_privacidad_url: e.target.value }))}
+                        placeholder="https://..."
+                        leftIcon={<Shield size={16} />}
+                        rightElement={config.politica_privacidad_url ? <ClearButton onClick={() => setConfig((prev: any) => ({ ...prev, politica_privacidad_url: '' }))} /> : null}
+                    />
                 </div>
             </Card>
         </div>
@@ -662,33 +747,7 @@ function AssetUploader({
     }
 
     const clearButton = value ? (
-        <button
-            onClick={() => onUpload('')}
-            style={{
-                color: 'var(--text-tertiary)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '50%',
-                transition: 'all 150ms ease'
-            }}
-            onMouseEnter={(e) => {
-                e.currentTarget.style.color = 'var(--color-error)';
-                e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.1)';
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--text-tertiary)';
-                e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-            title="Limpiar campo"
-            type="button"
-        >
-            <X size={16} />
-        </button>
+        <ClearButton onClick={() => onUpload('')} />
     ) : null;
 
     return (

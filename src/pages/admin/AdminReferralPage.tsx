@@ -398,16 +398,16 @@ export function AdminReferralPage() {
                     </button>
                 </div>
 
-                <Card>
+                <Card noPadding style={{ boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
                     <div style={{ overflowX: 'auto' }}>
                         {activeListTab === 'users' ? (
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
-                                    <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>
-                                        <th style={{ padding: '16px', fontSize: '13px', fontWeight: 700, color: 'var(--text-tertiary)' }}>Usuario</th>
-                                        <th style={{ padding: '16px', fontSize: '13px', fontWeight: 700, color: 'var(--text-tertiary)' }}>Referente</th>
-                                        <th style={{ padding: '16px', fontSize: '13px', fontWeight: 700, color: 'var(--text-tertiary)' }}>Plan / Estado</th>
-                                        <th style={{ padding: '16px', fontSize: '13px', fontWeight: 700, color: 'var(--text-tertiary)' }}>Fecha Registro</th>
+                                    <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                                        <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Usuario</th>
+                                        <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Referente</th>
+                                        <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plan / Estado</th>
+                                        <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fecha Registro</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -415,15 +415,20 @@ export function AdminReferralPage() {
                                         <tr><td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)' }}>No hay referidos registrados.</td></tr>
                                     ) : (
                                         allReferred.map(r => (
-                                            <tr key={r.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                                <td style={{ padding: '16px' }}>
+                                            <tr
+                                                key={r.id}
+                                                style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s', cursor: 'pointer' }}
+                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                            >
+                                                <td style={{ padding: '16px 24px' }}>
                                                     <div style={{ fontWeight: 600 }}>{r.nombre}</div>
                                                     <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{r.email}</div>
                                                 </td>
-                                                <td style={{ padding: '16px', fontSize: '14px' }}>
+                                                <td style={{ padding: '16px 24px', fontSize: '14px' }}>
                                                     <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{r.referente}</span>
                                                 </td>
-                                                <td style={{ padding: '16px', fontSize: '13px' }}>
+                                                <td style={{ padding: '16px 24px', fontSize: '13px' }}>
                                                     <div style={{ display: 'flex', gap: '6px' }}>
                                                         <span style={{
                                                             padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700,
@@ -435,7 +440,7 @@ export function AdminReferralPage() {
                                                         {r.emailVerificado && <span style={{ color: '#10B981' }} title="Verificado">✓</span>}
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                                <td style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                                                     {new Date(r.fechaRegistro).toLocaleString()}
                                                 </td>
                                             </tr>
@@ -445,7 +450,7 @@ export function AdminReferralPage() {
                             </table>
                         ) : (
                             <div>
-                                <div style={{ padding: '0 16px 16px', display: 'flex', justifyContent: 'flex-end' }}>
+                                <div style={{ padding: '16px 24px 16px', display: 'flex', justifyContent: 'flex-end', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-secondary)' }}>
                                         <input
                                             type="checkbox"
@@ -457,11 +462,11 @@ export function AdminReferralPage() {
                                 </div>
                                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                     <thead>
-                                        <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>
-                                            <th style={{ padding: '16px', fontSize: '13px', fontWeight: 700, color: 'var(--text-tertiary)' }}>Usuario Afiliado</th>
-                                            <th style={{ padding: '16px', fontSize: '13px', fontWeight: 700, color: 'var(--text-tertiary)' }}>Código</th>
-                                            <th style={{ padding: '16px', fontSize: '13px', fontWeight: 700, color: 'var(--text-tertiary)' }}>Métricas</th>
-                                            <th style={{ padding: '16px', fontSize: '13px', fontWeight: 700, color: 'var(--text-tertiary)' }}>Estado de Rango</th>
+                                        <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                                            <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Usuario Afiliado</th>
+                                            <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Código</th>
+                                            <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Métricas</th>
+                                            <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Estado de Rango</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -471,15 +476,20 @@ export function AdminReferralPage() {
                                             allLeaders
                                                 .filter(l => !showOnlyPromoted || l.rol === 'lider')
                                                 .map(l => (
-                                                    <tr key={l.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                                        <td style={{ padding: '16px' }}>
+                                                    <tr
+                                                        key={l.id}
+                                                        style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s', cursor: 'pointer' }}
+                                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+                                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                    >
+                                                        <td style={{ padding: '16px 24px' }}>
                                                             <div style={{ fontWeight: 700 }}>{l.nombre}</div>
                                                             <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{l.email}</div>
                                                         </td>
-                                                        <td style={{ padding: '16px', fontFamily: 'monospace', fontWeight: 700 }}>
+                                                        <td style={{ padding: '16px 24px', fontFamily: 'monospace', fontWeight: 700 }}>
                                                             {l.codigo}
                                                         </td>
-                                                        <td style={{ padding: '16px' }}>
+                                                        <td style={{ padding: '16px 24px' }}>
                                                             <div style={{ fontSize: '13px' }}>
                                                                 <span style={{ fontWeight: 700 }}>{l.totalReferidos}</span> referidos
                                                             </div>
@@ -487,7 +497,7 @@ export function AdminReferralPage() {
                                                                 {convertValue(l.totalComisiones || 0)} generados
                                                             </div>
                                                         </td>
-                                                        <td style={{ padding: '16px' }}>
+                                                        <td style={{ padding: '16px 24px' }}>
                                                             <span style={{
                                                                 padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 800,
                                                                 backgroundColor: l.rol === 'lider' ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-tertiary)',
