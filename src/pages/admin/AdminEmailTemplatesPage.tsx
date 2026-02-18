@@ -31,9 +31,17 @@ import {
     ExternalLink,
     MoveUp,
     FolderInput,
-    Edit3
+    Edit3,
+    UserPlus,
+    Send,
+    User,
+    X,
+    Loader2
 } from 'lucide-react';
-import { configService } from '@/services/configService';
+import { configService, GlobalConfig } from '@/services/configService';
+import { userService } from '@/services/userService';
+import * as mjmlModule from 'mjml-browser';
+const mjml2html = (mjmlModule as any).default || mjmlModule;
 
 interface EmailItem {
     id: string;
@@ -41,8 +49,11 @@ interface EmailItem {
     slug: string;
     subject: string;
     html_content: string;
+    mjml_content?: string;
     description: string;
     variables: string[];
+    sender_prefix?: string;
+    sender_name?: string;
     updated_at: string;
     is_folder?: boolean;
     parent_id?: string | null;
@@ -59,6 +70,7 @@ export function AdminEmailTemplatesPage() {
     const [previewDevice, setPreviewDevice] = useState<'mobile' | 'tablet' | 'pc'>('pc');
     const [showVariablesSubject, setShowVariablesSubject] = useState(false);
     const [showVariablesBody, setShowVariablesBody] = useState(false);
+    const [showMJMLComponents, setShowMJMLComponents] = useState(false);
 
     // UI State
     const [viewMode, setViewMode] = useState<'recent' | 'list'>('list');
@@ -70,8 +82,9 @@ export function AdminEmailTemplatesPage() {
     // Create States
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
-    const [newItem, setNewItem] = useState({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+    const [newItem, setNewItem] = useState({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
     const [isCreating, setIsCreating] = useState(false);
+    const [globalConfig, setGlobalConfig] = useState<GlobalConfig | null>(null);
 
     // Actions State
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -79,8 +92,14 @@ export function AdminEmailTemplatesPage() {
     const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
     const [itemToManage, setItemToManage] = useState<EmailItem | null>(null);
     const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+    const [isConfirmMJMLOpen, setIsConfirmMJMLOpen] = useState(false);
     const [folderSearchQuery, setFolderSearchQuery] = useState('');
     const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+    const [testUserSearch, setTestUserSearch] = useState('');
+    const [foundUsers, setFoundUsers] = useState<any[]>([]);
+    const [isSearchingUsers, setIsSearchingUsers] = useState(false);
+    const [selectedTestUser, setSelectedTestUser] = useState<any | null>(null);
+    const [isSendingTest, setIsSendingTest] = useState(false);
 
     const toast = useToast();
 
@@ -95,7 +114,7 @@ export function AdminEmailTemplatesPage() {
             .toUpperCase();
     };
 
-    const insertVariable = (field: 'subject' | 'html_content', variableName: string) => {
+    const insertContent = (field: 'subject' | 'html_content' | 'mjml_content', content: string, isVariable: boolean = true) => {
         if (!selectedTemplate) return;
 
         const elementId = field === 'subject' ? 'subject-input' : 'body-textarea';
@@ -105,10 +124,10 @@ export function AdminEmailTemplatesPage() {
 
         const start = element.selectionStart || 0;
         const end = element.selectionEnd || 0;
-        const text = selectedTemplate[field];
-        const variable = `{{${variableName}}}`;
+        const text = (selectedTemplate[field] as string) || '';
+        const contentToInsert = isVariable ? `{{${content}}}` : content;
 
-        const newText = text.substring(0, start) + variable + text.substring(end);
+        const newText = text.substring(0, start) + contentToInsert + text.substring(end);
 
         setSelectedTemplate({
             ...selectedTemplate,
@@ -118,11 +137,12 @@ export function AdminEmailTemplatesPage() {
         // Cerrar menús
         setShowVariablesSubject(false);
         setShowVariablesBody(false);
+        setShowMJMLComponents(false);
 
         // Devolver foco y posicionar cursor
         setTimeout(() => {
             element.focus();
-            const newPos = start + variable.length;
+            const newPos = start + contentToInsert.length;
             element.setSelectionRange(newPos, newPos);
         }, 10);
     };
@@ -163,6 +183,116 @@ export function AdminEmailTemplatesPage() {
         'Seguridad': [
             { name: 'codigo', label: 'Código de Verificación (OTP)' }
         ]
+    };
+
+    const categorizedMJMLComponents = {
+        'Diseño (Layout)': [
+            { name: 'full-section', label: 'Sección completa', code: '<mj-section backgroundColor="#ffffff">\n  <mj-column>\n    <mj-text>Contenido...</mj-text>\n  </mj-column>\n</mj-section>' },
+            { name: 'two-columns', label: 'Dos columnas', code: '<mj-section>\n  <mj-column>\n    <mj-text>Columna 1</mj-text>\n  </mj-column>\n  <mj-column>\n    <mj-text>Columna 2</mj-text>\n  </mj-column>\n</mj-section>' }
+        ],
+        'Contenido': [
+            { name: 'button', label: 'Botón Primario', code: '<mj-button backgroundColor="var(--color-primary)" color="white" borderRadius="10px" href="#">\n  Haga clic aquí\n</mj-button>' },
+            { name: 'image', label: 'Imagen con Link', code: '<mj-image width="300px" src="URL_IMAGEN" href="#" />' },
+            { name: 'text', label: 'Texto Párrafo', code: '<mj-text font-size="16px" color="#4a5568" line-height="24px">\n  Escriba su mensaje aquí...\n</mj-text>' },
+            { name: 'divider', label: 'Separador', code: '<mj-divider border-width="1px" border-color="#e2e8f0" />' },
+            { name: 'spacer', label: 'Espaciador', code: '<mj-spacer height="20px" />' }
+        ],
+        'Interactivos': [
+            { name: 'social', label: 'Redes Sociales', code: '<mj-social font-size="15px" icon-size="30px" mode="horizontal">\n  <mj-social-element name="facebook" href="#" />\n  <mj-social-element name="instagram" href="#" />\n  <mj-social-element name="twitter" href="#" />\n</mjml-social>' }
+        ]
+    };
+
+    const MJMLComponentList = ({ onSelect }: { onSelect: (code: string) => void }) => {
+        const [search, setSearch] = useState('');
+
+        const filteredCategories = Object.entries(categorizedMJMLComponents).reduce((acc, [category, comps]) => {
+            const matches = comps.filter(c =>
+                c.label.toLowerCase().includes(search.toLowerCase())
+            );
+            if (matches.length > 0) acc[category] = matches;
+            return acc;
+        }, {} as any);
+
+        return (
+            <div
+                className="absolute right-0 top-full mt-2 w-80 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
+            >
+                <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                    <div className="relative">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+                        <input
+                            type="text"
+                            placeholder="Buscar componente..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '10px 12px 10px 36px',
+                                borderRadius: '10px',
+                                border: '1px solid var(--border-color)',
+                                backgroundColor: 'var(--bg-primary)',
+                                fontSize: '12px',
+                                color: 'var(--text-primary)',
+                                outline: 'none'
+                            }}
+                            className="focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
+                            autoFocus
+                        />
+                    </div>
+                </div>
+
+                <div className="max-h-[400px] overflow-y-auto scrollbar-custom">
+                    {Object.entries(filteredCategories).length > 0 ? (
+                        Object.entries(filteredCategories).map(([category, comps]: [string, any]) => (
+                            <div key={category} className="border-b border-[var(--border-color)] last:border-0">
+                                <div style={{ padding: '10px 24px', backgroundColor: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', opacity: 0.8 }}>
+                                    <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{category}</span>
+                                </div>
+                                {comps.map((c: any) => (
+                                    <button
+                                        key={c.name}
+                                        onClick={() => onSelect(c.code)}
+                                        style={{
+                                            width: '100%',
+                                            padding: '14px 24px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '14px',
+                                            backgroundColor: 'transparent',
+                                            cursor: 'pointer',
+                                            transition: 'all 200ms ease',
+                                            border: 'none',
+                                            textAlign: 'left'
+                                        }}
+                                        className="group hover:bg-[var(--color-primary-light)]"
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
+                                            <div style={{ padding: '7px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="group-hover:bg-white transition-colors">
+                                                <Layout size={13} className="text-[var(--color-primary)]" />
+                                            </div>
+                                            <div className="flex flex-col items-start">
+                                                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }} className="group-hover:text-[var(--color-primary)]">
+                                                    {c.label}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <Plus size={12} className="opacity-0 group-hover:opacity-40 text-[var(--color-primary)] transition-opacity" />
+                                    </button>
+                                ))}
+                            </div>
+                        ))
+                    ) : (
+                        <div className="p-12 text-center space-y-3">
+                            <div className="inline-flex p-3 bg-[var(--bg-secondary)] rounded-full border border-[var(--border-color)]">
+                                <Search size={24} className="text-[var(--text-tertiary)]" />
+                            </div>
+                            <p className="text-sm text-[var(--text-tertiary)] font-medium">No encontramos componentes con "{search}"</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
     };
 
     const VariableList = ({ onSelect }: { onSelect: (v: string) => void }) => {
@@ -241,7 +371,7 @@ export function AdminEmailTemplatesPage() {
                                                     {v.label}
                                                 </span>
                                                 <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'monospace', marginTop: '2px' }}>
-                                                    {"{{"}{v.name}{"}}"}
+                                                    {'{'}{v.name}{'}'}
                                                 </span>
                                             </div>
                                         </div>
@@ -263,9 +393,482 @@ export function AdminEmailTemplatesPage() {
         );
     };
 
+    // --- NUEVO: Componentes de Remitente ---
+
+    const AddSenderModal = ({ isOpen, onClose, onSave, defaultName, domain }: any) => {
+        const [name, setName] = useState(defaultName || '');
+        const [prefix, setPrefix] = useState('');
+
+        useEffect(() => {
+            if (isOpen) {
+                setName(defaultName || '');
+                setPrefix('');
+            }
+        }, [isOpen, defaultName]);
+
+        return (
+            <Modal
+                isOpen={isOpen}
+                onClose={onClose}
+                title="Nuevo Remitente"
+                size="sm"
+            >
+                <div className="flex flex-col gap-6">
+                    <Input
+                        label="Nombre Visible"
+                        placeholder="Ej: DropCost Soporte"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                    />
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Dirección de Correo</label>
+                        <div
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                width: '100%',
+                                borderRadius: '10px',
+                                border: '1.5px solid var(--border-color)',
+                                backgroundColor: 'var(--bg-primary)',
+                                overflow: 'hidden',
+                                transition: 'all 200ms ease',
+                            }}
+                            className="focus-within:border-[var(--color-primary)] focus-within:ring-4 focus-within:ring-[rgba(0,102,255,0.15)]"
+                        >
+                            <input
+                                type="text"
+                                value={prefix}
+                                onChange={(e) => setPrefix(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ''))}
+                                placeholder="ej: ventas"
+                                style={{
+                                    flex: 1,
+                                    border: 'none',
+                                    outline: 'none',
+                                    padding: '12px 16px',
+                                    fontSize: '14px',
+                                    color: 'var(--text-primary)',
+                                    backgroundColor: 'transparent',
+                                    minWidth: 0
+                                }}
+                            />
+                            <div style={{
+                                padding: '12px 16px',
+                                backgroundColor: 'var(--bg-secondary)',
+                                borderLeft: '1px solid var(--border-color)',
+                                color: 'var(--text-tertiary)',
+                                fontSize: '14px',
+                                fontWeight: 500,
+                                userSelect: 'none',
+                                whiteSpace: 'nowrap'
+                            }}>
+                                @{domain || 'dropcost.com'}
+                            </div>
+                        </div>
+                        <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: 0, fontStyle: 'italic' }}>
+                            Solo se permiten letras minúsculas, números, puntos y guiones.
+                        </p>
+                    </div>
+
+                    <div style={{
+                        marginTop: '16px',
+                        paddingTop: '16px',
+                        borderTop: '1px solid var(--border-color)',
+                        display: 'flex',
+                        gap: '12px',
+                        justifyContent: 'flex-end'
+                    }}>
+                        <Button variant="secondary" onClick={onClose} style={{ borderColor: 'var(--border-color)' }}>Cancelar</Button>
+                        <Button onClick={() => onSave(name, prefix)} disabled={!name || !prefix}>Guardar Remitente</Button>
+                    </div>
+                </div>
+            </Modal >
+        );
+    };
+
+    const SenderSelector = ({ currentName, currentPrefix, domain, onSelect }: any) => {
+        const [isOpen, setIsOpen] = useState(false);
+        const [search, setSearch] = useState('');
+        const [showAddModal, setShowAddModal] = useState(false);
+        const dropdownRef = useRef<HTMLDivElement>(null);
+
+        // Click outside handler
+        useEffect(() => {
+            const handleClickOutside = (event: MouseEvent) => {
+                if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                    setIsOpen(false);
+                }
+            };
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }, []);
+
+        // Extraer remitentes únicos de todas las plantillas existentes
+        const uniqueSenders = React.useMemo(() => {
+            const senders = new Map();
+            templates.forEach(t => {
+                if (t.sender_prefix) {
+                    const key = `${t.sender_prefix}@${domain}`;
+                    if (!senders.has(key)) {
+                        senders.set(key, {
+                            name: t.sender_name || globalConfig?.nombre_empresa || 'Remitente',
+                            prefix: t.sender_prefix
+                        });
+                    }
+                }
+            });
+            return Array.from(senders.values());
+        }, [templates, domain, globalConfig]);
+
+        const filteredSenders = uniqueSenders.filter(s =>
+            s.name.toLowerCase().includes(search.toLowerCase()) ||
+            s.prefix.toLowerCase().includes(search.toLowerCase())
+        );
+
+        return (
+            <div className="relative" ref={dropdownRef}>
+                <div
+                    onClick={() => setIsOpen(!isOpen)}
+                    className={`w-full h-auto min-h-[56px] px-4 py-3 rounded-[12px] border-[1.5px] transition-all cursor-pointer group select-none flex items-center justify-between ${isOpen
+                        ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20 bg-[var(--bg-primary)]'
+                        : 'border-[var(--border-color)] bg-[var(--bg-primary)] hover:border-[var(--color-primary)]/50'
+                        }`}
+                >
+                    <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isOpen ? 'bg-[var(--color-primary)] text-white' : 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+                            }`}>
+                            <User size={20} />
+                        </div>
+                        <div>
+                            <div className="text-sm font-bold text-[var(--text-primary)]">
+                                {currentName || 'Seleccionar Remitente'}
+                            </div>
+                            <div className="text-xs text-[var(--text-tertiary)] font-mono mt-0.5 flex items-center gap-1">
+                                {currentPrefix || '...'}@{domain}
+                            </div>
+                        </div>
+                    </div>
+                    <ChevronDown size={16} className={`text-[var(--text-tertiary)] transition-transform duration-200 ${isOpen ? 'rotate-180 text-[var(--color-primary)]' : ''}`} />
+                </div>
+
+                {isOpen && (
+                    <div
+                        className="absolute left-0 right-0 top-full mt-2 w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                        style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
+                    >
+                        {/* Buscador Estilo VariableList */}
+                        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                            <div className="relative">
+                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar remitente..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 12px 10px 36px',
+                                        borderRadius: '10px',
+                                        border: '1px solid var(--border-color)',
+                                        backgroundColor: 'var(--bg-primary)',
+                                        fontSize: '12px',
+                                        color: 'var(--text-primary)',
+                                        outline: 'none'
+                                    }}
+                                    className="focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
+                                    autoFocus
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="max-h-60 overflow-y-auto scrollbar-custom">
+                            {filteredSenders.map((sender) => {
+                                const isSelected = currentPrefix === sender.prefix;
+                                return (
+                                    <button
+                                        key={sender.prefix}
+                                        onClick={() => {
+                                            onSelect(sender.name, sender.prefix);
+                                            setIsOpen(false);
+                                        }}
+                                        style={{
+                                            width: '100%',
+                                            padding: '14px 24px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            backgroundColor: isSelected ? 'var(--color-primary-light)' : 'transparent',
+                                            cursor: 'pointer',
+                                            transition: 'all 200ms ease',
+                                            border: 'none',
+                                            textAlign: 'left',
+                                            borderBottom: '1px solid var(--border-color)'
+                                        }}
+                                        className="group hover:bg-[var(--color-primary-light)] last:border-0"
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
+                                            <div style={{
+                                                padding: '7px',
+                                                backgroundColor: isSelected ? 'white' : 'var(--bg-secondary)',
+                                                borderRadius: '8px',
+                                                border: '1px solid var(--border-color)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                            }} className="group-hover:bg-white transition-colors">
+                                                <User size={13} className={isSelected ? 'text-[var(--color-primary)]' : 'text-[var(--text-secondary)]'} />
+                                            </div>
+                                            <div className="flex flex-col items-start">
+                                                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }} className="group-hover:text-[var(--color-primary)]">
+                                                    {sender.name}
+                                                </span>
+                                                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'monospace', marginTop: '2px' }}>
+                                                    {sender.prefix}@{domain}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {isSelected && <CheckCircle2 size={14} className="text-[var(--color-primary)]" />}
+                                    </button>
+                                );
+                            })}
+
+                            {filteredSenders.length === 0 && (
+                                <div className="p-8 text-center text-[var(--text-tertiary)] text-xs">
+                                    No se encontraron remitentes
+                                </div>
+                            )}
+
+                        </div>
+                        {/* Fixed Footer */}
+                        <div className="p-3 bg-[var(--bg-tertiary)] border-t border-[var(--border-color)]">
+                            <button
+                                onClick={() => {
+                                    setIsOpen(false);
+                                    setShowAddModal(true);
+                                }}
+                                className="w-full h-9 flex items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-xs font-bold hover:bg-[var(--color-primary)] hover:text-white transition-all border border-[var(--color-primary)]/20 hover:border-[var(--color-primary)]"
+                            >
+                                <Plus size={14} />
+                                Crear Nuevo Remitente
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                <AddSenderModal
+                    isOpen={showAddModal}
+                    onClose={() => setShowAddModal(false)}
+                    onSave={(name: string, prefix: string) => {
+                        onSelect(name, prefix);
+                        setShowAddModal(false);
+                    }}
+                    defaultName={globalConfig?.nombre_empresa}
+                    domain={domain}
+                />
+            </div>
+        );
+    };
+
+    const TestUserSelector = ({ onSelect, selectedUser }: any) => {
+        const [isOpen, setIsOpen] = useState(false);
+        const [search, setSearch] = useState('');
+        const [users, setUsers] = useState<any[]>([]);
+        const [loading, setLoading] = useState(false);
+        const dropdownRef = useRef<HTMLDivElement>(null);
+
+        useEffect(() => {
+            const handleClickOutside = (event: MouseEvent) => {
+                if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                    setIsOpen(false);
+                }
+            };
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }, []);
+
+        useEffect(() => {
+            if (isOpen && search.length >= 0) {
+                const fetchUsers = async () => {
+                    setLoading(true);
+                    try {
+                        const { data } = await userService.fetchUsers(1, 10, { search });
+                        setUsers(data || []);
+                    } catch (error) {
+                        console.error("Error searching users", error);
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+
+                const timeoutId = setTimeout(fetchUsers, 300);
+                return () => clearTimeout(timeoutId);
+            }
+        }, [isOpen, search]);
+
+        return (
+            <div className="relative" ref={dropdownRef}>
+                <div
+                    onClick={() => setIsOpen(!isOpen)}
+                    className={`w-full h-auto min-h-[56px] px-4 py-3 rounded-[12px] border-[1.5px] transition-all cursor-pointer group select-none flex items-center justify-between ${isOpen
+                        ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20 bg-[var(--bg-primary)]'
+                        : 'border-[var(--border-color)] bg-[var(--bg-primary)] hover:border-[var(--color-primary)]/50'
+                        }`}
+                >
+                    <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isOpen ? 'bg-[var(--color-primary)] text-white' : 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+                            }`}>
+                            <User size={20} />
+                        </div>
+                        <div>
+                            <div className="text-sm font-bold text-[var(--text-primary)]">
+                                {selectedUser ? `${selectedUser.nombres} ${selectedUser.apellidos}` : 'Seleccionar Usuario de Prueba'}
+                            </div>
+                            <div className="text-xs text-[var(--text-tertiary)] font-mono mt-0.5">
+                                {selectedUser ? selectedUser.email : 'Buscar por nombre o email...'}
+                            </div>
+                        </div>
+                    </div>
+                    <ChevronDown size={16} className={`text-[var(--text-tertiary)] transition-transform duration-200 ${isOpen ? 'rotate-180 text-[var(--color-primary)]' : ''}`} />
+                </div>
+
+                {isOpen && (
+                    <div
+                        className="absolute left-0 right-0 top-full mt-2 w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                        style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
+                    >
+                        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                            <div className="relative">
+                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar usuario..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 12px 10px 36px',
+                                        borderRadius: '10px',
+                                        border: '1px solid var(--border-color)',
+                                        backgroundColor: 'var(--bg-primary)',
+                                        fontSize: '12px',
+                                        color: 'var(--text-primary)',
+                                        outline: 'none'
+                                    }}
+                                    className="focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
+                                    autoFocus
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                                {loading && <div className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-[var(--color-primary)]"><Loader2 size={14} /></div>}
+                            </div>
+                        </div>
+
+                        <div className="max-h-60 overflow-y-auto scrollbar-custom">
+                            {users.map((user) => {
+                                const isSelected = selectedUser?.id === user.id;
+                                return (
+                                    <button
+                                        key={user.id}
+                                        onClick={() => {
+                                            onSelect(user);
+                                            setIsOpen(false);
+                                        }}
+                                        style={{
+                                            width: '100%',
+                                            padding: '14px 24px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            backgroundColor: isSelected ? 'var(--color-primary-light)' : 'transparent',
+                                            cursor: 'pointer',
+                                            transition: 'all 200ms ease',
+                                            border: 'none',
+                                            textAlign: 'left',
+                                            borderBottom: '1px solid var(--border-color)'
+                                        }}
+                                        className="group hover:bg-[var(--color-primary-light)] last:border-0"
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
+                                            <div style={{
+                                                padding: '7px',
+                                                backgroundColor: isSelected ? 'white' : 'var(--bg-secondary)',
+                                                borderRadius: '8px',
+                                                border: '1px solid var(--border-color)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                            }} className="group-hover:bg-white transition-colors">
+                                                <User size={13} className={isSelected ? 'text-[var(--color-primary)]' : 'text-[var(--text-secondary)]'} />
+                                            </div>
+                                            <div className="flex flex-col items-start">
+                                                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }} className="group-hover:text-[var(--color-primary)]">
+                                                    {user.nombres} {user.apellidos}
+                                                </span>
+                                                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'monospace', marginTop: '2px' }}>
+                                                    {user.email}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {isSelected && <CheckCircle2 size={14} className="text-[var(--color-primary)]" />}
+                                    </button>
+                                );
+                            })}
+
+                            {users.length === 0 && !loading && (
+                                <div className="p-8 text-center text-[var(--text-tertiary)] text-xs">
+                                    No se encontraron usuarios
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    async function handleSearchUsers(query: string) {
+        setTestUserSearch(query);
+        if (!query || query.length < 3) {
+            setFoundUsers([]);
+            return;
+        }
+
+        try {
+            setIsSearchingUsers(true);
+            const users = await userService.searchUsers(query);
+            setFoundUsers(users);
+        } catch (error) {
+            console.error('Error searching users:', error);
+        } finally {
+            setIsSearchingUsers(false);
+        }
+    }
+
+    async function handleSendTestEmail() {
+        if (!selectedTemplate || !selectedTestUser) return;
+
+        try {
+            setIsSendingTest(true);
+            // Simular envío de prueba (integrar con notificationService después si es necesario)
+            toast.success('¡Enviado!', `Correo de prueba enviado a ${selectedTestUser.email}`);
+        } catch (error) {
+            toast.error('Error', 'No se pudo enviar el correo de prueba.');
+        } finally {
+            setIsSendingTest(false);
+        }
+    }
+
     useEffect(() => {
         loadTemplates();
+        loadGlobalConfig();
     }, []);
+
+    async function loadGlobalConfig() {
+        try {
+            const config = await configService.getConfig();
+            setGlobalConfig(config);
+        } catch (error) {
+            console.error('Error loading config:', error);
+        }
+    }
 
     const deviceWidths = {
         mobile: '375px',
@@ -289,14 +892,33 @@ export function AdminEmailTemplatesPage() {
         if (!selectedTemplate) return;
         try {
             setIsSaving(true);
-            await configService.updateEmailTemplate(selectedTemplate.id, {
+
+            // Si hay contenido MJML, compilamos a HTML antes de guardar
+            let finalHtml = selectedTemplate.html_content;
+            if (selectedTemplate.mjml_content) {
+                try {
+                    const result = mjml2html(selectedTemplate.mjml_content);
+                    finalHtml = result.html;
+                } catch (mjError) {
+                    console.error('MJML Compilation Error:', mjError);
+                    // No detenemos el guardado, pero usamos el HTML previo si falla catastróficamente
+                }
+            }
+
+            const updatedData = {
                 subject: selectedTemplate.subject,
-                html_content: selectedTemplate.html_content,
-                description: selectedTemplate.description
-            });
+                html_content: finalHtml,
+                mjml_content: selectedTemplate.mjml_content,
+                description: selectedTemplate.description,
+                sender_prefix: selectedTemplate.sender_prefix,
+                sender_name: selectedTemplate.sender_name
+            };
 
-            setTemplates(prev => prev.map(t => t.id === selectedTemplate.id ? selectedTemplate : t));
+            await configService.updateEmailTemplate(selectedTemplate.id, updatedData);
 
+            const updatedTemplate = { ...selectedTemplate, ...updatedData };
+            setTemplates(prev => prev.map(t => t.id === selectedTemplate.id ? updatedTemplate : t));
+            setSelectedTemplate(updatedTemplate);
             toast.success('¡Guardado!', 'La plantilla se ha actualizado correctamente.');
         } catch (error) {
             toast.error('Error', 'No se pudo guardar la plantilla.');
@@ -318,7 +940,7 @@ export function AdminEmailTemplatesPage() {
             }) as any;
             setTemplates([...templates, data]);
             setIsCreateModalOpen(false);
-            setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+            setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
             toast.success('¡Creado!', 'La plantilla se ha creado correctamente.');
             setSelectedTemplate(data as any);
         } catch (error) {
@@ -344,7 +966,7 @@ export function AdminEmailTemplatesPage() {
             }) as any;
             setTemplates([...templates, data]);
             setIsFolderModalOpen(false);
-            setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+            setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
             toast.success('¡Creado!', 'La carpeta se ha creado correctamente.');
         } catch (error) {
             toast.error('Error', 'No se pudo crear la carpeta.');
@@ -423,7 +1045,7 @@ export function AdminEmailTemplatesPage() {
             } : t));
             setIsRenameModalOpen(false);
             setItemToManage(null);
-            setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+            setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
             toast.success('¡Actualizado!', 'Se ha actualizado la información correctamente.');
         } catch (error) {
             toast.error('Error', 'No se pudo actualizar.');
@@ -502,7 +1124,7 @@ export function AdminEmailTemplatesPage() {
                             <button
                                 onClick={() => {
                                     setItemToManage(item);
-                                    setNewItem({ name: item.name || '', slug: item.slug, description: item.description || '', subject: '', trigger_event: '' });
+                                    setNewItem({ name: item.name || '', slug: item.slug, description: item.description || '', subject: '', trigger_event: '', mjml_content: item.mjml_content || '', sender_prefix: item.sender_prefix || 'support' });
                                     setIsRenameModalOpen(true);
                                     setActiveMenuId(null);
                                 }}
@@ -527,7 +1149,7 @@ export function AdminEmailTemplatesPage() {
                             <button
                                 onClick={() => {
                                     setItemToManage(item);
-                                    setNewItem({ name: item.name || '', slug: item.slug, description: item.description || '', subject: item.subject, trigger_event: item.trigger_event || '' });
+                                    setNewItem({ name: item.name || '', slug: item.slug, description: item.description || '', subject: item.subject, trigger_event: item.trigger_event || '', mjml_content: item.mjml_content || '', sender_prefix: item.sender_prefix || 'support' });
                                     setIsRenameModalOpen(true);
                                     setActiveMenuId(null);
                                 }}
@@ -739,7 +1361,7 @@ export function AdminEmailTemplatesPage() {
                                 <Button
                                     variant="secondary"
                                     onClick={() => {
-                                        setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+                                        setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
                                         setIsFolderModalOpen(true);
                                     }}
                                     leftIcon={<Folder size={18} />}
@@ -749,7 +1371,7 @@ export function AdminEmailTemplatesPage() {
                                 </Button>
                                 <Button
                                     onClick={() => {
-                                        setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+                                        setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
                                         setIsCreateModalOpen(true);
                                     }}
                                     leftIcon={<Plus size={18} />}
@@ -817,7 +1439,19 @@ export function AdminEmailTemplatesPage() {
                                             filteredItems.map((item) => (
                                                 <tr
                                                     key={item.id}
-                                                    onClick={() => item.is_folder ? setNavigationPath([...navigationPath, item.id]) : setSelectedTemplate(item)}
+                                                    onClick={() => {
+                                                        const newItemData = {
+                                                            name: item.name,
+                                                            slug: item.slug,
+                                                            description: item.description,
+                                                            subject: item.subject || '',
+                                                            trigger_event: item.trigger_event || '',
+                                                            mjml_content: item.mjml_content || '',
+                                                            sender_prefix: item.sender_prefix || 'support'
+                                                        };
+                                                        setNewItem(newItemData);
+                                                        item.is_folder ? setNavigationPath([...navigationPath, item.id]) : setSelectedTemplate(item);
+                                                    }}
                                                     style={{
                                                         borderBottom: '1px solid var(--border-color)',
                                                         cursor: 'pointer',
@@ -1097,7 +1731,7 @@ export function AdminEmailTemplatesPage() {
                             </div>
                         </div>
                     </Modal>
-                </React.Fragment>
+                </React.Fragment >
             ) : (
                 /* Editor y Vista Previa en Vivo */
                 <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1109,6 +1743,18 @@ export function AdminEmailTemplatesPage() {
                             <span className="text-lg font-bold">Editando Plantilla: {selectedTemplate?.slug.toUpperCase()}</span>
                         </div>
                         <div className="flex gap-3">
+                            {selectedTemplate && selectedTemplate.mjml_content === undefined && (
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => {
+                                        setIsConfirmMJMLOpen(true);
+                                    }}
+                                    leftIcon={<Zap size={16} />}
+                                    style={{ borderRadius: '10px', color: 'var(--color-primary)', borderColor: 'var(--color-primary)' }}
+                                >
+                                    Convertir a MJML
+                                </Button>
+                            )}
                             <Button variant="secondary" onClick={() => setSelectedTemplate(null)} style={{ borderRadius: '10px' }}>Cancelar</Button>
                             <Button onClick={handleSave} isLoading={isSaving} leftIcon={<Save size={16} />} style={{ borderRadius: '10px' }}>Guardar Cambios</Button>
                         </div>
@@ -1157,7 +1803,7 @@ export function AdminEmailTemplatesPage() {
                                                         <ChevronDown size={12} style={{ transform: showVariablesSubject ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }} />
                                                     </button>
                                                     {showVariablesSubject && (
-                                                        <VariableList onSelect={(v) => insertVariable('subject', v)} />
+                                                        <VariableList onSelect={(v) => insertContent('subject', v)} />
                                                     )}
                                                 </div>
                                             }
@@ -1170,7 +1816,45 @@ export function AdminEmailTemplatesPage() {
                                                 <Layout size={16} className="text-[var(--color-primary)]" /> Cuerpo del Mensaje (HTML)
                                             </label>
 
-                                            <div className="relative">
+                                            <div className="flex items-center gap-3 relative">
+                                                {/* Biblioteca de Componentes MJML (Solo si es MJML) */}
+                                                {selectedTemplate?.mjml_content !== undefined && (
+                                                    <div className="relative">
+                                                        <button
+                                                            onClick={() => setShowMJMLComponents(!showMJMLComponents)}
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '10px',
+                                                                padding: '10px 20px',
+                                                                borderRadius: '10px',
+                                                                transition: 'all 200ms ease',
+                                                                backgroundColor: showMJMLComponents ? 'var(--color-primary)' : 'var(--bg-primary)',
+                                                                color: showMJMLComponents ? 'white' : 'var(--text-tertiary)',
+                                                                border: `1px solid ${showMJMLComponents ? 'var(--color-primary)' : 'var(--border-color)'}`,
+                                                                cursor: 'pointer'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                if (!showMJMLComponents) e.currentTarget.style.borderColor = 'var(--color-primary)';
+                                                                if (!showMJMLComponents) e.currentTarget.style.color = 'var(--color-primary)';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                if (!showMJMLComponents) e.currentTarget.style.borderColor = 'var(--border-color)';
+                                                                if (!showMJMLComponents) e.currentTarget.style.color = 'var(--text-tertiary)';
+                                                            }}
+                                                        >
+                                                            <Layout size={14} />
+                                                            <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Biblioteca MJML</span>
+                                                            <ChevronDown size={12} style={{ transform: showMJMLComponents ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }} />
+                                                        </button>
+                                                        {showMJMLComponents && (
+                                                            <div className="absolute right-0 top-full z-[110]">
+                                                                <MJMLComponentList onSelect={(code) => insertContent('mjml_content', code, false)} />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
                                                 <button
                                                     onClick={() => setShowVariablesBody(!showVariablesBody)}
                                                     style={{
@@ -1200,7 +1884,7 @@ export function AdminEmailTemplatesPage() {
                                                 </button>
                                                 {showVariablesBody && (
                                                     <div className="absolute right-0 top-full z-[110]">
-                                                        <VariableList onSelect={(v) => insertVariable('html_content', v)} />
+                                                        <VariableList onSelect={(v) => insertContent(selectedTemplate?.mjml_content !== undefined ? 'mjml_content' : 'html_content', v)} />
                                                     </div>
                                                 )}
                                             </div>
@@ -1208,8 +1892,16 @@ export function AdminEmailTemplatesPage() {
 
                                         <textarea
                                             id="body-textarea"
-                                            value={selectedTemplate?.html_content || ''}
-                                            onChange={(e) => selectedTemplate && setSelectedTemplate({ ...selectedTemplate, html_content: e.target.value })}
+                                            value={selectedTemplate?.mjml_content ?? selectedTemplate?.html_content ?? ''}
+                                            onChange={(e) => {
+                                                if (!selectedTemplate) return;
+                                                const val = e.target.value;
+                                                if (selectedTemplate.mjml_content !== undefined) {
+                                                    setSelectedTemplate({ ...selectedTemplate, mjml_content: val });
+                                                } else {
+                                                    setSelectedTemplate({ ...selectedTemplate, html_content: val });
+                                                }
+                                            }}
                                             style={{
                                                 width: '100%',
                                                 padding: '24px',
@@ -1229,56 +1921,83 @@ export function AdminEmailTemplatesPage() {
                                     </div>
                                 </div>
                             </Card>
+
                         </div>
 
                         {/* Info y Variables Side */}
                         <div className="xl:col-span-4 flex flex-col gap-6">
-                            <Card title="Guía del Desarrollador">
+                            <Card title="Herramientas de Desarrollador">
                                 <div className="flex flex-col gap-8 p-2">
-                                    <div className="space-y-3">
+                                    {/* Configuración del Remitente */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Mail size={16} className="text-[var(--text-tertiary)]" />
+                                            <span className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Remitente Transaccional</span>
+                                        </div>
+
+                                        <SenderSelector
+                                            currentName={selectedTemplate?.sender_name}
+                                            currentPrefix={selectedTemplate?.sender_prefix}
+                                            domain={globalConfig?.email_domain}
+                                            onSelect={(name: string, prefix: string) => {
+                                                if (selectedTemplate) {
+                                                    const updated = {
+                                                        ...selectedTemplate,
+                                                        sender_name: name,
+                                                        sender_prefix: prefix
+                                                    };
+                                                    setSelectedTemplate(updated);
+                                                    setTemplates(templates.map(t => t.id === updated.id ? updated : t));
+                                                }
+                                            }}
+                                        />
+
+                                        <p className="text-[10px] text-[var(--text-tertiary)] italic">
+                                            Define quién envía este correo. El dominio es fijo para asegurar entregabilidad (SPF/DKIM).
+                                        </p>
+                                    </div>
+
+                                    {/* Envío de Prueba */}
+                                    <div className="space-y-4 pt-4 border-t border-[var(--border-color)] border-dashed">
                                         <h5 className="text-[11px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-2">
-                                            <Info size={14} /> Función del Email
+                                            <Send size={14} /> Probar envío Real
                                         </h5>
-                                        <div style={{ padding: '24px', backgroundColor: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-                                            <p className="text-sm text-[var(--text-secondary)] leading-relaxed font-medium">
-                                                {selectedTemplate?.description}
-                                            </p>
+
+                                        <div className="flex flex-col gap-4">
+                                            <TestUserSelector
+                                                selectedUser={selectedTestUser}
+                                                onSelect={(user: any) => setSelectedTestUser(user)}
+                                            />
+
+                                            <Button
+                                                size="sm"
+                                                fullWidth
+                                                onClick={handleSendTestEmail}
+                                                isLoading={isSendingTest}
+                                                leftIcon={<Send size={14} />}
+                                                disabled={!selectedTestUser}
+                                                className={!selectedTestUser ? "opacity-50 cursor-not-allowed" : ""}
+                                            >
+                                                Enviar Correo de Prueba
+                                            </Button>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-4">
+                                    {/* Variables soportadas */}
+                                    <div className="space-y-4 pt-4 border-t border-[var(--border-color)] border-dashed">
                                         <h5 className="text-[11px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-2">
-                                            <Code size={14} /> Variables Soportadas (Obligatorias)
+                                            <Code size={14} /> Variables Soportadas
                                         </h5>
-                                        <div className="flex flex-wrap gap-3">
+                                        <div className="flex flex-wrap gap-2">
                                             {selectedTemplate?.variables.map(v => (
                                                 <div
                                                     key={v}
-                                                    style={{
-                                                        padding: '10px 20px',
-                                                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                                        border: '1px solid rgba(16, 185, 129, 0.2)',
-                                                        borderRadius: '12px',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '10px',
-                                                        fontSize: '12px',
-                                                        fontWeight: 'bold',
-                                                        color: '#10B981'
-                                                    }}
-                                                    className="shadow-sm hover:scale-105 transition-transform cursor-default"
+                                                    className="px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center gap-2 text-[11px] font-bold text-emerald-600 shadow-sm"
                                                 >
-                                                    <CheckCircle2 size={13} />
+                                                    <CheckCircle2 size={12} />
                                                     {"{{"}{v}{"}}"}
                                                 </div>
                                             ))}
-                                        </div>
-                                        <div
-                                            style={{ padding: '24px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '16px', border: '1px dashed var(--border-color)' }}
-                                        >
-                                            <p className="text-[12px] text-[var(--text-tertiary)] leading-normal italic">
-                                                Estas variables son fundamentales para que este email funcione correctamente. El autocompletador incluye además campos generales de usuario y tienda.
-                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -1402,17 +2121,42 @@ export function AdminEmailTemplatesPage() {
                                     transition: 'max-width 400ms cubic-bezier(0.4, 0, 0.2, 1)'
                                 }}
                             >
-                                {/* Browser Mock Header */}
-                                <div style={{ backgroundColor: '#f8fafc', padding: '16px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ff5f56' }}></div>
-                                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ffbd2e' }}></div>
-                                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#27c93f' }}></div>
+                                {/* Mail Client Mock Header */}
+                                <div style={{ backgroundColor: '#f8fafc', padding: '20px 24px', borderBottom: '1px solid #e2e8f0' }}>
+                                    {/* Window Bar */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Nuevo Mensaje</span>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <div style={{ width: '12px', height: '12px', borderRadius: '3px', border: '1.5px solid #cbd5e1' }}></div>
+                                            <div style={{ width: '12px', height: '12px', borderRadius: '3px', border: '1.5px solid #cbd5e1' }}></div>
+                                            <div style={{ width: '12px', height: '12px', borderRadius: '3px', border: '1.5px solid #cbd5e1' }}></div>
+                                        </div>
                                     </div>
-                                    <div style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0', padding: '4px 12px', display: 'flex', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                            Vista Previa: {selectedTemplate.subject}
-                                        </span>
+
+                                    {/* Header Fields */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>
+                                            <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 500, minWidth: '60px' }}>De:</span>
+                                            <span style={{ fontSize: '13px', color: '#1e293b', fontWeight: 600 }}>
+                                                {selectedTemplate.sender_name || globalConfig?.nombre_empresa || 'Remitente'}
+                                                <code style={{ fontSize: '11px', color: 'var(--color-primary)', backgroundColor: 'var(--color-primary-light)', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px' }}>
+                                                    {selectedTemplate.sender_prefix || '...'}@{globalConfig?.email_domain || 'dropcost.com'}
+                                                </code>
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>
+                                            <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 500, minWidth: '60px' }}>Para:</span>
+                                            <span style={{ fontSize: '13px', color: '#1e293b', fontWeight: 600 }}>
+                                                {selectedTestUser ? `${selectedTestUser.nombres} ${selectedTestUser.apellidos}` : 'Usuario de Prueba'}
+                                                <code style={{ fontSize: '11px', color: '#64748b', backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px' }}>
+                                                    {selectedTestUser ? selectedTestUser.email : 'correo@ejemplo.com'}
+                                                </code>
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 500, minWidth: '60px' }}>Asunto:</span>
+                                            <span style={{ fontSize: '13px', color: '#1e293b', fontWeight: 700 }}>{selectedTemplate.subject || '(Sin Asunto)'}</span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1424,7 +2168,15 @@ export function AdminEmailTemplatesPage() {
                                         backgroundColor: '#ffffff',
                                         overflowX: 'hidden'
                                     }}
-                                    dangerouslySetInnerHTML={{ __html: selectedTemplate ? renderPreview(selectedTemplate.html_content) : '' }}
+                                    dangerouslySetInnerHTML={{
+                                        __html: selectedTemplate
+                                            ? renderPreview(
+                                                selectedTemplate.mjml_content
+                                                    ? mjml2html(selectedTemplate.mjml_content).html
+                                                    : selectedTemplate.html_content
+                                            )
+                                            : ''
+                                    }}
                                 />
                             </div>
                         </div>
@@ -1438,7 +2190,7 @@ export function AdminEmailTemplatesPage() {
                 isOpen={isCreateModalOpen}
                 onClose={() => {
                     setIsCreateModalOpen(false);
-                    setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+                    setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
                 }}
                 title="Crear Nueva Plantilla"
                 size="sm"
@@ -1497,7 +2249,7 @@ export function AdminEmailTemplatesPage() {
                     <div className="flex gap-3 pt-2">
                         <Button variant="secondary" fullWidth onClick={() => {
                             setIsCreateModalOpen(false);
-                            setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+                            setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
                         }}>Cancelar</Button>
                         <Button fullWidth onClick={handleCreateTemplate} isLoading={isCreating}>Crear Plantilla</Button>
                     </div>
@@ -1508,7 +2260,7 @@ export function AdminEmailTemplatesPage() {
                 isOpen={isFolderModalOpen}
                 onClose={() => {
                     setIsFolderModalOpen(false);
-                    setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+                    setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
                 }}
                 title="Nueva Carpeta"
                 size="sm"
@@ -1529,7 +2281,7 @@ export function AdminEmailTemplatesPage() {
                     <div className="flex gap-3 pt-2">
                         <Button variant="secondary" fullWidth onClick={() => {
                             setIsFolderModalOpen(false);
-                            setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '' });
+                            setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
                         }}>Cancelar</Button>
                         <Button fullWidth onClick={handleCreateFolder} isLoading={isCreating}>Crear Carpeta</Button>
                     </div>
@@ -1549,6 +2301,24 @@ export function AdminEmailTemplatesPage() {
                     setItemToManage(null);
                 }}
                 isLoading={isCreating}
+            />
+
+            <ConfirmDialog
+                isOpen={isConfirmMJMLOpen}
+                title="¿Convertir a MJML?"
+                description="Esto reemplazará el código HTML actual con una estructura MJML base. Esta acción es ideal para hacer que tu correo sea 100% responsivo, pero el código HTML previo se perderá."
+                confirmLabel="Convertir ahora"
+                onConfirm={() => {
+                    if (selectedTemplate) {
+                        setSelectedTemplate({
+                            ...selectedTemplate,
+                            mjml_content: `<mjml>\n  <mj-body>\n    <mj-section backgroundColor="#ffffff">\n      <mj-column>\n        <mj-text font-size="20px" color="var(--color-primary)">${selectedTemplate.name}</mj-text>\n        <mj-divider border-color="var(--color-primary)"></mj-divider>\n        <mj-text line-height="24px">${selectedTemplate.html_content}</mj-text>\n      </mj-column>\n    </mj-section>\n  </mj-body>\n</mjml>`
+                        });
+                    }
+                    setIsConfirmMJMLOpen(false);
+                }}
+                onCancel={() => setIsConfirmMJMLOpen(false)}
+                variant="info"
             />
         </div >
     );

@@ -98,5 +98,24 @@ export const userService = {
         }
 
         return true;
+    },
+
+    /**
+     * Busca usuarios de forma rápida por email o nombres
+     */
+    async searchUsers(query: string): Promise<User[]> {
+        const search = `%${query.toLowerCase()}%`;
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .or(`email.ilike.${search},nombres.ilike.${search},apellidos.ilike.${search}`)
+            .limit(5);
+
+        if (error) {
+            console.error('Error searching users:', error);
+            return [];
+        }
+
+        return data as User[];
     }
 };

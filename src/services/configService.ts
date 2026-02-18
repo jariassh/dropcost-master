@@ -9,6 +9,7 @@ export interface GlobalConfig {
     meta_keywords: string;
     og_image_url: string;
     site_url: string;
+    email_domain: string;
 
     
     // Robots
@@ -138,7 +139,8 @@ export const configService = {
             'color_bg_primary', 'color_bg_secondary', 'color_text_primary', 'color_text_secondary',
             'color_sidebar_bg', 'color_sidebar_text',
             'codigo_head', 'codigo_footer',
-            'permitir_indexacion', 'permitir_seguimiento'
+            'permitir_indexacion', 'permitir_seguimiento',
+            'email_domain'
         ];
 
         fields.forEach(f => {
