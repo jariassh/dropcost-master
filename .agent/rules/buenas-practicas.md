@@ -385,7 +385,101 @@ Mínimo 5 flujos críticos con Playwright
 
 ---
 
-## XVI. DEPLOYMENT
+## XVI. GIT WORKFLOW - ESPECÍFICO DROPCOST
+
+### Ciclos de Desarrollo
+Una rama por ciclo de trabajo (semana, sprint). Múltiples commits EN ESA rama.
+
+```powershell
+# Setup inicial
+git clone https://github.com/[user]/dropcost-master.git
+cd dropcost-master
+git config user.name "Tu Nombre"
+git config user.email "tu@email.com"
+
+# Crear rama ciclo
+git checkout develop
+git pull origin develop
+git checkout -b feat/ciclo-febrero-semana1
+
+# Trabajar múltiples features EN ESA rama
+# Feature 1: editar, commit
+git add . ; git commit -m "feat(simulador): implementar costeo"
+
+# Feature 2: editar, commit
+git add . ; git commit -m "feat(referidos): nivel 2 comisiones"
+
+# Si algo se rompe: fix EN MISMA rama
+git add . ; git commit -m "fix(core): restaurar estado"
+
+# Testing completo en staging
+
+# Push rama ciclo
+git push origin feat/ciclo-febrero-semana1
+
+# Merge a develop (CICLO COMPLETO APROBADO)
+git checkout develop
+git pull origin develop
+git merge feat/ciclo-febrero-semana1
+git push origin develop
+
+# Cleanup rama ciclo
+git branch -d feat/ciclo-febrero-semana1
+git push origin --delete feat/ciclo-febrero-semana1
+
+# Siguiente ciclo: nueva rama
+git checkout -b feat/ciclo-febrero-semana2
+```
+
+### Convención Commits DropCost
+```
+Formato: feat(scope): descripción
+
+Scopes usados en DropCost:
+- (simulador): cálculos, costeo, márgenes
+- (auth): login, 2FA, JWT
+- (referidos): comisiones, líderes
+- (dashboard): KPIs, análisis
+- (integraciones): Meta, Shopify, Dropi
+- (admin): usuarios, planes, configuración
+- (components): UI, reusables
+- (db): migraciones, esquema
+- (pagos): comisiones, retiros, pasarelas
+
+Ejemplos:
+✅ feat(simulador): implementar cálculo costeo con devoluciones
+✅ feat(referidos): agregar ascenso automático a líder
+✅ fix(auth): corregir reset password con 2FA
+✅ test(dashboard): agregar tests KPIs
+```
+
+### NUNCA:
+```
+❌ Múltiples ramas feat/ sin mergear
+❌ Commits genéricos: "fix", "update", "changes"
+❌ Ramas huérfanas en repo
+❌ Mergear una feature por una (usa ciclos)
+❌ Push sin testing >70%
+❌ Git stash, cherry-pick, rebase (complejidad innecesaria)
+```
+
+### Merge a Main - Milestones Solamente
+```powershell
+# MVP (Auth + Simulador + Tiendas)
+# Beta (Core features estable)
+# Release (QA completo, aprobado)
+
+git checkout main
+git pull origin main
+git merge develop
+git push origin main
+git tag -a v1.0.0 -m "Release 1.0.0 MVP"
+git push origin v1.0.0
+```
+
+---
+
+## XVII. DEPLOYMENT
 
 ### Staging
 Copia anónima de producción. Testea integraciones antes prod.
