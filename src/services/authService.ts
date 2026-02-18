@@ -181,7 +181,8 @@ export async function getCurrentUser(): Promise<User | null> {
         plan: planDetails ? {
             name: planDetails.name,
             limits: planDetails.limits as any
-        } : undefined
+        } : undefined,
+        bank_info: (profile as any)?.bank_info
     };
 }
 

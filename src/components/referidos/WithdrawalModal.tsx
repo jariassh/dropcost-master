@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Landmark, CreditCard, User, FileText, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
+import { FormattedInput } from '@/components/common/FormattedInput';
 import { walletService } from '@/services/walletService';
 import { formatCurrency } from '@/lib/format';
 
@@ -85,9 +86,12 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                 bank_info: bankInfo
             });
 
-            // Opcional: Guardar info bancaria para la próxima vez si ha cambiado
-            if (JSON.stringify(bankInfo) !== JSON.stringify(existingBankInfo)) {
+            // Siempre guardar info bancaria actualizada en el perfil del usuario
+            try {
                 await walletService.saveDefaultBankInfo(bankInfo);
+            } catch (saveErr) {
+                console.error('Error guardando bank_info en users:', saveErr);
+                // No bloqueamos el flujo, el retiro ya fue creado
             }
 
             setStep(3); // Éxito
@@ -138,38 +142,24 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>¿Cuánto deseas retirar?</label>
                                 <div style={{ position: 'relative' }}>
-                                    <input
-                                        type="number"
-                                        value={amountLocal}
+                                    <FormattedInput
+                                        value={amountLocal ? parseFloat(amountLocal) : 0}
                                         onChange={(e) => setAmountLocal(e.target.value)}
-                                        placeholder="0.00"
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px 16px',
-                                            paddingRight: '60px',
-                                            borderRadius: '10px',
-                                            backgroundColor: 'var(--bg-primary)',
-                                            border: '1px solid var(--border-color)',
-                                            fontSize: '14px',
-                                            color: 'var(--text-primary)',
-                                            outline: 'none',
-                                            transition: 'all 200ms ease'
-                                        }}
+                                        placeholder="0"
+                                        rightElement={
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-tertiary)' }}>
+                                                {currency}
+                                            </span>
+                                        }
                                         onFocus={(e) => {
-                                            e.currentTarget.style.borderColor = 'var(--color-primary)';
-                                            e.currentTarget.style.boxShadow = '0 0 0 4px rgba(0,102,255,0.1)';
+                                            e.target.style.borderColor = 'var(--color-primary)';
+                                            e.target.style.boxShadow = '0 0 0 4px rgba(0,102,255,0.1)';
                                         }}
                                         onBlur={(e) => {
-                                            e.currentTarget.style.borderColor = 'var(--border-color)';
-                                            e.currentTarget.style.boxShadow = 'none';
+                                            e.target.style.borderColor = 'var(--border-color)';
+                                            e.target.style.boxShadow = 'none';
                                         }}
                                     />
-                                    <span style={{
-                                        position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)',
-                                        fontSize: '14px', fontWeight: 500, color: 'var(--text-tertiary)'
-                                    }}>
-                                        {currency}
-                                    </span>
                                 </div>
                                 {error && (
                                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--color-error)', fontSize: '12px', marginTop: '4px' }}>
