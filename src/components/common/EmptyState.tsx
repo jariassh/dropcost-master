@@ -28,8 +28,9 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
             <div
                 style={{
                     fontSize: '48px',
-                    marginBottom: '16px',
-                    opacity: 0.6,
+                    marginBottom: '24px',
+                    color: 'var(--text-tertiary)',
+                    opacity: 0.8,
                 }}
             >
                 {icon}
@@ -37,7 +38,7 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
 
             <h3
                 style={{
-                    fontSize: '20px',
+                    fontSize: '18px',
                     fontWeight: 600,
                     color: 'var(--text-primary)',
                     marginBottom: '8px',
@@ -65,23 +66,24 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '8px',
-                        padding: '12px 24px',
+                        padding: '10px 20px',
                         fontSize: '14px',
                         fontWeight: 600,
                         color: '#fff',
                         backgroundColor: 'var(--color-primary)',
                         border: 'none',
-                        borderRadius: '8px',
+                        borderRadius: '10px', // Standard radius
                         cursor: 'pointer',
-                        transition: 'all 150ms ease',
+                        transition: 'all 200ms ease',
+                        boxShadow: '0 2px 8px rgba(0, 102, 255, 0.2)',
                     }}
                     onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'var(--color-primary-dark)';
                         e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 102, 255, 0.3)';
                     }}
                     onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-                        e.currentTarget.style.transform = 'none';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 102, 255, 0.2)';
                     }}
                 >
                     {action.label}
