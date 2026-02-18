@@ -100,6 +100,24 @@ export function AdminEmailTemplatesPage() {
     const [isSearchingUsers, setIsSearchingUsers] = useState(false);
     const [selectedTestUser, setSelectedTestUser] = useState<any | null>(null);
     const [isSendingTest, setIsSendingTest] = useState(false);
+    const [currentTipIndex, setCurrentTipIndex] = useState(0);
+
+    const mjmlTips = [
+        "Jerarquía MJML: <mjml> -> <mj-body> -> <mj-section> -> <mj-column> -> <mj-text>.",
+        "Secciones: Usa <mj-section> para filas horizontales. Cada sección necesita al menos una <mj-column>.",
+        "Responsividad: ¡MJML se encarga de que tu correo se vea perfecto en móviles automáticamente!",
+        "Personalización: Usa {{nombres}} o {{link}} para inyectar datos reales del usuario.",
+        "Estilos: Puedes usar <mj-style> dentro de <mj-head> para estilos globales de la plantilla.",
+        "Previsualización: Haz clic en 'Guardar Cambios' para actualizar la vista previa en vivo."
+    ];
+
+    useEffect(() => {
+        if (!selectedTemplate) return;
+        const interval = setInterval(() => {
+            setCurrentTipIndex(prev => (prev + 1) % mjmlTips.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [selectedTemplate]);
 
     const toast = useToast();
 
@@ -582,7 +600,7 @@ export function AdminEmailTemplatesPage() {
                             </div>
                         </div>
 
-                        <div className="max-h-60 overflow-y-auto scrollbar-custom">
+                        <div className="overflow-y-auto scrollbar-custom" style={{ minHeight: '140px', maxHeight: '240px' }}>
                             {filteredSenders.map((sender) => {
                                 const isSelected = currentPrefix === sender.prefix;
                                 return (
@@ -633,8 +651,9 @@ export function AdminEmailTemplatesPage() {
                             })}
 
                             {filteredSenders.length === 0 && (
-                                <div className="p-8 text-center text-[var(--text-tertiary)] text-xs">
-                                    No se encontraron remitentes
+                                <div className="flex flex-col items-center justify-center p-12 text-center text-[var(--text-tertiary)]" style={{ minHeight: '140px' }}>
+                                    <User size={32} className="mb-3 opacity-20" />
+                                    <span className="text-xs font-medium">No se encontraron remitentes</span>
                                 </div>
                             )}
 
@@ -762,7 +781,7 @@ export function AdminEmailTemplatesPage() {
                             </div>
                         </div>
 
-                        <div className="max-h-60 overflow-y-auto scrollbar-custom">
+                        <div className="overflow-y-auto scrollbar-custom" style={{ minHeight: '140px', maxHeight: '240px' }}>
                             {users.map((user) => {
                                 const isSelected = selectedUser?.id === user.id;
                                 return (
@@ -813,8 +832,9 @@ export function AdminEmailTemplatesPage() {
                             })}
 
                             {users.length === 0 && !loading && (
-                                <div className="p-8 text-center text-[var(--text-tertiary)] text-xs">
-                                    No se encontraron usuarios
+                                <div className="flex flex-col items-center justify-center p-12 text-center text-[var(--text-tertiary)]" style={{ minHeight: '140px' }}>
+                                    <User size={32} className="mb-3 opacity-20" />
+                                    <span className="text-xs font-medium">No se encontraron usuarios</span>
                                 </div>
                             )}
                         </div>
@@ -1252,6 +1272,36 @@ export function AdminEmailTemplatesPage() {
                         Cree y gestione plantillas para todos sus correos electrónicos transaccionales.
                     </p>
                 </div>
+
+                {selectedTemplate && (
+                    <div className="flex gap-3 mt-4 sm:mt-0">
+                        {selectedTemplate.mjml_content === undefined && (
+                            <Button
+                                variant="secondary"
+                                onClick={() => setIsConfirmMJMLOpen(true)}
+                                leftIcon={<Zap size={16} />}
+                                style={{ borderRadius: '12px', color: 'var(--color-primary)', borderColor: 'var(--color-primary)', height: '48px' }}
+                            >
+                                Convertir a MJML
+                            </Button>
+                        )}
+                        <Button
+                            variant="secondary"
+                            onClick={() => setSelectedTemplate(null)}
+                            style={{ borderRadius: '12px', height: '48px', padding: '0 24px' }}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={handleSave}
+                            isLoading={isSaving}
+                            leftIcon={<Save size={16} />}
+                            style={{ borderRadius: '12px', height: '48px', padding: '0 24px' }}
+                        >
+                            Guardar Cambios
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {!selectedTemplate ? (
@@ -1408,21 +1458,21 @@ export function AdminEmailTemplatesPage() {
                     <div style={{ position: 'relative', zIndex: 10 }}>
                         <Card noPadding style={{
                             border: '1px solid var(--border-color)',
-                            borderRadius: '18px',
-                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                            borderRadius: '16px',
+                            boxShadow: 'var(--shadow-lg)',
                             backgroundColor: 'var(--card-bg)',
                             overflow: 'visible' // Permitir desbordamiento del menú
                         }}>
-                            <div style={{ borderRadius: '18px', minHeight: '450px', overflow: 'visible' }}>
+                            <div style={{ borderRadius: '16px', minHeight: '450px', overflow: 'visible' }}>
                                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1000px' }}>
                                     <thead style={{ position: 'sticky', top: 0, zIndex: 20 }}>
-                                        <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1.5px solid var(--border-color)' }}>
-                                            <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', borderTopLeftRadius: '18px' }}>Identificación</th>
-                                            <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tipo</th>
-                                            <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'center' }}>Estado</th>
-                                            <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Última Actividad</th>
-                                            <th style={{ padding: '24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Responsable</th>
-                                            <th style={{ padding: '24px', width: '80px', borderTopRightRadius: '18px' }}></th>
+                                        <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                                            <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', borderTopLeftRadius: '16px' }}>Identificación</th>
+                                            <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tipo</th>
+                                            <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Estado</th>
+                                            <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Última Actividad</th>
+                                            <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Responsable</th>
+                                            <th style={{ padding: '16px 24px', width: '80px', borderTopRightRadius: '16px' }}></th>
                                         </tr>
                                     </thead>
                                     <tbody style={{ backgroundColor: 'var(--card-bg)' }}>
@@ -1459,7 +1509,7 @@ export function AdminEmailTemplatesPage() {
                                                     }}
                                                     className="group hover:bg-[var(--bg-tertiary)]"
                                                 >
-                                                    <td style={{ padding: '24px' }}>
+                                                    <td style={{ padding: '16px 24px' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
                                                             <div style={{
                                                                 width: '46px',
@@ -1485,7 +1535,7 @@ export function AdminEmailTemplatesPage() {
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td style={{ padding: '24px' }}>
+                                                    <td style={{ padding: '16px 24px' }}>
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 700 }}>
                                                                 {item.is_folder ? (
@@ -1514,12 +1564,12 @@ export function AdminEmailTemplatesPage() {
                                                             )}
                                                         </div>
                                                     </td>
-                                                    <td style={{ padding: '24px', textAlign: 'center' }}>
+                                                    <td style={{ padding: '16px 24px', textAlign: 'center' }}>
                                                         <Badge variant={(item.status || 'activo') === 'activo' ? 'modern-success' : 'pill-secondary'}>
                                                             {(item.status || 'activo') === 'activo' ? 'ACTIVA' : 'ARCHIVADA'}
                                                         </Badge>
                                                     </td>
-                                                    <td style={{ padding: '24px' }}>
+                                                    <td style={{ padding: '16px 24px' }}>
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                             <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                                                                 {new Date(item.updated_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
@@ -1529,7 +1579,7 @@ export function AdminEmailTemplatesPage() {
                                                             </span>
                                                         </div>
                                                     </td>
-                                                    <td style={{ padding: '24px' }}>
+                                                    <td style={{ padding: '16px 24px' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                             <div style={{
                                                                 width: '32px',
@@ -1555,7 +1605,7 @@ export function AdminEmailTemplatesPage() {
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td style={{ padding: '24px', textAlign: 'right' }}>
+                                                    <td style={{ padding: '16px 24px', textAlign: 'right' }}>
                                                         <ActionMenu item={item} />
                                                     </td>
                                                 </tr>
@@ -1731,32 +1781,16 @@ export function AdminEmailTemplatesPage() {
                             </div>
                         </div>
                     </Modal>
-                </React.Fragment >
+                </React.Fragment>
             ) : (
                 /* Editor y Vista Previa en Vivo */
-                <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="flex items-center justify-between px-4">
+                <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex items-center px-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-[var(--color-primary-light)] text-[var(--color-primary)] rounded-lg">
-                                <Mail size={18} />
+                                <Mail size={16} />
                             </div>
-                            <span className="text-lg font-bold">Editando Plantilla: {selectedTemplate?.slug.toUpperCase()}</span>
-                        </div>
-                        <div className="flex gap-3">
-                            {selectedTemplate && selectedTemplate.mjml_content === undefined && (
-                                <Button
-                                    variant="secondary"
-                                    onClick={() => {
-                                        setIsConfirmMJMLOpen(true);
-                                    }}
-                                    leftIcon={<Zap size={16} />}
-                                    style={{ borderRadius: '10px', color: 'var(--color-primary)', borderColor: 'var(--color-primary)' }}
-                                >
-                                    Convertir a MJML
-                                </Button>
-                            )}
-                            <Button variant="secondary" onClick={() => setSelectedTemplate(null)} style={{ borderRadius: '10px' }}>Cancelar</Button>
-                            <Button onClick={handleSave} isLoading={isSaving} leftIcon={<Save size={16} />} style={{ borderRadius: '10px' }}>Guardar Cambios</Button>
+                            <span className="text-base font-bold text-[var(--text-primary)]">Editando Plantilla: <span className="text-[var(--color-primary)]">{selectedTemplate?.slug.toUpperCase()}</span></span>
                         </div>
                     </div>
 
@@ -1813,7 +1847,8 @@ export function AdminEmailTemplatesPage() {
                                     <div className="flex flex-col gap-4 relative">
                                         <div className="flex items-center justify-between">
                                             <label className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
-                                                <Layout size={16} className="text-[var(--color-primary)]" /> Cuerpo del Mensaje (HTML)
+                                                <Layout size={16} className="text-[var(--color-primary)]" />
+                                                {selectedTemplate?.mjml_content !== undefined ? 'Editor de Estructura (MJML)' : 'Cuerpo del Mensaje (HTML)'}
                                             </label>
 
                                             <div className="flex items-center gap-3 relative">
@@ -1958,8 +1993,11 @@ export function AdminEmailTemplatesPage() {
                                     </div>
 
                                     {/* Envío de Prueba */}
-                                    <div className="space-y-4 pt-4 border-t border-[var(--border-color)] border-dashed">
-                                        <h5 className="text-[11px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-2">
+                                    <div className="space-y-4 pt-6 border-t border-[var(--border-color)] border-dashed">
+                                        <h5
+                                            className="text-[11px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-2"
+                                            style={{ marginTop: '16px' }}
+                                        >
                                             <Send size={14} /> Probar envío Real
                                         </h5>
 
@@ -1984,18 +2022,43 @@ export function AdminEmailTemplatesPage() {
                                     </div>
 
                                     {/* Variables soportadas */}
-                                    <div className="space-y-4 pt-4 border-t border-[var(--border-color)] border-dashed">
-                                        <h5 className="text-[11px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-2">
+                                    <div className="space-y-4 pt-6 border-t border-[var(--border-color)] border-dashed">
+                                        <h5
+                                            className="text-[11px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-2"
+                                            style={{ marginTop: '16px' }}
+                                        >
                                             <Code size={14} /> Variables Soportadas
                                         </h5>
-                                        <div className="flex flex-wrap gap-2">
+                                        <div className="flex flex-wrap gap-3">
                                             {selectedTemplate?.variables.map(v => (
                                                 <div
                                                     key={v}
-                                                    className="px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center gap-2 text-[11px] font-bold text-emerald-600 shadow-sm"
+                                                    style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: '8px',
+                                                        padding: '6px 16px',
+                                                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                                        border: '1px solid rgba(16, 185, 129, 0.2)',
+                                                        borderRadius: '20px',
+                                                        color: '#10B981',
+                                                        fontSize: '11px',
+                                                        fontWeight: '700',
+                                                        transition: 'all 200ms ease',
+                                                        cursor: 'default',
+                                                        boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.15)';
+                                                        e.currentTarget.style.transform = 'translateY(-1px)';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+                                                        e.currentTarget.style.transform = 'translateY(0)';
+                                                    }}
                                                 >
-                                                    <CheckCircle2 size={12} />
-                                                    {"{{"}{v}{"}}"}
+                                                    <CheckCircle2 size={12} strokeWidth={3} />
+                                                    <span style={{ lineHeight: '1' }}>{"{{"}{v}{"}}"}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -2005,35 +2068,77 @@ export function AdminEmailTemplatesPage() {
 
                             <div
                                 style={{
-                                    padding: '32px',
+                                    padding: '20px 24px',
                                     backgroundColor: 'var(--color-primary-light)',
-                                    borderRadius: '24px',
+                                    borderRadius: '16px',
                                     border: '1px solid rgba(0, 102, 255, 0.1)',
                                     display: 'flex',
-                                    alignItems: 'start',
-                                    gap: '20px'
+                                    flexDirection: 'column',
+                                    gap: '12px',
+                                    minHeight: '100px',
+                                    justifyContent: 'center',
+                                    position: 'relative',
+                                    overflow: 'hidden'
                                 }}
                                 className="shadow-sm"
                             >
-                                <Info size={24} className="shrink-0 text-[var(--color-primary)]" />
-                                <p style={{ color: 'var(--color-primary)', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.6', margin: 0 }}>
-                                    Tip: Usa estilos inline siempre. El diseño de abajo se actualiza mientras escribes.
-                                </p>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center">
+                                        <Info size={16} className="text-[var(--color-primary)]" />
+                                    </div>
+                                    <span className="text-[11px] font-bold text-[var(--color-primary)] uppercase tracking-wider">Tip de Desarrollador</span>
+                                </div>
+
+                                <div className="relative h-12 flex items-center">
+                                    {mjmlTips.map((tip, idx) => (
+                                        <p
+                                            key={idx}
+                                            style={{
+                                                color: 'var(--color-primary)',
+                                                fontSize: '13px',
+                                                fontWeight: '700',
+                                                lineHeight: '1.5',
+                                                margin: 0,
+                                                position: 'absolute',
+                                                left: 0,
+                                                right: 0,
+                                                transition: 'all 500ms ease',
+                                                opacity: currentTipIndex === idx ? 1 : 0,
+                                                transform: currentTipIndex === idx ? 'translateX(0)' : currentTipIndex > idx ? 'translateX(-20px)' : 'translateX(20px)',
+                                                visibility: currentTipIndex === idx ? 'visible' : 'hidden'
+                                            }}
+                                        >
+                                            {tip}
+                                        </p>
+                                    ))}
+                                </div>
+
+                                <div className="flex gap-1.5 mt-2">
+                                    {mjmlTips.map((_, idx) => (
+                                        <div
+                                            key={idx}
+                                            onClick={() => setCurrentTipIndex(idx)}
+                                            style={{
+                                                width: currentTipIndex === idx ? '16px' : '6px',
+                                                height: '6px',
+                                                borderRadius: '3px',
+                                                backgroundColor: 'var(--color-primary)',
+                                                opacity: currentTipIndex === idx ? 1 : 0.2,
+                                                transition: 'all 300ms ease',
+                                                cursor: 'pointer'
+                                            }}
+                                        />
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* SECCIÓN VISTA PREVIA: Siempre visible y Responsiva */}
-                    <div className="flex flex-col gap-6">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div style={{ padding: '12px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Eye size={16} className="text-[var(--color-primary)]" />
-                                </div>
-                                <h3 className="text-xl font-bold text-[var(--text-primary)]">Vista Previa en Vivo</h3>
-                            </div>
-
-                            {/* Selector de Dispositivo (Resizer) - Calibración Final */}
+                    <Card
+                        title="Vista Previa en Vivo"
+                        icon={<Eye size={18} />}
+                        headerAction={
                             <div style={{ display: 'flex', gap: '4px', padding: '4px', backgroundColor: 'var(--bg-secondary)', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
                                 <button
                                     onClick={() => setPreviewDevice('mobile')}
@@ -2093,7 +2198,8 @@ export function AdminEmailTemplatesPage() {
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="3" rx="2" ry="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" /></svg>
                                 </button>
                             </div>
-                        </div>
+                        }
+                    >
 
                         {/* Canvas de Previsualización */}
                         <div
@@ -2101,8 +2207,8 @@ export function AdminEmailTemplatesPage() {
                                 display: 'flex',
                                 justifyContent: 'center',
                                 backgroundColor: 'var(--bg-tertiary)',
-                                padding: '60px 20px',
-                                borderRadius: '24px',
+                                padding: '40px 20px',
+                                borderRadius: '16px',
                                 border: '1px solid var(--border-color)',
                                 minHeight: '500px',
                                 overflow: 'hidden',
@@ -2180,10 +2286,9 @@ export function AdminEmailTemplatesPage() {
                                 />
                             </div>
                         </div>
-                    </div>
+                    </Card>
                 </div>
-            )
-            }
+            )}
 
             {/* Modales de Creación */}
             <Modal
@@ -2237,7 +2342,6 @@ export function AdminEmailTemplatesPage() {
                             </select>
                             <p className="text-[10px] text-[var(--text-tertiary)] italic">El disparador automatiza el envío cuando sucede el evento.</p>
                         </div>
-
 
                         <Input
                             label="Descripción"
@@ -2320,6 +2424,6 @@ export function AdminEmailTemplatesPage() {
                 onCancel={() => setIsConfirmMJMLOpen(false)}
                 variant="info"
             />
-        </div >
+        </div>
     );
 }
