@@ -34,18 +34,27 @@ const SIDEBAR_OPEN = 260;
 const SIDEBAR_COLLAPSED = 72;
 
 const adminNavItems = [
-    { to: '/admin', icon: LayoutDashboard, label: 'Admin Dashboard', end: true },
-    { to: '/admin/users', icon: Users, label: 'Gestión Usuarios' },
-    { to: '/admin/traffic', icon: PieChart, label: 'Análisis de Tráfico', disabled: true },
-    { to: '/admin/shortener', icon: Link2, label: 'Acortador de Enlaces', disabled: true },
-    { to: '/admin/ads', icon: Megaphone, label: 'Ads & Creatividades', disabled: true },
-    { to: '/admin/plans', icon: CreditCard, label: 'Planes y Membresías' },
-    { to: '/admin/referrals', icon: Share, label: 'Sistema de Referidos' },
-    { to: '/admin/withdrawals', icon: CreditCard, label: 'Gestión de Retiros' },
-    { to: '/admin/promo-codes', icon: Ticket, label: 'Códigos Promocionales', disabled: true },
-    { to: '/admin/logs', icon: History, label: 'Logs de Auditoría' },
-    { to: '/admin/settings', icon: Settings, label: 'Ajustes Globales' },
-    { to: '/admin/email-templates', icon: Mail, label: 'Plantillas de Email' },
+    // PRINCIPAL
+    { to: '/admin', icon: LayoutDashboard, label: 'Admin Dashboard', end: true, active: true },
+
+    // GESTIÓN DE USUARIOS
+    { to: '/admin/users', icon: Users, label: 'Gestión Usuarios', active: true },
+    { to: '/admin/email-templates', icon: Mail, label: 'Plantillas de Email', active: true },
+
+    // FINANCIERO & CRECIMIENTO
+    { to: '/admin/plans', icon: CreditCard, label: 'Planes y Membresías', active: true },
+    { to: '/admin/referrals', icon: Share, label: 'Sistema de Referidos', active: true },
+    { to: '/admin/withdrawals', icon: CreditCard, label: 'Gestión de Retiros', active: true },
+
+    // SISTEMA
+    { to: '/admin/settings', icon: Settings, label: 'Ajustes Globales', active: true },
+    { to: '/admin/logs', icon: History, label: 'Logs de Auditoría', active: true },
+
+    // PRÓXIMAMENTE (Inactivos)
+    { to: '/admin/traffic', icon: PieChart, label: 'Análisis de Tráfico', active: false },
+    { to: '/admin/shortener', icon: Link2, label: 'Acortador de Enlaces', active: false },
+    { to: '/admin/ads', icon: Megaphone, label: 'Ads & Creatividades', active: false },
+    { to: '/admin/promo-codes', icon: Ticket, label: 'Códigos Promocionales', active: false },
 ];
 
 export function AdminLayout() {
@@ -194,15 +203,47 @@ export function AdminLayout() {
                 </div>
 
                 {/* Admin Nav */}
-                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', padding: effectivelyCollapsed ? '12px 8px' : '16px 12px' }}>
-                    {adminNavItems.map((item) => (
-                        <AdminSidebarNavItem
-                            key={item.to}
-                            {...item}
-                            collapsed={effectivelyCollapsed}
-                            onClick={() => setMobileOpen(false)}
-                        />
-                    ))}
+                <nav
+                    style={{
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px',
+                        padding: effectivelyCollapsed ? '12px 8px' : '16px 12px',
+                        overflowY: 'auto',
+                        scrollbarWidth: 'none'
+                    }}
+                    className="scrollbar-hide"
+                >
+                    {/* Módulos Activos */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {adminNavItems.filter(i => i.active).map((item) => (
+                            <AdminSidebarNavItem
+                                key={item.to}
+                                {...item}
+                                collapsed={effectivelyCollapsed}
+                                onClick={() => setMobileOpen(false)}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Módulos Próximamente */}
+                    <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {!effectivelyCollapsed && (
+                            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '14px', marginBottom: '8px' }}>
+                                Próximamente
+                            </span>
+                        )}
+                        {adminNavItems.filter(i => !i.active).map((item) => (
+                            <AdminSidebarNavItem
+                                key={item.to}
+                                {...item}
+                                disabled
+                                collapsed={effectivelyCollapsed}
+                                onClick={() => setMobileOpen(false)}
+                            />
+                        ))}
+                    </div>
                 </nav>
             </aside>
 
