@@ -226,15 +226,15 @@ export function RegisterPage() {
                 </div>
             )}
 
-            <h2 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px', textAlign: 'center' }}>
                 Crear cuenta
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '24px' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '32px', textAlign: 'center', lineHeight: 1.5 }}>
                 Completa tus datos para comenzar
             </p>
 
             {error && (
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: '24px' }}>
                     <Alert type="error" dismissible onDismiss={clearError}>
                         {error}
                     </Alert>
@@ -475,11 +475,13 @@ export function RegisterPage() {
                 </Button>
             </form>
 
-            <p style={{ textAlign: 'center', fontSize: '14px', color: 'var(--text-secondary)', marginTop: '24px' }}>
+            <p style={{ textAlign: 'center', fontSize: '15px', color: 'var(--text-secondary)', marginTop: '32px' }}>
                 ¿Ya tienes una cuenta?{' '}
                 <Link
                     to="/login"
-                    style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}
+                    style={{ color: 'var(--color-primary)', fontWeight: 700, textDecoration: 'none' }}
+                    onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
+                    onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
                 >
                     Inicia sesión
                 </Link>
