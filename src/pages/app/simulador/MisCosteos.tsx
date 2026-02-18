@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EmptyState, useToast, ConfirmDialog, Tooltip } from '@/components/common';
+import { Card } from '@/components/common/Card';
 import type { SavedCosteo } from '@/types/simulator';
 import { Trash2, Copy, ArrowLeft, Search, Calculator, BarChart3, Check, X, Pencil, Info, Eye } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -208,267 +209,268 @@ export function MisCosteos() {
                 />
             )}
 
+
+
             {/* Table */}
             {filteredCosteos.length > 0 && (
-                <div
-                    style={{
-                        borderRadius: '12px',
-                        border: '1px solid var(--card-border)',
-                        overflow: 'hidden',
-                        overflowX: 'auto',
-                    }}
-                >
-                    <table
-                        style={{
-                            width: '100%',
-                            borderCollapse: 'collapse',
-                            fontSize: '14px',
-                            minWidth: '800px',
-                        }}
-                    >
-                        <thead>
-                            <tr style={{ backgroundColor: 'var(--bg-secondary)' }}>
-                                {['Producto', 'ID Campaña', 'Precio Sugerido', 'Utilidad', 'Efectividad', 'Fecha', 'Acciones'].map(
-                                    (col) => (
-                                        <th
-                                            key={col}
-                                            style={{
-                                                padding: '12px 16px',
-                                                textAlign: 'left',
-                                                fontWeight: 600,
-                                                color: 'var(--text-secondary)',
-                                                fontSize: '12px',
-                                                textTransform: 'uppercase',
-                                                letterSpacing: '0.05em',
-                                                borderBottom: '1px solid var(--border-color)',
-                                            }}
-                                        >
-                                            {col}
-                                        </th>
-                                    ),
-                                )}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredCosteos.map((c) => (
-                                <tr
-                                    key={c.id}
-                                    style={{
-                                        borderBottom: '1px solid var(--border-color)',
-                                        transition: 'background 100ms',
-                                    }}
-                                    onMouseEnter={(e) =>
-                                        (e.currentTarget.style.backgroundColor = 'var(--bg-secondary)')
-                                    }
-                                    onMouseLeave={(e) =>
-                                        (e.currentTarget.style.backgroundColor = 'transparent')
-                                    }
-                                >
-                                    {/* Producto */}
-                                    <td style={{ padding: '14px 16px' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                                                {c.productName}
-                                            </span>
-                                            {c.volumeStrategy && (
-                                                <div
-                                                    onClick={() => {
-                                                        const off = ofertas.find(o => o.costeoId === c.id);
-                                                        if (off) navigate(`/ofertas?id=${off.id}`);
-                                                        else navigate('/ofertas');
-                                                    }}
-                                                    style={{
-                                                        display: 'inline-flex', alignItems: 'center', gap: '4px',
-                                                        fontSize: '11px', fontWeight: 600,
-                                                        background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
-                                                        color: '#fff',
-                                                        padding: '2px 8px', borderRadius: '12px',
-                                                        width: 'fit-content',
-                                                        boxShadow: '0 2px 5px rgba(37,99,235,0.2)',
-                                                        cursor: 'pointer'
-                                                    }}
-                                                >
-                                                    <BarChart3 size={11} />
-                                                    <span>Con tabla volumen</span>
+                <Card noPadding style={{
+                    boxShadow: 'var(--shadow-lg)',
+                    borderRadius: '16px',
+                    border: '1px solid var(--border-color)',
+                    overflow: 'hidden'
+                }}>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table
+                            style={{
+                                width: '100%',
+                                borderCollapse: 'collapse',
+                                fontSize: '14px',
+                                minWidth: '800px',
+                            }}
+                        >
+                            <thead>
+                                <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                                    {['Producto', 'ID Campaña', 'Precio Sugerido', 'Utilidad', 'Efectividad', 'Fecha', 'Acciones'].map(
+                                        (col) => (
+                                            <th
+                                                key={col}
+                                                style={{
+                                                    padding: '16px 24px',
+                                                    textAlign: 'left',
+                                                    fontWeight: 600,
+                                                    color: 'var(--text-secondary)',
+                                                    fontSize: '12px',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.05em',
+                                                }}
+                                            >
+                                                {col}
+                                            </th>
+                                        ),
+                                    )}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredCosteos.map((c) => (
+                                    <tr
+                                        key={c.id}
+                                        style={{
+                                            borderBottom: '1px solid var(--border-color)',
+                                            transition: 'background-color 0.2s',
+                                        }}
+                                        onMouseEnter={(e) =>
+                                            (e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)')
+                                        }
+                                        onMouseLeave={(e) =>
+                                            (e.currentTarget.style.backgroundColor = 'transparent')
+                                        }
+                                    >
+                                        {/* Producto */}
+                                        <td style={{ padding: '16px 24px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                                                    {c.productName}
+                                                </span>
+                                                {c.volumeStrategy && (
+                                                    <div
+                                                        onClick={() => {
+                                                            const off = ofertas.find(o => o.costeoId === c.id);
+                                                            if (off) navigate(`/ofertas?id=${off.id}`);
+                                                            else navigate('/ofertas');
+                                                        }}
+                                                        style={{
+                                                            display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                                            fontSize: '11px', fontWeight: 600,
+                                                            background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                                                            color: '#fff',
+                                                            padding: '2px 8px', borderRadius: '12px',
+                                                            width: 'fit-content',
+                                                            boxShadow: '0 2px 5px rgba(37,99,235,0.2)',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        <BarChart3 size={11} />
+                                                        <span>Con tabla volumen</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+
+                                        {/* ID Campaña (Editable) */}
+                                        <td style={{ padding: '16px 24px' }}>
+                                            {editingId === c.id ? (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <input
+                                                        type="text"
+                                                        value={editValue}
+                                                        onChange={(e) => setEditValue(e.target.value)}
+                                                        placeholder="ID..."
+                                                        autoFocus
+                                                        style={{
+                                                            width: '100px',
+                                                            padding: '4px 8px',
+                                                            borderRadius: '6px',
+                                                            border: '1px solid var(--color-primary)',
+                                                            outline: 'none',
+                                                            fontSize: '13px',
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') saveEdit(c.id);
+                                                            if (e.key === 'Escape') cancelEdit();
+                                                        }}
+                                                    />
+                                                    <button
+                                                        onClick={() => saveEdit(c.id)}
+                                                        style={{
+                                                            padding: '4px', borderRadius: '4px',
+                                                            backgroundColor: 'var(--color-success)', color: '#fff',
+                                                            border: 'none', cursor: 'pointer', display: 'flex'
+                                                        }}
+                                                        title="Guardar"
+                                                    >
+                                                        <Check size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={cancelEdit}
+                                                        style={{
+                                                            padding: '4px', borderRadius: '4px',
+                                                            backgroundColor: 'var(--text-tertiary)', color: '#fff',
+                                                            border: 'none', cursor: 'pointer', display: 'flex'
+                                                        }}
+                                                        title="Cancelar"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    {c.metaCampaignId ? (
+                                                        <span style={{
+                                                            fontFamily: 'monospace',
+                                                            backgroundColor: 'var(--bg-secondary)',
+                                                            padding: '2px 6px',
+                                                            borderRadius: '4px',
+                                                            fontSize: '12px'
+                                                        }}>
+                                                            {c.metaCampaignId}
+                                                        </span>
+                                                    ) : (
+                                                        <span style={{ color: 'var(--text-tertiary)', fontSize: '13px', fontStyle: 'italic' }}>
+                                                            Sin asignar
+                                                        </span>
+                                                    )}
+                                                    <button
+                                                        onClick={() => startEdit(c)}
+                                                        style={{
+                                                            background: 'none', border: 'none', cursor: 'pointer',
+                                                            color: 'var(--text-tertiary)', padding: '4px',
+                                                            opacity: 0.6, transition: 'opacity 0.2s'
+                                                        }}
+                                                        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                                                        onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
+                                                        title="Editar ID Campaña"
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </button>
                                                 </div>
                                             )}
-                                        </div>
-                                    </td>
+                                        </td>
 
-                                    {/* ID Campaña (Editable) */}
-                                    <td style={{ padding: '14px 16px' }}>
-                                        {editingId === c.id ? (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                <input
-                                                    type="text"
-                                                    value={editValue}
-                                                    onChange={(e) => setEditValue(e.target.value)}
-                                                    placeholder="ID..."
-                                                    autoFocus
-                                                    style={{
-                                                        width: '100px',
-                                                        padding: '4px 8px',
-                                                        borderRadius: '6px',
-                                                        border: '1px solid var(--color-primary)',
-                                                        outline: 'none',
-                                                        fontSize: '13px',
-                                                    }}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter') saveEdit(c.id);
-                                                        if (e.key === 'Escape') cancelEdit();
-                                                    }}
-                                                />
-                                                <button
-                                                    onClick={() => saveEdit(c.id)}
-                                                    style={{
-                                                        padding: '4px', borderRadius: '4px',
-                                                        backgroundColor: 'var(--color-success)', color: '#fff',
-                                                        border: 'none', cursor: 'pointer', display: 'flex'
-                                                    }}
-                                                    title="Guardar"
-                                                >
-                                                    <Check size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={cancelEdit}
-                                                    style={{
-                                                        padding: '4px', borderRadius: '4px',
-                                                        backgroundColor: 'var(--text-tertiary)', color: '#fff',
-                                                        border: 'none', cursor: 'pointer', display: 'flex'
-                                                    }}
-                                                    title="Cancelar"
-                                                >
-                                                    <X size={14} />
-                                                </button>
-                                            </div>
-                                        ) : (
+                                        {/* Precio Sugerido */}
+                                        <td style={{ padding: '16px 24px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                {c.metaCampaignId ? (
-                                                    <span style={{
-                                                        fontFamily: 'monospace',
-                                                        backgroundColor: 'var(--bg-secondary)',
-                                                        padding: '2px 6px',
-                                                        borderRadius: '4px',
-                                                        fontSize: '12px'
-                                                    }}>
-                                                        {c.metaCampaignId}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>
+                                                        {formatCurrency(c.results.suggestedPrice)}
                                                     </span>
-                                                ) : (
-                                                    <span style={{ color: 'var(--text-tertiary)', fontSize: '13px', fontStyle: 'italic' }}>
-                                                        Sin asignar
-                                                    </span>
-                                                )}
-                                                <button
-                                                    onClick={() => startEdit(c)}
-                                                    style={{
-                                                        background: 'none', border: 'none', cursor: 'pointer',
-                                                        color: 'var(--text-tertiary)', padding: '4px',
-                                                        opacity: 0.6, transition: 'opacity 0.2s'
-                                                    }}
-                                                    onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                                                    onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
-                                                    title="Editar ID Campaña"
-                                                >
-                                                    <Pencil size={14} />
-                                                </button>
-                                            </div>
-                                        )}
-                                    </td>
-
-                                    {/* Precio Sugerido */}
-                                    <td style={{ padding: '14px 16px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>
-                                                    {formatCurrency(c.results.suggestedPrice)}
-                                                </span>
-                                                {c.results.originalSuggestedPrice && Math.abs(c.results.originalSuggestedPrice - c.results.suggestedPrice) > 10 && (
-                                                    <Tooltip content={`Sugerido por sistema: ${formatCurrency(c.results.originalSuggestedPrice)}`}>
-                                                        <Info size={14} style={{ color: 'var(--text-tertiary)', cursor: 'help' }} />
-                                                    </Tooltip>
+                                                    {c.results.originalSuggestedPrice && Math.abs(c.results.originalSuggestedPrice - c.results.suggestedPrice) > 10 && (
+                                                        <Tooltip content={`Sugerido por sistema: ${formatCurrency(c.results.originalSuggestedPrice)}`}>
+                                                            <Info size={14} style={{ color: 'var(--text-tertiary)', cursor: 'help' }} />
+                                                        </Tooltip>
+                                                    )}
+                                                </div>
+                                                {c.volumeStrategy && (
+                                                    <button
+                                                        onClick={() => {
+                                                            const off = ofertas.find(o => o.costeoId === c.id);
+                                                            if (off) navigate(`/ofertas?id=${off.id}`);
+                                                            else navigate('/ofertas');
+                                                        }}
+                                                        title="Ver detalles de oferta"
+                                                        style={{
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            width: '28px', height: '28px', borderRadius: '6px',
+                                                            border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)',
+                                                            cursor: 'pointer', color: 'var(--color-primary)',
+                                                            transition: 'all 100ms',
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.borderColor = 'var(--color-primary)';
+                                                            e.currentTarget.style.backgroundColor = 'rgba(0,102,255,0.05)';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.borderColor = 'var(--border-color)';
+                                                            e.currentTarget.style.backgroundColor = 'var(--card-bg)';
+                                                        }}
+                                                    >
+                                                        <Eye size={14} />
+                                                    </button>
                                                 )}
                                             </div>
-                                            {c.volumeStrategy && (
-                                                <button
-                                                    onClick={() => {
-                                                        const off = ofertas.find(o => o.costeoId === c.id);
-                                                        if (off) navigate(`/ofertas?id=${off.id}`);
-                                                        else navigate('/ofertas');
-                                                    }}
-                                                    title="Ver detalles de oferta"
-                                                    style={{
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                        width: '28px', height: '28px', borderRadius: '6px',
-                                                        border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)',
-                                                        cursor: 'pointer', color: 'var(--color-primary)',
-                                                        transition: 'all 100ms',
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        e.currentTarget.style.borderColor = 'var(--color-primary)';
-                                                        e.currentTarget.style.backgroundColor = 'rgba(0,102,255,0.05)';
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        e.currentTarget.style.borderColor = 'var(--border-color)';
-                                                        e.currentTarget.style.backgroundColor = 'var(--card-bg)';
-                                                    }}
-                                                >
-                                                    <Eye size={14} />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </td>
+                                        </td>
 
-                                    {/* Utilidad */}
-                                    <td style={{ padding: '14px 16px' }}>
-                                        <span style={{
-                                            fontWeight: 700,
-                                            fontSize: '15px',
-                                            color: c.results.netProfitPerSale > 0 ? 'var(--color-success)' : 'var(--color-error)'
-                                        }}>
-                                            {formatCurrency(c.results.netProfitPerSale)}
-                                        </span>
-                                    </td>
+                                        {/* Utilidad */}
+                                        <td style={{ padding: '16px 24px' }}>
+                                            <span style={{
+                                                fontWeight: 700,
+                                                fontSize: '15px',
+                                                color: c.results.netProfitPerSale > 0 ? 'var(--color-success)' : 'var(--color-error)'
+                                            }}>
+                                                {formatCurrency(c.results.netProfitPerSale)}
+                                            </span>
+                                        </td>
 
-                                    {/* Efectividad */}
-                                    <td style={{ padding: '14px 16px' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{c.results.finalEffectivenessPercent}%</span>
-                                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Entrega Final</span>
-                                        </div>
-                                    </td>
+                                        {/* Efectividad */}
+                                        <td style={{ padding: '16px 24px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{c.results.finalEffectivenessPercent}%</span>
+                                                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Entrega Final</span>
+                                            </div>
+                                        </td>
 
-                                    {/* Fecha */}
-                                    <td
-                                        style={{
-                                            padding: '14px 16px',
-                                            color: 'var(--text-secondary)',
-                                            fontSize: '13px',
-                                        }}
-                                    >
-                                        {formatDate(c.createdAt)}
-                                    </td>
+                                        {/* Fecha */}
+                                        <td
+                                            style={{
+                                                padding: '16px 24px',
+                                                color: 'var(--text-secondary)',
+                                                fontSize: '13px',
+                                            }}
+                                        >
+                                            {formatDate(c.createdAt)}
+                                        </td>
 
-                                    {/* Acciones */}
-                                    <td style={{ padding: '14px 16px' }}>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <ActionBtn
-                                                icon={<Copy size={14} />}
-                                                title="Duplicar"
-                                                onClick={() => handleDuplicate(c)}
-                                            />
-                                            <ActionBtn
-                                                icon={<Trash2 size={14} />}
-                                                title="Eliminar"
-                                                onClick={() => confirmDelete(c.id)}
-                                                danger
-                                            />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                                        {/* Acciones */}
+                                        <td style={{ padding: '16px 24px' }}>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <ActionBtn
+                                                    icon={<Copy size={14} />}
+                                                    title="Duplicar"
+                                                    onClick={() => handleDuplicate(c)}
+                                                />
+                                                <ActionBtn
+                                                    icon={<Trash2 size={14} />}
+                                                    title="Eliminar"
+                                                    onClick={() => confirmDelete(c.id)}
+                                                    danger
+                                                />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
             )}
 
             <ConfirmDialog
