@@ -26,6 +26,7 @@ import {
 import { auditService } from '../../services/auditService';
 import { AuditLog, AuditFilters, AuditAction } from '../../types/audit.types';
 import { Button, Spinner, Card } from '../common';
+import { cargarPaises, Pais } from '../../services/paisesService';
 import { supabase } from '@/lib/supabase';
 
 // --- Subcomponente DatePicker Pro ---
@@ -68,7 +69,8 @@ const DateRangePicker: React.FC<{
     return (
         <div ref={containerRef} style={{ position: 'relative', flex: 1, minWidth: '280px' }}>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rango de Fechas</label>
-            <div
+            <button
+                type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 style={{
                     display: 'flex',
@@ -80,14 +82,18 @@ const DateRangePicker: React.FC<{
                     borderRadius: '12px',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    height: '48px'
+                    height: '48px',
+                    width: '100%',
+                    textAlign: 'left',
+                    userSelect: 'none',
+                    position: 'relative'
                 }}
             >
-                <Calendar size={18} style={{ color: isOpen ? 'var(--color-primary)' : 'var(--text-tertiary)' }} />
+                <Calendar size={18} style={{ color: isOpen ? 'var(--color-primary)' : 'var(--text-tertiary)', flexShrink: 0 }} />
                 <span style={{ fontSize: '14px', color: value.start ? 'var(--text-primary)' : 'var(--text-tertiary)', fontWeight: 500 }}>
                     {value.start ? `${value.start}  →  ${value.end}` : 'Seleccionar fechas'}
                 </span>
-            </div>
+            </button>
 
             {isOpen && (
                 <div style={{
@@ -110,6 +116,13 @@ const DateRangePicker: React.FC<{
                                 type="date"
                                 value={value.start}
                                 onChange={(e) => onChange({ ...value, start: e.target.value })}
+                                onClick={(e) => {
+                                    try {
+                                        e.currentTarget.showPicker();
+                                    } catch (error) {
+                                        console.warn('showPicker not supported', error);
+                                    }
+                                }}
                                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
                             />
                         </div>
@@ -119,6 +132,13 @@ const DateRangePicker: React.FC<{
                                 type="date"
                                 value={value.end}
                                 onChange={(e) => onChange({ ...value, end: e.target.value })}
+                                onClick={(e) => {
+                                    try {
+                                        e.currentTarget.showPicker();
+                                    } catch (error) {
+                                        console.warn('showPicker not supported', error);
+                                    }
+                                }}
                                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
                             />
                         </div>
@@ -180,6 +200,7 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
     const [page, setPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
     const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+    const [allCountries, setAllCountries] = useState<Pais[]>([]);
 
     const fetchLogs = useCallback(async (isSilent = false) => {
         if (!isSilent) setLoading(true);
@@ -202,6 +223,10 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
     useEffect(() => {
         fetchLogs();
     }, [fetchLogs]);
+
+    useEffect(() => {
+        cargarPaises().then(setAllCountries);
+    }, []);
 
     // Update filters when userId changes
     useEffect(() => {
@@ -239,7 +264,7 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
         }
     };
 
-    const getActionConfig = (action: AuditAction) => {
+    const getActionConfig = (action: AuditAction | string) => {
         if (action === 'LOGIN') return { label: 'Inicio de Sesión', icon: LogIn, color: '#3B82F6' };
         if (action === 'LOGOUT') return { label: 'Cierre de Sesión', icon: LogOut, color: '#6B7280' };
         if (action.includes('CREATE')) return { label: 'Nuevo Registro', icon: PlusCircle, color: '#10B981' };
@@ -331,16 +356,16 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
 
             <div style={{ gap: '32px', alignItems: 'start' }} className={selectedLog ? "dc-audit-grid-active" : "dc-audit-grid"}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <Card noPadding style={{ border: '1px solid var(--border-color)', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+                    <Card noPadding style={{ border: '1px solid var(--border-color)', borderRadius: '16px', overflow: 'hidden', boxShadow: 'var(--shadow-lg)' }}>
                         <div style={{ overflowX: 'auto' }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
-                                        <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recurso / Referencia</th>
-                                        <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Módulo</th>
-                                        <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Acción</th>
-                                        {!hideUser && <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hecho por</th>}
-                                        <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', minWidth: '150px' }}>Día y Hora</th>
+                                        <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recurso / Referencia</th>
+                                        <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Módulo</th>
+                                        <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Acción</th>
+                                        {!hideUser && <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hecho por</th>}
+                                        <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', minWidth: '150px' }}>Día y Hora</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -367,7 +392,7 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
                                                     } as any}
                                                 >
                                                     <td style={{ padding: '16px 24px' }}>
-                                                        <div style={{ fontSize: '14px', fontWeight: 700, color: isSelected ? 'var(--color-primary)' : 'var(--text-primary)' }}>
+                                                        <div style={{ fontSize: '14px', fontWeight: 500, color: isSelected ? 'var(--color-primary)' : 'var(--text-primary)' }}>
                                                             {getFriendlyObjectName(log)}
                                                         </div>
                                                         <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'monospace', marginTop: '2px' }}>
@@ -379,13 +404,13 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
                                                             <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: `${mod.color}15`, color: mod.color }}>
                                                                 <mod.icon size={16} />
                                                             </div>
-                                                            <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>{mod.label}</span>
+                                                            <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 500 }}>{mod.label}</span>
                                                         </div>
                                                     </td>
                                                     <td style={{ padding: '16px 24px' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                             <act.icon size={16} style={{ color: act.color }} />
-                                                            <span style={{ fontSize: '13px', color: act.color, fontWeight: 800, textTransform: 'uppercase' }}>{act.label}</span>
+                                                            <span style={{ fontSize: '13px', color: act.color, fontWeight: 500, textTransform: 'uppercase' }}>{act.label}</span>
                                                         </div>
                                                     </td>
                                                     {!hideUser && (
@@ -395,22 +420,30 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
                                                                     width: '36px', height: '36px', borderRadius: '50%',
                                                                     backgroundColor: isSelected ? 'var(--color-primary)' : 'var(--bg-secondary)',
                                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                    fontSize: '13px', fontWeight: 800, color: isSelected ? '#FFF' : 'var(--color-primary)',
+                                                                    fontSize: '13px', fontWeight: 600, color: isSelected ? '#FFF' : 'var(--color-primary)',
                                                                     border: '1px solid var(--border-color)'
                                                                 }}>
                                                                     {log.usuario ? log.usuario.nombres[0] + (log.usuario.apellidos?.[0] || '') : 'S'}
                                                                 </div>
                                                                 <div>
-                                                                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                                                    <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                                         {log.usuario ? `${log.usuario.nombres} ${log.usuario.apellidos}` : 'Sistema'}
+                                                                        {log.usuario?.pais && (
+                                                                            <img
+                                                                                src={`https://flagcdn.com/w40/${log.usuario.pais.toLowerCase()}.png`}
+                                                                                alt={log.usuario.pais}
+                                                                                style={{ width: '14px', height: '10px', borderRadius: '1px', objectFit: 'cover' }}
+                                                                                title={allCountries.find(p => p.codigo_iso_2.toUpperCase() === log.usuario?.pais?.toUpperCase())?.nombre_es || log.usuario.pais}
+                                                                            />
+                                                                        )}
                                                                     </div>
-                                                                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Web User</div>
+                                                                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 400 }}>Web User</div>
                                                                 </div>
                                                             </div>
                                                         </td>
                                                     )}
                                                     <td style={{ padding: '16px 24px', minWidth: '150px' }}>
-                                                        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{day}</div>
+                                                        <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{day}</div>
                                                         <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>{time}</div>
                                                     </td>
                                                 </tr>
