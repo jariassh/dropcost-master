@@ -56,9 +56,13 @@ export async function enviarPruebaPlantilla(params: {
             return { success: false, error: error.message || JSON.stringify(error) };
         }
 
+        if (data && data.emails_enviados === 0 && data.razon_error) {
+            return { success: false, error: data.razon_error };
+        }
+
         return { success: data?.emails_enviados > 0 || data?.message === 'ok' };
     } catch (err: any) {
         console.error('[emailTrigger] Unexpected error:', err);
-        return { success: false, error: err.message || 'Error desconocido' };
+        return { success: false, error: err.message || 'Error inesperado en el cliente' };
     }
 }
