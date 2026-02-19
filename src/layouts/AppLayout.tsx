@@ -234,8 +234,8 @@ export function AppLayout() {
                                 collapsed={effectivelyCollapsed}
                                 onClick={() => setMobileOpen(false)}
                                 style={{
-                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                    color: '#EF4444'
+                                    backgroundColor: 'color-mix(in srgb, var(--color-admin-panel-link) 10%, transparent)',
+                                    color: 'var(--color-admin-panel-link)'
                                 }}
                             />
                         </div>
@@ -261,6 +261,7 @@ export function AppLayout() {
                     minWidth: 0,
                     marginLeft: 'var(--sidebar-width, 0px)',
                     transition: 'margin-left 300ms ease',
+                    backgroundColor: 'var(--bg-primary)',
                 }}
                 className="max-lg:!ml-0"
             >

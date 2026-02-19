@@ -4,7 +4,7 @@ import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Spinner } from '@/components/common/Spinner';
 import { Toggle } from '@/components/common/Toggle';
-import { Alert, useToast } from '@/components/common';
+import { Alert, useToast, CodeEditor } from '@/components/common';
 import {
     Search,
     Palette,
@@ -29,7 +29,8 @@ import {
     Linkedin,
     Youtube,
     FileText,
-    Shield
+    Shield,
+    AlignLeft
 } from 'lucide-react';
 import { configService, GlobalConfig } from '@/services/configService';
 import { storageService } from '@/services/storageService';
@@ -395,37 +396,89 @@ function SectionSEO({ config, setConfig, isDark }: any) {
 }
 
 function SectionBranding({ config, setConfig }: any) {
-    const colorGroups = [
+    const [brandingTab, setBrandingTab] = useState<'light' | 'dark' | 'brand'>('brand');
+
+    const brandColors = [
         {
-            title: 'Colores de Marca',
+            title: 'Identidad de Marca',
+            description: 'Colores principales del sistema. Estos suelen ser compartidos por ambos temas.',
             colors: [
                 { key: 'color_primary', label: 'Primario' },
-                { key: 'color_primary_dark', label: 'P. Oscuro' },
-                { key: 'color_primary_light', label: 'P. Claro' },
+                { key: 'color_primary_dark', label: 'P. Oscuro (hover)' },
+                { key: 'color_primary_light', label: 'P. Claro (suave)' },
+                { key: 'color_text_inverse', label: 'Texto Inverso' },
             ]
         },
         {
-            title: 'Semánticos',
+            title: 'Estados y Semántica',
+            description: 'Colores para feedback visual, alertas y validaciones.',
             colors: [
                 { key: 'color_success', label: 'Éxito' },
                 { key: 'color_warning', label: 'Aviso' },
                 { key: 'color_error', label: 'Error' },
+                { key: 'color_neutral', label: 'Neutral' },
             ]
         },
         {
-            title: 'Layout Base',
+            title: 'Navegación (Sidebar)',
+            description: 'Configuración de la barra lateral izquierda.',
             colors: [
-                { key: 'color_bg_primary', label: 'Fondo' },
-                { key: 'color_bg_secondary', label: 'Fondo Sec.' },
-                { key: 'color_text_primary', label: 'Texto P.' },
-                { key: 'color_text_secondary', label: 'Texto S.' },
+                { key: 'color_sidebar_bg', label: 'Fondo Sidebar' },
+                { key: 'color_sidebar_text', label: 'Texto Sidebar' },
+                { key: 'color_sidebar_active', label: 'Item Activo' },
             ]
         },
         {
-            title: 'Navegación',
+            title: 'Administración (Panel)',
+            description: 'Colores específicos para el área administrativa.',
             colors: [
-                { key: 'color_sidebar_bg', label: 'Menú Lat.' },
-                { key: 'color_sidebar_text', label: 'Texto Menú' },
+                { key: 'color_admin_panel_link', label: 'Acceso Admin (App)' },
+                { key: 'color_admin_sidebar_active', label: 'Activo Admin' },
+                { key: 'color_admin_sidebar_return', label: 'Botón Retorno' },
+            ]
+        }
+    ];
+
+    const themeColors = [
+        {
+            title: 'Fondos (Backgrounds)',
+            description: brandingTab === 'light' ? 'Estructura de fondos para el tema claro.' : 'Estructura de fondos para el tema oscuro.',
+            colors: brandingTab === 'light' ? [
+                { key: 'color_bg_primary', label: 'Fondo Principal' },
+                { key: 'color_bg_secondary', label: 'Fondo Secundario' },
+                { key: 'color_bg_tertiary', label: 'Fondo Terciario' },
+                { key: 'color_card_bg', label: 'Fondo Tarjetas' },
+                { key: 'color_card_border', label: 'Borde Tarjetas' },
+            ] : [
+                { key: 'dark_bg_primary', label: 'Fondo Principal (D)' },
+                { key: 'dark_bg_secondary', label: 'Fondo Secundario (D)' },
+                { key: 'dark_bg_tertiary', label: 'Fondo Terciario (D)' },
+                { key: 'dark_card_bg', label: 'Fondo Tarjetas (D)' },
+                { key: 'dark_card_border', label: 'Borde Tarjetas (D)' },
+            ]
+        },
+        {
+            title: 'Tipografía (Text)',
+            description: brandingTab === 'light' ? 'Colores de texto para fondos claros.' : 'Colores de texto para fondos oscuros.',
+            colors: brandingTab === 'light' ? [
+                { key: 'color_text_primary', label: 'Texto Principal' },
+                { key: 'color_text_secondary', label: 'Texto Secundario' },
+                { key: 'color_text_tertiary', label: 'Texto Terciario' },
+            ] : [
+                { key: 'dark_text_primary', label: 'Texto Principal (D)' },
+                { key: 'dark_text_secondary', label: 'Texto Secundario (D)' },
+                { key: 'dark_text_tertiary', label: 'Texto Terciario (D)' },
+            ]
+        },
+        {
+            title: 'Delineación (Borders)',
+            description: brandingTab === 'light' ? 'Bordes y separadores para el tema claro.' : 'Bordes y separadores para el tema oscuro.',
+            colors: brandingTab === 'light' ? [
+                { key: 'color_border', label: 'Borde Base' },
+                { key: 'color_border_hover', label: 'Borde Hover' },
+            ] : [
+                { key: 'dark_border', label: 'Borde Base (D)' },
+                { key: 'dark_border_hover', label: 'Borde Hover (D)' },
             ]
         }
     ];
@@ -492,46 +545,116 @@ function SectionBranding({ config, setConfig }: any) {
                 </Card>
             </div>
 
-            <Card title="Paleta de Colores">
+            <Card title="Paleta de Colores Corporativa">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                    {colorGroups.map((group) => (
-                        <div key={group.title}>
-                            <h5 className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-widest mb-4">{group.title}</h5>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {/* Selector de Sub-tab de Branding */}
+                    <div style={{
+                        display: 'flex',
+                        backgroundColor: 'var(--bg-secondary)',
+                        padding: '4px',
+                        borderRadius: '12px',
+                        width: 'fit-content',
+                    }}>
+                        <button
+                            onClick={() => setBrandingTab('brand')}
+                            style={{
+                                padding: '8px 16px',
+                                borderRadius: '8px',
+                                fontSize: '13px',
+                                fontWeight: 600,
+                                backgroundColor: brandingTab === 'brand' ? 'var(--bg-primary)' : 'transparent',
+                                color: brandingTab === 'brand' ? 'var(--color-primary)' : 'var(--text-tertiary)',
+                                border: 'none',
+                                cursor: 'pointer',
+                                transition: 'all 200ms ease',
+                                boxShadow: brandingTab === 'brand' ? 'var(--shadow-sm)' : 'none'
+                            }}
+                        >
+                            Marca y Core
+                        </button>
+                        <button
+                            onClick={() => setBrandingTab('light')}
+                            style={{
+                                padding: '8px 16px',
+                                borderRadius: '8px',
+                                fontSize: '13px',
+                                fontWeight: 600,
+                                backgroundColor: brandingTab === 'light' ? 'var(--bg-primary)' : 'transparent',
+                                color: brandingTab === 'light' ? 'var(--color-primary)' : 'var(--text-tertiary)',
+                                border: 'none',
+                                cursor: 'pointer',
+                                transition: 'all 200ms ease',
+                                boxShadow: brandingTab === 'light' ? 'var(--shadow-sm)' : 'none'
+                            }}
+                        >
+                            Tema Claro
+                        </button>
+                        <button
+                            onClick={() => setBrandingTab('dark')}
+                            style={{
+                                padding: '8px 16px',
+                                borderRadius: '8px',
+                                fontSize: '13px',
+                                fontWeight: 600,
+                                backgroundColor: brandingTab === 'dark' ? 'var(--bg-primary)' : 'transparent',
+                                color: brandingTab === 'dark' ? 'var(--color-primary)' : 'var(--text-tertiary)',
+                                border: 'none',
+                                cursor: 'pointer',
+                                transition: 'all 200ms ease',
+                                boxShadow: brandingTab === 'dark' ? 'var(--shadow-sm)' : 'none'
+                            }}
+                        >
+                            Tema Oscuro
+                        </button>
+                    </div>
+
+                    {(brandingTab === 'brand' ? brandColors : themeColors).map((group) => (
+                        <div key={group.title} className="animate-in fade-in slide-in-from-left-4 duration-300">
+                            <div style={{ marginBottom: '16px' }}>
+                                <h5 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-widest">{group.title}</h5>
+                                <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>{group.description}</p>
+                            </div>
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                 {group.colors.map((c) => (
                                     <div
                                         key={c.key}
                                         style={{
                                             display: 'flex',
                                             alignItems: 'center',
-                                            gap: '16px',
-                                            padding: '16px',
-                                            borderRadius: '12px',
+                                            gap: '12px',
+                                            padding: '12px',
+                                            borderRadius: '16px',
                                             backgroundColor: 'var(--bg-tertiary)',
                                             border: '1px solid var(--border-color)',
                                             transition: 'all 200ms ease'
                                         }}
-                                        className="hover:border-[var(--color-primary-light)] shadow-sm"
+                                        className="hover:border-[var(--color-primary-light)] group cursor-pointer"
+                                        onClick={() => {
+                                            const input = document.getElementById(`color-pick-${c.key}`);
+                                            if (input) input.click();
+                                        }}
                                     >
-                                        <input
-                                            type="color"
-                                            value={(config as any)[c.key]}
-                                            onChange={(e) => setConfig((prev: any) => ({ ...prev, [c.key]: e.target.value }))}
-                                            style={{
-                                                width: '40px',
-                                                height: '40px',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer',
-                                                border: 'none',
-                                                padding: 0,
-                                                overflow: 'hidden',
-                                                flexShrink: 0
-                                            }}
-                                            className="shadow-sm"
-                                        />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                id={`color-pick-${c.key}`}
+                                                type="color"
+                                                value={(config as any)[c.key] || '#000000'}
+                                                onChange={(e) => setConfig((prev: any) => ({ ...prev, [c.key]: e.target.value }))}
+                                                style={{
+                                                    width: '44px',
+                                                    height: '44px',
+                                                    borderRadius: '10px',
+                                                    cursor: 'pointer',
+                                                    border: 'none',
+                                                    padding: 0,
+                                                    overflow: 'hidden',
+                                                }}
+                                                className="shadow-sm ring-2 ring-white"
+                                            />
+                                        </div>
                                         <div className="min-w-0">
-                                            <p className="text-xs font-bold text-[var(--text-primary)] truncate">{c.label}</p>
-                                            <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wider font-medium">{(config as any)[c.key]}</p>
+                                            <p className="text-[11px] font-bold text-[var(--text-primary)] truncate">{c.label}</p>
+                                            <p className="text-[10px] text-[var(--text-tertiary)] font-mono uppercase">{(config as any)[c.key] || '---'}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -563,56 +686,110 @@ function SectionBranding({ config, setConfig }: any) {
 }
 
 function SectionTracking({ config, setConfig }: any) {
+    const toast = useToast();
+
+    /**
+     * Formatea el código (HTML/JS) con indentación simple
+     */
+    const formatCode = (key: 'codigo_head' | 'codigo_footer') => {
+        const code = config[key];
+        if (!code) return;
+
+        try {
+            let formatted = '';
+            let pad = 0;
+            const lines = code
+                .replace(/>\s*</g, '>\n<') // Romper líneas entre etiquetas
+                .split('\n');
+
+            lines.forEach((line: string) => {
+                let indent = 0;
+                const trimmed = line.trim();
+                if (!trimmed) return;
+
+                // Disminuir indentación si es etiqueta de cierre
+                if (trimmed.match(/^<\//)) {
+                    pad = Math.max(0, pad - 1);
+                }
+
+                indent = pad;
+
+                // Aumentar indentación si es etiqueta de apertura pero no autocierre
+                if (trimmed.match(/^<[^/].*[^/]>|(?=<!)/) && !trimmed.match(/\/>$/) && !trimmed.match(/^<.*>.*<\/.*>$/)) {
+                    pad += 1;
+                }
+
+                formatted += '  '.repeat(indent) + trimmed + '\n';
+            });
+
+            setConfig((prev: any) => ({ ...prev, [key]: formatted.trim() }));
+            toast.success('Formato aplicado', 'El código se ha reordenado correctamente.');
+        } catch (error) {
+            console.error('Error formatting code:', error);
+            toast.error('Error', 'No se pudo formatear el código.');
+        }
+    };
+
+    const FormatButton = ({ onClick }: { onClick: () => void }) => (
+        <button
+            onClick={onClick}
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-primary)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-tertiary)',
+                cursor: 'pointer',
+                transition: 'all 200ms ease'
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--color-primary)';
+                e.currentTarget.style.color = 'var(--color-primary)';
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-color)';
+                e.currentTarget.style.color = 'var(--text-tertiary)';
+            }}
+            title="Auto-formatear código"
+        >
+            <AlignLeft size={16} />
+        </button>
+    );
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            <Card title="Inyección en HEAD">
+            <Card
+                title="Inyección en HEAD"
+                description="Ideal para Píxeles, Tag Manager y Analytics."
+                headerAction={<FormatButton onClick={() => formatCode('codigo_head')} />}
+            >
                 <div className="space-y-4">
-                    <p className="text-sm text-[var(--text-secondary)]">Ideal para Píxeles, Tag Manager y Analytics.</p>
-                    <textarea
-                        value={config.codigo_head}
-                        onChange={(e) => setConfig((prev: any) => ({ ...prev, codigo_head: e.target.value }))}
-                        style={{
-                            width: '100%',
-                            padding: '18px',
-                            borderRadius: '16px',
-                            backgroundColor: '#0f172a',
-                            border: '1px solid #334155',
-                            color: '#34d399',
-                            fontFamily: 'monospace',
-                            fontSize: '12px',
-                            lineHeight: '1.6',
-                            outline: 'none',
-                            minHeight: '260px',
-                            transition: 'all 200ms ease'
-                        }}
-                        className="shadow-inner focus:ring-2 focus:ring-[var(--color-primary)]"
+                    <CodeEditor
+                        value={config.codigo_head || ''}
+                        onChange={(val) => setConfig((prev: any) => ({ ...prev, codigo_head: val }))}
+                        language="html"
                         placeholder="<!-- Meta Pixel -->"
+                        minHeight="260px"
                     />
                 </div>
             </Card>
 
-            <Card title="Inyección en FOOTER">
+            <Card
+                title="Inyección en FOOTER"
+                description="Ideal para Widgets de Chat y scripts de carga diferida."
+                headerAction={<FormatButton onClick={() => formatCode('codigo_footer')} />}
+            >
                 <div className="space-y-4">
-                    <p className="text-sm text-[var(--text-secondary)]">Ideal para Widgets de Chat y scripts de carga diferida.</p>
-                    <textarea
-                        value={config.codigo_footer}
-                        onChange={(e) => setConfig((prev: any) => ({ ...prev, codigo_footer: e.target.value }))}
-                        style={{
-                            width: '100%',
-                            padding: '18px',
-                            borderRadius: '16px',
-                            backgroundColor: '#0f172a',
-                            border: '1px solid #334155',
-                            color: '#34d399',
-                            fontFamily: 'monospace',
-                            fontSize: '12px',
-                            lineHeight: '1.6',
-                            outline: 'none',
-                            minHeight: '220px',
-                            transition: 'all 200ms ease'
-                        }}
-                        className="shadow-inner focus:ring-2 focus:ring-[var(--color-primary)]"
+                    <CodeEditor
+                        value={config.codigo_footer || ''}
+                        onChange={(val) => setConfig((prev: any) => ({ ...prev, codigo_footer: val }))}
+                        language="html"
                         placeholder="<script>...</script>"
+                        minHeight="220px"
                     />
                 </div>
             </Card>
