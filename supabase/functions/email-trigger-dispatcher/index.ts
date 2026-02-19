@@ -19,8 +19,10 @@ interface TriggerPayload {
  * Si la variable no existe en datos, la deja como está.
  */
 function reemplazarVariables(texto: string, datos: Record<string, string>): string {
-    return texto.replace(/\$\{([^}]+)\}/g, (match, key) => {
-        return datos[key] !== undefined ? datos[key] : match;
+    // Match {{ variable }} or {{variable}}
+    return texto.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (match, key) => {
+        const cleanKey = key.trim();
+        return datos[cleanKey] !== undefined ? datos[cleanKey] : match;
     });
 }
 
@@ -93,20 +95,34 @@ Deno.serve(async (req: Request) => {
             let razonError: string | null = null;
 
             try {
-                const emailResponse = await fetch(`${supabaseUrl}/functions/v1/email-service`, {
+                // Construct the URL for the email-service function
+                const emailServiceUrl = `${supabaseUrl}/functions/v1/email-service`;
+                console.log(`[email-trigger-dispatcher] Invoking email-service at: ${emailServiceUrl}`);
+
+                const emailResponse = await fetch(emailServiceUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${supabaseServiceKey}`,
                     },
-                    body: JSON.stringify({ to: toEmail, from: fromFull, subject: asuntoFinal, html: htmlFinal }),
+                    body: JSON.stringify({ 
+                        to: toEmail, 
+                        from: fromFull, 
+                        subject: asuntoFinal, 
+                        html: htmlFinal 
+                    }),
                 });
 
                 if (!emailResponse.ok) {
-                    const errorBody = await emailResponse.text();
-                    throw new Error(`email-service respondió ${emailResponse.status}: ${errorBody}`);
+                    const errorText = await emailResponse.text();
+                    console.error(`[email-trigger-dispatcher] email-service failed with status ${emailResponse.status}: ${errorText}`);
+                    throw new Error(`email-service responded ${emailResponse.status}: ${errorText}`);
+                } else {
+                    const responseData = await emailResponse.json().catch(() => ({}));
+                    console.log(`[email-trigger-dispatcher] email-service success:`, responseData);
                 }
             } catch (sendError: any) {
+                console.error(`[email-trigger-dispatcher] Exception calling email-service:`, sendError);
                 estado = 'fallido';
                 razonError = sendError.message;
             }
