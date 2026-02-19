@@ -26,40 +26,39 @@ export const PricingPage: React.FC = () => {
     const currentPlanId = user?.planId || 'plan_free';
 
     useEffect(() => {
-        const loadPlans = async () => {
+        const initialize = async () => {
+            setLoading(true);
             try {
+                // 1. Load Plans
                 const data = await plansService.getPlans(true, true);
                 setPlans(data);
-            } catch (error) {
-                console.error('Error loading pricing plans:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadPlans();
-    }, []);
 
-    // Detect Currency & Rates (Simplified from previous version)
-    useEffect(() => {
-        const initCurrency = async () => {
-            if (user?.pais) {
-                try {
+                // 2. Detect User Currency
+                if (user?.pais) {
                     const paisInfo = await obtenerPaisPorCodigo(user.pais);
                     if (paisInfo) {
                         const currency = getDisplayCurrency(user.pais, paisInfo.moneda_codigo);
                         setTargetCurrency(currency);
                     }
-                } catch (e) { console.error(e); }
+                }
+
+                // 3. Fetch Exchange Rates
+                const rates = await fetchExchangeRates('USD');
+                setExchangeRates(rates);
+            } catch (error) {
+                console.error('Error initializing pricing page:', error);
+            } finally {
+                setLoading(false);
             }
-            // Fetch rates base USD
-            const rates = await fetchExchangeRates('USD');
-            setExchangeRates(rates);
         };
-        initCurrency();
-    }, [user]);
+        initialize();
+    }, [user?.pais]);
+    // Quitamos [user] completo para evitar re-renders innecesarios, solo dependemos del país
 
     const getPriceDisplay = (plan: Plan) => {
-        const baseCurrency = plan.currency || 'COP';
+        // Corrección de seguridad: Si el precio es bajo (< 500) y está marcado como COP, 
+        // probablemente es un error de los datos iniciales guardados como COP en lugar de USD.
+        const baseCurrency = (plan.price_monthly < 500 && plan.currency === 'COP') ? 'USD' : (plan.currency || 'USD');
         const price = billingPeriod === 'monthly' ? plan.price_monthly : plan.price_semiannual;
 
         if (baseCurrency === targetCurrency) {

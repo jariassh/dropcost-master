@@ -135,10 +135,10 @@ export const AdminPlansPage: React.FC = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '16px 24px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                                            {formatCurrency(plan.price_monthly, plan.currency || 'COP')}
+                                            {formatCurrency(plan.price_monthly, plan.currency || 'USD')}
                                         </td>
                                         <td style={{ padding: '16px 24px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                                            {formatCurrency(plan.price_semiannual || 0, plan.currency || 'COP')}
+                                            {formatCurrency(plan.price_semiannual || 0, plan.currency || 'USD')}
                                         </td>
                                         <td style={{ padding: '16px 24px' }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '12px', color: 'var(--text-secondary)' }}>
