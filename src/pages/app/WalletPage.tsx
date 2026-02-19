@@ -21,6 +21,7 @@ import { fetchExchangeRates, convertPrice } from '@/utils/currencyUtils';
 import { useAuthStore } from '@/store/authStore';
 import { WithdrawalModal } from '@/components/referidos/WithdrawalModal';
 import { supabase } from '@/lib/supabase';
+import { PremiumFeatureGuard } from '@/components/common/PremiumFeatureGuard';
 
 export const WalletPage: React.FC = () => {
     const { user, initialize } = useAuthStore();
@@ -91,7 +92,7 @@ export const WalletPage: React.FC = () => {
                 }
             }
 
-            const days = config?.dias_retencion_comision ?? 30;
+            const days = (config as any)?.dias_retencion_comision ?? 30;
 
             setBalance(balanceData);
             setMovements(movementsData);
@@ -145,326 +146,332 @@ export const WalletPage: React.FC = () => {
     }
 
     return (
-        <div className="dc-wallet-container" style={{ display: 'flex', flexDirection: 'column', gap: '32px', padding: '20px 0 60px 0' }}>
-            {/* Header section */}
-            <div className="dc-wallet-header">
-                <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>Mi Billetera</h1>
-                <p style={{ color: 'var(--text-tertiary)', fontSize: '15px' }}>Gestiona tus comisiones y solicita retiros de forma segura.</p>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <StatsCard
-                    title="Saldo Disponible"
-                    value={getConverted(balance?.available_balance || 0)}
-                    currency={displayCurrency}
-                    icon={<Wallet size={24} />}
-                    color="var(--color-primary)"
-                    subtitle="Dinero listo para retirar"
-                    action={
-                        <Button
-                            size="xs"
-                            leftIcon={<Plus size={14} />}
-                            onClick={handleWithdrawClick}
-                        >
-                            Retirar
-                        </Button>
-                    }
-                />
-                <StatsCard
-                    title="Total Generado"
-                    value={getConverted(balance?.total_earned || 0)}
-                    currency={displayCurrency}
-                    icon={<TrendingUp size={24} />}
-                    color="var(--color-success)"
-                    subtitle="Histórico de ganancias"
-                />
-                <StatsCard
-                    title="En Revisión"
-                    value={getConverted(balance?.pending_commissions || 0)}
-                    currency={displayCurrency}
-                    icon={<History size={24} />}
-                    color="var(--color-warning)"
-                    subtitle={`Comisiones pendientes (< ${retentionDays} días)`}
-                />
-            </div>
-
-            {/* Main Content Area */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                {/* Left: Movements Table */}
-                <div className="xl:col-span-2" style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
-                    <div>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>Movimientos Recientes</h3>
-                        <Card noPadding style={{ boxShadow: 'var(--shadow-lg)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-                            <div className="overflow-x-auto">
-                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                    <thead>
-                                        <tr style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
-                                            <th style={tableHeaderStyle}>Concepto</th>
-                                            <th style={tableHeaderStyle}>Tipo</th>
-                                            <th style={tableHeaderStyle}>Fecha</th>
-                                            <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>Monto</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {movements.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={4} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
-                                                    No hay movimientos registrados.
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            movements.map((move) => (
-                                                <tr
-                                                    key={move.id}
-                                                    style={tableRowStyle}
-                                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
-                                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                                >
-                                                    <td style={tableCellStyle}>
-                                                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{move.description}</span>
-                                                    </td>
-                                                    <td style={tableCellStyle}>
-                                                        <Badge variant={move.type === 'withdrawal' ? 'modern-error' : 'modern-success'}>
-                                                            {move.type === 'referral_bonus' ? 'Comisión' :
-                                                                move.type === 'withdrawal' ? 'Retiro' : 'Ajuste'}
-                                                        </Badge>
-                                                    </td>
-                                                    <td style={tableCellStyle}>
-                                                        <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                                                            {new Date(move.created_at).toLocaleDateString()}
-                                                        </span>
-                                                    </td>
-                                                    <td style={{ ...tableCellStyle, textAlign: 'right' }}>
-                                                        <span style={{
-                                                            fontWeight: 700,
-                                                            color: move.type === 'withdrawal' ? 'var(--color-error)' : 'var(--color-success)'
-                                                        }}>
-                                                            {move.type === 'withdrawal' ? '-' : '+'}
-                                                            {formatCurrency(getConverted(move.amount), displayCurrency)}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </Card>
-                    </div>
-
-                    <div>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>Estado de Retiros</h3>
-                        <Card noPadding style={{ boxShadow: 'var(--shadow-lg)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-                            <div className="overflow-x-auto">
-                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                    <thead>
-                                        <tr style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
-                                            <th style={tableHeaderStyle}>ID</th>
-                                            <th style={tableHeaderStyle}>Monto Local</th>
-                                            <th style={tableHeaderStyle}>Estado</th>
-                                            <th style={tableHeaderStyle}>Banco</th>
-                                            <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>Fecha</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {withdrawals.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={5} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
-                                                    No has solicitado retiros aún.
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            withdrawals.map((req) => (
-                                                <tr
-                                                    key={req.id}
-                                                    style={tableRowStyle}
-                                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
-                                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                                >
-                                                    <td style={tableCellStyle}>
-                                                        <span style={{ fontSize: '12px', fontFamily: 'monospace', color: 'var(--text-tertiary)' }}>
-                                                            {req.id.split('-')[0]}...
-                                                        </span>
-                                                    </td>
-                                                    <td style={tableCellStyle}>
-                                                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                                                            {formatCurrency(req.monto_local, req.moneda_destino)}
-                                                        </span>
-                                                    </td>
-                                                    <td style={tableCellStyle}>
-                                                        <Badge variant={
-                                                            req.estado === 'completado' ? 'modern-success' :
-                                                                req.estado === 'en_proceso' ? 'pill-info' :
-                                                                    req.estado === 'rechazado' ? 'modern-error' : 'pill-warning'
-                                                        }>
-                                                            {req.estado === 'completado' ? 'Completado' :
-                                                                req.estado === 'en_proceso' ? 'En Proceso' :
-                                                                    req.estado === 'rechazado' ? 'Rechazado' : 'Pendiente'}
-                                                        </Badge>
-                                                    </td>
-                                                    <td style={tableCellStyle}>
-                                                        <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{req.banco_nombre}</span>
-                                                    </td>
-                                                    <td style={{ ...tableCellStyle, textAlign: 'right' }}>
-                                                        <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                                                            {new Date(req.fecha_solicitud).toLocaleDateString()}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </Card>
-                    </div>
+        <PremiumFeatureGuard
+            featureKey="access_wallet"
+            title="Billetera Premium"
+            description="El sistema de comisiones y retiros es una funcionalidad exclusiva para planes superiores. ¡Mejora tu plan para empezar a ganar!"
+        >
+            <div className="dc-wallet-container" style={{ display: 'flex', flexDirection: 'column', gap: '32px', padding: '20px 0 60px 0' }}>
+                {/* Header section */}
+                <div className="dc-wallet-header">
+                    <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>Mi Billetera</h1>
+                    <p style={{ color: 'var(--text-tertiary)', fontSize: '15px' }}>Gestiona tus comisiones y solicita retiros de forma segura.</p>
                 </div>
 
-                {/* Right: Actions and Bank Info */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-
-
-                    <Card title="Información Bancaria" style={{ boxShadow: 'var(--shadow-sm)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                                Vincula tu cuenta para recibir tus pagos automáticamente.
-                            </p>
-
-                            {bankInfo?.banco_nombre ? (
-                                <div style={{
-                                    padding: '20px',
-                                    backgroundColor: 'var(--bg-secondary)',
-                                    borderRadius: '16px',
-                                    border: '1px solid var(--border-color)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '16px'
-                                }}>
-                                    {/* Banco */}
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <div style={{
-                                                width: '40px', height: '40px',
-                                                borderRadius: '10px',
-                                                backgroundColor: 'rgba(0, 102, 255, 0.1)',
-                                                color: 'var(--color-primary)',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                            }}>
-                                                <Landmark size={20} />
-                                            </div>
-                                            <div>
-                                                <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Banco</p>
-                                                <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{bankInfo.banco_nombre}</p>
-                                            </div>
-                                        </div>
-                                        {bankInfo.cuenta_tipo && (
-                                            <span style={{
-                                                fontSize: '11px',
-                                                fontWeight: 700,
-                                                padding: '3px 10px',
-                                                borderRadius: '6px',
-                                                backgroundColor: 'rgba(0, 102, 255, 0.1)',
-                                                color: 'var(--color-primary)',
-                                                textTransform: 'uppercase',
-                                                letterSpacing: '0.04em'
-                                            }}>
-                                                {bankInfo.cuenta_tipo}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <div style={{ padding: '0 8px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        {/* Cuenta */}
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-                                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Cuenta</span>
-                                            <span style={{ fontSize: '13px', fontFamily: 'monospace', fontWeight: 600 }}>
-                                                •••• {bankInfo.cuenta_numero?.slice(-4) || '0000'}
-                                            </span>
-                                        </div>
-                                        {/* Titular */}
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-                                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Titular</span>
-                                            <span style={{ fontSize: '13px', fontWeight: 600 }}>{bankInfo.titular_nombre}</span>
-                                        </div>
-                                        {/* Documento */}
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Documento</span>
-                                            <span style={{ fontSize: '13px', fontFamily: 'monospace', fontWeight: 600 }}>
-                                                •••• {bankInfo.documento_id?.slice(-4) || '0000'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div style={{
-                                    padding: '32px 20px',
-                                    textAlign: 'center',
-                                    border: '2px dashed var(--border-color)',
-                                    borderRadius: '16px',
-                                    backgroundColor: 'var(--bg-secondary)'
-                                }}>
-                                    <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                                        No hay cuenta vinculada
-                                    </p>
-                                    <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
-                                        Agrega una cuenta al solicitar tu primer retiro.
-                                    </span>
-                                </div>
-                            )}
-
-                            <Button variant="ghost" size="sm" className="w-full" onClick={() => setIsBankEditOpen(true)}>
-                                {bankInfo?.banco_nombre ? 'Cambiar cuenta' : 'Vincular cuenta'}
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <StatsCard
+                        title="Saldo Disponible"
+                        value={getConverted(balance?.available_balance || 0)}
+                        currency={displayCurrency}
+                        icon={<Wallet size={24} />}
+                        color="var(--color-primary)"
+                        subtitle="Dinero listo para retirar"
+                        action={
+                            <Button
+                                size="xs"
+                                leftIcon={<Plus size={14} />}
+                                onClick={handleWithdrawClick}
+                            >
+                                Retirar
                             </Button>
-                        </div>
-                    </Card>
-
-                    <Card title="Información de Wise" style={{ boxShadow: 'var(--shadow-sm)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            <div style={{ display: 'flex', gap: '12px', alignItems: 'start' }}>
-                                <div style={{ color: 'var(--color-primary)' }}><Eye size={18} /></div>
-                                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                                    Los retiros se procesan todos los <strong>viernes</strong>.
-                                </p>
-                            </div>
-                            <div style={{ display: 'flex', gap: '12px', alignItems: 'start' }}>
-                                <div style={{ color: 'var(--color-primary)' }}><Download size={18} /></div>
-                                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                                    Se aplica un cargo de gestión del <strong>3%</strong> por transferencia.
-                                </p>
-                            </div>
-                        </div>
-                    </Card>
+                        }
+                    />
+                    <StatsCard
+                        title="Total Generado"
+                        value={getConverted(balance?.total_earned || 0)}
+                        currency={displayCurrency}
+                        icon={<TrendingUp size={24} />}
+                        color="var(--color-success)"
+                        subtitle="Histórico de ganancias"
+                    />
+                    <StatsCard
+                        title="En Revisión"
+                        value={getConverted(balance?.pending_commissions || 0)}
+                        currency={displayCurrency}
+                        icon={<History size={24} />}
+                        color="var(--color-warning)"
+                        subtitle={`Comisiones pendientes (< ${retentionDays} días)`}
+                    />
                 </div>
-            </div>
 
-            {/* Withdraw Modal */}
-            <WithdrawalModal
-                isOpen={isWithdrawModalOpen}
-                onClose={() => setIsWithdrawModalOpen(false)}
-                onSuccess={() => {
-                    loadData();
-                    initialize();
-                }}
-                availableBalanceUsd={balance?.available_balance || 0}
-                exchangeRate={exchangeRates?.[displayCurrency] || 1}
-                currency={displayCurrency}
-                existingBankInfo={bankInfo}
-                minimumWithdrawalUsd={minimumWithdrawal}
-            />
+                {/* Main Content Area */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    {/* Left: Movements Table */}
+                    <div className="xl:col-span-2" style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+                        <div>
+                            <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>Movimientos Recientes</h3>
+                            <Card noPadding style={{ boxShadow: 'var(--shadow-lg)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+                                <div className="overflow-x-auto">
+                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                        <thead>
+                                            <tr style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                                                <th style={tableHeaderStyle}>Concepto</th>
+                                                <th style={tableHeaderStyle}>Tipo</th>
+                                                <th style={tableHeaderStyle}>Fecha</th>
+                                                <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>Monto</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {movements.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={4} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                                                        No hay movimientos registrados.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                movements.map((move) => (
+                                                    <tr
+                                                        key={move.id}
+                                                        style={tableRowStyle}
+                                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+                                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                    >
+                                                        <td style={tableCellStyle}>
+                                                            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{move.description}</span>
+                                                        </td>
+                                                        <td style={tableCellStyle}>
+                                                            <Badge variant={move.type === 'withdrawal' ? 'modern-error' : 'modern-success'}>
+                                                                {move.type === 'referral_bonus' ? 'Comisión' :
+                                                                    move.type === 'withdrawal' ? 'Retiro' : 'Ajuste'}
+                                                            </Badge>
+                                                        </td>
+                                                        <td style={tableCellStyle}>
+                                                            <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                                                                {new Date(move.created_at).toLocaleDateString()}
+                                                            </span>
+                                                        </td>
+                                                        <td style={{ ...tableCellStyle, textAlign: 'right' }}>
+                                                            <span style={{
+                                                                fontWeight: 700,
+                                                                color: move.type === 'withdrawal' ? 'var(--color-error)' : 'var(--color-success)'
+                                                            }}>
+                                                                {move.type === 'withdrawal' ? '-' : '+'}
+                                                                {formatCurrency(getConverted(move.amount), displayCurrency)}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </Card>
+                        </div>
 
-            {/* Bank Edit Modal */}
-            {isBankEditOpen && (
-                <BankEditModal
-                    currentBankInfo={bankInfo}
-                    onClose={() => setIsBankEditOpen(false)}
-                    onSaved={() => {
-                        setIsBankEditOpen(false);
+                        <div>
+                            <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>Estado de Retiros</h3>
+                            <Card noPadding style={{ boxShadow: 'var(--shadow-lg)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+                                <div className="overflow-x-auto">
+                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                        <thead>
+                                            <tr style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                                                <th style={tableHeaderStyle}>ID</th>
+                                                <th style={tableHeaderStyle}>Monto Local</th>
+                                                <th style={tableHeaderStyle}>Estado</th>
+                                                <th style={tableHeaderStyle}>Banco</th>
+                                                <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>Fecha</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {withdrawals.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={5} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                                                        No has solicitado retiros aún.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                withdrawals.map((req) => (
+                                                    <tr
+                                                        key={req.id}
+                                                        style={tableRowStyle}
+                                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+                                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                    >
+                                                        <td style={tableCellStyle}>
+                                                            <span style={{ fontSize: '12px', fontFamily: 'monospace', color: 'var(--text-tertiary)' }}>
+                                                                {req.id.split('-')[0]}...
+                                                            </span>
+                                                        </td>
+                                                        <td style={tableCellStyle}>
+                                                            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                                                                {formatCurrency(req.monto_local, req.moneda_destino)}
+                                                            </span>
+                                                        </td>
+                                                        <td style={tableCellStyle}>
+                                                            <Badge variant={
+                                                                req.estado === 'completado' ? 'modern-success' :
+                                                                    req.estado === 'en_proceso' ? 'pill-info' :
+                                                                        req.estado === 'rechazado' ? 'modern-error' : 'pill-warning'
+                                                            }>
+                                                                {req.estado === 'completado' ? 'Completado' :
+                                                                    req.estado === 'en_proceso' ? 'En Proceso' :
+                                                                        req.estado === 'rechazado' ? 'Rechazado' : 'Pendiente'}
+                                                            </Badge>
+                                                        </td>
+                                                        <td style={tableCellStyle}>
+                                                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{req.banco_nombre}</span>
+                                                        </td>
+                                                        <td style={{ ...tableCellStyle, textAlign: 'right' }}>
+                                                            <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                                                                {new Date(req.fecha_solicitud).toLocaleDateString()}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </Card>
+                        </div>
+                    </div>
+
+                    {/* Right: Actions and Bank Info */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+
+
+                        <Card title="Información Bancaria" style={{ boxShadow: 'var(--shadow-sm)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <p style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                                    Vincula tu cuenta para recibir tus pagos automáticamente.
+                                </p>
+
+                                {bankInfo?.banco_nombre ? (
+                                    <div style={{
+                                        padding: '20px',
+                                        backgroundColor: 'var(--bg-secondary)',
+                                        borderRadius: '16px',
+                                        border: '1px solid var(--border-color)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '16px'
+                                    }}>
+                                        {/* Banco */}
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div style={{
+                                                    width: '40px', height: '40px',
+                                                    borderRadius: '10px',
+                                                    backgroundColor: 'rgba(0, 102, 255, 0.1)',
+                                                    color: 'var(--color-primary)',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                }}>
+                                                    <Landmark size={20} />
+                                                </div>
+                                                <div>
+                                                    <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Banco</p>
+                                                    <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{bankInfo.banco_nombre}</p>
+                                                </div>
+                                            </div>
+                                            {bankInfo.cuenta_tipo && (
+                                                <span style={{
+                                                    fontSize: '11px',
+                                                    fontWeight: 700,
+                                                    padding: '3px 10px',
+                                                    borderRadius: '6px',
+                                                    backgroundColor: 'rgba(0, 102, 255, 0.1)',
+                                                    color: 'var(--color-primary)',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.04em'
+                                                }}>
+                                                    {bankInfo.cuenta_tipo}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div style={{ padding: '0 8px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                            {/* Cuenta */}
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                                                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Cuenta</span>
+                                                <span style={{ fontSize: '13px', fontFamily: 'monospace', fontWeight: 600 }}>
+                                                    •••• {bankInfo.cuenta_numero?.slice(-4) || '0000'}
+                                                </span>
+                                            </div>
+                                            {/* Titular */}
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                                                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Titular</span>
+                                                <span style={{ fontSize: '13px', fontWeight: 600 }}>{bankInfo.titular_nombre}</span>
+                                            </div>
+                                            {/* Documento */}
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Documento</span>
+                                                <span style={{ fontSize: '13px', fontFamily: 'monospace', fontWeight: 600 }}>
+                                                    •••• {bankInfo.documento_id?.slice(-4) || '0000'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div style={{
+                                        padding: '32px 20px',
+                                        textAlign: 'center',
+                                        border: '2px dashed var(--border-color)',
+                                        borderRadius: '16px',
+                                        backgroundColor: 'var(--bg-secondary)'
+                                    }}>
+                                        <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                                            No hay cuenta vinculada
+                                        </p>
+                                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
+                                            Agrega una cuenta al solicitar tu primer retiro.
+                                        </span>
+                                    </div>
+                                )}
+
+                                <Button variant="ghost" size="sm" className="w-full" onClick={() => setIsBankEditOpen(true)}>
+                                    {bankInfo?.banco_nombre ? 'Cambiar cuenta' : 'Vincular cuenta'}
+                                </Button>
+                            </div>
+                        </Card>
+
+                        <Card title="Información de Wise" style={{ boxShadow: 'var(--shadow-sm)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ display: 'flex', gap: '12px', alignItems: 'start' }}>
+                                    <div style={{ color: 'var(--color-primary)' }}><Eye size={18} /></div>
+                                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                                        Los retiros se procesan todos los <strong>viernes</strong>.
+                                    </p>
+                                </div>
+                                <div style={{ display: 'flex', gap: '12px', alignItems: 'start' }}>
+                                    <div style={{ color: 'var(--color-primary)' }}><Download size={18} /></div>
+                                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                                        Se aplica un cargo de gestión del <strong>3%</strong> por transferencia.
+                                    </p>
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+
+                {/* Withdraw Modal */}
+                <WithdrawalModal
+                    isOpen={isWithdrawModalOpen}
+                    onClose={() => setIsWithdrawModalOpen(false)}
+                    onSuccess={() => {
                         loadData();
+                        initialize();
                     }}
+                    availableBalanceUsd={balance?.available_balance || 0}
+                    exchangeRate={exchangeRates?.[displayCurrency] || 1}
+                    currency={displayCurrency}
+                    existingBankInfo={bankInfo}
+                    minimumWithdrawalUsd={minimumWithdrawal}
                 />
-            )}
-        </div>
+
+                {/* Bank Edit Modal */}
+                {isBankEditOpen && (
+                    <BankEditModal
+                        currentBankInfo={bankInfo}
+                        onClose={() => setIsBankEditOpen(false)}
+                        onSaved={() => {
+                            setIsBankEditOpen(false);
+                            loadData();
+                        }}
+                    />
+                )}
+            </div>
+        </PremiumFeatureGuard>
     );
 };
 
