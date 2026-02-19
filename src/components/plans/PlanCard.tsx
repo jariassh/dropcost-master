@@ -83,7 +83,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onS
             {/* Price */}
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
                 <span style={{ fontSize: '36px', fontWeight: 800, color: 'var(--text-primary)' }}>
-                    {displayedPrice ? displayedPrice.replace(/\s/g, '') : formatCurrency(plan.price_monthly).replace(/\s/g, '')}
+                    {displayedPrice || formatCurrency(plan.price_monthly)}
                 </span>
                 <span style={{ fontSize: '14px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
                     {period === 'monthly' ? '/mes' : '/semestre'}
