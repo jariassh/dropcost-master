@@ -43,7 +43,7 @@ export const storeService = {
             auditService.recordLog({
                 accion: 'CREATE_STORE',
                 entidad: 'STORE',
-                entidad_id: data.id,
+                entidadId: data.id,
                 detalles: { nombre: data.nombre, pais: data.pais }
             });
         }
@@ -71,7 +71,7 @@ export const storeService = {
             auditService.recordLog({
                 accion: 'UPDATE_STORE',
                 entidad: 'STORE',
-                entidad_id: data.id,
+                entidadId: data.id,
                 detalles: cambios
             });
         }
@@ -105,7 +105,7 @@ export const storeService = {
         auditService.recordLog({
             accion: 'DELETE_STORE',
             entidad: 'STORE',
-            entidad_id: id,
+            entidadId: id,
             detalles: { 
                 id, 
                 nombre: tienda?.nombre || 'Tienda eliminada (Nombre desconocido)',
