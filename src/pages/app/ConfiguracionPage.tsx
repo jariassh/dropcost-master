@@ -35,7 +35,8 @@ import {
     Pencil,
     Activity,
     Target,
-    ListChecks
+    ListChecks,
+    MessageCircle
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useStoreStore } from '@/store/useStoreStore';
@@ -45,6 +46,9 @@ import { useToast, Modal, ConfirmDialog, Button, Badge, SelectPais } from '@/com
 import { CreateStoreModal } from '@/components/layout/CreateStoreModal';
 import type { Tienda } from '@/types/store.types';
 import { cargarPaises, Pais } from '@/services/paisesService';
+import { configService, GlobalConfig } from '@/services/configService';
+import { paymentService } from '@/services/paymentService';
+import { differenceInDays, parseISO } from 'date-fns';
 import {
     Clock,
     Zap,
@@ -219,6 +223,31 @@ export function ConfiguracionPage() {
         cargarPaises().then(setAllCountries);
     }, []);
 
+    // Global Config for Support
+    const [globalConfig, setGlobalConfig] = useState<GlobalConfig | null>(null);
+
+    useEffect(() => {
+        configService.getConfig().then(setGlobalConfig);
+    }, []);
+
+
+    const [isRenewing, setIsRenewing] = useState(false);
+
+    const handleRenew = async () => {
+        if (!user?.planId) return;
+        setIsRenewing(true);
+        try {
+            // Se asume pago mensual para renovación rápida
+            const initPoint = await paymentService.createCheckoutSession(user.planId, 'monthly');
+            if (initPoint) {
+                window.location.href = initPoint;
+            }
+        } catch (error: any) {
+            toast.error('Error al iniciar pago', error.message || 'No se pudo generar el link de renovación.');
+        } finally {
+            setIsRenewing(false);
+        }
+    };
 
     const executeDeleteTienda = async () => {
         if (!deleteTiendaConfirm) return;
@@ -553,7 +582,7 @@ export function ConfiguracionPage() {
                                     {user?.planId !== 'plan_enterprise' && (
                                         <Button
                                             variant="primary"
-                                            onClick={() => navigate('/precios')}
+                                            onClick={() => navigate('/pricing')}
                                             style={{ gap: '8px' }}
                                         >
                                             <ArrowUpCircle size={18} />
@@ -567,10 +596,12 @@ export function ConfiguracionPage() {
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                         <FeatureItem label={`Máximo ${user?.plan?.limits?.stores} tiendas`} active />
                                         <FeatureItem label={`${user?.plan?.limits?.costeos_limit || 'Ilimitados'} costeos`} active />
+                                        <FeatureItem label={`${user?.plan?.limits?.offers_limit || 'Ilimitadas'} ofertas sugeridas`} active />
                                         <FeatureItem label="Soporte Prioritario" active={user?.planId !== 'plan_free'} />
                                         <FeatureItem label="Acceso a Billetera" active={user?.plan?.limits?.access_wallet} />
                                         <FeatureItem label="Sistema de Referidos" active={user?.plan?.limits?.access_referrals} />
                                         <FeatureItem label="Duplicado de Costeos" active={user?.plan?.limits?.can_duplicate_costeos} />
+                                        <FeatureItem label="Duplicado de Ofertas" active={!!user?.plan?.limits?.can_duplicate_offers} />
                                     </div>
                                 </div>
                             </Card>
@@ -578,12 +609,33 @@ export function ConfiguracionPage() {
                             <Card>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
                                     <Clock size={20} color="var(--text-secondary)" />
-                                    <h4 style={{ margin: 0, fontWeight: 700 }}>Próxima Renovación</h4>
+                                    <h4 style={{ margin: 0, fontWeight: 700 }}>Vencimiento de Suscripción</h4>
                                 </div>
-                                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: 0 }}>
-                                    Tu suscripción se renovará automáticamente el <strong>{new Date(new Date().setMonth(new Date().getMonth() + 1)).toLocaleDateString()}</strong>.
-                                    Puedes gestionar tus métodos de pago para evitar interrupciones en el servicio.
+                                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 20px', lineHeight: 1.6 }}>
+                                    Tu suscripción no tiene cobros automáticos. Para mantener tus beneficios activos sin interrupciones, debes realizar el pago manualmente antes del <strong>{user?.fechaVencimiento ? new Date(user.fechaVencimiento).toLocaleDateString() : 'Próximamente'}.</strong> Contamos con un periodo de gracia de 3 días antes de la suspensión automática.
                                 </p>
+
+                                {(() => {
+                                    const daysRemaining = user?.fechaVencimiento
+                                        ? differenceInDays(parseISO(user.fechaVencimiento), new Date())
+                                        : 99;
+
+                                    if (daysRemaining <= 3) {
+                                        return (
+                                            <Button
+                                                variant="primary"
+                                                fullWidth
+                                                onClick={handleRenew}
+                                                isLoading={isRenewing}
+                                                style={{ gap: '8px', justifyContent: 'center' }}
+                                            >
+                                                <CreditCardIcon size={18} />
+                                                Renovar o Pagar Ahora
+                                            </Button>
+                                        );
+                                    }
+                                    return null;
+                                })()}
                             </Card>
                         </div>
 
@@ -591,11 +643,28 @@ export function ConfiguracionPage() {
                             <Card>
                                 <h4 style={{ margin: '0 0 16px', fontWeight: 700, fontSize: '15px' }}>¿Necesitas ayuda?</h4>
                                 <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', lineHeight: 1.6, marginBottom: '20px' }}>
-                                    Si tienes dudas sobre tu facturación o necesitas un plan personalizado para tu empresa, nuestro equipo está listo para ayudarte.
+                                    Si tienes dudas sobre tu facturación o necesitas un plan personalizado para tu cuenta, nuestro equipo está listo para ayudarte por estos medios:
                                 </p>
-                                <Button variant="secondary" fullWidth onClick={() => window.open('https://wa.me/xyz', '_blank')}>
-                                    Contactar Soporte
-                                </Button>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <Button
+                                        variant="secondary"
+                                        fullWidth
+                                        onClick={() => window.open(`https://wa.me/${globalConfig?.telefono?.replace(/[^0-9]/g, '')}`, '_blank')}
+                                        style={{ gap: '8px', justifyContent: 'center' }}
+                                    >
+                                        <MessageCircle size={18} />
+                                        WhatsApp Soporte
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        fullWidth
+                                        onClick={() => window.open(`mailto:${globalConfig?.email_contacto}`, '_blank')}
+                                        style={{ gap: '8px', justifyContent: 'center', border: '1px solid var(--border-color)' }}
+                                    >
+                                        <Mail size={18} />
+                                        Enviar Correo
+                                    </Button>
+                                </div>
                             </Card>
                         </div>
                     </div>
