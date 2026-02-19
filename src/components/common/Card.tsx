@@ -6,12 +6,14 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
     title?: string;
     icon?: ReactNode;
     headerAction?: ReactNode;
+    description?: string | ReactNode;
 }
 
 export function Card({
     hoverable = false,
     noPadding = false,
     title,
+    description,
     icon,
     headerAction,
     children,
@@ -72,14 +74,27 @@ export function Card({
                                 {icon}
                             </div>
                         )}
-                        <h3 style={{
-                            fontSize: '16px',
-                            fontWeight: 700,
-                            color: 'var(--text-primary)',
-                            margin: 0
-                        }}>
-                            {title}
-                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <h3 style={{
+                                fontSize: '16px',
+                                fontWeight: 700,
+                                color: 'var(--text-primary)',
+                                margin: 0
+                            }}>
+                                {title}
+                            </h3>
+                            {description && (
+                                <p style={{
+                                    fontSize: '12px',
+                                    color: 'var(--text-tertiary)',
+                                    margin: '4px 0 0',
+                                    fontWeight: 400,
+                                    lineHeight: '1.4'
+                                }}>
+                                    {description}
+                                </p>
+                            )}
+                        </div>
                     </div>
                     {headerAction && (
                         <div>

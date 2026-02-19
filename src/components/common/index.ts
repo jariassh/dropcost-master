@@ -23,4 +23,5 @@ export { PaisDisplay } from './PaisDisplay';
 export { InputPaisAutocompletado } from './InputPaisAutocompletado';
 export { CodePreview } from './CodePreview';
 export { CompactEmptyState } from './CompactEmptyState';
+export { CodeEditor } from './CodeEditor';
 
