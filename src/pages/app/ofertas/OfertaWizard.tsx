@@ -8,6 +8,7 @@ import { calculateDiscount, calculateBundle, calculateGift } from './ofertasCalc
 import type { StrategyType, DiscountConfig, BundleConfig, GiftConfig, Oferta } from '@/types/ofertas';
 import type { SavedCosteo } from '@/types/simulator';
 import { ChevronLeft, ChevronRight, Sparkles, X, Gift } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 
 const STEPS = ['Estrategia', 'Costeo', 'Configurar', 'Confirmar'];
 
@@ -63,7 +64,18 @@ export function OfertaWizard({ isOpen, onClose }: OfertaWizardProps) {
     }
 
     function handleActivate() {
+        const { user } = useAuthStore.getState();
+        const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+        const offersLimit = user?.plan?.limits?.offers_limit ?? -1;
+
         if (!strategyType || !selectedCosteo) return;
+
+        // Check Offers Limit
+        const existingOffers = JSON.parse(localStorage.getItem('dropcost_ofertas') || '[]') as Oferta[];
+        if (!isAdmin && offersLimit !== -1 && existingOffers.length >= offersLimit) {
+            toast.warning('Límite de Ofertas', `Tu plan actual permite un máximo de ${offersLimit} ofertas. Mejora tu plan para habilitar más.`);
+            return;
+        }
 
         let estimatedProfit = 0;
         let estimatedMargin = 0;

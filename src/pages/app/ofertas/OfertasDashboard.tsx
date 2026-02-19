@@ -9,7 +9,7 @@ import { Card } from '@/components/common/Card';
 import { OfertaDetailPanel } from './components/OfertaDetailPanel';
 import type { Oferta, StrategyType, OfertaStatus } from '@/types/ofertas';
 import { STRATEGIES } from '@/types/ofertas';
-import { Plus, Eye, Pause, Play, Trash2, Gift, Filter } from 'lucide-react';
+import { Plus, Eye, Pause, Play, Trash2, Gift, Filter, Copy } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
 interface OfertasDashboardProps {
@@ -59,6 +59,33 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
         );
         saveOfertas(updated);
         toast.success('Estado actualizado');
+    }
+
+    function handleDuplicate(oferta: Oferta) {
+        const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+        const canDuplicate = user?.plan?.limits?.can_duplicate_offers;
+
+        if (!isAdmin && !canDuplicate) {
+            toast.warning('Función Premium', 'La duplicación de ofertas no está habilitada en tu plan actual.');
+            return;
+        }
+
+        const offersLimit = user?.plan?.limits?.offers_limit ?? -1;
+        if (!isAdmin && offersLimit !== -1 && ofertas.length >= offersLimit) {
+            toast.warning('Límite de Ofertas', `Has alcanzado el máximo de ${offersLimit} ofertas permitidas en tu plan. Mejora tu suscripción para crear más.`);
+            return;
+        }
+
+        const dup: Oferta = {
+            ...oferta,
+            id: crypto.randomUUID(),
+            productName: `${oferta.productName} (copia)`,
+            createdAt: new Date().toISOString(),
+            activatedAt: new Date().toISOString(),
+        };
+        const updated = [dup, ...ofertas];
+        saveOfertas(updated);
+        toast.success('Oferta duplicada');
     }
 
     function handleDelete(id: string) {
@@ -142,11 +169,6 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                 ))}
             </div>
 
-            import {Card} from '@/components/common/Card';
-
-            // ... (imports remain)
-
-            // ... inside the component ...
 
             {/* Table (desktop) */}
             <Card noPadding style={{
@@ -209,6 +231,7 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                                                     title={o.status === 'activa' ? 'Pausar' : 'Reanudar'}
                                                     onClick={() => handleToggleStatus(o.id)}
                                                 />
+                                                <ActionBtn icon={<Copy size={14} />} title="Duplicar" onClick={() => handleDuplicate(o)} />
                                                 <ActionBtn icon={<Trash2 size={14} />} title="Eliminar" onClick={() => checkDelete(o.id)} danger />
                                             </div>
                                         </td>
