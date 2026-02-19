@@ -112,7 +112,8 @@ const categorizedVariables = {
     ],
     'Autenticación': [
         { name: '{{app_url}}/reset-password?token={{reset_token}}', label: 'Link Reset Password' },
-        { name: '{{app_url}}/verificar-email?code={{verification_code}}', label: 'Link Verificar Email' }
+        { name: '{{app_url}}/verificar-email?code={{verification_code}}', label: 'Link Verificar Email' },
+        { name: 'login_url', label: 'Link de Login' }
     ],
     'Legal': [
         { name: '{{app_url}}/privacidad', label: 'Política de Privacidad' },
@@ -125,7 +126,23 @@ const categorizedVariables = {
         { name: '{{app_url}}/soporte', label: 'Centro de Ayuda' }
     ],
     'Seguridad': [
-        { name: 'codigo', label: 'Código de Verificación (OTP)' }
+        { name: 'codigo_2fa', label: 'Código 2FA / OTP' },
+        { name: 'expira_en', label: 'Tiempo de Expiración' }
+    ],
+    'Marca & Colores': [
+        { name: 'color_primary', label: 'Color Primario' },
+        { name: 'color_primary_dark', label: 'Color Primario Oscuro' },
+        { name: 'color_primary_light', label: 'Color Primario Claro' },
+        { name: 'color_success', label: 'Color Éxito' },
+        { name: 'color_warning', label: 'Color Advertencia' },
+        { name: 'color_error', label: 'Color Error' },
+        { name: 'color_neutral', label: 'Color Neutral' },
+        { name: 'color_bg_primary', label: 'Color Fondo Principal' },
+        { name: 'color_bg_secondary', label: 'Color Fondo Secundario' },
+        { name: 'color_text_primary', label: 'Color Texto Principal' },
+        { name: 'color_text_secondary', label: 'Color Texto Secundario' },
+        { name: 'color_text_inverse', label: 'Color Texto Inverso' },
+        { name: 'color_sidebar_bg', label: 'Color Fondo Sidebar' }
     ]
 };
 
@@ -1134,7 +1151,9 @@ export function AdminEmailTemplatesPage() {
             let htmlFinal = selectedTemplate.html_content || '';
             if (selectedTemplate.mjml_content) {
                 try {
-                    const result = mjml2html(selectedTemplate.mjml_content);
+                    // Pre-reemplazar variables para que MJML no falle en su validación interna (especialmente colores)
+                    const mjmlPreparado = renderPreview(selectedTemplate.mjml_content);
+                    const result = mjml2html(mjmlPreparado, { validationLevel: 'skip' });
                     htmlFinal = result.html;
                 } catch (mjError) {
                     console.error('MJML compile error en prueba:', mjError);
@@ -1153,8 +1172,11 @@ export function AdminEmailTemplatesPage() {
                 codigo_referido: selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA',
                 // Variables de prueba genéricas para triggers que las necesiten
                 reset_link: `${window.location.origin}/actualizar-contrasena?token=PRUEBA`,
+                login_url: `${window.location.origin}/login`,
                 expira_en: '10 minutos',
                 codigo_2fa: '123456',
+                "2fa_code": '123456',
+                codigo: '123456',
                 plan_nombre: selectedTestUser.plan_id || 'Plan Pro',
                 fecha_inicio: new Date().toISOString().split('T')[0],
                 fecha_vencimiento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -1183,6 +1205,20 @@ export function AdminEmailTemplatesPage() {
                 fecha_cambio: new Date().toISOString().split('T')[0],
                 fecha_pago: new Date().toISOString().split('T')[0],
                 fecha_ascenso: new Date().toISOString().split('T')[0],
+                // Variables de marca (Simuladas con los valores del config actual o defaults)
+                color_primary: globalConfig?.color_primary || '#0066FF',
+                color_primary_dark: globalConfig?.color_primary_dark || '#0052cc',
+                color_primary_light: globalConfig?.color_primary_light || '#e6f0ff',
+                color_success: globalConfig?.color_success || '#10B981',
+                color_warning: globalConfig?.color_warning || '#F59E0B',
+                color_error: globalConfig?.color_error || '#EF4444',
+                color_neutral: globalConfig?.color_neutral || '#6B7280',
+                color_bg_primary: globalConfig?.color_bg_primary || '#FFFFFF',
+                color_bg_secondary: globalConfig?.color_bg_secondary || '#F9FAFB',
+                color_text_primary: globalConfig?.color_text_primary || '#1F2937',
+                color_text_secondary: globalConfig?.color_text_secondary || '#6B7280',
+                color_text_inverse: globalConfig?.color_text_inverse || '#FFFFFF',
+                color_sidebar_bg: globalConfig?.color_sidebar_bg || '#FFFFFF',
             };
 
             const resultado = await enviarPruebaPlantilla({
@@ -1197,6 +1233,7 @@ export function AdminEmailTemplatesPage() {
                 toast.error('Error al enviar', resultado.error || 'No se pudo enviar el correo de prueba.');
             }
         } catch (error) {
+            console.error('Error en handleSendTestEmail:', error);
             toast.error('Error', 'No se pudo enviar el correo de prueba.');
         } finally {
             setIsSendingTest(false);
@@ -1259,7 +1296,9 @@ export function AdminEmailTemplatesPage() {
             let finalHtml = selectedTemplate.html_content;
             if (selectedTemplate.mjml_content) {
                 try {
-                    const result = mjml2html(selectedTemplate.mjml_content);
+                    // Al guardar, usamos validationLevel 'skip' para permitir que las variables {{color}} 
+                    // persistan en el HTML y puedan ser inyectadas dinámicamente por el dispatcher después.
+                    const result = mjml2html(selectedTemplate.mjml_content, { validationLevel: 'skip' });
                     finalHtml = result.html;
                 } catch (mjError) {
                     console.error('MJML Compilation Error:', mjError);
@@ -1664,31 +1703,76 @@ export function AdminEmailTemplatesPage() {
     const renderPreview = (content: string) => {
         if (!selectedTemplate) return content;
         let rendered = content;
-        selectedTemplate.variables.forEach(v => {
-            let mockValue = `[${v}]`;
 
-            // Si hay usuario de prueba seleccionado, intentamos usar sus datos
-            if (selectedTestUser) {
-                if (v === 'nombres') mockValue = selectedTestUser.nombres;
-                else if (v === 'apellidos') mockValue = selectedTestUser.apellidos;
-                else if (v === 'email') mockValue = selectedTestUser.email;
-                else if (v === 'id' || v === 'user_id') mockValue = selectedTestUser.id.toString();
-                else if (v === 'nombre_completo') mockValue = `${selectedTestUser.nombres} ${selectedTestUser.apellidos}`;
-            } else {
-                // Valores por defecto si no hay usuario
-                if (v === 'nombres') mockValue = 'Juan';
-                else if (v === 'apellidos') mockValue = 'Pérez';
-                else if (v === 'email') mockValue = 'juan@ejemplo.com';
-            }
+        // 1. Obtener todas las variables posibles para el mapeo
+        const brandingVars: Record<string, string> = {
+            color_primary: globalConfig?.color_primary || '#0066FF',
+            color_primary_dark: globalConfig?.color_primary_dark || '#0052cc',
+            color_primary_light: globalConfig?.color_primary_light || '#e6f0ff',
+            color_success: globalConfig?.color_success || '#10B981',
+            color_warning: globalConfig?.color_warning || '#F59E0B',
+            color_error: globalConfig?.color_error || '#EF4444',
+            color_neutral: globalConfig?.color_neutral || '#6B7280',
+            color_bg_primary: globalConfig?.color_bg_primary || '#FFFFFF',
+            color_bg_secondary: globalConfig?.color_bg_secondary || '#F9FAFB',
+            color_text_primary: globalConfig?.color_text_primary || '#1F2937',
+            color_text_secondary: globalConfig?.color_text_secondary || '#6B7280',
+            color_text_inverse: globalConfig?.color_text_inverse || '#FFFFFF',
+            color_sidebar_bg: globalConfig?.color_sidebar_bg || '#FFFFFF',
+            app_url: window.location.origin,
+            login_url: `${window.location.origin}/login`
+        };
 
-            // Valores especiales que siempre son iguales o simulados
-            if (v === 'codigo') mockValue = '123456';
-            if (v === 'link') mockValue = '#';
-            if (v === 'url') mockValue = 'https://ejemplo.com';
-            if (v === 'empresa') mockValue = globalConfig?.nombre_empresa || 'Mi Empresa';
+        const securityVars: Record<string, string> = {
+            codigo_2fa: '123456',
+            "2fa_code": '123456',
+            expira_en: '10 minutos',
+            codigo: '123456'
+        };
 
-            rendered = rendered.replace(new RegExp(`\\{\\{\\s*${v}\\s*\\}\\}`, 'g'), mockValue);
+        // 2. Reemplazar variables registradas en la plantilla
+        if (selectedTemplate.variables && Array.isArray(selectedTemplate.variables)) {
+            selectedTemplate.variables.forEach(v => {
+                let mockValue = `[${v}]`;
+
+                // Usuario
+                if (selectedTestUser) {
+                    if (v === 'nombres') mockValue = selectedTestUser.nombres;
+                    else if (v === 'apellidos') mockValue = selectedTestUser.apellidos;
+                    else if (v === 'email') mockValue = selectedTestUser.email;
+                    else if (v === 'id' || v === 'user_id') mockValue = selectedTestUser.id.toString();
+                    else if (v === 'nombre_completo') mockValue = `${selectedTestUser.nombres} ${selectedTestUser.apellidos}`;
+                }
+
+                // Mapeo directo si existe en branding o security
+                if (brandingVars[v]) mockValue = brandingVars[v];
+                if (securityVars[v]) mockValue = securityVars[v];
+
+                // Otros defaults
+                if (v === 'empresa') mockValue = globalConfig?.nombre_empresa || 'DropCost';
+                if (v === 'link') mockValue = '#';
+                if (v === 'url') mockValue = brandingVars.app_url;
+
+                rendered = rendered.replace(new RegExp(`\\{\\{\\s*${v}\\s*\\}\\}`, 'g'), mockValue);
+            });
+        }
+
+        // 3. Fallback de emergencia para variables no registradas pero usadas (como los colores o datos de usuario)
+        // Esto permite que aunque no estén en la lista de 'variables' de la plantilla en DB, funcionen en el preview
+        const fallbacks: Record<string, string> = { ...brandingVars, ...securityVars };
+
+        if (selectedTestUser) {
+            fallbacks['nombres'] = selectedTestUser.nombres || '';
+            fallbacks['apellidos'] = selectedTestUser.apellidos || '';
+            fallbacks['email'] = selectedTestUser.email || '';
+            fallbacks['nombre_completo'] = `${selectedTestUser.nombres || ''} ${selectedTestUser.apellidos || ''}`.trim();
+        }
+
+        Object.entries(fallbacks).forEach(([key, val]) => {
+            const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g');
+            rendered = rendered.replace(regex, val);
         });
+
         return rendered;
     };
 
@@ -2845,9 +2929,14 @@ export function AdminEmailTemplatesPage() {
 
                                             if (selectedTemplate.mjml_content) {
                                                 try {
-                                                    const { html, errors } = mjml2html(selectedTemplate.mjml_content);
+                                                    // Usamos renderPreview ANTES de compilar para que MJML reciba colores reales
+                                                    // y no genere advertencias de validación en la consola.
+                                                    const mjmlConVariables = renderPreview(selectedTemplate.mjml_content);
+                                                    const { html, errors } = mjml2html(mjmlConVariables, { validationLevel: 'skip' });
+
                                                     if (errors && errors.length > 0) {
-                                                        console.warn('MJML Validation Errors:', errors);
+                                                        // Opcional: Solo loguear errores que no sean de variables si fuera necesario
+                                                        // console.warn('MJML Errors:', errors);
                                                     }
                                                     contentToRender = html;
                                                 } catch (error: any) {

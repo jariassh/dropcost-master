@@ -69,55 +69,21 @@ serve(async (req) => {
       
       console.log("Código insertado en DB, enviando email...");
 
-      // --- ENVÍO DE EMAIL CON PLANTILLA DINÁMICA ---
-      const resendKey = Deno.env.get('RESEND_API_KEY')
-      if (resendKey) {
-        try {
-            console.log("Cargando plantilla 2FA...");
-            const { data: template } = await adminClient
-                .from('email_templates')
-                .select('*')
-                .eq('slug', '2fa')
-                .maybeSingle()
-            
-            if (!template) throw new Error("Plantilla '2fa' no encontrada en la base de datos")
+      console.log("Código insertado en DB, disparando trigger de email...");
+      
+      // Enviar email usando el disparador centralizado
+      await dispararTrigger(supabaseUrl, supabaseServiceKey, '2FA_CODIGO_CONFIRMACION', {
+        usuario_id: user.id,
+        usuario_email: user.email ?? '',
+        usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
+        codigo_2fa: otp,
+        // Proporcionamos ambas por si acaso
+        codigo: otp,
+        "2fa_code": otp, 
+        expira_en: '5 minutos'
+      });
 
-            const renderedSubject = template.subject.replace('{{codigo}}', otp)
-            const renderedHtml = template.html_content.replace('{{codigo}}', otp)
-
-            console.log("Enviando via Resend API...");
-            const res = await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${resendKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    from: 'Seguridad DropCost <security@dropcost.jariash.com>',
-                    to: [user.email],
-                    subject: renderedSubject,
-                    html: renderedHtml
-                })
-            })
-
-            if (!res.ok) {
-                const errorText = await res.text()
-                console.error("Resend API Error:", errorText)
-                throw new Error(`Error enviando email: ${errorText}`)
-            }
-
-            console.log("Email 2FA enviado correctamente");
-
-        } catch (emailError) {
-             console.error("Fallo envío email:", emailError)
-             await adminClient.from('auth_codes').delete().eq('code_hash', otp)
-             throw new Error(`No se pudo enviar el correo de verificación: ${emailError.message}`) 
-        }
-      } else {
-        console.log("AVISO: RESEND_API_KEY no configurada. Código generado:", otp)
-        // Opcionalmente lanzar error en producción si se requiere email
-        // throw new Error("Servicio de correo no configurado (RESEND_API_KEY faltante)")
-      }
+      console.log("Trigger 2FA disparado correctamente");
 
       return new Response(JSON.stringify({ success: true, message: 'Código generado y enviado' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

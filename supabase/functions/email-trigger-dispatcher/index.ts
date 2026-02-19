@@ -48,15 +48,53 @@ Deno.serve(async (req: Request) => {
             );
         }
 
-        // Obtener configuración global (dominio de email)
+        // Obtener configuración global (dominio de email y colores de marca)
         const { data: config } = await supabase
             .from('configuracion_global')
-            .select('email_domain, nombre_empresa')
+            .select(`
+                email_domain, 
+                nombre_empresa, 
+                site_url,
+                color_primary,
+                color_primary_dark,
+                color_primary_light,
+                color_success,
+                color_error,
+                color_warning,
+                color_neutral,
+                color_bg_primary,
+                color_bg_secondary,
+                color_text_primary,
+                color_text_secondary,
+                color_text_inverse,
+                color_sidebar_bg
+            `)
             .limit(1)
             .maybeSingle();
 
         const emailDomain = config?.email_domain || 'dropcost.com';
         const nombreEmpresa = config?.nombre_empresa || 'DropCost';
+        const appUrl = config?.site_url || 'https://app.dropcost.com';
+
+        // Enriquecer datos con variables globales (colores y URLs)
+        const datosEnriquecidos = {
+            ...datos,
+            app_url: appUrl,
+            login_url: `${appUrl}/login`,
+            color_primary: config?.color_primary || '#0066FF',
+            color_primary_dark: config?.color_primary_dark || '#0052cc',
+            color_primary_light: config?.color_primary_light || '#e6f0ff',
+            color_success: config?.color_success || '#10B981',
+            color_warning: config?.color_warning || '#F59E0B',
+            color_error: config?.color_error || '#EF4444',
+            color_neutral: config?.color_neutral || '#6B7280',
+            color_bg_primary: config?.color_bg_primary || '#FFFFFF',
+            color_bg_secondary: config?.color_bg_secondary || '#F9FAFB',
+            color_text_primary: config?.color_text_primary || '#1F2937',
+            color_text_secondary: config?.color_text_secondary || '#6B7280',
+            color_text_inverse: config?.color_text_inverse || '#FFFFFF',
+            color_sidebar_bg: config?.color_sidebar_bg || '#FFFFFF',
+        };
 
         // ============================================================
         // MODO PRUEBA MANUAL: plantilla_id_prueba sin trigger real
@@ -88,8 +126,8 @@ Deno.serve(async (req: Request) => {
                 );
             }
 
-            const asuntoFinal = reemplazarVariables(plantilla.subject || '', datos);
-            const htmlFinal = reemplazarVariables(plantilla.html_content || '', datos);
+            const asuntoFinal = reemplazarVariables(plantilla.subject || '', datosEnriquecidos);
+            const htmlFinal = reemplazarVariables(plantilla.html_content || '', datosEnriquecidos);
 
             let estado: 'enviado' | 'fallido' = 'enviado';
             let razonError: string | null = null;
@@ -237,8 +275,8 @@ Deno.serve(async (req: Request) => {
             }
 
             // Reemplazar variables en asunto y HTML
-            const asuntoFinal = reemplazarVariables(plantilla.subject || '', datos);
-            const htmlFinal = reemplazarVariables(plantilla.html_content || '', datos);
+            const asuntoFinal = reemplazarVariables(plantilla.subject || '', datosEnriquecidos);
+            const htmlFinal = reemplazarVariables(plantilla.html_content || '', datosEnriquecidos);
 
             let estado: 'enviado' | 'fallido' = 'enviado';
             let razonError: string | null = null;

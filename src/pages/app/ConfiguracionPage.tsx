@@ -937,7 +937,7 @@ export function ConfiguracionPage() {
                                     <div style={{ maxWidth: '600px' }}>
                                         <h4 style={{ margin: '0 0 4px', fontWeight: 700, fontSize: '16px' }}>Autenticación de Dos Factores (2FA)</h4>
                                         <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)', lineHeight: 1.5 }}>
-                                            Recomendado para máxima seguridad. Cada inicio de sesión requerirá un código enviado a tu email.
+                                            Recomendado para máxima seguridad. Cada inicio de sesión requerirá un código enviado a tu email (válido por 5 minutos).
                                         </p>
                                     </div>
                                 </div>
