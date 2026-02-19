@@ -396,12 +396,11 @@ function SectionSEO({ config, setConfig, isDark }: any) {
 }
 
 function SectionBranding({ config, setConfig }: any) {
-    const [brandingTab, setBrandingTab] = useState<'light' | 'dark' | 'brand'>('brand');
-
-    const brandColors = [
+    // Definición unificada de colores para la tabla
+    const allColorGroups = [
+        // MARCA & CORE
         {
-            title: 'Identidad de Marca',
-            description: 'Colores principales del sistema. Estos suelen ser compartidos por ambos temas.',
+            category: 'Identidad de Marca',
             colors: [
                 { key: 'color_primary', label: 'Primario' },
                 { key: 'color_primary_dark', label: 'P. Oscuro (hover)' },
@@ -410,8 +409,7 @@ function SectionBranding({ config, setConfig }: any) {
             ]
         },
         {
-            title: 'Estados y Semántica',
-            description: 'Colores para feedback visual, alertas y validaciones.',
+            category: 'Estados y Semántica',
             colors: [
                 { key: 'color_success', label: 'Éxito' },
                 { key: 'color_warning', label: 'Aviso' },
@@ -420,8 +418,7 @@ function SectionBranding({ config, setConfig }: any) {
             ]
         },
         {
-            title: 'Navegación (Sidebar)',
-            description: 'Configuración de la barra lateral izquierda.',
+            category: 'Navegación (Sidebar)',
             colors: [
                 { key: 'color_sidebar_bg', label: 'Fondo Sidebar' },
                 { key: 'color_sidebar_text', label: 'Texto Sidebar' },
@@ -429,27 +426,43 @@ function SectionBranding({ config, setConfig }: any) {
             ]
         },
         {
-            title: 'Administración (Panel)',
-            description: 'Colores específicos para el área administrativa.',
+            category: 'Administración',
             colors: [
                 { key: 'color_admin_panel_link', label: 'Acceso Admin (App)' },
                 { key: 'color_admin_sidebar_active', label: 'Activo Admin' },
                 { key: 'color_admin_sidebar_return', label: 'Botón Retorno' },
             ]
-        }
-    ];
-
-    const themeColors = [
+        },
+        // TEMA CLARO
         {
-            title: 'Fondos (Backgrounds)',
-            description: brandingTab === 'light' ? 'Estructura de fondos para el tema claro.' : 'Estructura de fondos para el tema oscuro.',
-            colors: brandingTab === 'light' ? [
+            category: 'Tema Claro: Fondos',
+            colors: [
                 { key: 'color_bg_primary', label: 'Fondo Principal' },
                 { key: 'color_bg_secondary', label: 'Fondo Secundario' },
                 { key: 'color_bg_tertiary', label: 'Fondo Terciario' },
                 { key: 'color_card_bg', label: 'Fondo Tarjetas' },
                 { key: 'color_card_border', label: 'Borde Tarjetas' },
-            ] : [
+            ]
+        },
+        {
+            category: 'Tema Claro: Texto',
+            colors: [
+                { key: 'color_text_primary', label: 'Texto Principal' },
+                { key: 'color_text_secondary', label: 'Texto Secundario' },
+                { key: 'color_text_tertiary', label: 'Texto Terciario' },
+            ]
+        },
+        {
+            category: 'Tema Claro: Bordes',
+            colors: [
+                { key: 'color_border', label: 'Borde Base' },
+                { key: 'color_border_hover', label: 'Borde Hover' },
+            ]
+        },
+        // TEMA OSCURO
+        {
+            category: 'Tema Oscuro: Fondos',
+            colors: [
                 { key: 'dark_bg_primary', label: 'Fondo Principal (D)' },
                 { key: 'dark_bg_secondary', label: 'Fondo Secundario (D)' },
                 { key: 'dark_bg_tertiary', label: 'Fondo Terciario (D)' },
@@ -458,30 +471,29 @@ function SectionBranding({ config, setConfig }: any) {
             ]
         },
         {
-            title: 'Tipografía (Text)',
-            description: brandingTab === 'light' ? 'Colores de texto para fondos claros.' : 'Colores de texto para fondos oscuros.',
-            colors: brandingTab === 'light' ? [
-                { key: 'color_text_primary', label: 'Texto Principal' },
-                { key: 'color_text_secondary', label: 'Texto Secundario' },
-                { key: 'color_text_tertiary', label: 'Texto Terciario' },
-            ] : [
+            category: 'Tema Oscuro: Texto',
+            colors: [
                 { key: 'dark_text_primary', label: 'Texto Principal (D)' },
                 { key: 'dark_text_secondary', label: 'Texto Secundario (D)' },
                 { key: 'dark_text_tertiary', label: 'Texto Terciario (D)' },
             ]
         },
         {
-            title: 'Delineación (Borders)',
-            description: brandingTab === 'light' ? 'Bordes y separadores para el tema claro.' : 'Bordes y separadores para el tema oscuro.',
-            colors: brandingTab === 'light' ? [
-                { key: 'color_border', label: 'Borde Base' },
-                { key: 'color_border_hover', label: 'Borde Hover' },
-            ] : [
+            category: 'Tema Oscuro: Bordes',
+            colors: [
                 { key: 'dark_border', label: 'Borde Base (D)' },
                 { key: 'dark_border_hover', label: 'Borde Hover (D)' },
             ]
         }
     ];
+
+    // Helpers para estilos de categoría
+    const getCategoryBadgeStyle = (cat: string) => {
+        if (cat.includes('Tema Claro')) return { bg: '#e0f2fe', text: '#0284c7', border: '#bae6fd' };
+        if (cat.includes('Tema Oscuro')) return { bg: '#1e293b', text: '#cbd5e1', border: '#334155' };
+        if (cat.includes('Marca')) return { bg: '#f0fdf4', text: '#15803d', border: '#bbf7d0' };
+        return { bg: '#f3f4f6', text: '#4b5563', border: '#e5e7eb' };
+    };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -545,142 +557,115 @@ function SectionBranding({ config, setConfig }: any) {
                 </Card>
             </div>
 
-            <Card title="Paleta de Colores Corporativa">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                    {/* Selector de Sub-tab de Branding */}
-                    <div style={{
-                        display: 'flex',
-                        backgroundColor: 'var(--bg-secondary)',
-                        padding: '4px',
-                        borderRadius: '12px',
-                        width: 'fit-content',
-                    }}>
-                        <button
-                            onClick={() => setBrandingTab('brand')}
-                            style={{
-                                padding: '8px 16px',
-                                borderRadius: '8px',
-                                fontSize: '13px',
-                                fontWeight: 600,
-                                backgroundColor: brandingTab === 'brand' ? 'var(--bg-primary)' : 'transparent',
-                                color: brandingTab === 'brand' ? 'var(--color-primary)' : 'var(--text-tertiary)',
-                                border: 'none',
-                                cursor: 'pointer',
-                                transition: 'all 200ms ease',
-                                boxShadow: brandingTab === 'brand' ? 'var(--shadow-sm)' : 'none'
-                            }}
-                        >
-                            Marca y Core
-                        </button>
-                        <button
-                            onClick={() => setBrandingTab('light')}
-                            style={{
-                                padding: '8px 16px',
-                                borderRadius: '8px',
-                                fontSize: '13px',
-                                fontWeight: 600,
-                                backgroundColor: brandingTab === 'light' ? 'var(--bg-primary)' : 'transparent',
-                                color: brandingTab === 'light' ? 'var(--color-primary)' : 'var(--text-tertiary)',
-                                border: 'none',
-                                cursor: 'pointer',
-                                transition: 'all 200ms ease',
-                                boxShadow: brandingTab === 'light' ? 'var(--shadow-sm)' : 'none'
-                            }}
-                        >
-                            Tema Claro
-                        </button>
-                        <button
-                            onClick={() => setBrandingTab('dark')}
-                            style={{
-                                padding: '8px 16px',
-                                borderRadius: '8px',
-                                fontSize: '13px',
-                                fontWeight: 600,
-                                backgroundColor: brandingTab === 'dark' ? 'var(--bg-primary)' : 'transparent',
-                                color: brandingTab === 'dark' ? 'var(--color-primary)' : 'var(--text-tertiary)',
-                                border: 'none',
-                                cursor: 'pointer',
-                                transition: 'all 200ms ease',
-                                boxShadow: brandingTab === 'dark' ? 'var(--shadow-sm)' : 'none'
-                            }}
-                        >
-                            Tema Oscuro
-                        </button>
-                    </div>
+            <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>
+                    Administración de Colores
+                </h3>
+                <Card noPadding>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                            <thead>
+                                <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '80px' }}>Color</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Nombre</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Variable (Key)</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Código</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Categoría</th>
+                                </tr>
+                            </thead>
+                            <tbody style={{ backgroundColor: 'var(--card-bg)' }}>
+                                {allColorGroups.map(group => (
+                                    group.colors.map((c: any) => {
+                                        const style = getCategoryBadgeStyle(group.category);
+                                        const currentColor = (config as any)[c.key] || '#000000';
 
-                    {(brandingTab === 'brand' ? brandColors : themeColors).map((group) => (
-                        <div key={group.title} className="animate-in fade-in slide-in-from-left-4 duration-300">
-                            <div style={{ marginBottom: '16px' }}>
-                                <h5 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-widest">{group.title}</h5>
-                                <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>{group.description}</p>
-                            </div>
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                {group.colors.map((c) => (
-                                    <div
-                                        key={c.key}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '12px',
-                                            padding: '12px',
-                                            borderRadius: '16px',
-                                            backgroundColor: 'var(--bg-tertiary)',
-                                            border: '1px solid var(--border-color)',
-                                            transition: 'all 200ms ease'
-                                        }}
-                                        className="hover:border-[var(--color-primary-light)] group cursor-pointer"
-                                        onClick={() => {
-                                            const input = document.getElementById(`color-pick-${c.key}`);
-                                            if (input) input.click();
-                                        }}
-                                    >
-                                        <div style={{ position: 'relative' }}>
-                                            <input
-                                                id={`color-pick-${c.key}`}
-                                                type="color"
-                                                value={(config as any)[c.key] || '#000000'}
-                                                onChange={(e) => setConfig((prev: any) => ({ ...prev, [c.key]: e.target.value }))}
+                                        return (
+                                            <tr
+                                                key={c.key}
                                                 style={{
-                                                    width: '44px',
-                                                    height: '44px',
-                                                    borderRadius: '10px',
-                                                    cursor: 'pointer',
-                                                    border: 'none',
-                                                    padding: 0,
-                                                    overflow: 'hidden',
+                                                    borderBottom: '1px solid var(--border-color)',
+                                                    transition: 'background-color 0.2s ease'
                                                 }}
-                                                className="shadow-sm ring-2 ring-white"
-                                            />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-[11px] font-bold text-[var(--text-primary)] truncate">{c.label}</p>
-                                            <p className="text-[10px] text-[var(--text-tertiary)] font-mono uppercase">{(config as any)[c.key] || '---'}</p>
-                                        </div>
-                                    </div>
+                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                className="group"
+                                            >
+                                                <td style={{ padding: '16px 24px' }}>
+                                                    <div className="relative flex items-center justify-center w-10 h-10 group-hover:scale-110 transition-transform">
+                                                        <input
+                                                            type="color"
+                                                            value={currentColor}
+                                                            onChange={(e) => setConfig((prev: any) => ({ ...prev, [c.key]: e.target.value }))}
+                                                            className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                                                        />
+                                                        <div
+                                                            className="w-8 h-8 rounded-lg shadow-sm border border-[var(--border-color)] ring-2 ring-transparent group-hover:ring-[var(--border-color)] transition-all"
+                                                            style={{ backgroundColor: currentColor }}
+                                                        />
+                                                    </div>
+                                                </td>
+                                                <td style={{ padding: '16px 24px' }}>
+                                                    <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                                        {c.label}
+                                                    </span>
+                                                </td>
+                                                <td style={{ padding: '16px 24px' }}>
+                                                    <span
+                                                        className="inline-flex items-center justify-center font-mono text-[11px] rounded-full border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] select-all hover:border-[var(--color-primary)] transition-colors cursor-copy"
+                                                        style={{ padding: '6px 16px' }}
+                                                        onClick={() => navigator.clipboard.writeText(c.key)}
+                                                        title="Copiar variable"
+                                                    >
+                                                        {c.key}
+                                                    </span>
+                                                </td>
+                                                <td style={{ padding: '16px 24px' }}>
+                                                    <span className="text-xs font-mono text-[var(--text-secondary)] uppercase select-all font-medium">
+                                                        {currentColor}
+                                                    </span>
+                                                </td>
+                                                <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                                                    <span
+                                                        className="inline-flex items-center rounded-full text-[10px] font-bold uppercase tracking-wide shadow-sm"
+                                                        style={{
+                                                            backgroundColor: style.bg,
+                                                            color: style.text,
+                                                            border: `1px solid ${style.border}`,
+                                                            minWidth: '100px',
+                                                            justifyContent: 'center',
+                                                            padding: '6px 14px'
+                                                        }}
+                                                    >
+                                                        {group.category}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 ))}
-                            </div>
-                        </div>
-                    ))}
+                            </tbody>
+                        </table>
+                    </div>
 
                     <div
                         style={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: '16px',
-                            padding: '20px 24px',
-                            backgroundColor: 'var(--color-primary-light)',
-                            borderRadius: '16px',
-                            color: 'var(--color-primary)',
-                            marginTop: '8px'
+                            padding: '16px 20px',
+                            backgroundColor: 'var(--bg-tertiary)',
+                            borderRadius: '12px',
+                            marginTop: '24px',
+                            border: '1px dashed var(--border-color)'
                         }}
                     >
-                        <AlertCircle size={18} style={{ flexShrink: 0 }} />
-                        <p style={{ fontSize: '12px', fontWeight: 600, margin: 0, lineHeight: '1.5' }}>
-                            Los colores se inyectan dinámicamente en el tema de la plataforma.
+                        <AlertCircle size={16} className="text-[var(--text-tertiary)]" />
+                        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
+                            Estos valores se sincronizan automáticamente con las variables CSS del sistema (<code>:root</code>). Los cambios se reflejarán instantáneamente en la vista previa, pero requieren "Guardar" para persistir.
                         </p>
                     </div>
-                </div>
-            </Card>
+                </Card>
+            </div>
         </div>
     );
 }
