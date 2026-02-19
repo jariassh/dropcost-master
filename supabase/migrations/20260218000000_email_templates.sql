@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS public.email_templates (
 
 -- RLS Policies
 ALTER TABLE public.email_templates ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow read for authenticated users" ON public.email_templates;
+DROP POLICY IF EXISTS "Allow all for admins" ON public.email_templates;
 
 CREATE POLICY "Allow read for authenticated users" ON public.email_templates
     FOR SELECT TO authenticated USING (true);

@@ -30,14 +30,40 @@ export interface GlobalConfig {
     color_success: string;
     color_error: string;
     color_warning: string;
+    color_neutral: string;
     color_bg_primary: string;
     color_bg_secondary: string;
+    color_bg_tertiary: string;
+    color_card_bg: string;
     color_text_primary: string;
     color_text_secondary: string;
+    color_text_tertiary: string;
+    color_text_inverse: string;
+    color_border: string;
+    color_border_hover: string;
+    color_card_border: string;
+
+    // Modo Oscuro (Específicos)
+    dark_bg_primary: string;
+    dark_bg_secondary: string;
+    dark_bg_tertiary: string;
+    dark_card_bg: string;
+    dark_card_border: string;
+    dark_text_primary: string;
+    dark_text_secondary: string;
+    dark_text_tertiary: string;
+    dark_border: string;
+    dark_border_hover: string;
     
     // Sidebar
     color_sidebar_bg: string;
     color_sidebar_text: string;
+    color_sidebar_active: string;
+
+    // Administración
+    color_admin_panel_link: string;
+    color_admin_sidebar_active: string;
+    color_admin_sidebar_return: string;
     
     // Tracking
     codigo_head: string;
@@ -135,9 +161,25 @@ export const configService = {
             'meta_title', 'meta_description', 'meta_keywords', 'og_image_url', 'site_url',
             'favicon_url', 'logo_principal_url', 'logo_variante_url', 'logo_footer_url',
             'nombre_empresa', 'descripcion_empresa', 'sitio_web', 'email_contacto', 'telefono',
+            // Colores de marca
             'color_primary', 'color_primary_dark', 'color_primary_light',
-            'color_bg_primary', 'color_bg_secondary', 'color_text_primary', 'color_text_secondary',
-            'color_sidebar_bg', 'color_sidebar_text',
+            // Semánticos
+            'color_success', 'color_error', 'color_warning', 'color_neutral',
+            // Fondos
+            'color_bg_primary', 'color_bg_secondary', 'color_bg_tertiary', 'color_card_bg',
+            // Texto
+            'color_text_primary', 'color_text_secondary', 'color_text_tertiary', 'color_text_inverse',
+            // Bordes
+            'color_border', 'color_border_hover', 'color_card_border',
+            // Modo Oscuro
+            'dark_bg_primary', 'dark_bg_secondary', 'dark_bg_tertiary', 'dark_card_bg', 'dark_card_border',
+            'dark_text_primary', 'dark_text_secondary', 'dark_text_tertiary',
+            'dark_border', 'dark_border_hover',
+            // Sidebar
+            'color_sidebar_bg', 'color_sidebar_text', 'color_sidebar_active',
+            // Administración
+            'color_admin_panel_link', 'color_admin_sidebar_active', 'color_admin_sidebar_return',
+            // SEO
             'codigo_head', 'codigo_footer',
             'permitir_indexacion', 'permitir_seguimiento',
             'email_domain'
@@ -225,9 +267,47 @@ export const configService = {
         const defaults: Partial<GlobalConfig> = {
             meta_title: 'DropCost Master - Calculadora de Costos',
             meta_description: 'Herramienta de costeo para dropshipping.',
+            // Marca
             color_primary: '#0066FF',
+            color_primary_dark: '#003D99',
+            color_primary_light: '#E6F0FF',
+            // Semánticos
+            color_success: '#10B981',
+            color_warning: '#F59E0B',
+            color_error: '#EF4444',
+            color_neutral: '#6B7280',
+            // Fondos (modo claro)
             color_bg_primary: '#FFFFFF',
-            color_text_primary: '#1F2937'
+            color_bg_secondary: '#F3F4F6',
+            color_bg_tertiary: '#F9FAFB',
+            color_card_bg: '#FFFFFF',
+            // Texto
+            color_text_primary: '#1F2937',
+            color_text_secondary: '#6B7280',
+            color_text_tertiary: '#9CA3AF',
+            color_text_inverse: '#FFFFFF',
+            // Bordes
+            color_border: '#E5E7EB',
+            color_border_hover: '#D1D5DB',
+            // Sidebar
+            color_sidebar_bg: '#0F172A',
+            color_sidebar_text: '#94A3B8',
+            color_sidebar_active: '#0066FF',
+            // Valores por defecto Modo Oscuro
+            dark_bg_primary: '#0F172A',
+            dark_bg_secondary: '#1E293B',
+            dark_bg_tertiary: '#334155',
+            dark_card_bg: '#1E293B',
+            dark_card_border: '#334155',
+            dark_text_primary: '#F1F5F9',
+            dark_text_secondary: '#94A3B8',
+            dark_text_tertiary: '#64748B',
+            dark_border: '#334155',
+            dark_border_hover: '#475569',
+            color_card_border: '#E5E7EB',
+            color_admin_panel_link: '#EF4444',
+            color_admin_sidebar_active: '#EF4444',
+            color_admin_sidebar_return: '#1F2937',
         };
         await this.updateConfig(defaults);
     },

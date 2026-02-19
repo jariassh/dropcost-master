@@ -18,6 +18,9 @@ DROP POLICY IF EXISTS "dc_admin_referral_users_view" ON public.referidos_usuario
 DROP POLICY IF EXISTS "dc_lideres_self_view" ON public.referidos_lideres;
 DROP POLICY IF EXISTS "dc_referentes_self_view" ON public.referidos_usuarios;
 DROP POLICY IF EXISTS "Lideres view their direct referrals metrics" ON public.referidos_lideres;
+DROP POLICY IF EXISTS "dc_admin_users_all" ON public.users;
+DROP POLICY IF EXISTS "dc_admin_lideres_all" ON public.referidos_lideres;
+DROP POLICY IF EXISTS "dc_admin_referentes_all" ON public.referidos_usuarios;
 
 -- 3. APPLY BULLETPROOF POLICIES (No Functions, No Recursion)
 -- These use the JWT directly, which is the safest way to avoid recursion in Supabase.

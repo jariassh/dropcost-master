@@ -32,6 +32,9 @@ CREATE TABLE IF NOT EXISTS public.email_triggers (
 -- RLS
 ALTER TABLE public.email_triggers ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "email_triggers_read_authenticated" ON public.email_triggers;
+DROP POLICY IF EXISTS "email_triggers_all_admin" ON public.email_triggers;
+
 CREATE POLICY "email_triggers_read_authenticated" ON public.email_triggers
     FOR SELECT TO authenticated USING (true);
 
@@ -109,7 +112,8 @@ INSERT INTO public.email_triggers (nombre_trigger, descripcion, codigo_evento, c
  'Se dispara cuando la suscripción de un usuario vence.',
  'SUSCRIPCION_VENCIDA', 'usuario',
  '["${usuario_nombre}", "${usuario_email}", "${plan_nombre}", "${fecha_vencimiento}"]',
- 'automatico', 'subscriptions', 'UPDATE', 'UPDATE subscriptions SET status = vencida');
+ 'automatico', 'subscriptions', 'UPDATE', 'UPDATE subscriptions SET status = vencida')
+ON CONFLICT (codigo_evento) DO NOTHING;
 
 -- REFERIDOS (7 triggers)
 INSERT INTO public.email_triggers (nombre_trigger, descripcion, codigo_evento, categoria, variables_disponibles, tipo_disparador, tabla_origen, evento_tipo, condicion) VALUES
@@ -154,7 +158,8 @@ INSERT INTO public.email_triggers (nombre_trigger, descripcion, codigo_evento, c
  'Se dispara cuando una comisión llega a su fecha de expiración sin ser cobrada (CRON diario).',
  'COMISION_EXPIRADA', 'referido',
  '["${usuario_nombre}", "${usuario_email}", "${monto_comision}", "${fecha_expiracion}"]',
- 'cron', 'comisiones_referidos', 'CRON', 'Comisiones con fecha_expiracion_comision <= NOW()');
+ 'cron', 'comisiones_referidos', 'CRON', 'Comisiones con fecha_expiracion_comision <= NOW()')
+ON CONFLICT (codigo_evento) DO NOTHING;
 
 -- PAGOS (2 triggers)
 INSERT INTO public.email_triggers (nombre_trigger, descripcion, codigo_evento, categoria, variables_disponibles, tipo_disparador, tabla_origen, evento_tipo, condicion) VALUES
@@ -169,7 +174,8 @@ INSERT INTO public.email_triggers (nombre_trigger, descripcion, codigo_evento, c
  'Se dispara cuando el admin marca como procesado/completado el pago de comisiones.',
  'PAGO_COMISIONES_PROCESADO', 'pago',
  '["${usuario_nombre}", "${usuario_email}", "${monto_pago}", "${fecha_procesado}", "${banco_nombre}", "${numero_cuenta}", "${referencia_pago}"]',
- 'automatico', 'retiros_referidos', 'UPDATE', 'UPDATE retiros_referidos SET estado = completado');
+ 'automatico', 'retiros_referidos', 'UPDATE', 'UPDATE retiros_referidos SET estado = completado')
+ON CONFLICT (codigo_evento) DO NOTHING;
 
 -- ============================================================
 -- 3. TABLA: email_plantillas_triggers
@@ -186,6 +192,9 @@ CREATE TABLE IF NOT EXISTS public.email_plantillas_triggers (
 
 -- RLS
 ALTER TABLE public.email_plantillas_triggers ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "email_plantillas_triggers_read" ON public.email_plantillas_triggers;
+DROP POLICY IF EXISTS "email_plantillas_triggers_admin" ON public.email_plantillas_triggers;
 
 CREATE POLICY "email_plantillas_triggers_read" ON public.email_plantillas_triggers
     FOR SELECT TO authenticated USING (true);
@@ -235,6 +244,9 @@ CREATE TABLE IF NOT EXISTS public.email_historial (
 
 -- RLS
 ALTER TABLE public.email_historial ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "email_historial_read_admin" ON public.email_historial;
+DROP POLICY IF EXISTS "email_historial_insert_service" ON public.email_historial;
 
 CREATE POLICY "email_historial_read_admin" ON public.email_historial
     FOR SELECT
