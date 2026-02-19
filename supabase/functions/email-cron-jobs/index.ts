@@ -156,7 +156,57 @@ Deno.serve(async (req: Request) => {
         }
 
         // ============================================================
-        // 4. PROXIMO_REFERIDO_PARA_LIDER
+        // 4. SUSPENSIÓN AUTOMÁTICA (3 días de gracia)
+        //    RF-167: Si end_date + 3 días < hoy y status es 'activa' -> 'suspendida'
+        // ============================================================
+        {
+            const hoy = new Date();
+            // Restamos 3 días a hoy para obtener el límite de gracia
+            const limiteGracia = new Date(hoy);
+            limiteGracia.setDate(hoy.getDate() - 3);
+            const limiteGraciaISO = limiteGracia.toISOString();
+
+            const { data: porSuspender } = await supabase
+                .from('subscriptions')
+                .select(`
+                    id,
+                    user_id,
+                    plan_id,
+                    end_date,
+                    users!inner (nombres, apellidos, email)
+                `)
+                .eq('status', 'activa')
+                .lte('end_date', limiteGraciaISO);
+
+            let count = 0;
+            for (const sub of (porSuspender || [])) {
+                // 1. Suspender en la tabla de suscripciones
+                await supabase
+                    .from('subscriptions')
+                    .update({ status: 'suspendida' })
+                    .eq('id', sub.id);
+                
+                // 2. Sincronizar estado en la tabla de usuarios
+                await supabase
+                    .from('users')
+                    .update({ estado_suscripcion: 'suspendida' } as any)
+                    .eq('id', sub.user_id);
+
+                // 3. Notificar al usuario
+                const user = (sub as any).users;
+                await dispararTrigger('SUSCRIPCION_VENCIDA', {
+                    usuario_nombre: `${user.nombres} ${user.apellidos}`,
+                    usuario_email: user.email,
+                    plan_nombre: sub.plan_id || 'Plan Pro',
+                    fecha_vencimiento: sub.end_date,
+                });
+                count++;
+            }
+            resultados['SUSCRIPCIONES_SUSPENDIDAS'] = count;
+        }
+
+        // ============================================================
+        // 5. PROXIMO_REFERIDO_PARA_LIDER
         //    Líderes en múltiplos de 10 referidos (10, 20, 30, 40)
         //    antes de llegar a 50 (umbral de siguiente nivel)
         // ============================================================
