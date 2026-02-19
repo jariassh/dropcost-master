@@ -57,10 +57,10 @@ const iconMap: Record<AlertType, React.ElementType> = {
 };
 
 const colorMap: Record<AlertType, string> = {
-    success: '#10B981',
-    error: '#EF4444',
-    warning: '#F59E0B',
-    info: '#0066FF',
+    success: 'var(--color-success)',
+    error: 'var(--color-error)',
+    warning: 'var(--color-warning)',
+    info: 'var(--color-primary)',
 };
 
 // ─── Toast individual ───

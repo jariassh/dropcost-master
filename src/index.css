@@ -76,12 +76,18 @@
   --text-primary: #F1F5F9;
   --text-secondary: #94A3B8;
   --text-tertiary: #64748B;
+  --text-inverse: #FFFFFF;
 
   --border-color: #334155;
   --border-color-hover: #475569;
+  --border-color-focus: #0066FF;
 
   --card-bg: #1E293B;
   --card-border: #334155;
+
+  --color-neutral: #6B7280;
+
+  --sidebar-active: #0066FF;
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
