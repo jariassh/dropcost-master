@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
-import { useToast, Badge, Modal, Input, Spinner, ConfirmDialog } from '@/components/common';
+import { useToast, Badge, Modal, Input, Spinner, ConfirmDialog, CodeEditor } from '@/components/common';
 import { enviarPruebaPlantilla } from '@/utils/emailTrigger';
 import {
     Mail,
@@ -2392,33 +2392,18 @@ export function AdminEmailTemplatesPage() {
                                             </div>
                                         </div>
 
-                                        <textarea
-                                            id="body-textarea"
+                                        <CodeEditor
                                             value={selectedTemplate?.mjml_content ?? selectedTemplate?.html_content ?? ''}
-                                            onChange={(e) => {
+                                            onChange={(val) => {
                                                 if (!selectedTemplate) return;
-                                                const val = e.target.value;
                                                 if (selectedTemplate.mjml_content !== undefined) {
                                                     setSelectedTemplate({ ...selectedTemplate, mjml_content: val });
                                                 } else {
                                                     setSelectedTemplate({ ...selectedTemplate, html_content: val });
                                                 }
                                             }}
-                                            style={{
-                                                width: '100%',
-                                                padding: '24px',
-                                                borderRadius: '16px',
-                                                backgroundColor: '#0f172a',
-                                                border: '1px solid #334155',
-                                                color: '#34d399',
-                                                fontFamily: 'monospace',
-                                                fontSize: '13px',
-                                                lineHeight: '1.6',
-                                                outline: 'none',
-                                                minHeight: '400px',
-                                                transition: 'all 200ms ease'
-                                            }}
-                                            className="shadow-inner focus:ring-2 focus:ring-[var(--color-primary)] scrollbar-custom"
+                                            language={selectedTemplate?.mjml_content !== undefined ? 'mjml' : 'html'}
+                                            minHeight="400px"
                                         />
                                     </div>
                                 </div>

@@ -139,7 +139,7 @@ export function AdminLayout() {
                                     <div
                                         style={{
                                             width: '32px', height: '32px',
-                                            backgroundColor: '#EF4444',
+                                            backgroundColor: 'var(--color-admin-sidebar_active, #EF4444)',
                                             borderRadius: '8px',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             flexShrink: 0
@@ -148,7 +148,7 @@ export function AdminLayout() {
                                         <ShieldCheck size={18} color="#fff" />
                                     </div>
                                     <span style={{ color: '#fff', fontWeight: 800, fontSize: '15px', letterSpacing: '0.02em' }}>
-                                        ADMIN<span style={{ color: '#EF4444' }}>PANEL</span>
+                                        ADMIN<span style={{ color: 'var(--color-admin-sidebar-active, #EF4444)' }}>PANEL</span>
                                     </span>
                                 </div>
                             )}
@@ -188,7 +188,7 @@ export function AdminLayout() {
                             gap: '12px',
                             padding: '10px 14px',
                             borderRadius: '10px',
-                            backgroundColor: 'rgba(255,255,255,0.05)',
+                            backgroundColor: 'var(--color-admin-sidebar-return)',
                             color: '#fff',
                             border: 'none',
                             cursor: 'pointer',
@@ -196,8 +196,8 @@ export function AdminLayout() {
                             fontWeight: 600,
                             transition: 'background 150ms'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--color-admin-sidebar-return) 80%, white)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-admin-sidebar-return)'}
                     >
                         <ArrowLeft size={18} />
                         {!effectivelyCollapsed && "Volver a la App"}
@@ -309,7 +309,7 @@ export function AdminLayout() {
                                 onClick={() => setUserMenuOpen((v) => !v)}
                                 style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px', background: 'none', border: 'none', cursor: 'pointer' }}
                             >
-                                <div style={{ width: '34px', height: '34px', backgroundColor: '#EF4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '13px', fontWeight: 700 }}>
+                                <div style={{ width: '34px', height: '34px', backgroundColor: 'var(--color-admin-sidebar-active, #EF4444)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '13px', fontWeight: 700 }}>
                                     {user?.nombres?.[0] || 'A'}
                                 </div>
                                 <ChevronDown size={14} color="var(--text-tertiary)" />
@@ -381,7 +381,7 @@ function AdminSidebarNavItem({ to, icon: Icon, label, collapsed, disabled, end, 
                 display: 'flex', alignItems: 'center', gap: '12px', padding: collapsed ? '12px' : '10px 14px',
                 borderRadius: '10px', fontSize: '14px', fontWeight: isActive ? 600 : 500,
                 textDecoration: 'none', transition: 'all 150ms ease',
-                backgroundColor: isActive ? '#EF4444' : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
+                backgroundColor: isActive ? 'var(--color-admin-sidebar-active)' : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
                 color: isActive ? '#fff' : hovered ? '#fff' : 'rgba(255,255,255,0.6)',
             })}
             onMouseEnter={() => setHovered(true)}
