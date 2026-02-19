@@ -3,40 +3,22 @@
  * Persiste preferencia en localStorage.
  * Aplica atributo data-theme en document.documentElement.
  */
-import { useState, useEffect, useCallback } from 'react';
-
-type Theme = 'light' | 'dark';
-
-const THEME_STORAGE_KEY = 'dropcost-theme';
-
-function getInitialTheme(): Theme {
-    if (typeof window === 'undefined') return 'dark';
-
-    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
-    if (storedTheme === 'light' || storedTheme === 'dark') {
-        return storedTheme;
-    }
-
-    // Preferencia del sistema operativo
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return prefersDark ? 'dark' : 'light';
-}
+import { useEffect, useCallback } from 'react';
+import { useThemeStore } from '@/store/themeStore';
 
 export function useTheme() {
-    const [theme, setThemeState] = useState<Theme>(getInitialTheme);
+    const { theme, toggleTheme, setTheme } = useThemeStore();
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem(THEME_STORAGE_KEY, theme);
+        
+        // Sincronizar con clase 'dark' de Tailwind para componentes que usen clases dark:
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
     }, [theme]);
-
-    const toggleTheme = useCallback(() => {
-        setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
-    }, []);
-
-    const setTheme = useCallback((newTheme: Theme) => {
-        setThemeState(newTheme);
-    }, []);
 
     const isDark = theme === 'dark';
 

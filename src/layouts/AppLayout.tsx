@@ -205,6 +205,7 @@ export function AppLayout() {
                                     key={item.to}
                                     {...item}
                                     collapsed={effectivelyCollapsed}
+                                    isDark={isDark}
                                     end={item.to === '/'}
                                     onClick={() => setMobileOpen(false)}
                                     disabled={isRestricted}
@@ -222,7 +223,7 @@ export function AppLayout() {
                             </span>
                         )}
                         {navItems.filter(i => !i.active).map((item) => (
-                            <SidebarNavItem key={item.to} {...item} collapsed={effectivelyCollapsed} disabled onClick={() => setMobileOpen(false)} />
+                            <SidebarNavItem key={item.to} {...item} collapsed={effectivelyCollapsed} isDark={isDark} disabled onClick={() => setMobileOpen(false)} />
                         ))}
                     </div>
 
@@ -232,6 +233,7 @@ export function AppLayout() {
                             <SidebarNavItem
                                 {...adminLink}
                                 collapsed={effectivelyCollapsed}
+                                isDark={isDark}
                                 onClick={() => setMobileOpen(false)}
                                 style={{
                                     backgroundColor: 'color-mix(in srgb, var(--color-admin-panel-link) 10%, transparent)',
@@ -522,6 +524,7 @@ interface SidebarNavItemProps {
     icon: React.ComponentType<{ size: number; style?: React.CSSProperties }>;
     label: string;
     collapsed: boolean;
+    isDark: boolean;
     end?: boolean;
     onClick?: () => void;
     disabled?: boolean;
@@ -534,6 +537,7 @@ function SidebarNavItem({
     icon: Icon,
     label,
     collapsed,
+    isDark,
     end,
     onClick,
     disabled,

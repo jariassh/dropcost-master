@@ -99,7 +99,7 @@ export function AdminLayout() {
                     left: undefined,
                     bottom: 0,
                     width: mobileOpen ? '280px' : `${sidebarWidth}px`,
-                    backgroundColor: '#111827', // Darker for Admin
+                    backgroundColor: 'var(--sidebar-bg)', // Dinámico
                     display: 'flex',
                     flexDirection: 'column',
                     zIndex: 50,
@@ -107,7 +107,7 @@ export function AdminLayout() {
                     overflow: 'hidden',
                     ...(mobileOpen ? { left: 0 } : {})
                 }}
-                className={`lg:left-0 ${!mobileOpen ? 'max-lg:-left-full' : ''}`}
+                className={`lg:left-0 ${!mobileOpen ? 'max-lg:-left-full' : ''} border-r border-white/10`}
             >
                 {/* Admin Badge/Header */}
                 <div
@@ -116,7 +116,7 @@ export function AdminLayout() {
                         alignItems: 'center',
                         justifyContent: effectivelyCollapsed ? 'center' : 'space-between',
                         padding: effectivelyCollapsed ? '0' : '0 16px 0 20px',
-                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        borderBottom: '1px solid rgba(255,255,255,0.1)',
                         height: '64px',
                         background: 'linear-gradient(90deg, #1F2937, #111827)',
                     }}
@@ -224,6 +224,7 @@ export function AdminLayout() {
                                 key={item.to}
                                 {...item}
                                 collapsed={effectivelyCollapsed}
+                                isDark={isDark}
                                 onClick={() => setMobileOpen(false)}
                             />
                         ))}
@@ -242,6 +243,7 @@ export function AdminLayout() {
                                 {...item}
                                 disabled
                                 collapsed={effectivelyCollapsed}
+                                isDark={isDark}
                                 onClick={() => setMobileOpen(false)}
                             />
                         ))}
@@ -347,7 +349,7 @@ export function AdminLayout() {
     );
 }
 
-function AdminSidebarNavItem({ to, icon: Icon, label, collapsed, disabled, end, onClick }: any) {
+function AdminSidebarNavItem({ to, icon: Icon, label, collapsed, disabled, end, isDark, onClick }: any) {
     const [hovered, setHovered] = useState(false);
 
     if (disabled) {
@@ -382,7 +384,7 @@ function AdminSidebarNavItem({ to, icon: Icon, label, collapsed, disabled, end, 
                 borderRadius: '10px', fontSize: '14px', fontWeight: isActive ? 600 : 500,
                 textDecoration: 'none', transition: 'all 150ms ease',
                 backgroundColor: isActive ? 'var(--color-admin-sidebar-active)' : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
-                color: isActive ? '#fff' : hovered ? '#fff' : 'rgba(255,255,255,0.6)',
+                color: isActive ? '#fff' : hovered ? '#fff' : 'var(--sidebar-text)',
             })}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
