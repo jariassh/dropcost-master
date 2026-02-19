@@ -32,7 +32,10 @@ import {
     MoreVertical,
     FileText,
     Search,
-    Pencil
+    Pencil,
+    Activity,
+    Target,
+    ListChecks
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useStoreStore } from '@/store/useStoreStore';
@@ -42,17 +45,19 @@ import { useToast, Modal, ConfirmDialog, Button, Badge, SelectPais } from '@/com
 import { CreateStoreModal } from '@/components/layout/CreateStoreModal';
 import type { Tienda } from '@/types/store.types';
 import { cargarPaises, Pais } from '@/services/paisesService';
-import { fetchUserActivityLogs, AuditLog } from '@/services/auditService';
 import {
     Clock,
     Zap,
     CreditCard as CreditCardIcon,
     UserCheck,
     Key as KeyIcon,
-    AlertTriangle
+    AlertTriangle,
+    ShieldCheck,
+    Star,
+    ArrowUpCircle
 } from 'lucide-react';
 
-type TabType = 'perfil' | 'seguridad' | 'notificaciones' | 'actividad' | 'sesiones' | 'tiendas';
+type TabType = 'perfil' | 'membresia' | 'seguridad' | 'notificaciones' | 'sesiones' | 'tiendas';
 
 export function ConfiguracionPage() {
     const {
@@ -188,9 +193,6 @@ export function ConfiguracionPage() {
     });
     const [isSavingNotifs, setIsSavingNotifs] = useState(false);
 
-    // Actividad state
-    const [activityLogs, setActivityLogs] = useState<AuditLog[]>([]);
-    const [isLoadingLogs, setIsLoadingLogs] = useState(false);
 
     // Fetch stores on mount/tab change
     useEffect(() => {
@@ -217,15 +219,6 @@ export function ConfiguracionPage() {
         cargarPaises().then(setAllCountries);
     }, []);
 
-    useEffect(() => {
-        if (activeTab === 'actividad') {
-            setIsLoadingLogs(true);
-            fetchUserActivityLogs(30).then(logs => {
-                setActivityLogs(logs);
-                setIsLoadingLogs(false);
-            });
-        }
-    }, [activeTab]);
 
     const executeDeleteTienda = async () => {
         if (!deleteTiendaConfirm) return;
@@ -374,10 +367,10 @@ export function ConfiguracionPage() {
                     label="Sesiones"
                 />
                 <TabButton
-                    active={activeTab === 'actividad'}
-                    onClick={() => setActiveTab('actividad')}
-                    icon={<Clock size={18} />}
-                    label="Actividad"
+                    active={activeTab === 'membresia'}
+                    onClick={() => setActiveTab('membresia')}
+                    icon={<Zap size={18} />}
+                    label="Membresía"
                 />
                 <TabButton
                     active={activeTab === 'tiendas'}
@@ -527,6 +520,85 @@ export function ConfiguracionPage() {
                             </div>
                         </Card>
                     </aside>
+                </div>
+            )}
+
+            {/* Contenido de Membresía */}
+            {activeTab === 'membresia' && (
+                <div style={{ animation: 'fadeIn 0.3s' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '32px' }} className="dc-config-grid">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                            <Card>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px' }}>
+                                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                                        <div style={{
+                                            width: '56px', height: '56px', borderRadius: '16px',
+                                            backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            color: 'var(--color-primary)'
+                                        }}>
+                                            <Zap size={28} />
+                                        </div>
+                                        <div>
+                                            <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>
+                                                Plan {user?.plan?.name || 'Básico'}
+                                            </h3>
+                                            <p style={{ margin: '4px 0 0', fontSize: '14px', color: 'var(--text-tertiary)' }}>
+                                                Estado: <Badge variant={user?.estadoSuscripcion === 'activa' ? 'success' : 'warning'}>
+                                                    {user?.estadoSuscripcion?.toUpperCase() || 'ACTIVA'}
+                                                </Badge>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {user?.planId !== 'plan_enterprise' && (
+                                        <Button
+                                            variant="primary"
+                                            onClick={() => navigate('/precios')}
+                                            style={{ gap: '8px' }}
+                                        >
+                                            <ArrowUpCircle size={18} />
+                                            Mejorar Plan
+                                        </Button>
+                                    )}
+                                </div>
+
+                                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
+                                    <h4 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '16px', color: 'var(--text-primary)' }}> BENEFICIOS DE TU PLAN</h4>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                        <FeatureItem label={`Máximo ${user?.plan?.limits?.stores} tiendas`} active />
+                                        <FeatureItem label={`${user?.plan?.limits?.costeos_limit || 'Ilimitados'} costeos`} active />
+                                        <FeatureItem label="Soporte Prioritario" active={user?.planId !== 'plan_free'} />
+                                        <FeatureItem label="Acceso a Billetera" active={user?.plan?.limits?.access_wallet} />
+                                        <FeatureItem label="Sistema de Referidos" active={user?.plan?.limits?.access_referrals} />
+                                        <FeatureItem label="Duplicado de Costeos" active={user?.plan?.limits?.can_duplicate_costeos} />
+                                    </div>
+                                </div>
+                            </Card>
+
+                            <Card>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                                    <Clock size={20} color="var(--text-secondary)" />
+                                    <h4 style={{ margin: 0, fontWeight: 700 }}>Próxima Renovación</h4>
+                                </div>
+                                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: 0 }}>
+                                    Tu suscripción se renovará automáticamente el <strong>{new Date(new Date().setMonth(new Date().getMonth() + 1)).toLocaleDateString()}</strong>.
+                                    Puedes gestionar tus métodos de pago para evitar interrupciones en el servicio.
+                                </p>
+                            </Card>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                            <Card>
+                                <h4 style={{ margin: '0 0 16px', fontWeight: 700, fontSize: '15px' }}>¿Necesitas ayuda?</h4>
+                                <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', lineHeight: 1.6, marginBottom: '20px' }}>
+                                    Si tienes dudas sobre tu facturación o necesitas un plan personalizado para tu empresa, nuestro equipo está listo para ayudarte.
+                                </p>
+                                <Button variant="secondary" fullWidth onClick={() => window.open('https://wa.me/xyz', '_blank')}>
+                                    Contactar Soporte
+                                </Button>
+                            </Card>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -1293,31 +1365,6 @@ export function ConfiguracionPage() {
     );
 }
 
-// Subcomponentes Internos y Helpers
-function getLogDisplay(accion: string) {
-    switch (accion) {
-        case 'PAYMENT_RECEIVED':
-            return { icon: <CreditCardIcon size={18} />, color: '#10B981', label: 'Pago Recibido' };
-        case 'PLAN_ACTIVATED':
-            return { icon: <Zap size={18} />, color: '#F59E0B', label: 'Suscripción Activada' };
-        case 'COMMISSION_EARNED':
-            return { icon: <Zap size={18} />, color: '#3B82F6', label: 'Comisión Ganada' };
-        case 'LOGIN':
-            return { icon: <UserCheck size={18} />, color: '#6366F1', label: 'Inicio de Sesión' };
-        case 'PASSWORD_CHANGE':
-            return { icon: <KeyIcon size={18} />, color: '#EF4444', label: 'Cambio de Contraseña' };
-        default:
-            return { icon: <Clock size={18} />, color: '#6B7280', label: accion.replace(/_/g, ' ') };
-    }
-}
-
-function formatLogDetails(log: AuditLog) {
-    if (!log.detalles) return '';
-    if (log.accion === 'PLAN_ACTIVATED') return `Plan: ${log.detalles.plan_id?.toUpperCase()}`;
-    if (log.accion === 'PAYMENT_RECEIVED') return `Monto: ${log.detalles.amount} ${log.detalles.currency}`;
-    if (log.accion === 'COMMISSION_EARNED') return `Recibiste +$ ${log.detalles.amount_usd} de referido`;
-    return JSON.stringify(log.detalles).substring(0, 50);
-}
 
 function Card({ children }: { children: React.ReactNode }) {
     return (
@@ -1375,6 +1422,24 @@ function NotificationItem({ icon, title, description, checked, onChange }: {
                 </div>
             </div>
             <Toggle checked={checked} onChange={onChange} />
+        </div>
+    );
+}
+
+function FeatureItem({ label, active }: { label: string; active?: boolean }) {
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+                width: '20px', height: '20px', borderRadius: '50%',
+                backgroundColor: active ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: active ? '#10B981' : '#6B7280'
+            }}>
+                <CheckCircle2 size={12} />
+            </div>
+            <span style={{ fontSize: '13px', color: active ? 'var(--text-primary)' : 'var(--text-tertiary)', fontWeight: active ? 500 : 400 }}>
+                {label}
+            </span>
         </div>
     );
 }
