@@ -289,7 +289,7 @@ export const configService = {
             // Bordes
             color_border: '#E5E7EB',
             color_border_hover: '#D1D5DB',
-            // Sidebar
+            // Sidebar (Siempre Oscuro por preferencia premium)
             color_sidebar_bg: '#0F172A',
             color_sidebar_text: '#94A3B8',
             color_sidebar_active: '#0066FF',
