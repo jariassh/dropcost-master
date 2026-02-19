@@ -1,11 +1,10 @@
+import { supabase } from '@/lib/supabase';
+
 /**
  * Helper para disparar triggers de email desde el frontend.
- * Llama a la Edge Function email-trigger-dispatcher de forma fire-and-forget.
+ * Llama a la Edge Function email-trigger-dispatcher.
  * Los errores se loguean pero nunca bloquean el flujo principal.
  */
-
-const DISPATCHER_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/email-trigger-dispatcher`;
-const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 /**
  * Dispara un trigger de email de forma asíncrona (fire-and-forget).
@@ -16,19 +15,12 @@ export async function dispararTriggerEmail(
     datos: Record<string, string>
 ): Promise<void> {
     try {
-        const res = await fetch(DISPATCHER_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${ANON_KEY}`,
-                'apikey': ANON_KEY,
-            },
-            body: JSON.stringify({ codigo_evento, datos }),
+        const { error } = await supabase.functions.invoke('email-trigger-dispatcher', {
+            body: { codigo_evento, datos }
         });
 
-        if (!res.ok) {
-            const body = await res.text();
-            console.error(`[emailTrigger] Error disparando ${codigo_evento}:`, body);
+        if (error) {
+            console.error(`[emailTrigger] Error disparando ${codigo_evento}:`, error);
         }
     } catch (err) {
         // Fire-and-forget: nunca bloquea el flujo principal
@@ -46,14 +38,8 @@ export async function enviarPruebaPlantilla(params: {
     datos_usuario: Record<string, string>;
 }): Promise<{ success: boolean; error?: string }> {
     try {
-        const res = await fetch(DISPATCHER_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${ANON_KEY}`,
-                'apikey': ANON_KEY,
-            },
-            body: JSON.stringify({
+        const { data, error } = await supabase.functions.invoke('email-trigger-dispatcher', {
+            body: {
                 // Usamos un codigo_evento especial para pruebas manuales
                 // El dispatcher lo maneja con plantilla_id_prueba
                 codigo_evento: '__PRUEBA_MANUAL__',
@@ -61,17 +47,18 @@ export async function enviarPruebaPlantilla(params: {
                 tipo_envio: 'prueba',
                 plantilla_id_prueba: params.plantilla_id,
                 email_destino_prueba: params.email_destino,
-            }),
+            }
         });
 
-        if (!res.ok) {
-            const body = await res.text();
-            return { success: false, error: body };
+        if (error) {
+            console.error('[emailTrigger] invoke error:', error);
+            // supabase-js returns error as an object, usually with a message
+            return { success: false, error: error.message || JSON.stringify(error) };
         }
 
-        const data = await res.json();
-        return { success: data.emails_enviados > 0 };
+        return { success: data?.emails_enviados > 0 || data?.message === 'ok' };
     } catch (err: any) {
+        console.error('[emailTrigger] Unexpected error:', err);
         return { success: false, error: err.message || 'Error desconocido' };
     }
 }

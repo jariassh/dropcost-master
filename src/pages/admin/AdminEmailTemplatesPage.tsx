@@ -43,6 +43,7 @@ import {
 import { configService, GlobalConfig } from '@/services/configService';
 import { userService } from '@/services/userService';
 import { supabase } from '@/lib/supabase';
+// @ts-ignore
 import * as mjmlModule from 'mjml-browser';
 import { MJMLAttributeModal } from './components/MJMLAttributeModal';
 const mjml2html = (mjmlModule as any).default || mjmlModule;
@@ -97,7 +98,31 @@ const categorizedVariables = {
     'Referidos': [
         { name: 'lider_nombre', label: 'Nombre de su Líder' },
         { name: 'total_referidos', label: 'Total de Invitados' },
-        { name: 'total_comisiones', label: 'Comisiones Totales' }
+        { name: 'monto_comision', label: 'Monto de Comisión' },
+        { name: 'fecha_pago', label: 'Fecha de Pago' },
+        { name: 'banco_nombre', label: 'Banco de Destino' }
+    ],
+    'Sistema': [
+        { name: '{{app_url}}/simulador', label: 'Link al Simulador' },
+        { name: '{{app_url}}/dashboard', label: 'Link al Dashboard' },
+        { name: '{{app_url}}/referidos', label: 'Link a Referidos' },
+        { name: '{{app_url}}/billetera', label: 'Link a Billetera' },
+        { name: '{{app_url}}/planes', label: 'Link a Planes' },
+        { name: '{{app_url}}/configuracion', label: 'Link a Configuración' }
+    ],
+    'Autenticación': [
+        { name: '{{app_url}}/reset-password?token={{reset_token}}', label: 'Link Reset Password' },
+        { name: '{{app_url}}/verificar-email?code={{verification_code}}', label: 'Link Verificar Email' }
+    ],
+    'Legal': [
+        { name: '{{app_url}}/privacidad', label: 'Política de Privacidad' },
+        { name: '{{app_url}}/terminos', label: 'Términos y Condiciones' },
+        { name: '{{app_url}}/contacto', label: 'Página de Contacto' }
+    ],
+    'Soporte': [
+        { name: 'mailto:soporte@dropcost.com', label: 'Email Soporte' },
+        { name: 'mailto:ventas@dropcost.com', label: 'Email Ventas' },
+        { name: '{{app_url}}/soporte', label: 'Centro de Ayuda' }
     ],
     'Seguridad': [
         { name: 'codigo', label: 'Código de Verificación (OTP)' }
@@ -982,6 +1007,19 @@ export function AdminEmailTemplatesPage() {
     const [globalConfig, setGlobalConfig] = useState<GlobalConfig | null>(null);
     const [availableTriggers, setAvailableTriggers] = useState<{ id: string; nombre_trigger: string; codigo_evento: string; categoria: string }[]>([]);
 
+    useEffect(() => {
+        const fetchTriggers = async () => {
+            const { data } = await (supabase as any)
+                .from('email_triggers')
+                .select('id, nombre_trigger, codigo_evento, categoria')
+                .eq('activo', true)
+                .order('nombre_trigger');
+
+            if (data) setAvailableTriggers(data);
+        };
+        fetchTriggers();
+    }, []);
+
     // Actions State
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
     const [menuPosition, setMenuPosition] = useState<{ top?: number; bottom?: number; right: number } | null>(null);
@@ -1041,7 +1079,10 @@ export function AdminEmailTemplatesPage() {
         const start = element.selectionStart || 0;
         const end = element.selectionEnd || 0;
         const text = (selectedTemplate[field] as string) || '';
-        const contentToInsert = isVariable ? `{{${content}}}` : content;
+        // Check if content already starts with {{ to avoid double wrapping
+        // Also allow mailto links to pass raw if intended as variables (though usually variables are placeholders)
+        // If content has {{ already, we assume it's a pre-formatted variable/link
+        const contentToInsert = (isVariable && !content.includes('{{') && !content.startsWith('mailto:')) ? `{{${content}}}` : content;
 
         const newText = text.substring(0, start) + contentToInsert + text.substring(end);
 
@@ -1104,8 +1145,10 @@ export function AdminEmailTemplatesPage() {
             // Construir datos del usuario de prueba para reemplazo de variables
             const datosUsuario: Record<string, string> = {
                 usuario_id: selectedTestUser.id || '',
-                usuario_nombre: `${selectedTestUser.nombres || ''} ${selectedTestUser.apellidos || ''}`.trim(),
-                usuario_email: selectedTestUser.email || '',
+                nombres: selectedTestUser.nombres || '',
+                apellidos: selectedTestUser.apellidos || '',
+                email: selectedTestUser.email || '',
+                usuario_email: selectedTestUser.email || '', // Mantener por compatibilidad si algún trigger viejo lo usa
                 fecha_registro: selectedTestUser.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
                 codigo_referido: selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA',
                 // Variables de prueba genéricas para triggers que las necesiten
@@ -1258,17 +1301,23 @@ export function AdminEmailTemplatesPage() {
                 parent_id: navigationPath.length > 0 ? navigationPath[navigationPath.length - 1] : null
             }) as any;
 
-            // Si se seleccionó un trigger, crear la asociación en email_plantillas_triggers
+            // Si se seleccionó un trigger, gestionar exclusividad y crear asociación
             if (newItem.trigger_event && data?.id) {
                 const trigger = availableTriggers.find(t => t.codigo_evento === newItem.trigger_event);
                 if (trigger) {
-                    await (supabase as any)
-                        .from('email_plantillas_triggers')
-                        .insert({
-                            plantilla_id: data.id,
-                            trigger_id: trigger.id,
-                            activo: true,
-                        });
+                    // 1. Limpiar asociaciones previas (Exclusividad)
+                    await (supabase as any).from('email_plantillas_triggers').delete().eq('trigger_id', trigger.id);
+                    await (supabase as any).from('email_templates').update({ trigger_event: null }).eq('trigger_event', newItem.trigger_event);
+
+                    // 2. Crear nueva asociación
+                    await (supabase as any).from('email_plantillas_triggers').insert({
+                        plantilla_id: data.id,
+                        trigger_id: trigger.id,
+                        activo: true,
+                    });
+
+                    // 3. Update local state to remove trigger from others
+                    setTemplates(prev => prev.map(t => t.trigger_event === newItem.trigger_event ? { ...t, trigger_event: '' } : t));
                 }
             }
 
@@ -1364,19 +1413,62 @@ export function AdminEmailTemplatesPage() {
         if (!itemToManage || !newItem.slug) return;
         try {
             setIsCreating(true);
+
+            // Update the template itself with basic info first
             await configService.updateEmailTemplate(itemToManage.id, {
                 name: newItem.name,
                 slug: newItem.slug,
                 description: newItem.description,
                 trigger_event: newItem.trigger_event
             });
-            setTemplates(templates.map(t => t.id === itemToManage.id ? {
-                ...t,
+
+            // Enforce Unique Trigger Association & Update DB
+            if (newItem.trigger_event) {
+                const trigger = availableTriggers.find(t => t.codigo_evento === newItem.trigger_event);
+                if (trigger) {
+                    // 1. Remove ANY existing association for this trigger (Enforce Single Template per Trigger)
+                    await (supabase as any).from('email_plantillas_triggers').delete().eq('trigger_id', trigger.id);
+
+                    // 2. Visually clear 'trigger_event' from any other email template in DB
+                    await (supabase as any).from('email_templates')
+                        .update({ trigger_event: null })
+                        .eq('trigger_event', newItem.trigger_event)
+                        .neq('id', itemToManage.id);
+
+                    // 3. Create NEW association for this template
+                    await (supabase as any).from('email_plantillas_triggers').insert({
+                        plantilla_id: itemToManage.id,
+                        trigger_id: trigger.id,
+                        activo: true
+                    });
+                }
+            }
+
+            // Update the template itself (redundant if already done above, but keeping for consistency with provided snippet)
+            await configService.updateEmailTemplate(itemToManage.id, {
                 name: newItem.name,
                 slug: newItem.slug,
                 description: newItem.description,
                 trigger_event: newItem.trigger_event
-            } : t));
+            });
+
+            setTemplates(prev => prev.map(t => {
+                // Update current template
+                if (t.id === itemToManage.id) {
+                    return {
+                        ...t,
+                        name: newItem.name,
+                        slug: newItem.slug,
+                        description: newItem.description,
+                        trigger_event: newItem.trigger_event
+                    };
+                }
+                // Clear trigger from old holder if exists (local state sync)
+                if (newItem.trigger_event && t.trigger_event === newItem.trigger_event) {
+                    return { ...t, trigger_event: '' }; // Remove trigger visual
+                }
+                return t;
+            }));
             setIsRenameModalOpen(false);
             setItemToManage(null);
             setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
@@ -2087,12 +2179,27 @@ export function AdminEmailTemplatesPage() {
                                             }}
                                         >
                                             <option value="">Sin Disparador Automático</option>
-                                            <option value="user_registration">Registro de Usuario</option>
-                                            <option value="password_reset">Recuperación de Contraseña</option>
-                                            <option value="order_created">Pedido Creado</option>
-                                            <option value="order_shipped">Pedido Enviado</option>
-                                            <option value="subscription_active">Suscripción Activada</option>
-                                            <option value="payment_failed">Pago Fallido</option>
+
+                                            {/* Categoría: Usuario */}
+                                            <optgroup label="Usuario">
+                                                {availableTriggers.filter(t => t.categoria === 'usuario').map(t => (
+                                                    <option key={t.id} value={t.codigo_evento}>{t.nombre_trigger}</option>
+                                                ))}
+                                            </optgroup>
+
+                                            {/* Categoría: Referidos */}
+                                            <optgroup label="Referidos">
+                                                {availableTriggers.filter(t => t.categoria === 'referido').map(t => (
+                                                    <option key={t.id} value={t.codigo_evento}>{t.nombre_trigger}</option>
+                                                ))}
+                                            </optgroup>
+
+                                            {/* Categoría: Pago */}
+                                            <optgroup label="Pagos">
+                                                {availableTriggers.filter(t => t.categoria === 'pago').map(t => (
+                                                    <option key={t.id} value={t.codigo_evento}>{t.nombre_trigger}</option>
+                                                ))}
+                                            </optgroup>
                                         </select>
                                     </div>
 
@@ -2404,6 +2511,8 @@ export function AdminEmailTemplatesPage() {
                                             }}
                                             language={selectedTemplate?.mjml_content !== undefined ? 'mjml' : 'html'}
                                             minHeight="400px"
+                                            maxHeight="600px"
+                                            id="body-textarea"
                                         />
                                     </div>
                                 </div>
