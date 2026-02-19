@@ -90,6 +90,10 @@ export function SimuladorPage() {
     }, [maxUnits]);
 
     const handleSave = useCallback(() => {
+        const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+        const costeoLimit = user?.plan?.limits?.costeos_limit ?? -1;
+        const offersLimit = user?.plan?.limits?.offers_limit ?? -1;
+
         if (!results || results.suggestedPrice <= 0) {
             toast.warning('Ingresa datos para calcular antes de guardar');
             return;
@@ -97,6 +101,23 @@ export function SimuladorPage() {
         if (!inputs.productName.trim()) {
             toast.warning('Ingresa un nombre para el producto');
             return;
+        }
+
+        // 1. Check Costeos Limit
+        const existingCosteos = JSON.parse(localStorage.getItem('dropcost_costeos') || '[]') as SavedCosteo[];
+        if (!isAdmin && costeoLimit !== -1 && existingCosteos.length >= costeoLimit) {
+            toast.warning('Límite de Costeos', `Tu plan actual permite un máximo de ${costeoLimit} costeos guardados. Mejora tu plan para habilitar más.`);
+            return;
+        }
+
+        // 2. Check Offers Limit (If volume strategy is enabled)
+        if (volumeStrategy.enabled) {
+            const existingOffers = JSON.parse(localStorage.getItem('dropcost_ofertas') || '[]');
+            if (!isAdmin && offersLimit !== -1 && existingOffers.length >= offersLimit) {
+                toast.warning('Límite de Ofertas', `No se pudo crear la oferta automática. Tu plan actual permite un máximo de ${offersLimit} ofertas. Mejora tu plan para habilitar más.`);
+                // We continue to save the costeo, but without the offer
+                return;
+            }
         }
 
         let finalVolumeStrategy = volumeStrategy.enabled ? { ...volumeStrategy } : undefined;
