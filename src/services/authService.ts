@@ -199,6 +199,7 @@ export async function getCurrentUser(): Promise<User | null> {
         fechaRegistro: user.created_at,
         codigoReferido: profile?.codigo_referido_personal || undefined,
         planId: profile?.plan_id || 'plan_free',
+        fechaVencimiento: (profile as any)?.plan_expires_at,
         plan: planDetails ? {
             name: planDetails.name,
             limits: planDetails.limits as any

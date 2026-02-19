@@ -39,13 +39,13 @@ export const walletService = {
 
         // 1. Obtener configuración de días de retención
         const { data: config } = await supabase
-            .from('sistema_referidos_config')
+            .from('sistema_referidos_config' as any)
             .select('dias_retencion_comision')
             .order('fecha_actualizacion', { ascending: false })
             .limit(1)
             .maybeSingle();
 
-        const retentionDays = config?.dias_retencion_comision ?? 30;
+        const retentionDays = (config as any)?.dias_retencion_comision ?? 30;
 
         // 2. Calcular fecha límite para comisiones disponibles
         const retentionDate = new Date();
@@ -209,6 +209,6 @@ export const walletService = {
             .limit(1)
             .maybeSingle();
 
-        return config?.monto_minimo_retiro_usd ?? 10.00;
+        return (config as any)?.monto_minimo_retiro_usd ?? 10.00;
     }
 };

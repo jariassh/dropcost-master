@@ -24,7 +24,8 @@ export interface User {
             [key: string]: number | boolean | undefined;
         };
     };
-    estadoSuscripcion?: 'activa' | 'cancelada' | 'suspendida' | 'trial' | 'inactiva';
+    estadoSuscripcion?: 'activa' | 'cancelada' | 'suspendida' | 'trial' | 'inactiva' | 'pendiente';
+    fechaVencimiento?: string;
     emailVerificado: boolean;
     twoFactorEnabled: boolean;
     rol?: 'cliente' | 'lider' | 'admin' | 'superadmin';

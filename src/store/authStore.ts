@@ -33,6 +33,9 @@ export const useAuthStore = create<AuthState>((set) => ({
             
             // Check 2FA
             if (user?.twoFactorEnabled) {
+                // Invalidate old token to prevent bypass on refresh/back
+                localStorage.removeItem(`2fa_verified_${user.id}`);
+
                 // Solicitar código
                 const faResponse = await authService.request2FALogin();
                 
@@ -57,7 +60,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             auditService.recordLog({
                 accion: 'LOGIN',
                 entidad: 'USER',
-                entidad_id: user?.id || null,
+                entidadId: user?.id,
                 detalles: { email: credentials.email }
             });
 
@@ -131,7 +134,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             auditService.recordLog({
                 accion: 'LOGIN',
                 entidad: 'USER',
-                entidad_id: user?.id || null,
+                entidadId: user?.id,
                 detalles: { method: '2FA' }
             });
 
@@ -225,7 +228,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             auditService.recordLog({
                 accion: 'UPDATE_PROFILE',
                 entidad: 'USER',
-                entidad_id: user?.id || null,
+                entidadId: user?.id,
                 detalles: userData
             });
 
@@ -301,7 +304,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             auditService.recordLog({
                 accion: 'LOGOUT',
                 entidad: 'USER',
-                entidad_id: user.id || null,
+                entidadId: user?.id,
                 detalles: {}
             });
         }

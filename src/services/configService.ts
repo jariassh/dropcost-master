@@ -139,8 +139,87 @@ export const configService = {
             .eq('id', CONFIG_ID)
             .maybeSingle();
 
-        if (error) throw error;
-        if (!data) throw new Error('No se encontró configuración global.');
+        if (error) {
+            console.error('Error refreshing config cache:', error);
+            // Don't throw, let it fallback to default if desired or handle gracefully
+        }
+        
+        if (!data) {
+             console.warn('No se encontró configuración global. Using default.');
+             // Instead of throwing, we might just return default values or null
+             // For now, let's return default values simulating a fetched config
+             // so the app doesn't crash on login
+             const fallback: GlobalConfig = {
+                id: CONFIG_ID,
+                meta_title: 'DropCost Master',
+                meta_description: 'Calculadora de costos para dropshipping',
+                meta_keywords: 'dropshipping, costos, calculadora',
+                og_image_url: '',
+                site_url: 'https://dropcost.com',
+                email_domain: 'dropcost.com',
+                permitir_indexacion: true,
+                permitir_seguimiento: true,
+                robots_txt_custom: '',
+                favicon_url: '',
+                logo_principal_url: '',
+                logo_variante_url: '',
+                logo_footer_url: '',
+                color_primary: '#0066FF',
+                color_primary_dark: '#0052cc',
+                color_primary_light: '#e6f0ff',
+                color_success: '#10B981',
+                color_error: '#EF4444',
+                color_warning: '#F59E0B',
+                color_neutral: '#6B7280',
+                color_bg_primary: '#FFFFFF',
+                color_bg_secondary: '#F9FAFB',
+                color_bg_tertiary: '#F3F4F6',
+                color_card_bg: '#FFFFFF',
+                color_text_primary: '#1F2937',
+                color_text_secondary: '#6B7280',
+                color_text_tertiary: '#9CA3AF',
+                color_text_inverse: '#FFFFFF',
+                color_border: '#E5E7EB',
+                color_border_hover: '#D1D5DB',
+                color_card_border: '#E5E7EB',
+                dark_bg_primary: '#1F2937',
+                dark_bg_secondary: '#111827',
+                dark_bg_tertiary: '#374151',
+                dark_card_bg: '#1F2937',
+                dark_card_border: '#374151',
+                dark_text_primary: '#F9FAFB',
+                dark_text_secondary: '#D1D5DB',
+                dark_text_tertiary: '#9CA3AF',
+                dark_border: '#374151',
+                dark_border_hover: '#4B5563',
+                color_sidebar_bg: '#FFFFFF',
+                color_sidebar_text: '#1F2937',
+                color_sidebar_active: '#0066FF',
+                color_admin_panel_link: '#F3F4F6',
+                color_admin_sidebar_active: '#10B981',
+                color_admin_sidebar_return: '#EF4444',
+                
+                codigo_head: '',
+                codigo_footer: '',
+                
+                nombre_empresa: 'DropCost',
+                descripcion_empresa: 'Software de costeo',
+                sitio_web: 'https://dropcost.com',
+                email_contacto: 'soporte@dropcost.com',
+                telefono: '+57300000000',
+                pais_operacion: 'CO',
+                
+                instagram_url: '',
+                linkedin_url: '',
+                twitter_url: '',
+                youtube_url: '',
+                
+                terminos_condiciones_url: '',
+                politica_privacidad_url: ''
+             };
+             localStorage.setItem(CACHE_KEY, JSON.stringify(fallback));
+             return fallback;
+        }
 
         localStorage.setItem(CACHE_KEY, JSON.stringify(data));
         return data as unknown as GlobalConfig;
