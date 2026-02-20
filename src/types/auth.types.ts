@@ -9,6 +9,8 @@ export interface User {
     pais?: string;
     planId?: string;
     plan?: {
+        id: string;
+        slug: string;
         name: string;
         limits: {
             stores: number;
