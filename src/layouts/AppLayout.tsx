@@ -406,14 +406,18 @@ export function AppLayout() {
                                                     fontSize: '11px',
                                                     fontWeight: 700,
                                                     color: '#fff',
-                                                    background: 'linear-gradient(135deg, #0066FF, #003D99)',
+                                                    background: user?.rol === 'superadmin'
+                                                        ? 'linear-gradient(135deg, #4338CA, #312E81)'
+                                                        : 'linear-gradient(135deg, #0066FF, #003D99)',
                                                     padding: '4px 14px',
                                                     borderRadius: '20px',
                                                     letterSpacing: '0.05em',
                                                     textTransform: 'uppercase',
                                                 }}
                                             >
-                                                {user?.plan?.name || (user?.planId === 'plan_free' ? 'Plan Gratis' : user?.planId === 'plan_pro' ? 'Plan Pro' : user?.planId === 'plan_enterprise' ? 'Plan Enterprise' : 'Plan Básico')}
+                                                {user?.rol && user.rol !== 'cliente'
+                                                    ? (user.rol === 'superadmin' ? 'Superadmin' : user.rol === 'lider' ? 'Líder ⭐' : user.rol.toUpperCase())
+                                                    : (user?.plan?.name || 'Plan Gratis')}
                                             </span>
                                         </div>
 
