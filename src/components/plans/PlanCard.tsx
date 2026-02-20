@@ -7,12 +7,22 @@ import { formatCurrency } from '@/lib/format';
 interface PlanCardProps {
     plan: Plan;
     isCurrent?: boolean;
+    isDisabled?: boolean;
+    disabledReason?: string;
     onSelect?: (plan: Plan) => void;
     displayedPrice?: string;
     period?: 'monthly' | 'semiannual';
 }
 
-export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onSelect, displayedPrice, period = 'monthly' }) => {
+export const PlanCard: React.FC<PlanCardProps> = ({
+    plan,
+    isCurrent = false,
+    isDisabled = false,
+    disabledReason,
+    onSelect,
+    displayedPrice,
+    period = 'monthly'
+}) => {
 
     // Logic based on slug for styling
     const isEnterprise = plan.slug === 'plan_enterprise';
@@ -92,42 +102,56 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onS
 
             {/* Features */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
-                {plan.features?.map((feature: string, index: number) => (
-                    <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                        <div style={{
-                            marginTop: '2px',
-                            width: '20px',
-                            height: '20px',
-                            borderRadius: '50%',
-                            backgroundColor: 'var(--bg-secondary)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0
-                        }}>
-                            <Check size={12} style={{ color: 'var(--color-primary)' }} />
+                {plan.features?.map((feature: string, index: number) => {
+                    // Logic to show forbidden emoji if offers_limit is 0
+                    let displayText = feature;
+                    if (feature.toLowerCase().includes('0 ofertas') || feature.includes('Crear ofertas')) {
+                        const offersLimit = (plan.limits as any)?.offers_limit;
+                        if (offersLimit === 0) {
+                            displayText = '⛔ Crear ofertas';
+                        }
+                    }
+
+                    return (
+                        <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <div style={{
+                                marginTop: '2px',
+                                width: '20px',
+                                height: '20px',
+                                borderRadius: '50%',
+                                backgroundColor: 'var(--bg-secondary)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                            }}>
+                                <Check size={12} style={{ color: 'var(--color-primary)' }} />
+                            </div>
+                            <span style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                                {displayText}
+                            </span>
                         </div>
-                        <span style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                            {feature}
-                        </span>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Action Button */}
-            <Button
-                variant={isCurrent ? 'secondary' : (isPro ? 'primary' : 'secondary')}
-                fullWidth
-                onClick={() => onSelect && onSelect(plan)}
-                disabled={isCurrent}
-                style={{
-                    height: '48px',
-                    fontSize: '15px',
-                    ...(isEnterprise ? { backgroundColor: 'var(--text-primary)', color: 'var(--bg-primary)', border: 'none' } : {})
-                }}
-            >
-                {isCurrent ? 'Plan Activo' : 'Seleccionar Plan'}
-            </Button>
+            <div title={disabledReason}>
+                <Button
+                    variant={isCurrent ? 'secondary' : (isPro ? 'primary' : 'secondary')}
+                    fullWidth
+                    onClick={() => onSelect && onSelect(plan)}
+                    disabled={isCurrent || isDisabled}
+                    style={{
+                        height: '48px',
+                        fontSize: '15px',
+                        ...(isEnterprise ? { backgroundColor: 'var(--text-primary)', color: 'var(--bg-primary)', border: 'none' } : {}),
+                        ...((isDisabled && !isCurrent) ? { opacity: 0.5, cursor: 'not-allowed' } : {})
+                    }}
+                >
+                    {isCurrent ? 'Plan Activo' : (isDisabled ? 'No Disponible' : 'Seleccionar Plan')}
+                </Button>
+            </div>
         </div>
     );
 };

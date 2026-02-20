@@ -224,7 +224,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
             pattern = /^\d+ Costeos$/;
             altPattern = /^Costeos Ilimitados$/;
         } else if (key === 'offers_limit') {
-            newText = getOffersText(value);
+            newText = value >= INFINITY_THRESHOLD ? 'Ofertas Ilimitadas' : (value <= 0 ? '⛔ Crear ofertas' : `${value} Ofertas`);
             pattern = /^\d+ Ofertas$/;
             altPattern = /^Ofertas Ilimitadas$/;
         }

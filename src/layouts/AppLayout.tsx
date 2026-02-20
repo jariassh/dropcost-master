@@ -46,7 +46,7 @@ const SIDEBAR_COLLAPSED = 72;
 
 const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard', active: false }, // Próximamente
-    { to: '/simulador', icon: Calculator, label: 'Simulador', active: true },
+    { to: '/mis-costeos', icon: Calculator, label: 'Mis Costeos', active: true },
     { to: '/ofertas', icon: Gift, label: 'Ofertas Irresistibles', active: true },
     { to: '/referidos', icon: Share2, label: 'Sistema de Referidos', active: true },
     { to: '/billetera', icon: Wallet, label: 'Billetera / Wallet', active: true },
@@ -198,7 +198,7 @@ export function AppLayout() {
                     {/* Módulos Activos */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {navItems.filter(i => i.active).map((item) => {
-                            const isRestricted = !tiendaActual && (item.to === '/simulador' || item.to === '/ofertas');
+                            const isRestricted = !tiendaActual && (item.to === '/mis-costeos' || item.to === '/ofertas');
 
                             return (
                                 <SidebarNavItem
