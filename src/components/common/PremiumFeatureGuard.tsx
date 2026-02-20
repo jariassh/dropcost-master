@@ -22,11 +22,51 @@ export const PremiumFeatureGuard: React.FC<PremiumFeatureGuardProps> = ({
     const { user } = useAuthStore();
     const navigate = useNavigate();
 
+    // 1. Resolve role and plan
     const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
-    const hasAccess = user?.plan?.limits?.[featureKey];
+    const isSuperAdmin = user?.rol === 'superadmin';
+    const hasPlanDetails = !!user?.plan?.limits;
+    const limits = user?.plan?.limits;
+    const limitValue = limits?.[featureKey];
 
-    // Grant access if admin or if plan includes the feature
-    if (isAdmin || hasAccess) {
+    // 2. Access Decision Logic
+    let hasAccess = false;
+
+    // A. If we have explicit plan details, follow them strictly
+    if (hasPlanDetails) {
+        if (limitValue === true) {
+            hasAccess = true;
+        } else if (typeof limitValue === 'number') {
+            hasAccess = limitValue > 0 || limitValue === -1;
+        } else if (typeof limitValue === 'string') {
+            const val = (limitValue as string).toLowerCase();
+            if (val === 'true') hasAccess = true;
+            else {
+                const n = parseInt(val, 10);
+                if (!isNaN(n) && (n > 0 || n === -1)) hasAccess = true;
+            }
+        }
+    }
+
+    // B. SuperAdmin/Admin Bypass
+    // - SuperAdmins always bypass.
+    // - Admins ONLY bypass if they don't have a plan assigned (managing from DB)
+    //   AND if they were not explicitly blocked in step A.
+    if (!hasAccess) {
+        if (isSuperAdmin) {
+            hasAccess = true;
+        } else if (isAdmin) {
+            // Si el admin no tiene plan asignado, le damos paso por defecto para gestión
+            if (!user?.planId || user?.planId === '') {
+                hasAccess = true;
+            }
+            // Si tiene planId (incluyendo 'plan_free'), y no tiene detalles que den permiso,
+            // se queda bloqueado. Esto permite a los desarrolladores testear el paywall.
+        }
+    }
+
+    // Grant access if confirmed
+    if (hasAccess) {
         return <>{children}</>;
     }
 
@@ -45,14 +85,14 @@ export const PremiumFeatureGuard: React.FC<PremiumFeatureGuardProps> = ({
                 <Lock size={32} />
             </div>
             <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '12px', color: 'var(--text-primary)' }}>{title}</h2>
-            <p style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '32px', maxWidth: '480px', margin: '0 auto 32px' }}>
+            <div style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '32px', maxWidth: '480px', margin: '0 auto 32px' }}>
                 {description}
-            </p>
+            </div>
             <button
                 onClick={() => navigate('/pricing')}
                 style={{
                     padding: '12px 24px', borderRadius: '10px', border: 'none',
-                    background: 'var(--color-primary)', // Use primary color for consistency
+                    background: 'var(--color-primary)',
                     color: '#fff', fontSize: '15px', fontWeight: 600, cursor: 'pointer',
                     boxShadow: '0 4px 12px rgba(0, 102, 255, 0.25)',
                     transition: 'all 0.2s ease'

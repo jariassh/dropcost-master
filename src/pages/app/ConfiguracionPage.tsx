@@ -997,14 +997,36 @@ export function ConfiguracionPage() {
                                 Administra tus puntos de venta y sus integraciones
                             </p>
                         </div>
-                        <button
-                            className="dc-button-primary"
-                            onClick={handleOpenCreateStore}
-                            style={{ gap: '8px' }}
-                        >
-                            <Plus size={16} />
-                            Nueva Tienda
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            {/* Indicador de Cuota de Tiendas */}
+                            <div style={{
+                                padding: '8px 16px', backgroundColor: 'var(--bg-secondary)',
+                                borderRadius: '12px', border: '1px solid var(--border-color)',
+                                display: 'flex', alignItems: 'center', gap: '8px'
+                            }}>
+                                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                    Cuota: <span style={{ color: tiendas.length >= (user?.plan?.limits?.stores || 0) && (user?.rol !== 'admin' && user?.rol !== 'superadmin') ? 'var(--color-error)' : 'var(--color-primary)' }}>
+                                        {tiendas.length}/{user?.plan?.limits?.stores || 0} Tiendas
+                                    </span>
+                                </div>
+                                <div style={{ width: '60px', height: '6px', backgroundColor: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
+                                    <div style={{
+                                        width: `${Math.min((tiendas.length / (user?.plan?.limits?.stores || 1)) * 100, 100)}%`,
+                                        height: '100%',
+                                        backgroundColor: tiendas.length >= (user?.plan?.limits?.stores || 0) && (user?.rol !== 'admin' && user?.rol !== 'superadmin') ? 'var(--color-error)' : 'var(--color-primary)'
+                                    }} />
+                                </div>
+                            </div>
+
+                            <button
+                                className="dc-button-primary"
+                                onClick={handleOpenCreateStore}
+                                style={{ gap: '8px' }}
+                            >
+                                <Plus size={16} />
+                                Nueva Tienda
+                            </button>
+                        </div>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
