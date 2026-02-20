@@ -36,9 +36,9 @@ export function WizardStep3Builder({
     onBundleChange,
     onGiftChange,
 }: WizardStep3Props) {
-    const price = costeo.results.suggestedPrice;
-    const profit = costeo.results.netProfitPerSale;
-    const supplierCost = costeo.inputs.productCost;
+    const price = costeo.results_json?.suggestedPrice ?? 0;
+    const profit = costeo.results_json?.netProfitPerSale ?? 0;
+    const supplierCost = costeo.inputs_json?.productCost ?? 0;
 
     const formatCurrency = (val: number) =>
         '$' + val.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });

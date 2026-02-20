@@ -146,7 +146,7 @@ export function PaymentStatusPage() {
                     </p>
                     <Button
                         variant="primary"
-                        onClick={() => navigate('/simulador')}
+                        onClick={() => navigate('/mis-costeos')}
                         fullWidth
                         style={buttonStyle}
                     >
@@ -167,7 +167,7 @@ export function PaymentStatusPage() {
                     </p>
                     <Button
                         variant="primary"
-                        onClick={() => navigate('/simulador')}
+                        onClick={() => navigate('/mis-costeos')}
                         fullWidth
                         style={{ ...buttonStyle, backgroundColor: 'var(--color-primary)' }}
                     >
@@ -192,7 +192,7 @@ export function PaymentStatusPage() {
                     </div>
                     <Button
                         variant="secondary"
-                        onClick={() => navigate('/simulador')}
+                        onClick={() => navigate('/mis-costeos')}
                         fullWidth
                         style={buttonStyle}
                     >
