@@ -5,9 +5,7 @@ import {
     ChevronLeft,
     Settings,
     FileText,
-    Pause,
-    Play,
-    Edit3,
+    Trash2,
     Clock,
     Package
 } from 'lucide-react';
@@ -15,13 +13,11 @@ import {
 interface OfertaDetailPanelProps {
     oferta: Oferta;
     onClose: () => void;
-    onToggleStatus: (id: string) => void;
     onDelete: (id: string) => void;
 }
 
-export function OfertaDetailPanel({ oferta, onClose, onToggleStatus, onDelete }: OfertaDetailPanelProps) {
+export function OfertaDetailPanel({ oferta, onClose, onDelete }: OfertaDetailPanelProps) {
     const strategyInfo = STRATEGIES.find((s) => s.type === oferta.strategyType)!;
-    const isActiva = oferta.status === 'activa';
 
     const formatCurrency = (val: number) =>
         '$' + val.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -39,7 +35,7 @@ export function OfertaDetailPanel({ oferta, onClose, onToggleStatus, onDelete }:
             closeOnOverlay={true}
         >
             <div style={{ backgroundColor: 'var(--bg-primary)', margin: '-32px', padding: '24px 32px', borderRadius: '16px', color: 'var(--text-primary)' }}>
-                {/* Header with Back Arrow & Status */}
+                {/* Header with Back Arrow */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                         <button
@@ -62,12 +58,6 @@ export function OfertaDetailPanel({ oferta, onClose, onToggleStatus, onDelete }:
                         <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                             Detalles de Oferta
                         </h2>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: isActiva ? '#10B981' : '#F59E0B' }} />
-                        <span style={{ fontSize: '10px', fontWeight: 800, color: isActiva ? '#10B981' : '#F59E0B', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                            {isActiva ? 'ACTIVA' : 'PAUSADA'}
-                        </span>
                     </div>
                 </div>
 
@@ -125,7 +115,7 @@ export function OfertaDetailPanel({ oferta, onClose, onToggleStatus, onDelete }:
                                     alignItems: 'center',
                                     gap: '6px'
                                 }}>
-                                    <Clock size={12} /> {formatDate(oferta.activatedAt || oferta.createdAt)}
+                                    <Clock size={12} /> {formatDate(oferta.createdAt)}
                                 </span>
                             </div>
                         </div>
@@ -239,42 +229,23 @@ export function OfertaDetailPanel({ oferta, onClose, onToggleStatus, onDelete }:
                     </button>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <button
-                            onClick={() => onToggleStatus(oferta.id)}
+                            onClick={() => onDelete(oferta.id)}
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '8px',
                                 padding: '9px 18px',
                                 borderRadius: '8px',
-                                backgroundColor: 'transparent',
-                                color: 'var(--color-error)',
-                                fontSize: '12.5px',
-                                fontWeight: 700,
-                                border: '1px solid rgba(239, 68, 68, 0.4)',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <Pause size={14} />
-                            Pausar
-                        </button>
-                        <button
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                padding: '9px 22px',
-                                borderRadius: '8px',
-                                backgroundColor: 'var(--color-primary)',
+                                backgroundColor: 'var(--color-error)',
                                 color: '#fff',
                                 fontSize: '12.5px',
                                 fontWeight: 700,
                                 border: 'none',
-                                cursor: 'pointer',
-                                boxShadow: '0 4px 12px rgba(0, 102, 255, 0.2)'
+                                cursor: 'pointer'
                             }}
                         >
-                            <Edit3 size={13} />
-                            Editar
+                            <Trash2 size={16} />
+                            Eliminar Oferta
                         </button>
                     </div>
                 </div>
