@@ -4,7 +4,7 @@
  * - Hook useToast expone métodos para mostrar toasts
  * - Store interno con Zustand para gestión de estado
  */
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { create } from 'zustand';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 import type { AlertType, ToastMessage } from '@/types/common.types';
@@ -33,9 +33,10 @@ const useToastStore = create<ToastStore>((set) => ({
 
 // ─── Hook público ───
 export function useToast() {
-    const { addToast, removeToast } = useToastStore();
+    const addToast = useToastStore((s) => s.addToast);
+    const removeToast = useToastStore((s) => s.removeToast);
 
-    return {
+    return useMemo(() => ({
         success: (title: string, description?: string) =>
             addToast({ type: 'success', title, description, duration: 5000 }),
         error: (title: string, description?: string) =>
@@ -45,7 +46,7 @@ export function useToast() {
         info: (title: string, description?: string) =>
             addToast({ type: 'info', title, description, duration: 5000 }),
         dismiss: removeToast,
-    };
+    }), [addToast, removeToast]);
 }
 
 // ─── Ícono por tipo ───

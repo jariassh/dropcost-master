@@ -5,7 +5,7 @@ import { AlertTriangle, HelpCircle } from 'lucide-react';
 interface ConfirmDialogProps {
     isOpen: boolean;
     title: string;
-    description: string;
+    description: React.ReactNode;
     confirmLabel?: string;
     cancelLabel?: string;
     variant?: 'danger' | 'info';
