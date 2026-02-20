@@ -200,7 +200,11 @@ export async function getCurrentUser(): Promise<User | null> {
         codigoReferido: profile?.codigo_referido_personal || undefined,
         planId: profile?.plan_id || 'plan_free',
         fechaVencimiento: (profile as any)?.plan_expires_at,
+        plan_precio_pagado: (profile as any)?.plan_precio_pagado || 0,
+        plan_periodo: (profile as any)?.plan_periodo,
         plan: planDetails ? {
+            id: profile?.plan_id || '',
+            slug: profile?.plan_id || '',
             name: planDetails.name,
             limits: planDetails.limits as any
         } : undefined,
