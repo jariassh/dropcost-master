@@ -6,9 +6,6 @@
 /** Available offer strategy types */
 export type StrategyType = 'descuento' | 'bundle' | 'obsequio';
 
-/** Offer status */
-export type OfertaStatus = 'activa' | 'pausada' | 'expirada';
-
 /** Gift/bonus type options */
 export type GiftType = 'muestra_gratis' | 'complemento' | 'otro_producto' | 'cupon_descuento';
 
@@ -83,10 +80,7 @@ export interface Oferta {
     /** Estimated margin percentage */
     estimatedMarginPercent: number;
 
-    status: OfertaStatus;
     createdAt: string;
-    activatedAt: string;
-    expiresAt?: string;
 }
 
 /** Strategy metadata for UI display */

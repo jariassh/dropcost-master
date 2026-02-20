@@ -1,20 +1,19 @@
 /**
- * SimuladorPage - Layout principal del simulador.
- * Header: Nombre producto + Guardar + Mis Costeos
- * 2 paneles: formulario (izq) + resultados sticky (der)
- * Cálculo en TIEMPO REAL.
+ * SimuladorPage - Editor persistente para costeos individuales.
+ * Carga datos desde Supabase por ID.
+ * Protege cambios no guardados.
  */
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { SimuladorForm } from './SimuladorForm';
 import { SimuladorResults } from './SimuladorResults';
 import { calculateSuggestedPrice, calculateVolumeTable, calculateVolumeMetrics } from './simulatorCalculations';
-import { useToast, Spinner } from '@/components/common';
+import { useToast, Spinner, ConfirmDialog, Tooltip } from '@/components/common';
 import { useAuthStore } from '@/store/authStore';
 import type { SimulatorInputs, SimulatorResults as Results, VolumeStrategy, SavedCosteo } from '@/types/simulator';
-import { useNavigate } from 'react-router-dom';
-import { Calculator, History, Save, Store, PlusCircle } from 'lucide-react';
-import { useStoreStore } from '@/store/useStoreStore'; // Import store
-import { CreateStoreModal } from '@/components/layout/CreateStoreModal'; // Import modal
+import { Calculator, History, Save, X, ArrowLeft, Info, AlertTriangle } from 'lucide-react';
+import { useStoreStore } from '@/store/useStoreStore';
+import { costeoService } from '@/services/costeoService';
 
 const DEFAULT_INPUTS: SimulatorInputs = {
     productName: '',
@@ -35,39 +34,92 @@ const DEFAULT_VOLUME: VolumeStrategy = {
 };
 
 export function SimuladorPage() {
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const toast = useToast();
-    const { tiendas, isLoading: storesLoading, fetchTiendas } = useStoreStore(); // Get store state
     const { user } = useAuthStore();
-    const [isCreateStoreOpen, setCreateStoreOpen] = useState(false); // Modal state
 
-    const handleOpenCreateStore = () => {
-        const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
-        const storeLimit = user?.plan?.limits?.stores ?? 0;
-
-        if (!isAdmin && tiendas.length >= storeLimit) {
-            toast.warning(
-                'Límite alcanzado',
-                `Tu plan actual permite un máximo de ${storeLimit} ${storeLimit === 1 ? 'tienda' : 'tiendas'}. Mejora tu plan para agregar más.`
-            );
-            return;
-        }
-        setCreateStoreOpen(true);
-    };
-
-    // Fetch stores if empty on mount (safety check)
-    useEffect(() => {
-        fetchTiendas();
-    }, [fetchTiendas]);
+    // --- Estado del Costeo ---
+    const [costeoPadre, setCosteoPadre] = useState<SavedCosteo | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
 
     const [inputs, setInputs] = useState<SimulatorInputs>(DEFAULT_INPUTS);
     const [results, setResults] = useState<Results | null>(null);
     const [volumeStrategy, setVolumeStrategy] = useState<VolumeStrategy>(DEFAULT_VOLUME);
     const [maxUnits, setMaxUnits] = useState(5);
     const [manualPrice, setManualPrice] = useState<number | null>(null);
-    const [manualVolumePrice, setManualVolumePrice] = useState<number | null>(null); // New state
+    const [manualVolumePrice, setManualVolumePrice] = useState<number | null>(null);
 
-    // ─── Auto-calculate in real time ───
+    // --- Control de Cambios ---
+    const [isDirty, setIsDirty] = useState(false);
+    const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+    const pendingPath = useRef<string | null>(null);
+
+    // Carga inicial
+    useEffect(() => {
+        const load = async () => {
+            if (!id) return;
+            try {
+                const data = await costeoService.getCosteo(id);
+                setCosteoPadre(data);
+
+                // Mapear datos si existen (si no es 'vacio')
+                if (data.estado === 'guardado') {
+                    setInputs(data.inputs_json || {
+                        ...DEFAULT_INPUTS,
+                        productName: data.nombre_producto,
+                        productCost: data.costo_producto || 0,
+                        shippingCost: data.costo_flete || 0,
+                        desiredMarginPercent: data.margen ?? 0,
+                        averageCpa: data.cpa ?? 0,
+                        otherExpenses: data.gastos_adicionales ?? 0,
+                        returnRatePercent: data.devoluciones ?? 0,
+                        collectionCommissionPercent: data.comision_recaudo_porcentaje ?? 0,
+                        preCancellationPercent: data.cancelacion_pre_envio_porcentaje ?? 0
+                    });
+                    if (data.volume_strategy) {
+                        setVolumeStrategy(data.volume_strategy);
+                        setMaxUnits(data.volume_strategy.priceTable?.length ? data.volume_strategy.priceTable[data.volume_strategy.priceTable.length - 1].quantity : 5);
+                    }
+                    if (data.results_json) {
+                        setResults(data.results_json);
+                        setManualPrice(data.results_json.manualPrice || null);
+                    }
+                } else {
+                    // Si está vacío, solo seteamos el nombre del producto
+                    setInputs(prev => ({ ...prev, productName: data.nombre_producto }));
+                }
+                setIsDirty(false); // Reset dirty on load
+            } catch (error) {
+                toast.error('No se pudo cargar el costeo');
+                navigate('/simulador');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        load();
+    }, [id, navigate, toast]);
+
+    // Detectar cambios
+    useEffect(() => {
+        if (!isLoading) setIsDirty(true);
+    }, [inputs, volumeStrategy, maxUnits, manualPrice, manualVolumePrice]);
+
+    // Prevenir salida accidental del navegador (Refresh / Close Tab)
+    // NOTA: Los navegadores modernos OBLIGAN a usar su alerta nativa aquí por seguridad.
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = '¿Deseas salir sin guardar los cambios?';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [isDirty]);
+
+    // ─── Auto-cálculo en tiempo real ───
     useEffect(() => {
         const calc = calculateSuggestedPrice(inputs, manualPrice);
         setResults(calc);
@@ -89,120 +141,48 @@ export function SimuladorPage() {
         setManualVolumePrice(null);
     }, [maxUnits]);
 
-    const handleSave = useCallback(() => {
-        const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
-        const costeoLimit = user?.plan?.limits?.costeos_limit ?? -1;
-        const offersLimit = user?.plan?.limits?.offers_limit ?? -1;
-
-        if (!results || results.suggestedPrice <= 0) {
-            toast.warning('Ingresa datos para calcular antes de guardar');
-            return;
-        }
-        if (!inputs.productName.trim()) {
-            toast.warning('Ingresa un nombre para el producto');
-            return;
-        }
-
-        // 1. Check Costeos Limit
-        const existingCosteos = JSON.parse(localStorage.getItem('dropcost_costeos') || '[]') as SavedCosteo[];
-        if (!isAdmin && costeoLimit !== -1 && existingCosteos.length >= costeoLimit) {
-            toast.warning('Límite de Costeos', `Tu plan actual permite un máximo de ${costeoLimit} costeos guardados. Mejora tu plan para habilitar más.`);
-            return;
-        }
-
-        // 2. Check Offers Limit (If volume strategy is enabled)
-        if (volumeStrategy.enabled) {
-            const existingOffers = JSON.parse(localStorage.getItem('dropcost_ofertas') || '[]');
-            if (!isAdmin && offersLimit !== -1 && existingOffers.length >= offersLimit) {
-                toast.warning('Límite de Ofertas', `No se pudo crear la oferta automática. Tu plan actual permite un máximo de ${offersLimit} ofertas. Mejora tu plan para habilitar más.`);
-                // We continue to save the costeo, but without the offer
-                return;
-            }
-        }
-
-        let finalVolumeStrategy = volumeStrategy.enabled ? { ...volumeStrategy } : undefined;
-
-        // If there's a manual volume price, we update the table row for maxUnits
-        if (finalVolumeStrategy && manualVolumePrice && manualVolumePrice > 0) {
-            const rowIdx = finalVolumeStrategy.priceTable.findIndex(r => r.quantity === maxUnits);
-            if (rowIdx > -1) {
-                // We update this row with manual values
-                const vResults = calculateVolumeMetrics(inputs, maxUnits, manualVolumePrice);
-                if (vResults) {
-                    finalVolumeStrategy.priceTable[rowIdx] = {
-                        quantity: maxUnits,
-                        totalPrice: vResults.suggestedPrice,
-                        pricePerUnit: vResults.suggestedPrice / maxUnits,
-                        savingsPerUnit: (results.suggestedPrice - (vResults.suggestedPrice / maxUnits)),
-                        totalProfit: vResults.netProfitPerSale
-                    };
-                }
-            }
-        }
-
-        const costeo: SavedCosteo = {
-            id: crypto.randomUUID(),
-            storeId: 'default',
-            productName: inputs.productName,
-            inputs,
-            results,
-            volumeStrategy: finalVolumeStrategy,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
-
-        const existing = JSON.parse(localStorage.getItem('dropcost_costeos') || '[]') as SavedCosteo[];
-        existing.unshift(costeo);
-        localStorage.setItem('dropcost_costeos', JSON.stringify(existing));
-
-        // --- NEW: Automatically create an Offer if Volume Strategy is enabled ---
-        if (finalVolumeStrategy) {
-            const newOffer = {
-                id: crypto.randomUUID(),
-                userId: 'user_123', // Placeholder until real auth
-                storeId: 'default',
-                costeoId: costeo.id,
-                productName: costeo.productName,
-                strategyType: 'bundle',
-                bundleConfig: {
-                    quantity: maxUnits,
-                    marginPercent: finalVolumeStrategy.marginPercent,
-                    usePredefinedTable: true,
-                    priceTable: finalVolumeStrategy.priceTable.map(row => ({
-                        quantity: row.quantity,
-                        totalPrice: row.totalPrice,
-                        pricePerUnit: row.pricePerUnit,
-                        savingsPerUnit: row.savingsPerUnit,
-                        totalProfit: row.totalProfit
-                    }))
-                },
-                estimatedProfit: finalVolumeStrategy.priceTable.find(r => r.quantity === maxUnits)?.totalProfit || results.netProfitPerSale,
-                estimatedMarginPercent: inputs.desiredMarginPercent, // approximation
-                status: 'activa',
-                createdAt: new Date().toISOString(),
-                activatedAt: new Date().toISOString()
+    const handleSave = async () => {
+        if (!id || !results) return;
+        setIsSaving(true);
+        try {
+            const updates: Partial<SavedCosteo> = {
+                costo_producto: inputs.productCost,
+                costo_flete: inputs.shippingCost,
+                gastos_adicionales: inputs.otherExpenses,
+                cpa: inputs.averageCpa,
+                margen: inputs.desiredMarginPercent,
+                devoluciones: inputs.returnRatePercent,
+                comision_recaudo_porcentaje: inputs.collectionCommissionPercent,
+                cancelacion_pre_envio_porcentaje: inputs.preCancellationPercent,
+                precio_final: results.suggestedPrice,
+                utilidad_neta: results.netProfitPerSale,
+                inputs_json: inputs,
+                results_json: { ...results, manualPrice: manualPrice ?? undefined },
+                volume_strategy: volumeStrategy.enabled ? volumeStrategy : undefined,
+                estado: 'guardado'
             };
 
-            const existingOffers = JSON.parse(localStorage.getItem('dropcost_ofertas') || '[]');
-            existingOffers.unshift(newOffer);
-            localStorage.setItem('dropcost_ofertas', JSON.stringify(existingOffers));
-
-            toast.success(`Costeo y Oferta "${costeo.productName}" guardados`);
-        } else {
-            toast.success('Costeo guardado correctamente');
+            await costeoService.saveCosteo(id, updates);
+            toast.success('Costeo guardado con éxito');
+            setIsDirty(false);
+            navigate('/simulador');
+        } catch (error) {
+            toast.error('Error al guardar el costeo');
+        } finally {
+            setIsSaving(false);
         }
+    };
 
-        // Reset form after saving
-        setInputs(DEFAULT_INPUTS);
-        setVolumeStrategy(DEFAULT_VOLUME);
-        setManualPrice(null);
-        setManualVolumePrice(null);
-    }, [inputs, results, volumeStrategy, manualPrice, manualVolumePrice, maxUnits, toast]);
+    const handleCancel = () => {
+        if (isDirty) {
+            setShowUnsavedModal(true);
+            pendingPath.current = '/mis-costeos';
+        } else {
+            navigate('/mis-costeos');
+        }
+    };
 
-    const isActive = results != null && results.suggestedPrice > 0;
-
-    // ─── EMPTY STATE: NO STORES ───
-    if (storesLoading) {
+    if (isLoading) {
         return (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}>
                 <Spinner size="lg" />
@@ -210,74 +190,6 @@ export function SimuladorPage() {
         );
     }
 
-    if (tiendas.length === 0) {
-        return (
-            <div style={{
-                maxWidth: '640px', margin: '60px auto', textAlign: 'center',
-                padding: '48px 40px',
-                backgroundColor: 'var(--card-bg)',
-                borderRadius: '24px',
-                border: '1.5px solid var(--border-color)',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                animation: 'scaleIn 400ms ease-out'
-            }}>
-                <div style={{
-                    width: '96px', height: '96px', borderRadius: '28px',
-                    backgroundColor: 'rgba(0,102,255,0.08)', color: 'var(--color-primary)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 28px',
-                    border: '1px solid rgba(0,102,255,0.1)'
-                }}>
-                    <Store size={48} />
-                </div>
-                <h2 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '16px', color: 'var(--text-primary)', letterSpacing: '-0.025em' }}>
-                    ¡Bienvenido a DropCost Master!
-                </h2>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '36px', lineHeight: 1.7, fontSize: '16px' }}>
-                    Para comenzar a simular precios y calcular márgenes con precisión, primero necesitamos configurar tu tienda.
-                    Esto nos permitirá guardar tu historial y personalizar los cálculos para tu país.
-                </p>
-                <button
-                    onClick={handleOpenCreateStore}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '10px',
-                        padding: '14px 32px',
-                        fontSize: '16px',
-                        fontWeight: 700,
-                        color: '#ffffff',
-                        background: 'linear-gradient(135deg, #0066FF 0%, #003D99 100%)',
-                        border: 'none',
-                        borderRadius: '12px',
-                        cursor: 'pointer',
-                        margin: '0 auto',
-                        boxShadow: '0 10px 15px -3px rgba(0, 102, 255, 0.3), 0 4px 6px -2px rgba(0, 102, 255, 0.05)',
-                        transition: 'all 200ms ease',
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 102, 255, 0.4), 0 10px 10px -5px rgba(0, 102, 255, 0.1)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 102, 255, 0.3), 0 4px 6px -2px rgba(0, 102, 255, 0.05)';
-                    }}
-                >
-                    <PlusCircle size={20} />
-                    Crear mi Primera Tienda
-                </button>
-
-                <CreateStoreModal
-                    isOpen={isCreateStoreOpen}
-                    onClose={() => setCreateStoreOpen(false)}
-                />
-            </div>
-        );
-    }
-
-    // ─── Calculate Volume Results (for breakdown & manual override) ───
     const currentVolumePrice = manualVolumePrice ?? (
         volumeStrategy.enabled
             ? volumeStrategy.priceTable.find(r => r.quantity === maxUnits)?.totalPrice
@@ -290,108 +202,84 @@ export function SimuladorPage() {
 
     return (
         <div>
-            {/* ─── Page Header ─── */}
-            <div
-                style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    marginBottom: '20px', flexWrap: 'wrap', gap: '12px',
-                }}
-            >
-                <div>
-                    <h1 style={{ fontSize: '24px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Calculator size={24} style={{ color: 'var(--color-primary)' }} />
-                        Simulador Financiero COD
-                    </h1>
-                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                        Calculamos el precio ideal basándonos en tu margen deseado y las fugas operativas
-                    </p>
-                </div>
-                <button
-                    onClick={() => navigate('/simulador/mis-costeos')}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: '8px',
-                        padding: '10px 20px', fontSize: '14px', fontWeight: 600,
-                        color: 'var(--color-primary)', backgroundColor: 'var(--bg-secondary)',
-                        border: '1px solid var(--border-color)', borderRadius: '8px',
-                        cursor: 'pointer', transition: 'all 150ms ease',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; }}
-                >
-                    <History size={16} /> Mis Costeos
-                </button>
-            </div>
-
-            {/* ─── Product Name + Save Bar ─── */}
-            <div
-                style={{ display: 'flex', gap: '12px', marginBottom: '20px', alignItems: 'stretch' }}
-                className="save-bar"
-            >
-                <div style={{ flex: 1 }}>
-                    <input
-                        type="text"
-                        placeholder="Nombre del producto — Ej: Crema facial, Faja reductora..."
-                        value={inputs.productName}
-                        onChange={(e) => setInputs((prev) => ({ ...prev, productName: e.target.value }))}
+            {/* Header: Sticky superior */}
+            <div style={{
+                position: 'sticky', top: '0', zIndex: 100,
+                backgroundColor: 'var(--bg-primary)', padding: '16px 0',
+                borderBottom: '1px solid var(--border-color)', marginBottom: '32px',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <button
+                        onClick={handleCancel}
                         style={{
-                            width: '100%', height: '100%', minHeight: '48px',
-                            padding: '0 16px', fontSize: '14px',
-                            color: 'var(--text-primary)', backgroundColor: 'var(--card-bg)',
-                            border: '1px solid var(--card-border)', borderRadius: '10px',
-                            outline: 'none', transition: 'border-color 150ms',
+                            padding: '10px', borderRadius: '12px', border: '1px solid var(--border-color)',
+                            backgroundColor: 'var(--card-bg)', cursor: 'pointer', color: 'var(--text-primary)'
                         }}
-                        onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
-                        onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--card-border)'; }}
-                    />
+                    >
+                        <ArrowLeft size={18} />
+                    </button>
+                    <div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            Editando Producto
+                        </div>
+                        <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                            {costeoPadre?.nombre_producto}
+                        </h1>
+                    </div>
                 </div>
-                <button
-                    onClick={handleSave}
-                    disabled={!isActive}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: '8px',
-                        padding: '12px 24px', fontSize: '14px', fontWeight: 700,
-                        whiteSpace: 'nowrap',
-                        ...(isActive
-                            ? {
-                                color: '#fff',
-                                background: 'linear-gradient(135deg, #0066FF 0%, #003D99 100%)',
-                                border: 'none',
-                                cursor: 'pointer',
-                                boxShadow: '0 4px 14px rgba(0,102,255,0.3)',
-                            }
-                            : {
-                                color: 'var(--text-tertiary)',
-                                background: 'var(--card-bg)',
-                                border: '1px solid var(--border-color)',
-                                cursor: 'not-allowed',
-                                boxShadow: 'none',
-                            }
-                        ),
-                        borderRadius: '10px',
-                        transition: 'all 200ms ease',
-                    }}
-                    onMouseEnter={(e) => {
-                        if (isActive) e.currentTarget.style.transform = 'translateY(-1px)';
-                    }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; }}
-                >
-                    <Save size={16} /> Guardar Costeo
-                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {isDirty && (
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: '6px',
+                            padding: '6px 12px', backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            borderRadius: '8px', color: 'var(--color-warning)', fontSize: '13px', fontWeight: 600
+                        }}>
+                            <AlertTriangle size={14} /> Cambios sin guardar
+                        </div>
+                    )}
+                    <button
+                        onClick={handleCancel}
+                        style={{
+                            padding: '12px 20px', borderRadius: '12px', border: '1.5px solid var(--border-color)',
+                            backgroundColor: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)',
+                            fontWeight: 700, fontSize: '14px'
+                        }}
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving || !isDirty}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '8px',
+                            padding: '12px 28px', fontSize: '14px', fontWeight: 700,
+                            borderRadius: '12px', cursor: (isSaving || !isDirty) ? 'not-allowed' : 'pointer',
+                            backgroundColor: isDirty ? 'var(--color-primary)' : 'var(--text-tertiary)',
+                            color: '#fff', border: 'none',
+                            boxShadow: isDirty ? '0 4px 14px rgba(0, 102, 255, 0.3)' : 'none',
+                        }}
+                    >
+                        {isSaving ? <Spinner size="sm" /> : <Save size={18} />}
+                        Guardar Cambios
+                    </button>
+                </div>
             </div>
 
-            {/* ─── Two-panel layout ─── */}
+            {/* Layout de Simulador */}
             <div
                 style={{
                     display: 'grid',
-                    gridTemplateColumns: 'minmax(0, 1.2fr) minmax(340px, 1fr)',
-                    gap: '24px',
+                    gridTemplateColumns: 'minmax(0, 1.3fr) minmax(360px, 1fr)',
+                    gap: '32px',
                     alignItems: 'start',
                 }}
                 className="simulator-layout"
             >
                 <SimuladorForm
                     inputs={inputs}
-                    onChange={setInputs}
+                    onChange={(newVal) => setInputs(newVal)}
                     volumeStrategy={volumeStrategy}
                     onVolumeStrategyChange={setVolumeStrategy}
                     maxUnits={maxUnits}
@@ -415,10 +303,28 @@ export function SimuladorPage() {
                 />
             </div>
 
+            {/* Modal de Cambios sin Guardar */}
+            <ConfirmDialog
+                isOpen={showUnsavedModal}
+                title="Cambios sin guardar"
+                description="Tienes cambios pendientes en este costeo. ¿Deseas salir sin guardar? Los cambios se perderán de forma permanente."
+                confirmLabel="Salir sin guardar"
+                cancelLabel="Seguir editando"
+                variant="danger"
+                onConfirm={() => {
+                    setIsDirty(false);
+                    setShowUnsavedModal(false);
+                    if (pendingPath.current) navigate(pendingPath.current);
+                }}
+                onCancel={() => {
+                    setShowUnsavedModal(false);
+                    pendingPath.current = null;
+                }}
+            />
+
             <style>{`
-                @media (max-width: 1024px) {
+                @media (max-width: 1100px) {
                     .simulator-layout { grid-template-columns: 1fr !important; }
-                    .save-bar { flex-direction: column; }
                 }
             `}</style>
         </div>

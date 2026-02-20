@@ -256,6 +256,70 @@ export type Database = {
           },
         ]
       }
+      ofertas: {
+        Row: {
+          id: string
+          usuario_id: string
+          tienda_id: string
+          costeo_id: string | null
+          nombre_producto: string
+          tipo_estrategia: string
+          configuracion_json: Json
+          ganancia_estimada: number | null
+          margen_estimado_porcentaje: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          usuario_id: string
+          tienda_id: string
+          costeo_id?: string | null
+          nombre_producto: string
+          tipo_estrategia: string
+          configuracion_json?: Json
+          ganancia_estimada?: number | null
+          margen_estimado_porcentaje?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          usuario_id?: string
+          tienda_id?: string
+          costeo_id?: string | null
+          nombre_producto?: string
+          tipo_estrategia?: string
+          configuracion_json?: Json
+          ganancia_estimada?: number | null
+          margen_estimado_porcentaje?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ofertas_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ofertas_tienda_id_fkey"
+            columns: ["tienda_id"]
+            isOneToOne: false
+            referencedRelation: "tiendas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ofertas_costeo_id_fkey"
+            columns: ["costeo_id"]
+            isOneToOne: false
+            referencedRelation: "costeos"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       referidos_lideres: {
         Row: {
           banco_info: Json | null

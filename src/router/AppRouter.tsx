@@ -45,7 +45,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
     if (isAuthenticated) {
-        return <Navigate to="/simulador" replace />;
+        return <Navigate to="/mis-costeos" replace />;
     }
 
     return <>{children}</>;
@@ -83,14 +83,14 @@ export function AppRouter() {
                     </ProtectedRoute>
                 }
             >
-                <Route path="/" element={<Navigate to="/simulador" replace />} />
+                <Route path="/" element={<Navigate to="/mis-costeos" replace />} />
 
                 {/* Rutas de Planes (Públicas dentro de la App) */}
                 <Route path="/pricing" element={<PricingPage />} />
 
                 {/* Rutas con Paywall (Requieren suscripción activa) */}
-                <Route path="/simulador" element={<SubscriptionGuard><SimuladorPage /></SubscriptionGuard>} />
-                <Route path="/simulador/mis-costeos" element={<SubscriptionGuard><MisCosteos /></SubscriptionGuard>} />
+                <Route path="/mis-costeos" element={<SubscriptionGuard><MisCosteos /></SubscriptionGuard>} />
+                <Route path="/mis-costeos/:id" element={<SubscriptionGuard><SimuladorPage /></SubscriptionGuard>} />
                 <Route path="/dashboard" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
                 <Route path="/ofertas" element={<SubscriptionGuard><OfertasPage /></SubscriptionGuard>} />
                 <Route path="/analisis-regional" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
