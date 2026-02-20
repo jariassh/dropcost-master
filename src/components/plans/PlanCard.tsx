@@ -41,7 +41,10 @@ export const PlanCard: React.FC<PlanCardProps> = ({
             boxShadow: isCurrent ? '0 10px 30px -10px rgba(0, 102, 255, 0.2)' : 'var(--shadow-sm)',
             transition: 'all 0.3s ease', // Smoother transition
             height: '100%',
-            flex: 1
+            flex: 1,
+            pointerEvents: (isDisabled && !isCurrent) ? 'none' : 'auto',
+            filter: (isDisabled && !isCurrent) ? 'grayscale(0.5) opacity(0.6)' : 'none',
+            cursor: (isDisabled && !isCurrent) ? 'not-allowed' : 'default'
         }}
             onMouseEnter={(e) => {
                 if (!isCurrent) {

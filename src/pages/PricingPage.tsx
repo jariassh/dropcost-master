@@ -5,7 +5,8 @@ import { plansService } from '../services/plansService';
 import { paymentService } from '../services/paymentService';
 import { Plan } from '@/types/plans.types';
 import { PlanCard } from '../components/plans/PlanCard';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageCircle } from 'lucide-react';
+import { configService, GlobalConfig } from '../services/configService';
 import { obtenerPaisPorCodigo } from '@/services/paisesService';
 import { fetchExchangeRates, getDisplayCurrency } from '@/utils/currencyUtils';
 import { formatCurrency } from '@/lib/format';
@@ -18,6 +19,7 @@ export const PricingPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [targetCurrency, setTargetCurrency] = useState('COP');
     const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
+    const [globalConfig, setGlobalConfig] = useState<GlobalConfig | null>(null);
 
     // Billing State
     const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'semiannual'>('monthly');
@@ -45,6 +47,10 @@ export const PricingPage: React.FC = () => {
                 // 3. Fetch Exchange Rates
                 const rates = await fetchExchangeRates('USD');
                 setExchangeRates(rates);
+
+                // 4. Fetch Global Config
+                const config = await configService.getConfig();
+                setGlobalConfig(config);
             } catch (error) {
                 console.error('Error initializing pricing page:', error);
             } finally {
@@ -56,8 +62,11 @@ export const PricingPage: React.FC = () => {
     // Quitamos [user] completo para evitar re-renders innecesarios, solo dependemos del país
 
     const getPriceDisplay = (plan: Plan) => {
-        // Corrección de seguridad: Si el precio es bajo (< 500) y está marcado como COP, 
-        // probablemente es un error de los datos iniciales guardados como COP en lugar de USD.
+        // Price Protection: If this is the current active plan, show what they actually paid
+        if (currentPlanId === plan.slug && user?.plan_precio_pagado && user.plan_periodo === billingPeriod) {
+            return formatCurrency(user.plan_precio_pagado, targetCurrency);
+        }
+
         const baseCurrency = (plan.price_monthly < 500 && plan.currency === 'COP') ? 'USD' : (plan.currency || 'USD');
         const price = billingPeriod === 'monthly' ? plan.price_monthly : plan.price_semiannual;
 
@@ -81,26 +90,25 @@ export const PricingPage: React.FC = () => {
     const handleSelectPlan = async (plan: Plan) => {
         if (plan.slug === currentPlanId) return;
 
-        // Prevent downgrade logic
-        const currentUserPlan = user?.plan;
+        // 1. Get current paid amount normalized to monthly
+        const paidAmount = user?.plan_precio_pagado || 0;
+        const paidPeriod = user?.plan_periodo || 'monthly';
+        const paidMonthlyEquiv = paidPeriod === 'semiannual' ? paidAmount / 6 : paidAmount;
 
-        // Use price as a proxy for plan tier
-        if (currentUserPlan && currentUserPlan.slug !== 'plan_free') {
-            // Find current plan object to get its price for comparison
-            const currentPlanFull = plans.find(p => p.slug === currentUserPlan.slug);
+        // 2. Get target plan amount normalized to monthly
+        const targetAmount = billingPeriod === 'monthly' ? plan.price_monthly : plan.price_semiannual;
+        const targetMonthlyEquiv = billingPeriod === 'semiannual' ? targetAmount / 6 : targetAmount;
 
-            if (currentPlanFull) {
-                // If target plan is cheaper than current plan, it's a downgrade
-                if (plan.price_monthly < currentPlanFull.price_monthly) {
-                    toast.warning('Cambio de Plan', 'Para bajar de plan o cancelar, por favor contacta a soporte o espera a que tu suscripción actual venza.');
-                    return;
-                }
+        // 3. Block Downgrades
+        if (paidMonthlyEquiv > 0) {
+            if (targetMonthlyEquiv < paidMonthlyEquiv) {
+                toast.warning('Cambio de Plan', 'No puedes bajar a un plan de menor costo desde la aplicación. Por favor contacta a soporte o espera a que tu suscripción actual venza.');
+                return;
             }
-        }
-
-        if (plan.slug === 'plan_free') {
-            toast.info('Plan Gratuito', 'Para cambiar al plan gratuito, por favor espera a que finalice tu suscripción actual.');
-            return;
+            if (plan.slug === 'plan_free') {
+                toast.info('Plan Gratuito', 'Para volver al plan gratuito, espera a que finalice tu suscripción actual.');
+                return;
+            }
         }
 
         try {
@@ -229,11 +237,29 @@ export const PricingPage: React.FC = () => {
                     let isDisabled = false;
                     let disabledReason = '';
 
-                    const currentPlanFull = plans.find(p => p.slug === user?.plan?.slug);
-                    if (currentPlanFull && !isPlanCurrent && user?.plan?.slug !== 'plan_free') {
-                        if (plan.price_monthly < currentPlanFull.price_monthly) {
+                    // 1. Get current paid amount normalized to monthly (with fallback for legacy users)
+                    let paidAmount = user?.plan_precio_pagado || 0;
+                    let paidPeriod = user?.plan_periodo || 'monthly';
+
+                    if (paidAmount === 0 && currentPlanId !== 'plan_free') {
+                        const currentPlanObj = plans.find(p => p.slug === currentPlanId || p.id === currentPlanId);
+                        if (currentPlanObj) {
+                            paidAmount = currentPlanObj.price_monthly;
+                            paidPeriod = 'monthly';
+                        }
+                    }
+
+                    const paidMonthlyEquiv = paidPeriod === 'semiannual' ? paidAmount / 6 : paidAmount;
+
+                    // 2. Get target plan amount normalized to monthly
+                    const targetAmount = billingPeriod === 'monthly' ? plan.price_monthly : plan.price_semiannual;
+                    const targetMonthlyEquiv = billingPeriod === 'semiannual' ? targetAmount / 6 : targetAmount;
+
+                    if (paidMonthlyEquiv > 0 && !isPlanCurrent) {
+                        // Comparison with 0.01 tolerance for floating point
+                        if (targetMonthlyEquiv < (paidMonthlyEquiv - 0.01)) {
                             isDisabled = true;
-                            disabledReason = 'No puedes bajar de plan desde la aplicación. Contacta a soporte.';
+                            disabledReason = 'No puedes bajar a un plan de menor costo desde la aplicación.';
                         } else if (plan.slug === 'plan_free') {
                             isDisabled = true;
                             disabledReason = 'Debes esperar a que venza tu suscripción actual para volver al plan gratuito.';
@@ -256,10 +282,35 @@ export const PricingPage: React.FC = () => {
                 })}
             </div>
 
-            <div style={{ marginTop: '64px', textAlign: 'center' }}>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
+            <div style={{ marginTop: '64px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
                     ¿Necesitas algo más específico? Contáctanos para soluciones Enterprise.
                 </p>
+                {globalConfig?.telefono && (
+                    <a
+                        href={`https://wa.me/${globalConfig.telefono.replace(/\+/g, '').replace(/\s/g, '')}?text=${encodeURIComponent('Hola, me gustaría recibir más información sobre los planes Enterprise de DropCost.')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ textDecoration: 'none' }}
+                    >
+                        <button className="dc-button-secondary" style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '12px 24px',
+                            borderRadius: '10px',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            backgroundColor: '#25D366',
+                            color: 'white',
+                            border: 'none',
+                            cursor: 'pointer'
+                        }}>
+                            <MessageCircle size={20} />
+                            Contactar por WhatsApp
+                        </button>
+                    </a>
+                )}
             </div>
         </div>
     );

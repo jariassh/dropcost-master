@@ -95,14 +95,26 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 onMouseEnter={(e) => {
                     if (isDisabled) return;
                     const el = e.currentTarget;
-                    el.style.backgroundColor = hoverBg;
-                    if (variant === 'primary') el.style.transform = 'translateY(-2px)';
-                    if (variant === 'primary') el.style.boxShadow = '0 6px 20px rgba(0,102,255,0.35)';
+                    // Si el componente tiene un color de fondo personalizado o no es el default, usamos brillo
+                    if (style?.backgroundColor) {
+                        el.style.filter = 'brightness(0.9)';
+                    } else {
+                        el.style.backgroundColor = hoverBg;
+                    }
+
+                    if (variant === 'primary') {
+                        el.style.transform = 'translateY(-2px)';
+                        el.style.boxShadow = '0 6px 20px rgba(0,102,255,0.35)';
+                    }
                 }}
                 onMouseLeave={(e) => {
                     if (isDisabled) return;
                     const el = e.currentTarget;
-                    el.style.backgroundColor = baseVariant.backgroundColor || '';
+                    if (style?.backgroundColor) {
+                        el.style.filter = 'none';
+                    } else {
+                        el.style.backgroundColor = baseVariant.backgroundColor || '';
+                    }
                     el.style.transform = 'translateY(0)';
                     el.style.boxShadow = 'none';
                 }}

@@ -88,7 +88,9 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
     const { error: userError } = await supabase.from("users").update({
         plan_id: planId,
         estado_suscripcion: 'activa',
-        plan_expires_at: expiresAt.toISOString()
+        plan_expires_at: expiresAt.toISOString(),
+        plan_precio_pagado: paymentData.transaction_amount, // Mantener el precio pagado para protección futura
+        plan_periodo: period
     }).eq("id", userId);
 
     if (userError) {
@@ -252,7 +254,7 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: "Missing required fields." }), { status: 200, headers: corsHeaders });
       }
 
-      // Get Plan Details
+      // Get Plan and User Details
       const { data: plan, error: planError } = await supabase
         .from("plans")
         .select("*")
@@ -263,7 +265,24 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: `Plan not found: ${planId}` }), { status: 200, headers: corsHeaders });
       }
 
-      const price = period === 'monthly' ? plan.price_monthly : plan.price_semiannual;
+      // Fetch user profile for Price Protection
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('plan_id, plan_precio_pagado, plan_periodo')
+        .eq('id', userId)
+        .maybeSingle();
+
+      let price = period === 'monthly' ? plan.price_monthly : plan.price_semiannual;
+
+      // Price Protection Logic: Si el usuario ya está en este plan y periodo, usar su precio bloqueado
+      if (userProfile && userProfile.plan_id === plan.slug && 
+          Number(userProfile.plan_precio_pagado) > 0 && 
+          userProfile.plan_periodo === period) {
+          
+          console.log(`[price-protection] Aplicando precio bloqueado para usuario ${userId}: ${userProfile.plan_precio_pagado}`);
+          price = Number(userProfile.plan_precio_pagado);
+      }
+
       const title = `${plan.name} (${period === 'monthly' ? 'Mensual' : 'Semestral'})`;
 
       // Construct Preference
