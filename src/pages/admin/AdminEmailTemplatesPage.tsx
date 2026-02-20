@@ -103,7 +103,7 @@ const categorizedVariables = {
         { name: 'banco_nombre', label: 'Banco de Destino' }
     ],
     'Sistema': [
-        { name: '{{app_url}}/simulador', label: 'Link al Simulador' },
+        { name: '{{app_url}}/mis-costeos', label: 'Link al Simulador' },
         { name: '{{app_url}}/dashboard', label: 'Link al Dashboard' },
         { name: '{{app_url}}/referidos', label: 'Link a Referidos' },
         { name: '{{app_url}}/billetera', label: 'Link a Billetera' },

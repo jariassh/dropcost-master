@@ -81,6 +81,23 @@ export const PricingPage: React.FC = () => {
     const handleSelectPlan = async (plan: Plan) => {
         if (plan.slug === currentPlanId) return;
 
+        // Prevent downgrade logic
+        const currentUserPlan = user?.plan;
+
+        // Use price as a proxy for plan tier
+        if (currentUserPlan && currentUserPlan.slug !== 'plan_free') {
+            // Find current plan object to get its price for comparison
+            const currentPlanFull = plans.find(p => p.slug === currentUserPlan.slug);
+
+            if (currentPlanFull) {
+                // If target plan is cheaper than current plan, it's a downgrade
+                if (plan.price_monthly < currentPlanFull.price_monthly) {
+                    toast.warning('Cambio de Plan', 'Para bajar de plan o cancelar, por favor contacta a soporte o espera a que tu suscripción actual venza.');
+                    return;
+                }
+            }
+        }
+
         if (plan.slug === 'plan_free') {
             toast.info('Plan Gratuito', 'Para cambiar al plan gratuito, por favor espera a que finalice tu suscripción actual.');
             return;
@@ -207,17 +224,36 @@ export const PricingPage: React.FC = () => {
                 gap: '32px',
                 alignItems: 'stretch'
             }}>
-                {plans.map((plan) => (
-                    <div key={plan.id} style={{ display: 'flex' }}>
-                        <PlanCard
-                            plan={plan}
-                            isCurrent={currentPlanId === plan.slug || currentPlanId === plan.id}
-                            onSelect={handleSelectPlan}
-                            displayedPrice={getPriceDisplay(plan)}
-                            period={billingPeriod}
-                        />
-                    </div>
-                ))}
+                {plans.map((plan) => {
+                    const isPlanCurrent = currentPlanId === plan.slug || currentPlanId === plan.id;
+                    let isDisabled = false;
+                    let disabledReason = '';
+
+                    const currentPlanFull = plans.find(p => p.slug === user?.plan?.slug);
+                    if (currentPlanFull && !isPlanCurrent && user?.plan?.slug !== 'plan_free') {
+                        if (plan.price_monthly < currentPlanFull.price_monthly) {
+                            isDisabled = true;
+                            disabledReason = 'No puedes bajar de plan desde la aplicación. Contacta a soporte.';
+                        } else if (plan.slug === 'plan_free') {
+                            isDisabled = true;
+                            disabledReason = 'Debes esperar a que venza tu suscripción actual para volver al plan gratuito.';
+                        }
+                    }
+
+                    return (
+                        <div key={plan.id} style={{ display: 'flex' }}>
+                            <PlanCard
+                                plan={plan}
+                                isCurrent={isPlanCurrent}
+                                isDisabled={isDisabled}
+                                disabledReason={disabledReason}
+                                onSelect={handleSelectPlan}
+                                displayedPrice={getPriceDisplay(plan)}
+                                period={billingPeriod}
+                            />
+                        </div>
+                    );
+                })}
             </div>
 
             <div style={{ marginTop: '64px', textAlign: 'center' }}>
