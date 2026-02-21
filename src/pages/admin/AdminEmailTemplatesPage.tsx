@@ -76,12 +76,15 @@ const categorizedVariables = {
         { name: 'pais', label: 'País de Residencia' },
         { name: 'wallet_saldo', label: 'Saldo en Wallet' },
         { name: 'codigo_referido_personal', label: 'Su Código de Invitación' },
-        { name: 'fecha_registro', label: 'Fecha de Registro' }
+        { name: 'fecha_registro', label: 'Fecha de Registro' },
+        { name: 'fecha_actualizacion', label: 'Fecha de Actualización' }
     ],
     'Suscripción': [
         { name: 'plan_nombre', label: 'Nombre del Plan Actual' },
         { name: 'plan_precio', label: 'Precio del Plan' },
-        { name: 'plan_expiracion', label: 'Fecha de Expiración' },
+        { name: 'plan_detalles', label: 'Lista de Características' },
+        { name: 'fecha_proximo_cobro', label: 'Fecha Próximo Cobro' },
+        { name: 'link_pago', label: 'Link de Pago Manual' },
         { name: 'estado_suscripcion', label: 'Estado (Activa/Pendiente)' }
     ],
     'Tienda': [
@@ -103,6 +106,7 @@ const categorizedVariables = {
         { name: 'banco_nombre', label: 'Banco de Destino' }
     ],
     'Sistema': [
+        { name: 'app_url', label: 'Link a Inicio (Raíz)' },
         { name: '{{app_url}}/mis-costeos', label: 'Link al Simulador' },
         { name: '{{app_url}}/dashboard', label: 'Link al Dashboard' },
         { name: '{{app_url}}/referidos', label: 'Link a Referidos' },
@@ -121,15 +125,19 @@ const categorizedVariables = {
         { name: '{{app_url}}/contacto', label: 'Página de Contacto' }
     ],
     'Soporte': [
-        { name: 'mailto:soporte@dropcost.com', label: 'Email Soporte' },
-        { name: 'mailto:ventas@dropcost.com', label: 'Email Ventas' },
+        { name: 'email_soporte', label: 'Email de Soporte (Config)' },
+        { name: 'telefono_soporte', label: 'Teléfono de Soporte' },
         { name: '{{app_url}}/soporte', label: 'Centro de Ayuda' }
     ],
     'Seguridad': [
         { name: 'codigo_2fa', label: 'Código 2FA / OTP' },
-        { name: 'expira_en', label: 'Tiempo de Expiración' }
+        { name: 'expira_en', label: 'Tiempo de Expiración' },
+        { name: 'email_anterior', label: 'Email Anterior' },
+        { name: 'email_nuevo', label: 'Email Nuevo' }
     ],
     'Marca & Colores': [
+        { name: 'nombre_empresa', label: 'Nombre de la Empresa' },
+        { name: 'logo_url', label: 'URL del Logo Principal' },
         { name: 'color_primary', label: 'Color Primario' },
         { name: 'color_primary_dark', label: 'Color Primario Oscuro' },
         { name: 'color_primary_light', label: 'Color Primario Claro' },
@@ -656,11 +664,16 @@ const AddSenderModal = ({ isOpen, onClose, onSave, defaultName, domain }: any) =
     );
 };
 
-const SenderSelector = ({ currentName, currentPrefix, domain, onSelect, templates, globalConfig }: any) => {
+const SenderSelector = ({ currentName, currentPrefix, domain, onSelect, templates, globalConfig, onRefresh }: any) => {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
+    const [showEditNameModal, setShowEditNameModal] = useState(false);
+    const [senderToEdit, setSenderToEdit] = useState<{ name: string; prefix: string; count: number } | null>(null);
+    const [newName, setNewName] = useState('');
+    const [isRenaming, setIsRenaming] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const toast = useToast();
 
     // Click outside handler
     useEffect(() => {
@@ -673,7 +686,7 @@ const SenderSelector = ({ currentName, currentPrefix, domain, onSelect, template
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Extraer remitentes únicos de todas las plantillas existentes
+    // Extraer remitentes únicos de todas las plantillas existentes y contar sus usos
     const uniqueSenders = React.useMemo(() => {
         const senders = new Map();
         templates.forEach((t: any) => {
@@ -682,8 +695,12 @@ const SenderSelector = ({ currentName, currentPrefix, domain, onSelect, template
                 if (!senders.has(key)) {
                     senders.set(key, {
                         name: t.sender_name || globalConfig?.nombre_empresa || 'Remitente',
-                        prefix: t.sender_prefix
+                        prefix: t.sender_prefix,
+                        count: 1
                     });
+                } else {
+                    const existing = senders.get(key);
+                    existing.count += 1;
                 }
             }
         });
@@ -694,6 +711,27 @@ const SenderSelector = ({ currentName, currentPrefix, domain, onSelect, template
         s.name.toLowerCase().includes(search.toLowerCase()) ||
         s.prefix.toLowerCase().includes(search.toLowerCase())
     );
+
+    const handleRenameSender = async () => {
+        if (!senderToEdit || !newName.trim()) return;
+        setIsRenaming(true);
+        try {
+            const { error } = await (supabase as any)
+                .from('email_templates')
+                .update({ sender_name: newName.trim() })
+                .eq('sender_prefix', senderToEdit.prefix);
+
+            if (error) throw error;
+
+            toast.success('Actualizado', `Se ha actualizado el nombre del remitente en ${senderToEdit.count} plantillas.`);
+            if (onRefresh) onRefresh();
+            setShowEditNameModal(false);
+        } catch (e) {
+            toast.error('Error', 'No se pudo actualizar el nombre del remitente.');
+        } finally {
+            setIsRenaming(false);
+        }
+    };
 
     return (
         <div className="relative" ref={dropdownRef}>
@@ -787,7 +825,33 @@ const SenderSelector = ({ currentName, currentPrefix, domain, onSelect, template
                                         </span>
                                     </div>
                                 </div>
-                                <CheckCircle2 size={14} className="opacity-0 group-hover:opacity-40 text-[var(--color-primary)] transition-opacity" />
+                                <div className="flex items-center gap-2">
+                                    <div style={{
+                                        padding: '2px 8px',
+                                        backgroundColor: 'var(--bg-secondary)',
+                                        borderRadius: '6px',
+                                        fontSize: '10px',
+                                        fontWeight: 800,
+                                        color: 'var(--text-tertiary)',
+                                        border: '1px solid var(--border-color)',
+                                        minWidth: '24px',
+                                        textAlign: 'center'
+                                    }}>
+                                        {sender.count}
+                                    </div>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSenderToEdit(sender);
+                                            setNewName(sender.name);
+                                            setShowEditNameModal(true);
+                                        }}
+                                        className="p-1.5 hover:bg-white rounded-md text-[var(--text-tertiary)] hover:text-[var(--color-primary)] transition-colors"
+                                    >
+                                        <Edit3 size={12} />
+                                    </button>
+                                    <CheckCircle2 size={14} className="opacity-0 group-hover:opacity-40 text-[var(--color-primary)] transition-opacity" />
+                                </div>
                             </button>
                         ))}
 
@@ -828,6 +892,45 @@ const SenderSelector = ({ currentName, currentPrefix, domain, onSelect, template
                     </div>
                 </div>
             )}
+
+            <Modal
+                isOpen={showEditNameModal}
+                onClose={() => setShowEditNameModal(false)}
+                title="Editar Remitente"
+                size="sm"
+            >
+                <div className="flex flex-col gap-6">
+                    <Input
+                        label="Nombre Visible"
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        placeholder="Ej: DropCost Soporte"
+                    />
+                    <div className="space-y-1.5 opacity-70">
+                        <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Correo Electrónico (Solo Lectura)</label>
+                        <div style={{
+                            backgroundColor: 'var(--bg-secondary)',
+                            border: '1.5px solid var(--border-color)',
+                            padding: '12px 16px',
+                            borderRadius: '10px',
+                            fontSize: '14px',
+                            fontFamily: 'monospace',
+                            color: 'var(--text-tertiary)',
+                            cursor: 'not-allowed',
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            minHeight: '48px'
+                        }}>
+                            {senderToEdit?.prefix}@{domain}
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-4">
+                        <Button variant="secondary" onClick={() => setShowEditNameModal(false)}>Cancelar</Button>
+                        <Button onClick={handleRenameSender} isLoading={isRenaming}>Guardar Cambios</Button>
+                    </div>
+                </div>
+            </Modal>
 
             <AddSenderModal
                 isOpen={showAddModal}
@@ -1051,6 +1154,7 @@ export function AdminEmailTemplatesPage() {
     const [foundUsers, setFoundUsers] = useState<any[]>([]);
     const [isSearchingUsers, setIsSearchingUsers] = useState(false);
     const [selectedTestUser, setSelectedTestUser] = useState<any | null>(null);
+    const [selectedUserPlan, setSelectedUserPlan] = useState<any | null>(null);
     const [isSendingTest, setIsSendingTest] = useState(false);
     const [currentTipIndex, setCurrentTipIndex] = useState(0);
     const [mjmlModalComponent, setMjmlModalComponent] = useState<any | null>(null);
@@ -1063,6 +1167,34 @@ export function AdminEmailTemplatesPage() {
         "Estilos: Puedes usar <mj-style> dentro de <mj-head> para estilos globales de la plantilla.",
         "Previsualización: Haz clic en 'Guardar Cambios' para actualizar la vista previa en vivo."
     ];
+
+    useEffect(() => {
+        if (!selectedTestUser?.plan_id) {
+            setSelectedUserPlan(null);
+            return;
+        }
+        const fetchPlan = async () => {
+            const planId = selectedTestUser.plan_id;
+            // Intento 1: buscar por UUID (id)
+            let { data: plan } = await (supabase as any)
+                .from('plans')
+                .select('*')
+                .eq('id', planId)
+                .maybeSingle();
+            // Intento 2: si no encontró por ID, buscar por slug
+            if (!plan) {
+                const { data: planBySlug } = await (supabase as any)
+                    .from('plans')
+                    .select('*')
+                    .eq('slug', planId)
+                    .maybeSingle();
+                plan = planBySlug;
+            }
+            console.log('[Preview] Plan resuelto:', plan?.name || 'NO ENCONTRADO', '| price_monthly:', plan?.price_monthly, '| planId era:', planId);
+            setSelectedUserPlan(plan);
+        };
+        fetchPlan();
+    }, [selectedTestUser]);
 
     useEffect(() => {
         if (!selectedTemplate) return;
@@ -1168,7 +1300,9 @@ export function AdminEmailTemplatesPage() {
                 apellidos: selectedTestUser.apellidos || '',
                 email: selectedTestUser.email || '',
                 usuario_email: selectedTestUser.email || '', // Mantener por compatibilidad si algún trigger viejo lo usa
+                telefono: selectedTestUser.telefono || '+57 321 000 0000',
                 fecha_registro: selectedTestUser.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+                fecha_actualizacion: new Date().toLocaleString('es-ES'),
                 codigo_referido: selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA',
                 // Variables de prueba genéricas para triggers que las necesiten
                 reset_link: `${window.location.origin}/actualizar-contrasena?token=PRUEBA`,
@@ -1177,13 +1311,13 @@ export function AdminEmailTemplatesPage() {
                 codigo_2fa: '123456',
                 "2fa_code": '123456',
                 codigo: '123456',
-                plan_nombre: selectedTestUser.plan_id || 'Plan Pro',
+                plan_nombre: selectedUserPlan?.name || selectedTestUser.plan_id || 'Plan Pro',
                 fecha_inicio: new Date().toISOString().split('T')[0],
                 fecha_vencimiento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
                 dias_restantes: '3',
                 monto_comision: '25.00',
                 fecha_expiracion: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                monto_pago: '100.00',
+                monto_pago: selectedUserPlan?.price_monthly != null ? String(selectedUserPlan.price_monthly) : '0.00',
                 banco_nombre: 'Banco de Prueba',
                 numero_cuenta: '****1234',
                 referencia_pago: 'REF-PRUEBA-001',
@@ -1205,6 +1339,20 @@ export function AdminEmailTemplatesPage() {
                 fecha_cambio: new Date().toISOString().split('T')[0],
                 fecha_pago: new Date().toISOString().split('T')[0],
                 fecha_ascenso: new Date().toISOString().split('T')[0],
+                fecha_proximo_cobro: (() => {
+                    const fv = selectedTestUser?.fecha_vencimiento_plan;
+                    if (fv) return new Date(fv).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                    const pe = selectedTestUser?.plan_expires_at;
+                    if (pe) return new Date(pe).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                    const reg = selectedTestUser?.created_at || selectedTestUser?.fecha_registro;
+                    if (reg) { const d = new Date(reg); d.setDate(d.getDate() + 30); return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }); }
+                    return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                })(),
+                plan_detalles: selectedUserPlan?.features ? selectedUserPlan.features.map((f: string) => `• ${f}`).join('<br>') : '• Gestión de hasta 5 tiendas<br>• Simulador de costos avanzado<br>• Integración con Meta Ads<br>• Soporte prioritario',
+                plan_precio: selectedUserPlan?.price_monthly != null ? String(selectedUserPlan.price_monthly) : '0.00',
+                link_pago: 'https://www.mercadopago.com.co/checkout/v1/redirect?pref_id=PRUEBA',
+                email_soporte: globalConfig?.email_contacto || 'soporte@dropcost.com',
+                telefono_soporte: globalConfig?.telefono || '+57 321 000 0000',
                 // Variables de marca (Simuladas con los valores del config actual o defaults)
                 color_primary: globalConfig?.color_primary || '#0066FF',
                 color_primary_dark: globalConfig?.color_primary_dark || '#0052cc',
@@ -1720,14 +1868,42 @@ export function AdminEmailTemplatesPage() {
             color_text_inverse: globalConfig?.color_text_inverse || '#FFFFFF',
             color_sidebar_bg: globalConfig?.color_sidebar_bg || '#FFFFFF',
             app_url: window.location.origin,
-            login_url: `${window.location.origin}/login`
+            login_url: `${window.location.origin}/login`,
+            telefono: globalConfig?.telefono || '{{telefono}}',
+            "teléfono": globalConfig?.telefono || '{{telefono}}',
+            fecha_actualizacion: new Date().toLocaleDateString(),
+            plan_nombre: selectedUserPlan?.name || '{{plan_nombre}}',
+            plan_precio: selectedUserPlan?.price_monthly != null ? String(selectedUserPlan.price_monthly) : '{{plan_precio}}',
+            plan_detalles: selectedUserPlan?.features ? selectedUserPlan.features.map((f: string) => `• ${f}`).join('<br>') : '{{plan_detalles}}',
+            // Calcular fecha próximo cobro desde múltiples fuentes
+            fecha_proximo_cobro: (() => {
+                // Prioridad 1: campo fecha_vencimiento_plan
+                const fv = selectedTestUser?.fecha_vencimiento_plan;
+                if (fv) return new Date(fv).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                // Prioridad 2: campo plan_expires_at
+                const pe = selectedTestUser?.plan_expires_at;
+                if (pe) return new Date(pe).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                // Prioridad 3: calcular 30 días después del created_at como estimación
+                const reg = selectedTestUser?.created_at || selectedTestUser?.fecha_registro;
+                if (reg) {
+                    const d = new Date(reg);
+                    d.setDate(d.getDate() + 30);
+                    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                }
+                return '{{fecha_proximo_cobro}}';
+            })(),
+            link_pago: selectedTestUser?.link_pago_manual || '{{link_pago}}',
+            email_soporte: globalConfig?.email_contacto || '{{email_soporte}}',
+            empresa: globalConfig?.nombre_empresa || '{{empresa}}'
         };
 
         const securityVars: Record<string, string> = {
-            codigo_2fa: '123456',
-            "2fa_code": '123456',
-            expira_en: '10 minutos',
-            codigo: '123456'
+            codigo_2fa: '{{codigo_2fa}}',
+            "2fa_code": '{{2fa_code}}',
+            expira_en: '{{expira_en}}',
+            codigo: '{{codigo}}',
+            email_anterior: '{{email_anterior}}',
+            email_nuevo: '{{email_nuevo}}'
         };
 
         // 2. Reemplazar variables registradas en la plantilla
@@ -1740,6 +1916,8 @@ export function AdminEmailTemplatesPage() {
                     if (v === 'nombres') mockValue = selectedTestUser.nombres;
                     else if (v === 'apellidos') mockValue = selectedTestUser.apellidos;
                     else if (v === 'email') mockValue = selectedTestUser.email;
+                    else if (v === 'telefono') mockValue = selectedTestUser.telefono || '[Sin Teléfono]';
+                    else if (v === 'fecha_actualizacion') mockValue = new Date().toLocaleDateString();
                     else if (v === 'id' || v === 'user_id') mockValue = selectedTestUser.id.toString();
                     else if (v === 'nombre_completo') mockValue = `${selectedTestUser.nombres} ${selectedTestUser.apellidos}`;
                 }
@@ -1753,23 +1931,55 @@ export function AdminEmailTemplatesPage() {
                 if (v === 'link') mockValue = '#';
                 if (v === 'url') mockValue = brandingVars.app_url;
 
-                rendered = rendered.replace(new RegExp(`\\{\\{\\s*${v}\\s*\\}\\}`, 'g'), mockValue);
+                rendered = rendered.replace(new RegExp(`\\{\\{\\s*${v}\\s*\\}\\}`, 'gi'), mockValue);
             });
         }
 
-        // 3. Fallback de emergencia para variables no registradas pero usadas (como los colores o datos de usuario)
-        // Esto permite que aunque no estén en la lista de 'variables' de la plantilla en DB, funcionen en el preview
+        // 3. Fallback de emergencia para variables no registradas pero usadas
         const fallbacks: Record<string, string> = { ...brandingVars, ...securityVars };
 
         if (selectedTestUser) {
             fallbacks['nombres'] = selectedTestUser.nombres || '';
             fallbacks['apellidos'] = selectedTestUser.apellidos || '';
             fallbacks['email'] = selectedTestUser.email || '';
+            fallbacks['telefono'] = selectedTestUser.telefono || '{{telefono}}';
+            fallbacks['teléfono'] = selectedTestUser.telefono || '{{telefono}}';
+            fallbacks['fecha_actualizacion'] = new Date().toLocaleDateString();
             fallbacks['nombre_completo'] = `${selectedTestUser.nombres || ''} ${selectedTestUser.apellidos || ''}`.trim();
         }
 
+        // Agregar explícitamente los datos del plan (sobreescribe cualquier valor anterior)
+        if (selectedUserPlan) {
+            // IMPORTANTE: price_monthly puede ser 0 (plan gratuito/admin), checar != null y no solo truthy
+            fallbacks['plan_nombre'] = selectedUserPlan.name || '{{plan_nombre}}';
+            fallbacks['plan_precio'] = selectedUserPlan.price_monthly != null
+                ? String(selectedUserPlan.price_monthly)
+                : '{{plan_precio}}';
+            fallbacks['plan_detalles'] = Array.isArray(selectedUserPlan.features)
+                ? selectedUserPlan.features.map((f: string) => `• ${f}`).join('<br>')
+                : '{{plan_detalles}}';
+        }
+
+        // Calcular fecha próximo cobro desde múltiples fuentes
+        const calcFechaProximoCobro = () => {
+            const fv = selectedTestUser?.fecha_vencimiento_plan;
+            if (fv) return new Date(fv).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            const pe = selectedTestUser?.plan_expires_at;
+            if (pe) return new Date(pe).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            const reg = selectedTestUser?.created_at || selectedTestUser?.fecha_registro;
+            if (reg) {
+                const d = new Date(reg);
+                d.setDate(d.getDate() + 30);
+                return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            }
+            return '{{fecha_proximo_cobro}}';
+        };
+        if (selectedTestUser) {
+            fallbacks['fecha_proximo_cobro'] = calcFechaProximoCobro();
+        }
+
         Object.entries(fallbacks).forEach(([key, val]) => {
-            const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g');
+            const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'gi');
             rendered = rendered.replace(regex, val);
         });
 
@@ -2403,7 +2613,7 @@ export function AdminEmailTemplatesPage() {
                             <div className="p-2 bg-[var(--color-primary-light)] text-[var(--color-primary)] rounded-lg">
                                 <Mail size={16} />
                             </div>
-                            <span className="text-base font-bold text-[var(--text-primary)]">Editando Plantilla: <span className="text-[var(--color-primary)]">{selectedTemplate?.slug.toUpperCase()}</span></span>
+                            <span className="text-base font-bold text-[var(--text-primary)]">Editando Plantilla: <span className="text-[var(--color-primary)]">{selectedTemplate?.name}</span></span>
                         </div>
                     </div>
 
@@ -2621,6 +2831,7 @@ export function AdminEmailTemplatesPage() {
                                             domain={globalConfig?.site_url ? globalConfig.site_url.replace(/^https?:\/\//, '').replace(/\/$/, '') : 'dropcost.com'}
                                             templates={templates}
                                             globalConfig={globalConfig}
+                                            onRefresh={loadTemplates}
                                             onSelect={(name: string, prefix: string) => {
                                                 if (selectedTemplate) {
                                                     const updated = {
