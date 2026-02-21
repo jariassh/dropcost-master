@@ -64,11 +64,25 @@ export const PricingPage: React.FC = () => {
     const getPriceDisplay = (plan: Plan) => {
         // Price Protection: If this is the current active plan, show what they actually paid
         if (currentPlanId === plan.slug && user?.plan_precio_pagado && user.plan_periodo === billingPeriod) {
-            return formatCurrency(user.plan_precio_pagado, targetCurrency);
+            const paidAmount = user.plan_precio_pagado;
+            // plan_precio_pagado puede estar en USD si fue asignado por admin/migración.
+            // Detectamos si está en USD (< 500) y convertimos igual que los demás precios.
+            const paidIsUSD = paidAmount < 500;
+            if (paidIsUSD && targetCurrency !== 'USD' && exchangeRates) {
+                const rateTo = targetCurrency === 'USD' ? 1 : (exchangeRates[targetCurrency] ?? 1);
+                return formatCurrency(paidAmount * rateTo, targetCurrency);
+            }
+            return formatCurrency(paidAmount, targetCurrency);
         }
 
-        const baseCurrency = (plan.price_monthly < 500 && plan.currency === 'COP') ? 'USD' : (plan.currency || 'USD');
         const price = billingPeriod === 'monthly' ? plan.price_monthly : plan.price_semiannual;
+
+        // Detectar si el precio almacenado es en USD o COP usando el precio del periodo actual:
+        // Heuristica: precio < 500 = USD (base), precio >= 500 = COP (ya convertido en BD).
+        // Usar el precio del periodo seleccionado (no siempre price_monthly) para no mezclar
+        // un monthly en USD con un semiannual que ya este en COP.
+        const isStoredInCOP = price >= 500;
+        const baseCurrency = isStoredInCOP ? (plan.currency || 'COP') : 'USD';
 
         if (baseCurrency === targetCurrency) {
             return formatCurrency(price, targetCurrency);
@@ -76,8 +90,8 @@ export const PricingPage: React.FC = () => {
 
         if (!exchangeRates) return formatCurrency(price, baseCurrency);
 
-        const rateFrom = baseCurrency === 'USD' ? 1 : exchangeRates[baseCurrency];
-        const rateTo = targetCurrency === 'USD' ? 1 : exchangeRates[targetCurrency];
+        const rateFrom = baseCurrency === 'USD' ? 1 : (exchangeRates[baseCurrency] ?? 1);
+        const rateTo = targetCurrency === 'USD' ? 1 : (exchangeRates[targetCurrency] ?? 1);
 
         if (!rateFrom || !rateTo) return formatCurrency(price, baseCurrency);
 
