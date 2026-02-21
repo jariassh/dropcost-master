@@ -9,18 +9,18 @@ interface TriggerPayload {
     codigo_evento: string;
     datos: Record<string, string>;
     tipo_envio?: 'automatico' | 'prueba';
-    // Para prueba manual: plantilla_id específica + email destino
+    // Para prueba manual: plantilla_id especificada + email destino
     plantilla_id_prueba?: string;
     email_destino_prueba?: string;
 }
 
 /**
- * Reemplaza todas las variables ${variable} en un texto con los valores del objeto datos.
+ * Reemplaza todas las variables {{variable}} en un texto con los valores del objeto datos.
  * Si la variable no existe en datos, la deja como está.
  */
 function reemplazarVariables(texto: string, datos: Record<string, string>): string {
     // Match {{ variable }} or {{variable}}
-    return texto.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (match, key) => {
+    return texto.replace(/\{\{\s*([^}]+)\s*\}\}/g, (match, key) => {
         const cleanKey = key.trim();
         return datos[cleanKey] !== undefined ? datos[cleanKey] : match;
     });
@@ -52,8 +52,8 @@ Deno.serve(async (req: Request) => {
         const { data: config } = await supabase
             .from('configuracion_global')
             .select(`
-                email_domain, 
-                nombre_empresa, 
+                email_domain,
+                nombre_empresa,
                 site_url,
                 color_primary,
                 color_primary_dark,
@@ -72,8 +72,8 @@ Deno.serve(async (req: Request) => {
             .limit(1)
             .maybeSingle();
 
-        const emailDomain = config?.email_domain || 'dropcost.com';
-        const nombreEmpresa = config?.nombre_empresa || 'DropCost';
+        const emailDomain = config?.email_domain || 'dropcost.jariash.com';
+        const nombreEmpresa = config?.nombre_empresa || 'DropCost Master';
         const appUrl = config?.site_url || 'https://app.dropcost.com';
 
         // Enriquecer datos con variables globales (colores y URLs)
@@ -97,7 +97,7 @@ Deno.serve(async (req: Request) => {
         };
 
         // ============================================================
-        // MODO PRUEBA MANUAL: plantilla_id_prueba sin trigger real
+        // MODO PRUEBA MANUAL: plantilla_id sin trigger real
         // ============================================================
         if (codigo_evento === '__PRUEBA_MANUAL__' && plantilla_id_prueba) {
             const { data: plantilla } = await supabase
@@ -135,7 +135,7 @@ Deno.serve(async (req: Request) => {
             try {
                 // Construct the URL for the email-service function
                 const emailServiceUrl = `${supabaseUrl}/functions/v1/email-service`;
-                console.log(`[email-trigger-dispatcher] Invoking email-service at: ${emailServiceUrl}`);
+                console.log('[email-trigger-dispatcher] Invoking email-service at:', emailServiceUrl);
 
                 const emailResponse = await fetch(emailServiceUrl, {
                     method: 'POST',
@@ -143,24 +143,24 @@ Deno.serve(async (req: Request) => {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${supabaseServiceKey}`,
                     },
-                    body: JSON.stringify({ 
-                        to: toEmail, 
-                        from: fromFull, 
-                        subject: asuntoFinal, 
-                        html: htmlFinal 
-                    }),
+                    body: JSON.stringify({
+                        to: toEmail,
+                        from: fromFull,
+                        subject: asuntoFinal,
+                        html: htmlFinal
+                    })
                 });
 
                 if (!emailResponse.ok) {
                     const errorText = await emailResponse.text();
-                    console.error(`[email-trigger-dispatcher] email-service failed with status ${emailResponse.status}: ${errorText}`);
+                    console.error('[email-trigger-dispatcher] email-service failed with status:', emailResponse.status, errorText);
                     throw new Error(`email-service responded ${emailResponse.status}: ${errorText}`);
                 } else {
                     const responseData = await emailResponse.json().catch(() => ({}));
-                    console.log(`[email-trigger-dispatcher] email-service success:`, responseData);
+                    console.log('[email-trigger-dispatcher] email-service success:', responseData);
                 }
             } catch (sendError: any) {
-                console.error(`[email-trigger-dispatcher] Exception calling email-service:`, sendError);
+                console.error('[email-trigger-dispatcher] Exception calling email-service:', sendError);
                 estado = 'fallido';
                 razonError = sendError.message;
             }
@@ -199,7 +199,7 @@ Deno.serve(async (req: Request) => {
             .maybeSingle();
 
         if (triggerError || !trigger) {
-            console.error(`[email-trigger-dispatcher] Trigger no encontrado: ${codigo_evento}`, triggerError);
+            console.error('[email-trigger-dispatcher] Trigger no encontrado:', codigo_evento, triggerError);
             return new Response(
                 JSON.stringify({ emails_enviados: 0, mensaje: 'Trigger no encontrado o inactivo' }),
                 { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -242,7 +242,7 @@ Deno.serve(async (req: Request) => {
             );
         }
 
-        // Si no hay plantillas asociadas → silencio (comportamiento esperado)
+        // Si no hay plantillas asociadas -> silencio (comportamiento esperado)
         if (!asociaciones || asociaciones.length === 0) {
             return new Response(
                 JSON.stringify({ emails_enviados: 0, mensaje: 'No hay plantillas activas asociadas al trigger' }),
@@ -270,7 +270,7 @@ Deno.serve(async (req: Request) => {
                 : datos['usuario_email'] || datos['lider_email'];
 
             if (!toEmail) {
-                console.warn(`[email-trigger-dispatcher] Sin email destinatario para trigger ${codigo_evento}`);
+                console.warn('[email-trigger-dispatcher] Sin email destinatario para trigger', codigo_evento);
                 continue;
             }
 
@@ -294,7 +294,7 @@ Deno.serve(async (req: Request) => {
                         from: fromFull,
                         subject: asuntoFinal,
                         html: htmlFinal,
-                    }),
+                    })
                 });
 
                 if (!emailResponse.ok) {
@@ -304,7 +304,7 @@ Deno.serve(async (req: Request) => {
 
                 emailsEnviados++;
             } catch (sendError: any) {
-                console.error(`[email-trigger-dispatcher] Error enviando email:`, sendError);
+                console.error('[email-trigger-dispatcher] Error enviando email:', sendError);
                 estado = 'fallido';
                 razonError = sendError.message || 'Error desconocido';
             }
@@ -336,7 +336,7 @@ Deno.serve(async (req: Request) => {
                 plantilla: plantilla.name,
                 email: toEmail,
                 estado,
-                razon_error: razonError,
+                razon_error: razonError
             });
         }
 

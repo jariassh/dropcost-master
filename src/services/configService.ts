@@ -156,7 +156,7 @@ export const configService = {
                 meta_keywords: 'dropshipping, costos, calculadora',
                 og_image_url: '',
                 site_url: 'https://dropcost.com',
-                email_domain: 'dropcost.com',
+                email_domain: 'dropcost.jariash.com',
                 permitir_indexacion: true,
                 permitir_seguimiento: true,
                 robots_txt_custom: '',
