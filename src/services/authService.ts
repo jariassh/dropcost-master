@@ -118,11 +118,12 @@ export async function registerUser(data: RegisterData): Promise<AuthResponse> {
          // Si se registró con código de referido, disparar REFERIDO_REGISTRADO
          if (data.referredBy) {
              dispararTriggerEmail('REFERIDO_REGISTRADO', {
-                 usuario_id: authData.user.id,
-                 usuario_nombre: `${data.nombres} ${data.apellidos}`.trim(),
-                 usuario_email: data.email,
+                 usuario_id: authData.user.id, // ID del referido (para lookup del líder en dispatcher)
+                 referido_nombre: `${data.nombres} ${data.apellidos}`.trim(),
+                 referido_email: data.email,
                  codigo_referido: data.referredBy,
                  fecha_registro: new Date().toISOString().split('T')[0],
+                 // No enviamos usuario_email aquí para que el dispatcher use el del líder
              });
          }
     }

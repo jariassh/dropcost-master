@@ -1363,14 +1363,15 @@ export function AdminEmailTemplatesPage() {
                 codigo_referido_personal: selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA',
                 referido_nombre: 'Carlos Martínez', // Ejemplo: nombre de quien se registró con el link de referido
                 // Variables de prueba genéricas para triggers que las necesiten
-                reset_link: `${window.location.origin}/actualizar-contrasena?token=PRUEBA`,
-                login_url: `${window.location.origin}/login`,
+                app_url: (globalConfig as any)?.site_url || window.location.origin,
+                login_url: `${(globalConfig as any)?.site_url || window.location.origin}/login`,
+                reset_link: `${(globalConfig as any)?.site_url || window.location.origin}/actualizar-contrasena?token=PRUEBA`,
+                verification_link: `${(globalConfig as any)?.site_url || window.location.origin}/verificar-email?token=PRUEBA`,
                 expira_en: '24 horas',
                 horas_validez: '24',
                 codigo_2fa: '123456',
                 "2fa_code": '123456',
                 codigo: '123456',
-                verification_link: `${window.location.origin}/verificar-email?token=PRUEBA`,
                 plan_nombre: selectedUserPlan?.name || selectedTestUser.plan_id || 'Plan Pro',
                 fecha_inicio: fmtDate(new Date()),
                 ...planDates,
@@ -1451,7 +1452,7 @@ export function AdminEmailTemplatesPage() {
                 color_text_primary: globalConfig?.color_text_primary || '#1F2937',
                 color_text_secondary: globalConfig?.color_text_secondary || '#6B7280',
                 color_text_inverse: globalConfig?.color_text_inverse || '#FFFFFF',
-                color_sidebar_bg: globalConfig?.color_sidebar_bg || '#FFFFFF',
+                color_sidebar_bg: globalConfig?.color_sidebar_bg || '#0F172A',
             };
 
             const resultado = await enviarPruebaPlantilla({
@@ -1955,9 +1956,9 @@ export function AdminEmailTemplatesPage() {
             color_text_primary: globalConfig?.color_text_primary || '#1F2937',
             color_text_secondary: globalConfig?.color_text_secondary || '#6B7280',
             color_text_inverse: globalConfig?.color_text_inverse || '#FFFFFF',
-            color_sidebar_bg: globalConfig?.color_sidebar_bg || '#FFFFFF',
-            app_url: window.location.origin,
-            login_url: `${window.location.origin}/login`,
+            color_sidebar_bg: globalConfig?.color_sidebar_bg || '#0F172A',
+            app_url: (globalConfig as any)?.site_url || window.location.origin,
+            login_url: `${(globalConfig as any)?.site_url || window.location.origin}/login`,
             telefono: globalConfig?.telefono || '{{telefono}}',
             "teléfono": globalConfig?.telefono || '{{telefono}}',
             fecha_actualizacion: fmtDate(new Date()),
