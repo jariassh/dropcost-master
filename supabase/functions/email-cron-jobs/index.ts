@@ -207,30 +207,56 @@ Deno.serve(async (req: Request) => {
 
         // ============================================================
         // 5. PROXIMO_REFERIDO_PARA_LIDER
-        //    Líderes en múltiplos de 10 referidos (10, 20, 30, 40)
-        //    antes de llegar a 50 (umbral de siguiente nivel)
+        //    Usuarios que AÚN NO son líderes pero se acercan al
+        //    requisito mínimo de referidos. Se notifica en hitos:
+        //    50%, 70%, 80%, 90% del requisito.
         // ============================================================
         {
-            // Buscar líderes con total_referidos en múltiplos de 10 (entre 10 y 49)
-            const { data: lideres } = await supabase
+            // Obtener requisito dinámico de la config
+            const { data: refConfig } = await supabase
+                .from('sistema_referidos_config')
+                .select('referidos_minimo_lider, comision_nivel_2')
+                .order('fecha_actualizacion', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            const requisitoLider = refConfig?.referidos_minimo_lider || 50;
+            const comisionNivel2 = refConfig?.comision_nivel_2 || 5;
+
+            // Hitos en los que notificamos (porcentajes del requisito)
+            const hitoPorcentajes = [50, 70, 80, 90];
+            const hitosAbsolutos = hitoPorcentajes.map(p => Math.round(requisitoLider * p / 100));
+
+            // Buscar usuarios que NO son líderes y tienen referidos > 0
+            const { data: usuarios } = await supabase
                 .from('users')
                 .select('id, nombres, apellidos, email, total_referidos')
-                .eq('rol', 'lider')
+                .neq('rol', 'lider')
                 .gt('total_referidos', 0)
-                .lt('total_referidos', 50);
+                .lt('total_referidos', requisitoLider);
 
             let count = 0;
-            for (const lider of (lideres || [])) {
-                const total = lider.total_referidos || 0;
-                // Solo notificar si está en un múltiplo de 10
-                if (total > 0 && total % 10 === 0) {
-                    const siguienteHito = total + 10 <= 50 ? total + 10 : 50;
+            for (const usuario of (usuarios || [])) {
+                const total = usuario.total_referidos || 0;
+                // Solo notificar si está exactamente en uno de los hitos
+                if (hitosAbsolutos.includes(total)) {
+                    const faltantes = requisitoLider - total;
+                    const progreso = Math.round((total / requisitoLider) * 100);
                     await dispararTrigger('PROXIMO_REFERIDO_PARA_LIDER', {
-                        lider_nombre: `${lider.nombres} ${lider.apellidos}`,
-                        lider_email: lider.email,
+                        usuario_nombre: `${usuario.nombres} ${usuario.apellidos}`,
+                        usuario_email: usuario.email,
+                        // Variables clásicas (compatibilidad)
+                        lider_nombre: `${usuario.nombres} ${usuario.apellidos}`,
+                        lider_email: usuario.email,
                         total_referidos: String(total),
-                        referidos_para_siguiente_hito: String(siguienteHito - total),
-                        siguiente_hito: String(siguienteHito),
+                        referidos_para_siguiente_hito: String(faltantes),
+                        siguiente_hito: String(requisitoLider),
+                        // Variables nuevas para plantilla "Casi Allí"
+                        referidos_actuales: String(total),
+                        referidos_faltantes: String(faltantes),
+                        porcentaje_progreso: String(progreso),
+                        requisito_lider: String(requisitoLider),
+                        comision_nivel2: String(comisionNivel2),
                     });
                     count++;
                 }
