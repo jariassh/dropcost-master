@@ -131,12 +131,6 @@ export const AdminWithdrawalsPage: React.FC = () => {
                         ...datosBase,
                         fecha_aprobacion: new Date().toISOString().split('T')[0],
                     });
-                } else if (newStatus === 'completado') {
-                    dispararTriggerEmail('PAGO_COMISIONES_PROCESADO', {
-                        ...datosBase,
-                        fecha_procesado: new Date().toISOString().split('T')[0],
-                        referencia_pago: reason || '',
-                    });
                 }
             }
 

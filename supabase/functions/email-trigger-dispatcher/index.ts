@@ -114,8 +114,12 @@ Deno.serve(async (req: Request) => {
             color_text_primary: config?.color_text_primary || '#1F2937',
             color_text_secondary: config?.color_text_secondary || '#6B7280',
             color_text_inverse: config?.color_text_inverse || '#FFFFFF',
-            color_text_inverse: config?.color_text_inverse || '#FFFFFF',
             color_sidebar_bg: config?.color_sidebar_bg || '#FFFFFF',
+            // Variables de Autenticación (Fallbacks o desde datos si vienen)
+            reset_link: datos['reset_link'] || `${appUrl}/actualizar-contrasena?token={{reset_token}}`,
+            horas_validez: datos['horas_validez'] || '24',
+            verification_link: datos['verification_link'] || `${appUrl}/verificar-email?token={{verification_token}}`,
+            login_url: datos['login_url'] || `${appUrl}/login`,
         };
 
         // ============================================================

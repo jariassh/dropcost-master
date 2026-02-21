@@ -98,7 +98,13 @@ const categorizedVariables = {
         { name: 'producto_nombre', label: 'Nombre del Producto (Último)' },
         { name: 'producto_sku', label: 'SKU del Producto' },
         { name: 'producto_precio_sugerido', label: 'Precio Sugerido' },
-        { name: 'producto_utilidad_neta', label: 'Utilidad Neta Estimada' }
+        { name: 'producto_utilidad_neta', label: 'Utilidad Neta Estimada' },
+        { name: 'monto_retiro', label: 'Monto a Retirar (USD)' },
+        { name: 'saldo_restante', label: 'Saldo Restante en Billetera (USD)' },
+        { name: 'fecha_aprobacion', label: 'Fecha de Aprobación del Retiro' },
+        { name: 'fecha_estimada_llegada', label: 'Fecha Estimada de Llegada del Dinero' },
+        { name: 'banco_destino', label: 'Banco Destino de la Transferencia' },
+        { name: 'titular_cuenta', label: 'Titular de la Cuenta Bancaria' },
     ],
     'Referidos': [
         { name: 'lider_nombre', label: 'Nombre de su Líder' },
@@ -125,6 +131,12 @@ const categorizedVariables = {
         { name: 'comision_mensual', label: 'Comisión Mensual por Referido (USD)' },
         { name: 'fecha_inicio_comision', label: 'Fecha Inicio Período de Comisión' },
         { name: 'fecha_expiracion_comision', label: 'Fecha Expiración de Comisión sobre Referido' },
+        { name: 'comision_total_ganada', label: 'Total Comisionado por Referido en el Período (USD)' },
+        { name: 'referidos_actuales', label: 'Referidos Actuales del Usuario' },
+        { name: 'referidos_faltantes', label: 'Referidos Faltantes para ser Líder' },
+        { name: 'porcentaje_progreso', label: 'Porcentaje de Progreso hacia Líder (%)' },
+        { name: 'requisito_lider', label: 'Requisito Total de Referidos para Líder (alias)' },
+        { name: 'comision_nivel2', label: 'Porcentaje Comisión Nivel 2 (alias)' },
     ],
     'Sistema': [
         { name: 'app_url', label: 'Link a Inicio (Raíz)' },
@@ -136,8 +148,9 @@ const categorizedVariables = {
         { name: '{{app_url}}/configuracion', label: 'Link a Configuración' }
     ],
     'Autenticación': [
-        { name: '{{app_url}}/reset-password?token={{reset_token}}', label: 'Link Reset Password' },
-        { name: '{{app_url}}/verificar-email?code={{verification_code}}', label: 'Link Verificar Email' },
+        { name: 'reset_link', label: 'Link para Restablecer Contraseña' },
+        { name: 'horas_validez', label: 'Horas de Validez del Link' },
+        { name: 'verification_link', label: 'Link para Verificar Email' },
         { name: 'login_url', label: 'Link de Login' }
     ],
     'Legal': [
@@ -1316,20 +1329,23 @@ export function AdminEmailTemplatesPage() {
 
             // Calcular dias_restantes y fecha_vencimiento desde datos del usuario (igual que el dispatcher)
             const planDates: Record<string, string> = {};
+            // Helper: formatea Date a dd-mm-yyyy
+            const fmtDate = (d: Date) => `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+            const fmtDateStr = (s: string) => { try { return fmtDate(new Date(s)); } catch { return s; } };
             const _fv = selectedTestUser?.fecha_vencimiento_plan || selectedTestUser?.plan_expires_at;
             const _hoy = new Date(); _hoy.setHours(0, 0, 0, 0);
             if (_fv) {
                 const _venc = new Date(_fv); _venc.setHours(0, 0, 0, 0);
                 const _diff = Math.ceil((_venc.getTime() - _hoy.getTime()) / (1000 * 60 * 60 * 24));
                 planDates['dias_restantes'] = String(Math.max(0, _diff));
-                planDates['fecha_vencimiento'] = _venc.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                planDates['fecha_vencimiento'] = fmtDate(_venc);
             } else {
                 const _reg = selectedTestUser?.created_at || selectedTestUser?.fecha_registro;
                 if (_reg) {
                     const _venc = new Date(_reg); _venc.setDate(_venc.getDate() + 30); _venc.setHours(0, 0, 0, 0);
                     const _diff = Math.ceil((_venc.getTime() - _hoy.getTime()) / (1000 * 60 * 60 * 24));
                     planDates['dias_restantes'] = String(Math.max(0, _diff));
-                    planDates['fecha_vencimiento'] = _venc.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                    planDates['fecha_vencimiento'] = fmtDate(_venc);
                 }
             }
 
@@ -1341,28 +1357,30 @@ export function AdminEmailTemplatesPage() {
                 email: selectedTestUser.email || '',
                 usuario_email: selectedTestUser.email || '', // Mantener por compatibilidad si algún trigger viejo lo usa
                 telefono: selectedTestUser.telefono || '+57 321 000 0000',
-                fecha_registro: selectedTestUser.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
-                fecha_actualizacion: new Date().toLocaleString('es-ES'),
+                fecha_registro: fmtDateStr(selectedTestUser.created_at || new Date().toISOString()),
+                fecha_actualizacion: fmtDate(new Date()),
                 codigo_referido: selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA',
                 codigo_referido_personal: selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA',
                 referido_nombre: 'Carlos Martínez', // Ejemplo: nombre de quien se registró con el link de referido
                 // Variables de prueba genéricas para triggers que las necesiten
                 reset_link: `${window.location.origin}/actualizar-contrasena?token=PRUEBA`,
                 login_url: `${window.location.origin}/login`,
-                expira_en: '10 minutos',
+                expira_en: '24 horas',
+                horas_validez: '24',
                 codigo_2fa: '123456',
                 "2fa_code": '123456',
                 codigo: '123456',
+                verification_link: `${window.location.origin}/verificar-email?token=PRUEBA`,
                 plan_nombre: selectedUserPlan?.name || selectedTestUser.plan_id || 'Plan Pro',
-                fecha_inicio: new Date().toISOString().split('T')[0],
+                fecha_inicio: fmtDate(new Date()),
                 ...planDates,
                 monto_comision: '25.00',
-                fecha_expiracion: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                fecha_expiracion: fmtDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
                 monto_pago: '12.79',
                 comision_ganada: '1.92',
                 plan_referido: `${selectedUserPlan?.name || 'Plan Pro'} (Mensual)`,
-                fecha_pago_referido: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
-                fecha_proximo_pago: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
+                fecha_pago_referido: fmtDate(new Date()),
+                fecha_proximo_pago: fmtDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
                 saldo_billetera: '32.50',
                 banco_nombre: 'Banco de Prueba',
                 numero_cuenta: '****1234',
@@ -1372,38 +1390,48 @@ export function AdminEmailTemplatesPage() {
                 siguiente_hito: '10',
                 lider_nombre: `${selectedTestUser.nombres || ''} ${selectedTestUser.apellidos || ''}`.trim(),
                 lider_email: selectedTestUser.email || '',
-                referido_nombre: 'Usuario Referido (Prueba)',
                 referido_email: 'referido@prueba.com',
                 comision_referido_nivel1: '15',
                 comision_referido_nivel2: '5',
                 vigencia_meses_comision: '12',
                 requisito_para_lider: '50',
                 referidos_cantidad: '23',
-                fecha_cancelacion_referido: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
-                fecha_ultima_comision: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
+                fecha_cancelacion_referido: fmtDate(new Date()),
+                fecha_ultima_comision: fmtDate(new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)),
                 dias_restantes_comision: '23',
                 comision_mensual: '1.92',
-                fecha_inicio_comision: new Date(Date.now() - 335 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
-                fecha_expiracion_comision: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
-                fecha_cancelacion: new Date().toISOString().split('T')[0],
-                fecha_activacion: new Date().toISOString().split('T')[0],
-                fecha_desactivacion: new Date().toISOString().split('T')[0],
-                fecha_actualizacion: new Date().toISOString().split('T')[0],
-                fecha_aprobacion: new Date().toISOString().split('T')[0],
-                fecha_procesado: new Date().toISOString().split('T')[0],
+                fecha_inicio_comision: fmtDate(new Date(Date.now() - 335 * 24 * 60 * 60 * 1000)),
+                fecha_expiracion_comision: fmtDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
+                comision_total_ganada: '23.04',
+                referidos_actuales: '23',
+                referidos_faltantes: '27',
+                porcentaje_progreso: '46',
+                requisito_lider: '50',
+                comision_nivel2: '5',
+                // Retiros / Billetera
+                monto_retiro: '20.00',
+                saldo_restante: '12.50',
+                fecha_aprobacion: fmtDate(new Date()),
+                fecha_estimada_llegada: fmtDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)),
+                banco_destino: 'Bancolombia',
+                titular_cuenta: `${selectedTestUser.nombres || ''} ${selectedTestUser.apellidos || ''}`.trim(),
+                fecha_cancelacion: fmtDate(new Date()),
+                fecha_activacion: fmtDate(new Date()),
+                fecha_desactivacion: fmtDate(new Date()),
+                fecha_procesado: fmtDate(new Date()),
                 email_nuevo: selectedTestUser.email || '',
                 email_anterior: 'anterior@ejemplo.com',
-                fecha_cambio: new Date().toISOString().split('T')[0],
-                fecha_pago: new Date().toISOString().split('T')[0],
-                fecha_ascenso: new Date().toISOString().split('T')[0],
+                fecha_cambio: fmtDate(new Date()),
+                fecha_pago: fmtDate(new Date()),
+                fecha_ascenso: fmtDate(new Date()),
                 fecha_proximo_cobro: (() => {
                     const fv = selectedTestUser?.fecha_vencimiento_plan;
-                    if (fv) return new Date(fv).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                    if (fv) return fmtDate(new Date(fv));
                     const pe = selectedTestUser?.plan_expires_at;
-                    if (pe) return new Date(pe).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                    if (pe) return fmtDate(new Date(pe));
                     const reg = selectedTestUser?.created_at || selectedTestUser?.fecha_registro;
-                    if (reg) { const d = new Date(reg); d.setDate(d.getDate() + 30); return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }); }
-                    return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                    if (reg) { const d = new Date(reg); d.setDate(d.getDate() + 30); return fmtDate(d); }
+                    return fmtDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
                 })(),
                 plan_detalles: selectedUserPlan?.features ? selectedUserPlan.features.map((f: string) => `• ${f}`).join('<br>') : '• Gestión de hasta 5 tiendas<br>• Simulador de costos avanzado<br>• Integración con Meta Ads<br>• Soporte prioritario',
                 plan_precio: selectedUserPlan?.price_monthly != null ? String(selectedUserPlan.price_monthly) : '0.00',
@@ -1909,6 +1937,10 @@ export function AdminEmailTemplatesPage() {
         if (!selectedTemplate) return content;
         let rendered = content;
 
+        // Helper: formatea Date a dd-mm-yyyy (disponible para todos los bloques)
+        const fmtDate = (d: Date) => `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+        const fmtDateStr = (s: string) => { try { return fmtDate(new Date(s)); } catch { return s; } };
+
         // 1. Obtener todas las variables posibles para el mapeo
         const brandingVars: Record<string, string> = {
             color_primary: globalConfig?.color_primary || '#0066FF',
@@ -1928,7 +1960,7 @@ export function AdminEmailTemplatesPage() {
             login_url: `${window.location.origin}/login`,
             telefono: globalConfig?.telefono || '{{telefono}}',
             "teléfono": globalConfig?.telefono || '{{telefono}}',
-            fecha_actualizacion: new Date().toLocaleDateString(),
+            fecha_actualizacion: fmtDate(new Date()),
             plan_nombre: selectedUserPlan?.name || '{{plan_nombre}}',
             plan_precio: selectedUserPlan?.price_monthly != null ? String(selectedUserPlan.price_monthly) : '{{plan_precio}}',
             plan_detalles: selectedUserPlan?.features ? selectedUserPlan.features.map((f: string) => `• ${f}`).join('<br>') : '{{plan_detalles}}',
@@ -1936,16 +1968,16 @@ export function AdminEmailTemplatesPage() {
             fecha_proximo_cobro: (() => {
                 // Prioridad 1: campo fecha_vencimiento_plan
                 const fv = selectedTestUser?.fecha_vencimiento_plan;
-                if (fv) return new Date(fv).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                if (fv) return fmtDate(new Date(fv));
                 // Prioridad 2: campo plan_expires_at
                 const pe = selectedTestUser?.plan_expires_at;
-                if (pe) return new Date(pe).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                if (pe) return fmtDate(new Date(pe));
                 // Prioridad 3: calcular 30 días después del created_at como estimación
                 const reg = selectedTestUser?.created_at || selectedTestUser?.fecha_registro;
                 if (reg) {
                     const d = new Date(reg);
                     d.setDate(d.getDate() + 30);
-                    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                    return fmtDate(d);
                 }
                 return '{{fecha_proximo_cobro}}';
             })(),
@@ -1974,7 +2006,7 @@ export function AdminEmailTemplatesPage() {
                     else if (v === 'apellidos') mockValue = selectedTestUser.apellidos;
                     else if (v === 'email') mockValue = selectedTestUser.email;
                     else if (v === 'telefono') mockValue = selectedTestUser.telefono || '[Sin Teléfono]';
-                    else if (v === 'fecha_actualizacion') mockValue = new Date().toLocaleDateString();
+                    else if (v === 'fecha_actualizacion') mockValue = fmtDate(new Date());
                     else if (v === 'id' || v === 'user_id') mockValue = selectedTestUser.id.toString();
                     else if (v === 'nombre_completo') mockValue = `${selectedTestUser.nombres} ${selectedTestUser.apellidos}`;
                 }
@@ -2001,7 +2033,7 @@ export function AdminEmailTemplatesPage() {
             fallbacks['email'] = selectedTestUser.email || '';
             fallbacks['telefono'] = selectedTestUser.telefono || '{{telefono}}';
             fallbacks['teléfono'] = selectedTestUser.telefono || '{{telefono}}';
-            fallbacks['fecha_actualizacion'] = new Date().toLocaleDateString();
+            fallbacks['fecha_actualizacion'] = fmtDate(new Date());
             fallbacks['nombre_completo'] = `${selectedTestUser.nombres || ''} ${selectedTestUser.apellidos || ''}`.trim();
             // Código de referido del usuario seleccionado
             fallbacks['codigo_referido_personal'] = selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA';
@@ -2014,19 +2046,38 @@ export function AdminEmailTemplatesPage() {
             fallbacks['vigencia_meses_comision'] = '12';
             fallbacks['requisito_para_lider'] = '50';
             fallbacks['referidos_cantidad'] = '23';
-            fallbacks['fecha_cancelacion_referido'] = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-            fallbacks['fecha_ultima_comision'] = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            fallbacks['fecha_cancelacion_referido'] = fmtDate(new Date());
+            fallbacks['fecha_ultima_comision'] = fmtDate(new Date(Date.now() - 15 * 24 * 60 * 60 * 1000));
             fallbacks['dias_restantes_comision'] = '23';
             fallbacks['comision_mensual'] = '1.92';
-            fallbacks['fecha_inicio_comision'] = new Date(Date.now() - 335 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-            fallbacks['fecha_expiracion_comision'] = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            fallbacks['fecha_inicio_comision'] = fmtDate(new Date(Date.now() - 335 * 24 * 60 * 60 * 1000));
+            fallbacks['fecha_expiracion_comision'] = fmtDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+            fallbacks['comision_total_ganada'] = '23.04';
+            fallbacks['referidos_actuales'] = fallbacks['referidos_cantidad'] || '23';
+            fallbacks['referidos_faltantes'] = String(Math.max(0, parseInt(fallbacks['requisito_para_lider'] || '50') - parseInt(fallbacks['referidos_cantidad'] || '23')));
+            fallbacks['porcentaje_progreso'] = String(Math.round((parseInt(fallbacks['referidos_cantidad'] || '23') / parseInt(fallbacks['requisito_para_lider'] || '50')) * 100));
+            fallbacks['requisito_lider'] = fallbacks['requisito_para_lider'] || '50';
+            fallbacks['comision_nivel2'] = fallbacks['comision_referido_nivel2'] || '5';
+            // Retiros / Billetera
+            fallbacks['monto_retiro'] = '20.00';
+            fallbacks['saldo_restante'] = '12.50';
+            fallbacks['fecha_aprobacion'] = fmtDate(new Date());
+            fallbacks['fecha_estimada_llegada'] = fmtDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000));
+            fallbacks['banco_destino'] = 'Bancolombia';
+            fallbacks['titular_cuenta'] = `${selectedTestUser?.nombres || ''} ${selectedTestUser?.apellidos || ''}`.trim() || 'Jonathan Arias';
             // Variables de REFERIDO_PRIMER_PAGO (valores en USD)
             fallbacks['comision_ganada'] = '1.92';
             fallbacks['monto_pago'] = '12.79';
             fallbacks['plan_referido'] = 'Plan Pro (Mensual)';
-            fallbacks['fecha_pago_referido'] = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-            fallbacks['fecha_proximo_pago'] = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            fallbacks['fecha_pago_referido'] = fmtDate(new Date());
+            fallbacks['fecha_proximo_pago'] = fmtDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
             fallbacks['saldo_billetera'] = '32.50';
+            // Autenticación
+            fallbacks['reset_link'] = (brandingVars.app_url || `${window.location.origin}`) + '/actualizar-contrasena?token=PRUEBA';
+            fallbacks['horas_validez'] = '24';
+            fallbacks['verification_link'] = (brandingVars.app_url || `${window.location.origin}`) + '/verificar-email?token=PRUEBA';
+            fallbacks['login_url'] = (brandingVars.app_url || `${window.location.origin}`) + '/login';
+            fallbacks['expira_en'] = '24 horas';
         }
 
         // Agregar explícitamente los datos del plan (sobreescribe cualquier valor anterior)
