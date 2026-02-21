@@ -197,14 +197,27 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
                 // EMAIL TRIGGER: REFERIDO_PRIMER_PAGO (notificar al líder)
                 const { data: leaderUser } = await supabase.from('users').select('nombres, apellidos, email').eq('id', leader.user_id).maybeSingle();
                 const { data: referidoUser } = await supabase.from('users').select('nombres, apellidos, email').eq('id', userId).maybeSingle();
+                // Obtener nombre legible del plan
+                let planNombreLegible = planId;
+                const { data: planInfo } = await supabase.from('plans').select('name').eq('slug', planId).maybeSingle();
+                if (planInfo?.name) planNombreLegible = planInfo.name;
                 dispararTrigger(supabaseUrl, serviceKey, 'REFERIDO_PRIMER_PAGO', {
                     usuario_id: leader.user_id,
                     usuario_nombre: `${leaderUser?.nombres || ''} ${leaderUser?.apellidos || ''}`.trim(),
+                    nombres: leaderUser?.nombres || '',
+                    apellidos: leaderUser?.apellidos || '',
                     usuario_email: leaderUser?.email || '',
                     referido_nombre: `${referidoUser?.nombres || ''} ${referidoUser?.apellidos || ''}`.trim(),
                     referido_email: referidoUser?.email || '',
+                    // Variables financieras del pago — TODO en USD para consistencia
+                    monto_pago: (Math.round((commissionAmountUSD * 100 / commissionPercent) * 100) / 100).toFixed(2),
+                    comision_ganada: commissionAmountUSD.toFixed(2),
                     monto_comision: commissionAmountUSD.toFixed(2),
-                    plan_nombre: planId,
+                    plan_referido: `${planNombreLegible} (${period === 'monthly' ? 'Mensual' : 'Semestral'})`,
+                    plan_nombre: planNombreLegible,
+                    fecha_pago_referido: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
+                    fecha_proximo_pago: expiresAt.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
+                    saldo_billetera: newBalance.toFixed(2),
                 });
             }
         }
