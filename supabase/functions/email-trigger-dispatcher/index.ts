@@ -175,107 +175,92 @@ Deno.serve(async (req: Request) => {
 
         // ============================================================
         // CASO ESPECIAL: REFERIDO_REGISTRADO → email al LÍDER (referidor)
-        // El trigger llega con codigo_referido (del líder) y referido_nombre (nuevo usuario)
         // ============================================================
-        let targetUserId = datos['usuario_id'] || datos['id'];
-        const originalPayloadUserId = datos['usuario_id']; // El usuario que disparó el trigger (el referido)
+        let targetId = datos['usuario_id'] || datos['id'];
+        const refersToUserId = datos['usuario_id']; // El nuevo usuario
 
         if (codigo_evento === 'REFERIDO_REGISTRADO' && datos['codigo_referido']) {
-            const { data: lider, error: liderError } = await supabase
+            const { data: lider } = await supabase
                 .from('users')
-                .select('id, nombres, apellidos, email, plan_id, codigo_referido_personal')
+                .select('id, nombres, apellidos, email, codigo_referido_personal')
                 .eq('codigo_referido_personal', datos['codigo_referido'])
                 .maybeSingle();
 
-            if (liderError) console.error('[Dispatcher] Error buscando líder por codigo_referido:', liderError);
-
             if (lider) {
-                // El destinatario es el LÍDER, no el nuevo usuario
-                targetUserId = lider.id;
+                targetId = lider.id;
                 datosEnriquecidos['usuario_id'] = lider.id;
                 datosEnriquecidos['nombres'] = lider.nombres || '';
                 datosEnriquecidos['apellidos'] = lider.apellidos || '';
                 datosEnriquecidos['email'] = lider.email || '';
-                datosEnriquecidos['usuario_email'] = lider.email || '';
                 
-                // Buscar el nombre real del REFERIDO para evitar el fallback "tu invitado"
-                if (originalPayloadUserId) {
-                    const { data: refUser } = await supabase
-                        .from('users')
-                        .select('nombres, apellidos')
-                        .eq('id', originalPayloadUserId)
-                        .maybeSingle();
-                    if (refUser && (refUser.nombres || refUser.apellidos)) {
-                        datosEnriquecidos['referido_nombre'] = `${refUser.nombres || ''} ${refUser.apellidos || ''}`.trim();
+                // Buscar el nombre real del REFERIDO usando AUTH (más rápido que tabla public.users)
+                if (refersToUserId) {
+                    const { data: { user: refAuthUser } } = await supabase.auth.admin.getUserById(refersToUserId);
+                    if (refAuthUser?.user_metadata?.nombres) {
+                        datosEnriquecidos['referido_nombre'] = `${refAuthUser.user_metadata.nombres} ${refAuthUser.user_metadata.apellidos || ''}`.trim();
                     }
                 }
                 
-                // Fallback si no se encontró en DB
                 if (!datosEnriquecidos['referido_nombre']) {
                     datosEnriquecidos['referido_nombre'] = datos['referido_nombre'] || 'tu invitado';
                 }
-
-                datosEnriquecidos['referido_email'] = datos['referido_email'] || '';
-                datosEnriquecidos['fecha_registro'] = datos['fecha_registro'] || new Date().toISOString().split('T')[0];
-                datosEnriquecidos['codigo_referido_personal'] = lider.codigo_referido_personal || datos['codigo_referido'];
-                console.log(`[Dispatcher] REFERIDO_REGISTRADO → Redirigiendo a líder ${lider.email}, referido: ${datosEnriquecidos['referido_nombre']}`);
-            } else {
-                console.warn('[Dispatcher] REFERIDO_REGISTRADO: líder no encontrado para codigo_referido:', datos['codigo_referido']);
+                console.log(`[Dispatcher] REFERIDO_REGISTRADO → Destino: ${lider.email}, Referido: ${datosEnriquecidos['referido_nombre']}`);
             }
         }
 
         // ============================================================
-        // ENRIQUECIMIENTO AUTOMÁTICO DE DATOS DE SUSCRIPCIÓN / PERFIL
+        // ENRIQUECIMIENTO: Obtener datos del destinatario directamente de AUTH
+        // Esto evita esperar a que la tabla public.users se sincronice (race condition)
         // ============================================================
-        if (targetUserId) {
-            console.log('[Dispatcher] Enriqueciendo datos para usuario/destinatario:', targetUserId);
+        if (targetId) {
+            const { data: { user: authUser } } = await supabase.auth.admin.getUserById(targetId);
             
-            const { data: user, error: userError } = await supabase
-                .from('users')
-                .select('plan_id, fecha_vencimiento_plan, plan_expires_at, created_at, fecha_registro, link_pago_manual, nombres, apellidos, email, email_confirmed_at, codigo_referido_personal')
-                .eq('id', targetUserId)
-                .maybeSingle();
+            if (authUser) {
+                datosEnriquecidos['nombres'] = authUser.user_metadata?.nombres || datosEnriquecidos['nombres'] || '';
+                datosEnriquecidos['apellidos'] = authUser.user_metadata?.apellidos || datosEnriquecidos['apellidos'] || '';
+                datosEnriquecidos['email'] = authUser.email || datosEnriquecidos['email'] || '';
+                datosEnriquecidos['usuario_email'] = authUser.email || datosEnriquecidos['usuario_email'] || '';
 
-            if (userError) console.error('[Dispatcher] Error buscando usuario:', userError);
-
-            if (user) {
-                // Si el usuario no está verificado y es un trigger de registro, generar link real de Supabase
-                if (!user.email_confirmed_at && (codigo_evento === 'USUARIO_REGISTRADO' || codigo_evento === 'BIENVENIDA')) {
+                // Generar Link de Verificación si no está verificado (NO BLOQUEANTE)
+                if (!authUser.email_confirmed_at && (codigo_evento === 'USUARIO_REGISTRADO' || codigo_evento === 'BIENVENIDA' || codigo_evento === 'USER_SIGNUP')) {
                     try {
                         const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
                             type: 'signup',
-                            email: user.email,
+                            email: authUser.email!,
                             options: { redirectTo: appUrl }
                         });
-                        if (linkData?.properties?.action_link) {
+                        
+                        if (linkError) {
+                            console.warn('[Dispatcher] Supabase no permitió generar el link (posiblemente Confirm Email está OFF):', linkError.message);
+                            datosEnriquecidos['verification_link'] = `${appUrl}/login?error=verify_manual`;
+                        } else if (linkData?.properties?.action_link) {
                             datosEnriquecidos['verification_link'] = linkData.properties.action_link;
                             console.log('[Dispatcher] Link de verificación generado correctamente');
                         }
                     } catch (err) {
-                        console.error('[Dispatcher] Error generando link de verificación:', err);
+                        console.error('[Dispatcher] Error crítico generando link:', err);
+                        datosEnriquecidos['verification_link'] = `${appUrl}/login`;
                     }
                 }
-                // Asegurar datos básicos del destinatario (si no se pusieron arriba)
-                datosEnriquecidos['nombres'] = user.nombres || datosEnriquecidos['nombres'] || '';
-                datosEnriquecidos['apellidos'] = user.apellidos || datosEnriquecidos['apellidos'] || '';
-                datosEnriquecidos['email'] = user.email || datosEnriquecidos['email'] || '';
-                datosEnriquecidos['usuario_email'] = user.email || datosEnriquecidos['usuario_email'] || '';
-                
-                // Código de referido personal del destinatario
-                if (user.codigo_referido_personal) {
-                    datosEnriquecidos['codigo_referido_personal'] = user.codigo_referido_personal;
-                    datosEnriquecidos['codigo_referido'] = user.codigo_referido_personal;
-                }
+            }
 
-                if (user.plan_id) {
-                    const planId = user.plan_id;
-                    // Intento 1: buscar por UUID (id), Intento 2: buscar por slug
+            // Datos adicionales de la tabla (Suscripción, etc.)
+            const { data: dbUser } = await supabase
+                .from('users')
+                .select('plan_id, fecha_vencimiento_plan, plan_expires_at, link_pago_manual, codigo_referido_personal')
+                .eq('id', targetId)
+                .maybeSingle();
+
+            if (dbUser) {
+                if (dbUser.codigo_referido_personal) {
+                    datosEnriquecidos['codigo_referido_personal'] = dbUser.codigo_referido_personal;
+                }
+                if (dbUser.plan_id) {
                     const { data: plan } = await supabase
                         .from('plans')
                         .select('name, price_monthly, features')
-                        .or(`id.eq.${planId},slug.eq.${planId}`)
+                        .or(`id.eq.${dbUser.plan_id},slug.eq.${dbUser.plan_id}`)
                         .maybeSingle();
-
                     if (plan) {
                         datosEnriquecidos['plan_nombre'] = String(plan.name);
                         datosEnriquecidos['plan_precio'] = plan.price_monthly != null ? String(plan.price_monthly) : '0.00';
@@ -284,21 +269,14 @@ Deno.serve(async (req: Request) => {
                         }
                     }
                 }
-
-                // Fechas y Links
-                const fechaVenc = user.fecha_vencimiento_plan || user.plan_expires_at;
+                const fechaVenc = dbUser.fecha_vencimiento_plan || dbUser.plan_expires_at;
                 if (fechaVenc) {
-                    const vencimiento = new Date(fechaVenc);
-                    const hoy = new Date(); hoy.setHours(0,0,0,0);
-                    vencimiento.setHours(0,0,0,0);
-                    const diff = Math.ceil((vencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-                    
-                    datosEnriquecidos['fecha_proximo_cobro'] = vencimiento.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-                    datosEnriquecidos['fecha_vencimiento'] = datosEnriquecidos['fecha_proximo_cobro'];
-                    datosEnriquecidos['dias_restantes'] = String(Math.max(0, diff));
+                    const venc = new Date(fechaVenc);
+                    const hoy = new Date(); hoy.setHours(0,0,0,0); venc.setHours(0,0,0,0);
+                    datosEnriquecidos['fecha_proximo_cobro'] = venc.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                    datosEnriquecidos['dias_restantes'] = String(Math.max(0, Math.ceil((venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24))));
                 }
-                
-                datosEnriquecidos['link_pago'] = user.link_pago_manual || `${appUrl}/configuracion`;
+                datosEnriquecidos['link_pago'] = dbUser.link_pago_manual || `${appUrl}/configuracion`;
             }
         }
 
