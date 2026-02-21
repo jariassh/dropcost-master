@@ -119,6 +119,68 @@ Deno.serve(async (req: Request) => {
         };
 
         // ============================================================
+        // ENRIQUECIMIENTO: Configuración de Referidos (comisión y vigencia)
+        // Valores dinámicos desde sistema_referidos_config del admin
+        // ============================================================
+        const { data: referralConfig } = await supabase
+            .from('sistema_referidos_config')
+            .select('comision_nivel_1, comision_nivel_2, meses_vigencia_comision, referidos_minimo_lider')
+            .order('fecha_actualizacion', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        datosEnriquecidos['comision_referido_nivel1'] = String(referralConfig?.comision_nivel_1 ?? 15);
+        datosEnriquecidos['comision_referido_nivel2'] = String(referralConfig?.comision_nivel_2 ?? 5);
+        datosEnriquecidos['vigencia_meses_comision'] = String(referralConfig?.meses_vigencia_comision ?? 12);
+        datosEnriquecidos['requisito_para_lider'] = String(referralConfig?.referidos_minimo_lider ?? 50);
+
+        // Obtener cantidad de referidos actuales del usuario (si tiene perfil de líder)
+        const recipientUserId = datosEnriquecidos['usuario_id'] || datos['usuario_id'];
+        if (recipientUserId) {
+            const { data: liderData } = await supabase
+                .from('referidos_lideres')
+                .select('total_referidos')
+                .eq('user_id', recipientUserId)
+                .maybeSingle();
+            datosEnriquecidos['referidos_cantidad'] = String(liderData?.total_referidos ?? 0);
+        } else {
+            datosEnriquecidos['referidos_cantidad'] = '0';
+        }
+
+        console.log('[Dispatcher] Referral config: nivel1=', datosEnriquecidos['comision_referido_nivel1'], 'nivel2=', datosEnriquecidos['comision_referido_nivel2'], 'requisito_lider=', datosEnriquecidos['requisito_para_lider'], 'referidos_cantidad=', datosEnriquecidos['referidos_cantidad']);
+
+        // ============================================================
+        // CASO ESPECIAL: REFERIDO_REGISTRADO → email al LÍDER (referidor)
+        // El trigger llega con codigo_referido (del líder) y referido_nombre (nuevo usuario)
+        // ============================================================
+        if (codigo_evento === 'REFERIDO_REGISTRADO' && datos['codigo_referido']) {
+            const { data: lider, error: liderError } = await supabase
+                .from('users')
+                .select('id, nombres, apellidos, email, plan_id, codigo_referido_personal')
+                .eq('codigo_referido_personal', datos['codigo_referido'])
+                .maybeSingle();
+
+            if (liderError) console.error('[Dispatcher] Error buscando líder por codigo_referido:', liderError);
+
+            if (lider) {
+                // El destinatario es el LÍDER, no el nuevo usuario
+                datosEnriquecidos['usuario_id'] = lider.id;
+                datosEnriquecidos['nombres'] = lider.nombres || '';
+                datosEnriquecidos['apellidos'] = lider.apellidos || '';
+                datosEnriquecidos['email'] = lider.email || '';
+                datosEnriquecidos['usuario_email'] = lider.email || '';
+                // Nombre del nuevo registrado que usó el link
+                datosEnriquecidos['referido_nombre'] = datos['referido_nombre'] || 'tu invitado';
+                datosEnriquecidos['referido_email'] = datos['referido_email'] || '';
+                datosEnriquecidos['fecha_registro'] = datos['fecha_registro'] || new Date().toISOString().split('T')[0];
+                datosEnriquecidos['codigo_referido_personal'] = lider.codigo_referido_personal || datos['codigo_referido'];
+                console.log(`[Dispatcher] REFERIDO_REGISTRADO → email a líder ${lider.email}, referido: ${datos['referido_nombre']}`);
+            } else {
+                console.warn('[Dispatcher] REFERIDO_REGISTRADO: líder no encontrado para codigo_referido:', datos['codigo_referido']);
+            }
+        }
+
+        // ============================================================
         // ENRIQUECIMIENTO AUTOMÁTICO DE DATOS DE SUSCRIPCIÓN
         // ============================================================
         if (datos['usuario_id'] || datos['id']) {
@@ -127,7 +189,7 @@ Deno.serve(async (req: Request) => {
             
             const { data: user, error: userError } = await supabase
                 .from('users')
-                .select('plan_id, fecha_vencimiento_plan, plan_expires_at, created_at, fecha_registro, link_pago_manual, nombres, apellidos, email')
+                .select('plan_id, fecha_vencimiento_plan, plan_expires_at, created_at, fecha_registro, link_pago_manual, nombres, apellidos, email, codigo_referido_personal')
                 .eq('id', uid)
                 .maybeSingle();
 
@@ -140,6 +202,15 @@ Deno.serve(async (req: Request) => {
                 datosEnriquecidos['nombres'] = datos['nombres'] || user.nombres || '';
                 datosEnriquecidos['apellidos'] = datos['apellidos'] || user.apellidos || '';
                 datosEnriquecidos['email'] = datos['email'] || user.email || '';
+                // Código de referido personal del usuario
+                if (user.codigo_referido_personal) {
+                    datosEnriquecidos['codigo_referido_personal'] = user.codigo_referido_personal;
+                    datosEnriquecidos['codigo_referido'] = user.codigo_referido_personal;
+                }
+                // referido_nombre: nombre de quien se registró con el link (viene en datos desde el trigger de registro)
+                if (datos['referido_nombre']) {
+                    datosEnriquecidos['referido_nombre'] = datos['referido_nombre'];
+                }
 
                 if (user.plan_id) {
                     const planId = user.plan_id;

@@ -103,9 +103,28 @@ const categorizedVariables = {
     'Referidos': [
         { name: 'lider_nombre', label: 'Nombre de su Líder' },
         { name: 'total_referidos', label: 'Total de Invitados' },
-        { name: 'monto_comision', label: 'Monto de Comisión' },
-        { name: 'fecha_pago', label: 'Fecha de Pago' },
-        { name: 'banco_nombre', label: 'Banco de Destino' }
+        { name: 'monto_comision', label: 'Monto de Comisión (USD)' },
+        { name: 'comision_ganada', label: 'Comisión Ganada (USD) por Pago de Referido' },
+        { name: 'monto_pago', label: 'Monto Pagado por el Referido (USD)' },
+        { name: 'plan_referido', label: 'Plan que Compró el Referido' },
+        { name: 'fecha_pago', label: 'Fecha de Pago (Retiros)' },
+        { name: 'fecha_pago_referido', label: 'Fecha de Pago del Referido' },
+        { name: 'fecha_proximo_pago', label: 'Próximo Pago del Referido' },
+        { name: 'saldo_billetera', label: 'Saldo Actual en Billetera (USD)' },
+        { name: 'banco_nombre', label: 'Banco de Destino' },
+        { name: 'referido_nombre', label: 'Nombre del Nuevo Referido (quien se registró)' },
+        { name: 'referido_email', label: 'Email del Nuevo Referido' },
+        { name: 'comision_referido_nivel1', label: 'Porcentaje Comisión Nivel 1 (Config)' },
+        { name: 'comision_referido_nivel2', label: 'Porcentaje Comisión Nivel 2 (Config)' },
+        { name: 'vigencia_meses_comision', label: 'Meses de Vigencia Comisión (Config)' },
+        { name: 'requisito_para_lider', label: 'Referidos Mínimos para ser Líder (Config)' },
+        { name: 'referidos_cantidad', label: 'Cantidad Actual de Referidos del Líder' },
+        { name: 'fecha_cancelacion_referido', label: 'Fecha Cancelación Suscripción del Referido' },
+        { name: 'fecha_ultima_comision', label: 'Fecha Última Comisión Generada por Referido' },
+        { name: 'dias_restantes_comision', label: 'Días Restantes de Comisión sobre Referido' },
+        { name: 'comision_mensual', label: 'Comisión Mensual por Referido (USD)' },
+        { name: 'fecha_inicio_comision', label: 'Fecha Inicio Período de Comisión' },
+        { name: 'fecha_expiracion_comision', label: 'Fecha Expiración de Comisión sobre Referido' },
     ],
     'Sistema': [
         { name: 'app_url', label: 'Link a Inicio (Raíz)' },
@@ -1325,6 +1344,8 @@ export function AdminEmailTemplatesPage() {
                 fecha_registro: selectedTestUser.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
                 fecha_actualizacion: new Date().toLocaleString('es-ES'),
                 codigo_referido: selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA',
+                codigo_referido_personal: selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA',
+                referido_nombre: 'Carlos Martínez', // Ejemplo: nombre de quien se registró con el link de referido
                 // Variables de prueba genéricas para triggers que las necesiten
                 reset_link: `${window.location.origin}/actualizar-contrasena?token=PRUEBA`,
                 login_url: `${window.location.origin}/login`,
@@ -1337,7 +1358,12 @@ export function AdminEmailTemplatesPage() {
                 ...planDates,
                 monto_comision: '25.00',
                 fecha_expiracion: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                monto_pago: selectedUserPlan?.price_monthly != null ? String(selectedUserPlan.price_monthly) : '0.00',
+                monto_pago: '12.79',
+                comision_ganada: '1.92',
+                plan_referido: `${selectedUserPlan?.name || 'Plan Pro'} (Mensual)`,
+                fecha_pago_referido: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
+                fecha_proximo_pago: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
+                saldo_billetera: '32.50',
                 banco_nombre: 'Banco de Prueba',
                 numero_cuenta: '****1234',
                 referencia_pago: 'REF-PRUEBA-001',
@@ -1348,6 +1374,17 @@ export function AdminEmailTemplatesPage() {
                 lider_email: selectedTestUser.email || '',
                 referido_nombre: 'Usuario Referido (Prueba)',
                 referido_email: 'referido@prueba.com',
+                comision_referido_nivel1: '15',
+                comision_referido_nivel2: '5',
+                vigencia_meses_comision: '12',
+                requisito_para_lider: '50',
+                referidos_cantidad: '23',
+                fecha_cancelacion_referido: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
+                fecha_ultima_comision: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
+                dias_restantes_comision: '23',
+                comision_mensual: '1.92',
+                fecha_inicio_comision: new Date(Date.now() - 335 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
+                fecha_expiracion_comision: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
                 fecha_cancelacion: new Date().toISOString().split('T')[0],
                 fecha_activacion: new Date().toISOString().split('T')[0],
                 fecha_desactivacion: new Date().toISOString().split('T')[0],
@@ -1485,7 +1522,9 @@ export function AdminEmailTemplatesPage() {
 
             await configService.updateEmailTemplate(selectedTemplate.id, updatedData);
 
-            const updatedTemplate = { ...selectedTemplate, ...updatedData } as EmailItem;
+            // CRITICAL: Preserve trigger_event — updatedData doesn't include it,
+            // so we must explicitly keep it from the existing selectedTemplate
+            const updatedTemplate = { ...selectedTemplate, ...updatedData, trigger_event: selectedTemplate.trigger_event } as EmailItem;
             setTemplates(prev => prev.map(t => t.id === selectedTemplate.id ? updatedTemplate : t));
             setSelectedTemplate(updatedTemplate);
             toast.success('¡Guardado!', 'La plantilla se ha actualizado correctamente.');
@@ -1514,7 +1553,9 @@ export function AdminEmailTemplatesPage() {
                 if (trigger) {
                     // 1. Limpiar asociaciones previas (Exclusividad)
                     await (supabase as any).from('email_plantillas_triggers').delete().eq('trigger_id', trigger.id);
-                    await (supabase as any).from('email_templates').update({ trigger_event: null }).eq('trigger_event', newItem.trigger_event);
+                    await (supabase as any).from('email_templates').update({ trigger_event: null })
+                        .eq('trigger_event', newItem.trigger_event)
+                        .neq('id', data.id); // Protect newly created template
 
                     // 2. Crear nueva asociación
                     await (supabase as any).from('email_plantillas_triggers').insert({
@@ -1523,12 +1564,16 @@ export function AdminEmailTemplatesPage() {
                         activo: true,
                     });
 
-                    // 3. Update local state to remove trigger from others
-                    setTemplates(prev => prev.map(t => t.trigger_event === newItem.trigger_event ? { ...t, trigger_event: '' } : t));
+                    // 3. Ensure the returned data has the trigger_event set
+                    data.trigger_event = newItem.trigger_event;
                 }
             }
 
-            setTemplates([...templates, data]);
+            // Use functional updater to avoid stale state, clear trigger from old holders and add new template
+            setTemplates(prev => [
+                ...prev.map(t => (newItem.trigger_event && t.trigger_event === newItem.trigger_event) ? { ...t, trigger_event: '' } : t),
+                data
+            ]);
             setIsCreateModalOpen(false);
             setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
             toast.success('¡Creado!', 'La plantilla se ha creado correctamente.');
@@ -1650,14 +1695,6 @@ export function AdminEmailTemplatesPage() {
                     });
                 }
             }
-
-            // Update the template itself (redundant if already done above, but keeping for consistency with provided snippet)
-            await configService.updateEmailTemplate(itemToManage.id, {
-                name: newItem.name,
-                slug: newItem.slug,
-                description: newItem.description,
-                trigger_event: newItem.trigger_event
-            });
 
             setTemplates(prev => prev.map(t => {
                 // Update current template
@@ -1966,6 +2003,30 @@ export function AdminEmailTemplatesPage() {
             fallbacks['teléfono'] = selectedTestUser.telefono || '{{telefono}}';
             fallbacks['fecha_actualizacion'] = new Date().toLocaleDateString();
             fallbacks['nombre_completo'] = `${selectedTestUser.nombres || ''} ${selectedTestUser.apellidos || ''}`.trim();
+            // Código de referido del usuario seleccionado
+            fallbacks['codigo_referido_personal'] = selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA';
+            fallbacks['codigo_referido'] = selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA';
+            // Nombre de la persona que se registró con el link de referido (ejemplo para preview)
+            fallbacks['referido_nombre'] = 'Carlos Martínez';
+            // Configuración de referidos (valores de ejemplo, en producción vienen de sistema_referidos_config)
+            fallbacks['comision_referido_nivel1'] = '15';
+            fallbacks['comision_referido_nivel2'] = '5';
+            fallbacks['vigencia_meses_comision'] = '12';
+            fallbacks['requisito_para_lider'] = '50';
+            fallbacks['referidos_cantidad'] = '23';
+            fallbacks['fecha_cancelacion_referido'] = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            fallbacks['fecha_ultima_comision'] = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            fallbacks['dias_restantes_comision'] = '23';
+            fallbacks['comision_mensual'] = '1.92';
+            fallbacks['fecha_inicio_comision'] = new Date(Date.now() - 335 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            fallbacks['fecha_expiracion_comision'] = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            // Variables de REFERIDO_PRIMER_PAGO (valores en USD)
+            fallbacks['comision_ganada'] = '1.92';
+            fallbacks['monto_pago'] = '12.79';
+            fallbacks['plan_referido'] = 'Plan Pro (Mensual)';
+            fallbacks['fecha_pago_referido'] = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            fallbacks['fecha_proximo_pago'] = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            fallbacks['saldo_billetera'] = '32.50';
         }
 
         // Agregar explícitamente los datos del plan (sobreescribe cualquier valor anterior)
@@ -2019,10 +2080,13 @@ export function AdminEmailTemplatesPage() {
         };
         if (selectedTestUser) {
             fallbacks['dias_restantes'] = calcDiasRestantes();
-            // fecha_vencimiento como alias
+            // fecha_vencimiento: si hay fecha explícita la usa, si no copia fecha_proximo_cobro
             const fvRaw = selectedTestUser?.fecha_vencimiento_plan || selectedTestUser?.plan_expires_at;
             if (fvRaw) {
                 fallbacks['fecha_vencimiento'] = new Date(fvRaw).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            } else {
+                // Alias de fecha_proximo_cobro para usuarios sin fecha explícita
+                fallbacks['fecha_vencimiento'] = fallbacks['fecha_proximo_cobro'] || '{{fecha_vencimiento}}';
             }
         }
 
