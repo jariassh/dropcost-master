@@ -127,7 +127,7 @@ Deno.serve(async (req: Request) => {
             
             const { data: user, error: userError } = await supabase
                 .from('users')
-                .select('plan_id, fecha_vencimiento_plan, link_pago_manual, nombres, apellidos, email')
+                .select('plan_id, fecha_vencimiento_plan, plan_expires_at, created_at, fecha_registro, link_pago_manual, nombres, apellidos, email, dias_restantes')
                 .eq('id', uid)
                 .maybeSingle();
 
@@ -199,9 +199,14 @@ Deno.serve(async (req: Request) => {
                     console.log('[Dispatcher] fecha_proximo_cobro calculada desde created_at:', datosEnriquecidos['fecha_proximo_cobro']);
                 }
                 
-                // Calcular dias_restantes dinámicamente al momento del envío
+                // dias_restantes: usar el valor de la BD (actualizado por el cron) como fuente principal.
+                // Solo recalcular si no existe en BD (usuario nuevo o cron aún no corrió).
                 const fechaVenc = user.fecha_vencimiento_plan || user.plan_expires_at;
-                if (fechaVenc) {
+                if (user.dias_restantes !== null && user.dias_restantes !== undefined) {
+                    datosEnriquecidos['dias_restantes'] = String(user.dias_restantes);
+                    console.log('[Dispatcher] dias_restantes tomado de BD:', user.dias_restantes);
+                } else if (fechaVenc) {
+                    // Fallback: calcular al vuelo si el cron aún no actualizó este usuario
                     const hoy = new Date();
                     hoy.setHours(0, 0, 0, 0);
                     const vencimiento = new Date(fechaVenc);
@@ -209,11 +214,14 @@ Deno.serve(async (req: Request) => {
                     const diff = vencimiento.getTime() - hoy.getTime();
                     const dias = Math.ceil(diff / (1000 * 60 * 60 * 24));
                     datosEnriquecidos['dias_restantes'] = String(Math.max(0, dias));
-                    // Alias por compatibilidad
-                    datosEnriquecidos['fecha_vencimiento'] = new Date(fechaVenc).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-                    console.log('[Dispatcher] dias_restantes calculados:', datosEnriquecidos['dias_restantes']);
+                    console.log('[Dispatcher] dias_restantes calculado al vuelo (fallback):', datosEnriquecidos['dias_restantes']);
                 }
-                
+
+                // alias fecha_vencimiento
+                if (fechaVenc) {
+                    datosEnriquecidos['fecha_vencimiento'] = new Date(fechaVenc).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                }
+
                 datosEnriquecidos['link_pago'] = user.link_pago_manual || `${appUrl}/configuracion`;
             }
         }
