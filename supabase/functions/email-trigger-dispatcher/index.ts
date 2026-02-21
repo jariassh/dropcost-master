@@ -16,13 +16,19 @@ interface TriggerPayload {
 
 /**
  * Reemplaza todas las variables {{variable}} en un texto con los valores del objeto datos.
- * Si la variable no existe en datos, la deja como está.
+ * La búsqueda es insensible a mayúsculas para las llaves.
  */
-function reemplazarVariables(texto: string, datos: Record<string, string>): string {
-    // Match {{ variable }} or {{variable}}
+function reemplazarVariables(texto: string, datos: Record<string, any>): string {
     return texto.replace(/\{\{\s*([^}]+)\s*\}\}/g, (match, key) => {
-        const cleanKey = key.trim();
-        return datos[cleanKey] !== undefined ? datos[cleanKey] : match;
+        const cleanKey = key.trim().toLowerCase();
+        
+        // Buscar en los datos ignorando mayúsculas/minúsculas en las llaves
+        const actualKey = Object.keys(datos).find(k => k.toLowerCase() === cleanKey);
+        
+        if (actualKey && datos[actualKey] !== undefined && datos[actualKey] !== null) {
+            return String(datos[actualKey]);
+        }
+        return match;
     });
 }
 
@@ -54,7 +60,10 @@ Deno.serve(async (req: Request) => {
             .select(`
                 email_domain,
                 nombre_empresa,
+                logo_principal_url,
                 site_url,
+                email_contacto,
+                telefono,
                 color_primary,
                 color_primary_dark,
                 color_primary_light,
@@ -75,12 +84,22 @@ Deno.serve(async (req: Request) => {
         const emailDomain = config?.email_domain || 'dropcost.jariash.com';
         const nombreEmpresa = config?.nombre_empresa || 'DropCost Master';
         const appUrl = config?.site_url || 'https://app.dropcost.com';
+        const logoUrl = config?.logo_principal_url || '';
 
         // Enriquecer datos con variables globales (colores y URLs)
         const datosEnriquecidos = {
             ...datos,
+            nombre_empresa: nombreEmpresa,
+            logo_url: logoUrl,
+            email_contacto: config?.email_contacto || '',
+            email_soporte: config?.email_contacto || '',
+            telefono_soporte: config?.telefono || '',
             app_url: appUrl,
             login_url: `${appUrl}/login`,
+            // Variables para Perfil / Seguridad
+            email_anterior: datos['email_anterior'] || 'usuario.anterior@gmail.com',
+            email_nuevo: datos['email_nuevo'] || 'usuario.nuevo@gmail.com',
+            fecha_actualizacion: datos['fecha_actualizacion'] || new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
             color_primary: config?.color_primary || '#0066FF',
             color_primary_dark: config?.color_primary_dark || '#0052cc',
             color_primary_light: config?.color_primary_light || '#e6f0ff',
@@ -93,8 +112,94 @@ Deno.serve(async (req: Request) => {
             color_text_primary: config?.color_text_primary || '#1F2937',
             color_text_secondary: config?.color_text_secondary || '#6B7280',
             color_text_inverse: config?.color_text_inverse || '#FFFFFF',
+            color_text_inverse: config?.color_text_inverse || '#FFFFFF',
             color_sidebar_bg: config?.color_sidebar_bg || '#FFFFFF',
         };
+
+        // ============================================================
+        // ENRIQUECIMIENTO AUTOMÁTICO DE DATOS DE SUSCRIPCIÓN
+        // ============================================================
+        if (datos['usuario_id'] || datos['id']) {
+            const uid = datos['usuario_id'] || datos['id'];
+            console.log('[Dispatcher] Enriqueciendo datos para usuario:', uid);
+            
+            const { data: user, error: userError } = await supabase
+                .from('users')
+                .select('plan_id, fecha_vencimiento_plan, link_pago_manual, nombres, apellidos, email')
+                .eq('id', uid)
+                .maybeSingle();
+
+            if (userError) console.error('[Dispatcher] Error buscando usuario:', userError);
+
+            if (user) {
+                console.log('[Dispatcher] Usuario encontrado. plan_id:', user.plan_id);
+                
+                // Asegurar datos básicos
+                datosEnriquecidos['nombres'] = datos['nombres'] || user.nombres || '';
+                datosEnriquecidos['apellidos'] = datos['apellidos'] || user.apellidos || '';
+                datosEnriquecidos['email'] = datos['email'] || user.email || '';
+
+                if (user.plan_id) {
+                    const planId = user.plan_id;
+                    console.log('[Dispatcher] Buscando plan para planId:', planId);
+                    
+                    // Intento 1: buscar por UUID (id)
+                    let { data: plan } = await supabase
+                        .from('plans')
+                        .select('name, price_monthly, features')
+                        .eq('id', planId)
+                        .maybeSingle();
+                    
+                    // Intento 2: si no encontró por ID (era un slug), buscar por slug
+                    if (!plan) {
+                        const { data: planBySlug } = await supabase
+                            .from('plans')
+                            .select('name, price_monthly, features')
+                            .eq('slug', planId)
+                            .maybeSingle();
+                        plan = planBySlug;
+                    }
+
+                    if (plan) {
+                        console.log('[Dispatcher] Plan encontrado:', plan.name);
+                        datosEnriquecidos['plan_nombre'] = String(plan.name);
+                        // IMPORTANTE: price_monthly puede ser 0, usar != null
+                        datosEnriquecidos['plan_precio'] = plan.price_monthly != null
+                            ? String(plan.price_monthly)
+                            : '0.00';
+                        
+                        if (Array.isArray(plan.features)) {
+                            datosEnriquecidos['plan_detalles'] = plan.features
+                                .map((f: string) => `• ${f}`)
+                                .join('<br>');
+                        }
+                    } else {
+                        console.warn('[Dispatcher] Plan NO encontrado en DB. planId buscado:', planId);
+                        const fallbackName = planId.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+                        datosEnriquecidos['plan_nombre'] = fallbackName;
+                        if (!datosEnriquecidos['plan_precio']) datosEnriquecidos['plan_precio'] = '0.00';
+                    }
+                }
+
+                // Fechas y Links - con fallback calculado
+                if (user.fecha_vencimiento_plan) {
+                    const fecha = new Date(user.fecha_vencimiento_plan);
+                    datosEnriquecidos['fecha_proximo_cobro'] = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                } else if (user.plan_expires_at) {
+                    // Fallback: columna plan_expires_at (de pagos via Mercado Pago)
+                    const fecha = new Date(user.plan_expires_at);
+                    datosEnriquecidos['fecha_proximo_cobro'] = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                } else if (user.created_at || user.fecha_registro) {
+                    // Fallback final: calcular 30 días desde registro (plan activo antes de implementar el campo)
+                    const baseDate = new Date(user.created_at || user.fecha_registro);
+                    baseDate.setDate(baseDate.getDate() + 30);
+                    datosEnriquecidos['fecha_proximo_cobro'] = baseDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                    console.log('[Dispatcher] fecha_proximo_cobro calculada desde created_at:', datosEnriquecidos['fecha_proximo_cobro']);
+                }
+                
+                datosEnriquecidos['link_pago'] = user.link_pago_manual || `${appUrl}/configuracion`;
+            }
+        }
 
         // ============================================================
         // MODO PRUEBA MANUAL: plantilla_id sin trigger real
