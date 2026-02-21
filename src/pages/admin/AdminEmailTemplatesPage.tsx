@@ -83,7 +83,9 @@ const categorizedVariables = {
         { name: 'plan_nombre', label: 'Nombre del Plan Actual' },
         { name: 'plan_precio', label: 'Precio del Plan' },
         { name: 'plan_detalles', label: 'Lista de Características' },
-        { name: 'fecha_proximo_cobro', label: 'Fecha Próximo Cobro' },
+        { name: 'fecha_proximo_cobro', label: 'Fecha Próximo Cobro / Vencimiento' },
+        { name: 'dias_restantes', label: 'Días Restantes del Plan' },
+        { name: 'fecha_vencimiento', label: 'Fecha de Vencimiento' },
         { name: 'link_pago', label: 'Link de Pago Manual' },
         { name: 'estado_suscripcion', label: 'Estado (Activa/Pendiente)' }
     ],
@@ -1318,6 +1320,14 @@ export function AdminEmailTemplatesPage() {
                 monto_comision: '25.00',
                 fecha_expiracion: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
                 monto_pago: selectedUserPlan?.price_monthly != null ? String(selectedUserPlan.price_monthly) : '0.00',
+                dias_restantes: (() => {
+                    const fv = selectedTestUser?.fecha_vencimiento_plan || selectedTestUser?.plan_expires_at;
+                    if (!fv) return '30';
+                    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+                    const venc = new Date(fv); venc.setHours(0, 0, 0, 0);
+                    const diff = Math.ceil((venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+                    return String(Math.max(0, diff));
+                })(),
                 banco_nombre: 'Banco de Prueba',
                 numero_cuenta: '****1234',
                 referencia_pago: 'REF-PRUEBA-001',
@@ -1976,6 +1986,34 @@ export function AdminEmailTemplatesPage() {
         };
         if (selectedTestUser) {
             fallbacks['fecha_proximo_cobro'] = calcFechaProximoCobro();
+        }
+
+        // Calcular dias_restantes dinámicamente
+        const calcDiasRestantes = () => {
+            const fv = selectedTestUser?.fecha_vencimiento_plan || selectedTestUser?.plan_expires_at;
+            if (fv) {
+                const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+                const venc = new Date(fv); venc.setHours(0, 0, 0, 0);
+                const diff = Math.ceil((venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+                return String(Math.max(0, diff));
+            }
+            // Fallback: calcular desde created_at + 30 días
+            const reg = selectedTestUser?.created_at || selectedTestUser?.fecha_registro;
+            if (reg) {
+                const venc = new Date(reg); venc.setDate(venc.getDate() + 30);
+                const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+                const diff = Math.ceil((venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+                return String(Math.max(0, diff));
+            }
+            return '{{dias_restantes}}';
+        };
+        if (selectedTestUser) {
+            fallbacks['dias_restantes'] = calcDiasRestantes();
+            // fecha_vencimiento como alias
+            const fvRaw = selectedTestUser?.fecha_vencimiento_plan || selectedTestUser?.plan_expires_at;
+            if (fvRaw) {
+                fallbacks['fecha_vencimiento'] = new Date(fvRaw).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            }
         }
 
         Object.entries(fallbacks).forEach(([key, val]) => {

@@ -199,6 +199,21 @@ Deno.serve(async (req: Request) => {
                     console.log('[Dispatcher] fecha_proximo_cobro calculada desde created_at:', datosEnriquecidos['fecha_proximo_cobro']);
                 }
                 
+                // Calcular dias_restantes dinámicamente al momento del envío
+                const fechaVenc = user.fecha_vencimiento_plan || user.plan_expires_at;
+                if (fechaVenc) {
+                    const hoy = new Date();
+                    hoy.setHours(0, 0, 0, 0);
+                    const vencimiento = new Date(fechaVenc);
+                    vencimiento.setHours(0, 0, 0, 0);
+                    const diff = vencimiento.getTime() - hoy.getTime();
+                    const dias = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                    datosEnriquecidos['dias_restantes'] = String(Math.max(0, dias));
+                    // Alias por compatibilidad
+                    datosEnriquecidos['fecha_vencimiento'] = new Date(fechaVenc).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                    console.log('[Dispatcher] dias_restantes calculados:', datosEnriquecidos['dias_restantes']);
+                }
+                
                 datosEnriquecidos['link_pago'] = user.link_pago_manual || `${appUrl}/configuracion`;
             }
         }
