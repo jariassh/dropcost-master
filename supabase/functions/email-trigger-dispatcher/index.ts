@@ -127,7 +127,7 @@ Deno.serve(async (req: Request) => {
             
             const { data: user, error: userError } = await supabase
                 .from('users')
-                .select('plan_id, fecha_vencimiento_plan, plan_expires_at, created_at, fecha_registro, link_pago_manual, nombres, apellidos, email, dias_restantes')
+                .select('plan_id, fecha_vencimiento_plan, plan_expires_at, created_at, fecha_registro, link_pago_manual, nombres, apellidos, email')
                 .eq('id', uid)
                 .maybeSingle();
 
@@ -199,14 +199,11 @@ Deno.serve(async (req: Request) => {
                     console.log('[Dispatcher] fecha_proximo_cobro calculada desde created_at:', datosEnriquecidos['fecha_proximo_cobro']);
                 }
                 
-                // dias_restantes: usar el valor de la BD (actualizado por el cron) como fuente principal.
-                // Solo recalcular si no existe en BD (usuario nuevo o cron aún no corrió).
+                // Calcular dias_restantes dinámicamente SIEMPRE al momento del envío.
+                // Una vez que la migración corra y el cron actualice el campo, podemos leerlo d BD.
+                // Por ahora: calcular al vuelo es la fuente de verdad más confiable.
                 const fechaVenc = user.fecha_vencimiento_plan || user.plan_expires_at;
-                if (user.dias_restantes !== null && user.dias_restantes !== undefined) {
-                    datosEnriquecidos['dias_restantes'] = String(user.dias_restantes);
-                    console.log('[Dispatcher] dias_restantes tomado de BD:', user.dias_restantes);
-                } else if (fechaVenc) {
-                    // Fallback: calcular al vuelo si el cron aún no actualizó este usuario
+                if (fechaVenc) {
                     const hoy = new Date();
                     hoy.setHours(0, 0, 0, 0);
                     const vencimiento = new Date(fechaVenc);
@@ -214,12 +211,19 @@ Deno.serve(async (req: Request) => {
                     const diff = vencimiento.getTime() - hoy.getTime();
                     const dias = Math.ceil(diff / (1000 * 60 * 60 * 24));
                     datosEnriquecidos['dias_restantes'] = String(Math.max(0, dias));
-                    console.log('[Dispatcher] dias_restantes calculado al vuelo (fallback):', datosEnriquecidos['dias_restantes']);
-                }
-
-                // alias fecha_vencimiento
-                if (fechaVenc) {
-                    datosEnriquecidos['fecha_vencimiento'] = new Date(fechaVenc).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                    datosEnriquecidos['fecha_vencimiento'] = vencimiento.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                    console.log('[Dispatcher] dias_restantes calculado:', datosEnriquecidos['dias_restantes'], '| Vence:', datosEnriquecidos['fecha_vencimiento']);
+                } else if (user.created_at || user.fecha_registro) {
+                    // Fallback: created_at + 30 días (usuario sin fecha de vencimiento explícita)
+                    const base = new Date(user.created_at || user.fecha_registro);
+                    const venc = new Date(base);
+                    venc.setDate(venc.getDate() + 30);
+                    const hoy = new Date(); hoy.setHours(0,0,0,0);
+                    venc.setHours(0,0,0,0);
+                    const diff = venc.getTime() - hoy.getTime();
+                    datosEnriquecidos['dias_restantes'] = String(Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24))));
+                    datosEnriquecidos['fecha_vencimiento'] = venc.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                    console.log('[Dispatcher] dias_restantes (fallback created_at+30):', datosEnriquecidos['dias_restantes']);
                 }
 
                 datosEnriquecidos['link_pago'] = user.link_pago_manual || `${appUrl}/configuracion`;

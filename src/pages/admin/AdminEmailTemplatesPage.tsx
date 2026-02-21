@@ -1295,6 +1295,25 @@ export function AdminEmailTemplatesPage() {
                 }
             }
 
+            // Calcular dias_restantes y fecha_vencimiento desde datos del usuario (igual que el dispatcher)
+            const planDates: Record<string, string> = {};
+            const _fv = selectedTestUser?.fecha_vencimiento_plan || selectedTestUser?.plan_expires_at;
+            const _hoy = new Date(); _hoy.setHours(0, 0, 0, 0);
+            if (_fv) {
+                const _venc = new Date(_fv); _venc.setHours(0, 0, 0, 0);
+                const _diff = Math.ceil((_venc.getTime() - _hoy.getTime()) / (1000 * 60 * 60 * 24));
+                planDates['dias_restantes'] = String(Math.max(0, _diff));
+                planDates['fecha_vencimiento'] = _venc.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            } else {
+                const _reg = selectedTestUser?.created_at || selectedTestUser?.fecha_registro;
+                if (_reg) {
+                    const _venc = new Date(_reg); _venc.setDate(_venc.getDate() + 30); _venc.setHours(0, 0, 0, 0);
+                    const _diff = Math.ceil((_venc.getTime() - _hoy.getTime()) / (1000 * 60 * 60 * 24));
+                    planDates['dias_restantes'] = String(Math.max(0, _diff));
+                    planDates['fecha_vencimiento'] = _venc.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                }
+            }
+
             // Construir datos del usuario de prueba para reemplazo de variables
             const datosUsuario: Record<string, string> = {
                 usuario_id: selectedTestUser.id || '',
@@ -1315,19 +1334,10 @@ export function AdminEmailTemplatesPage() {
                 codigo: '123456',
                 plan_nombre: selectedUserPlan?.name || selectedTestUser.plan_id || 'Plan Pro',
                 fecha_inicio: new Date().toISOString().split('T')[0],
-                fecha_vencimiento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                dias_restantes: '3',
+                ...planDates,
                 monto_comision: '25.00',
                 fecha_expiracion: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
                 monto_pago: selectedUserPlan?.price_monthly != null ? String(selectedUserPlan.price_monthly) : '0.00',
-                dias_restantes: (() => {
-                    const fv = selectedTestUser?.fecha_vencimiento_plan || selectedTestUser?.plan_expires_at;
-                    if (!fv) return '30';
-                    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-                    const venc = new Date(fv); venc.setHours(0, 0, 0, 0);
-                    const diff = Math.ceil((venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-                    return String(Math.max(0, diff));
-                })(),
                 banco_nombre: 'Banco de Prueba',
                 numero_cuenta: '****1234',
                 referencia_pago: 'REF-PRUEBA-001',
