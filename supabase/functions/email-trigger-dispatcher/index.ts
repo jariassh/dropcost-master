@@ -26,7 +26,9 @@ function reemplazarVariables(texto: string, datos: Record<string, any>): string 
         const actualKey = Object.keys(datos).find(k => k.toLowerCase() === cleanKey);
         
         if (actualKey && datos[actualKey] !== undefined && datos[actualKey] !== null) {
-            return String(datos[actualKey]);
+            const valor = String(datos[actualKey]);
+            // NO reemplazar con string vacío: deja el placeholder visible
+            return valor !== '' ? valor : match;
         }
         return match;
     });
@@ -91,8 +93,8 @@ Deno.serve(async (req: Request) => {
             ...datos,
             nombre_empresa: nombreEmpresa,
             logo_url: logoUrl,
-            email_contacto: config?.email_contacto || '',
-            email_soporte: config?.email_contacto || '',
+            email_contacto: config?.email_contacto || 'soporte@dropcost.com',
+            email_soporte: config?.email_contacto || 'soporte@dropcost.com',
             telefono_soporte: config?.telefono || '',
             app_url: appUrl,
             login_url: `${appUrl}/login`,
