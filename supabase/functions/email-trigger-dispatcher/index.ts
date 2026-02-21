@@ -178,6 +178,7 @@ Deno.serve(async (req: Request) => {
         // El trigger llega con codigo_referido (del líder) y referido_nombre (nuevo usuario)
         // ============================================================
         let targetUserId = datos['usuario_id'] || datos['id'];
+        const originalPayloadUserId = datos['usuario_id']; // El usuario que disparó el trigger (el referido)
 
         if (codigo_evento === 'REFERIDO_REGISTRADO' && datos['codigo_referido']) {
             const { data: lider, error: liderError } = await supabase
@@ -196,8 +197,24 @@ Deno.serve(async (req: Request) => {
                 datosEnriquecidos['apellidos'] = lider.apellidos || '';
                 datosEnriquecidos['email'] = lider.email || '';
                 datosEnriquecidos['usuario_email'] = lider.email || '';
-                // Nombre del nuevo registrado que usó el link
-                datosEnriquecidos['referido_nombre'] = datos['referido_nombre'] || 'tu invitado';
+                
+                // Buscar el nombre real del REFERIDO para evitar el fallback "tu invitado"
+                if (originalPayloadUserId) {
+                    const { data: refUser } = await supabase
+                        .from('users')
+                        .select('nombres, apellidos')
+                        .eq('id', originalPayloadUserId)
+                        .maybeSingle();
+                    if (refUser && (refUser.nombres || refUser.apellidos)) {
+                        datosEnriquecidos['referido_nombre'] = `${refUser.nombres || ''} ${refUser.apellidos || ''}`.trim();
+                    }
+                }
+                
+                // Fallback si no se encontró en DB
+                if (!datosEnriquecidos['referido_nombre']) {
+                    datosEnriquecidos['referido_nombre'] = datos['referido_nombre'] || 'tu invitado';
+                }
+
                 datosEnriquecidos['referido_email'] = datos['referido_email'] || '';
                 datosEnriquecidos['fecha_registro'] = datos['fecha_registro'] || new Date().toISOString().split('T')[0];
                 datosEnriquecidos['codigo_referido_personal'] = lider.codigo_referido_personal || datos['codigo_referido'];
@@ -215,13 +232,29 @@ Deno.serve(async (req: Request) => {
             
             const { data: user, error: userError } = await supabase
                 .from('users')
-                .select('plan_id, fecha_vencimiento_plan, plan_expires_at, created_at, fecha_registro, link_pago_manual, nombres, apellidos, email, codigo_referido_personal')
+                .select('plan_id, fecha_vencimiento_plan, plan_expires_at, created_at, fecha_registro, link_pago_manual, nombres, apellidos, email, email_confirmed_at, codigo_referido_personal')
                 .eq('id', targetUserId)
                 .maybeSingle();
 
             if (userError) console.error('[Dispatcher] Error buscando usuario:', userError);
 
             if (user) {
+                // Si el usuario no está verificado y es un trigger de registro, generar link real de Supabase
+                if (!user.email_confirmed_at && (codigo_evento === 'USUARIO_REGISTRADO' || codigo_evento === 'BIENVENIDA')) {
+                    try {
+                        const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+                            type: 'signup',
+                            email: user.email,
+                            options: { redirectTo: appUrl }
+                        });
+                        if (linkData?.properties?.action_link) {
+                            datosEnriquecidos['verification_link'] = linkData.properties.action_link;
+                            console.log('[Dispatcher] Link de verificación generado correctamente');
+                        }
+                    } catch (err) {
+                        console.error('[Dispatcher] Error generando link de verificación:', err);
+                    }
+                }
                 // Asegurar datos básicos del destinatario (si no se pusieron arriba)
                 datosEnriquecidos['nombres'] = user.nombres || datosEnriquecidos['nombres'] || '';
                 datosEnriquecidos['apellidos'] = user.apellidos || datosEnriquecidos['apellidos'] || '';
