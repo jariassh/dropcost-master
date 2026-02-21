@@ -64,6 +64,7 @@ Deno.serve(async (req: Request) => {
                 nombre_empresa,
                 logo_principal_url,
                 site_url,
+                sitio_web,
                 email_contacto,
                 telefono,
                 color_primary,
@@ -85,7 +86,14 @@ Deno.serve(async (req: Request) => {
 
         const emailDomain = config?.email_domain || 'dropcost.jariash.com';
         const nombreEmpresa = config?.nombre_empresa || 'DropCost Master';
-        const appUrl = config?.site_url || 'https://app.dropcost.com';
+        
+        // Obtener URL base de forma robusta (evitando fallbacks hardcoded si hay config)
+        let appUrl = (config?.site_url || config?.sitio_web || '').trim();
+        if (!appUrl) appUrl = 'https://app.dropcost.com'; // Fallback final si no hay nada en DB
+        
+        // Limpiar slash final para evitar dobles slashes en concatenaciones (p.ej. /login)
+        appUrl = appUrl.replace(/\/+$/, '');
+        
         const logoUrl = config?.logo_principal_url || '';
 
         // Enriquecer datos con variables globales (colores y URLs)
@@ -124,39 +132,53 @@ Deno.serve(async (req: Request) => {
 
         // ============================================================
         // ENRIQUECIMIENTO: Configuración de Referidos (comisión y vigencia)
-        // Valores dinámicos desde sistema_referidos_config del admin
         // ============================================================
-        const { data: referralConfig } = await supabase
-            .from('sistema_referidos_config')
-            .select('comision_nivel_1, comision_nivel_2, meses_vigencia_comision, referidos_minimo_lider')
-            .order('fecha_actualizacion', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+        let referralConfig = null;
+        try {
+            const { data } = await supabase
+                .from('sistema_referidos_config')
+                .select('comision_nivel_1, comision_nivel_2, meses_vigencia_comision, referidos_minimo_lider')
+                .order('fecha_actualizacion', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+            referralConfig = data;
+        } catch (err) {
+            console.error('[Dispatcher] Error al consultar sistema_referidos_config:', err);
+        }
 
-        datosEnriquecidos['comision_referido_nivel1'] = String(referralConfig?.comision_nivel_1 ?? 15);
-        datosEnriquecidos['comision_referido_nivel2'] = String(referralConfig?.comision_nivel_2 ?? 5);
-        datosEnriquecidos['vigencia_meses_comision'] = String(referralConfig?.meses_vigencia_comision ?? 12);
-        datosEnriquecidos['requisito_para_lider'] = String(referralConfig?.referidos_minimo_lider ?? 50);
+        // Asegurar que las variables de comisión NUNCA sean vacías (usar defaults del negocio si falla query)
+        datosEnriquecidos['comision_referido_nivel1'] = String(referralConfig?.comision_nivel_1 || 15);
+        datosEnriquecidos['comision_referido_nivel2'] = String(referralConfig?.comision_nivel_2 || 5);
+        datosEnriquecidos['vigencia_meses_comision'] = String(referralConfig?.meses_vigencia_comision || 12);
+        datosEnriquecidos['requisito_para_lider'] = String(referralConfig?.referidos_minimo_lider || 50);
+        datosEnriquecidos['referido_nombre'] = datos['referido_nombre'] || 'tu invitado';
 
-        // Obtener cantidad de referidos actuales del usuario (si tiene perfil de líder)
+        // Obtener cantidad de referidos actuales del usuario/destinatario
         const recipientUserId = datosEnriquecidos['usuario_id'] || datos['usuario_id'];
         if (recipientUserId) {
-            const { data: liderData } = await supabase
-                .from('referidos_lideres')
-                .select('total_referidos')
-                .eq('user_id', recipientUserId)
-                .maybeSingle();
-            datosEnriquecidos['referidos_cantidad'] = String(liderData?.total_referidos ?? 0);
+            try {
+                const { data: liderData } = await supabase
+                    .from('referidos_lideres')
+                    .select('total_referidos')
+                    .eq('user_id', recipientUserId)
+                    .maybeSingle();
+                datosEnriquecidos['referidos_cantidad'] = String(liderData?.total_referidos ?? 0);
+            } catch (err) {
+                console.error('[Dispatcher] Error al consultar referidos_lideres:', err);
+                datosEnriquecidos['referidos_cantidad'] = '0';
+            }
         } else {
             datosEnriquecidos['referidos_cantidad'] = '0';
         }
 
-        console.log('[Dispatcher] Referral config: nivel1=', datosEnriquecidos['comision_referido_nivel1'], 'nivel2=', datosEnriquecidos['comision_referido_nivel2'], 'requisito_lider=', datosEnriquecidos['requisito_para_lider'], 'referidos_cantidad=', datosEnriquecidos['referidos_cantidad']);
+        console.log(`[Dispatcher] Config enriquecida: comision1=${datosEnriquecidos['comision_referido_nivel1']}, referido=${datosEnriquecidos['referido_nombre']}`);
 
         // ============================================================
         // CASO ESPECIAL: REFERIDO_REGISTRADO → email al LÍDER (referidor)
         // El trigger llega con codigo_referido (del líder) y referido_nombre (nuevo usuario)
         // ============================================================
+        let targetUserId = datos['usuario_id'] || datos['id'];
+
         if (codigo_evento === 'REFERIDO_REGISTRADO' && datos['codigo_referido']) {
             const { data: lider, error: liderError } = await supabase
                 .from('users')
@@ -168,6 +190,7 @@ Deno.serve(async (req: Request) => {
 
             if (lider) {
                 // El destinatario es el LÍDER, no el nuevo usuario
+                targetUserId = lider.id;
                 datosEnriquecidos['usuario_id'] = lider.id;
                 datosEnriquecidos['nombres'] = lider.nombres || '';
                 datosEnriquecidos['apellidos'] = lider.apellidos || '';
@@ -178,129 +201,70 @@ Deno.serve(async (req: Request) => {
                 datosEnriquecidos['referido_email'] = datos['referido_email'] || '';
                 datosEnriquecidos['fecha_registro'] = datos['fecha_registro'] || new Date().toISOString().split('T')[0];
                 datosEnriquecidos['codigo_referido_personal'] = lider.codigo_referido_personal || datos['codigo_referido'];
-                console.log(`[Dispatcher] REFERIDO_REGISTRADO → email a líder ${lider.email}, referido: ${datos['referido_nombre']}`);
+                console.log(`[Dispatcher] REFERIDO_REGISTRADO → Redirigiendo a líder ${lider.email}, referido: ${datosEnriquecidos['referido_nombre']}`);
             } else {
                 console.warn('[Dispatcher] REFERIDO_REGISTRADO: líder no encontrado para codigo_referido:', datos['codigo_referido']);
             }
         }
 
         // ============================================================
-        // ENRIQUECIMIENTO AUTOMÁTICO DE DATOS DE SUSCRIPCIÓN
+        // ENRIQUECIMIENTO AUTOMÁTICO DE DATOS DE SUSCRIPCIÓN / PERFIL
         // ============================================================
-        if (datos['usuario_id'] || datos['id']) {
-            const uid = datos['usuario_id'] || datos['id'];
-            console.log('[Dispatcher] Enriqueciendo datos para usuario:', uid);
+        if (targetUserId) {
+            console.log('[Dispatcher] Enriqueciendo datos para usuario/destinatario:', targetUserId);
             
             const { data: user, error: userError } = await supabase
                 .from('users')
                 .select('plan_id, fecha_vencimiento_plan, plan_expires_at, created_at, fecha_registro, link_pago_manual, nombres, apellidos, email, codigo_referido_personal')
-                .eq('id', uid)
+                .eq('id', targetUserId)
                 .maybeSingle();
 
             if (userError) console.error('[Dispatcher] Error buscando usuario:', userError);
 
             if (user) {
-                console.log('[Dispatcher] Usuario encontrado. plan_id:', user.plan_id);
+                // Asegurar datos básicos del destinatario (si no se pusieron arriba)
+                datosEnriquecidos['nombres'] = user.nombres || datosEnriquecidos['nombres'] || '';
+                datosEnriquecidos['apellidos'] = user.apellidos || datosEnriquecidos['apellidos'] || '';
+                datosEnriquecidos['email'] = user.email || datosEnriquecidos['email'] || '';
+                datosEnriquecidos['usuario_email'] = user.email || datosEnriquecidos['usuario_email'] || '';
                 
-                // Asegurar datos básicos
-                datosEnriquecidos['nombres'] = datos['nombres'] || user.nombres || '';
-                datosEnriquecidos['apellidos'] = datos['apellidos'] || user.apellidos || '';
-                datosEnriquecidos['email'] = datos['email'] || user.email || '';
-                // Código de referido personal del usuario
+                // Código de referido personal del destinatario
                 if (user.codigo_referido_personal) {
                     datosEnriquecidos['codigo_referido_personal'] = user.codigo_referido_personal;
                     datosEnriquecidos['codigo_referido'] = user.codigo_referido_personal;
                 }
-                // referido_nombre: nombre de quien se registró con el link (viene en datos desde el trigger de registro)
-                if (datos['referido_nombre']) {
-                    datosEnriquecidos['referido_nombre'] = datos['referido_nombre'];
-                }
 
                 if (user.plan_id) {
                     const planId = user.plan_id;
-                    console.log('[Dispatcher] Buscando plan para planId:', planId);
-                    
-                    // Intento 1: buscar por UUID (id)
-                    let { data: plan } = await supabase
+                    // Intento 1: buscar por UUID (id), Intento 2: buscar por slug
+                    const { data: plan } = await supabase
                         .from('plans')
                         .select('name, price_monthly, features')
-                        .eq('id', planId)
+                        .or(`id.eq.${planId},slug.eq.${planId}`)
                         .maybeSingle();
-                    
-                    // Intento 2: si no encontró por ID (era un slug), buscar por slug
-                    if (!plan) {
-                        const { data: planBySlug } = await supabase
-                            .from('plans')
-                            .select('name, price_monthly, features')
-                            .eq('slug', planId)
-                            .maybeSingle();
-                        plan = planBySlug;
-                    }
 
                     if (plan) {
-                        console.log('[Dispatcher] Plan encontrado:', plan.name);
                         datosEnriquecidos['plan_nombre'] = String(plan.name);
-                        // IMPORTANTE: price_monthly puede ser 0, usar != null
-                        datosEnriquecidos['plan_precio'] = plan.price_monthly != null
-                            ? String(plan.price_monthly)
-                            : '0.00';
-                        
+                        datosEnriquecidos['plan_precio'] = plan.price_monthly != null ? String(plan.price_monthly) : '0.00';
                         if (Array.isArray(plan.features)) {
-                            datosEnriquecidos['plan_detalles'] = plan.features
-                                .map((f: string) => `• ${f}`)
-                                .join('<br>');
+                            datosEnriquecidos['plan_detalles'] = plan.features.map((f: string) => `• ${f}`).join('<br>');
                         }
-                    } else {
-                        console.warn('[Dispatcher] Plan NO encontrado en DB. planId buscado:', planId);
-                        const fallbackName = planId.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
-                        datosEnriquecidos['plan_nombre'] = fallbackName;
-                        if (!datosEnriquecidos['plan_precio']) datosEnriquecidos['plan_precio'] = '0.00';
                     }
                 }
 
-                // Fechas y Links - con fallback calculado
-                if (user.fecha_vencimiento_plan) {
-                    const fecha = new Date(user.fecha_vencimiento_plan);
-                    datosEnriquecidos['fecha_proximo_cobro'] = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-                } else if (user.plan_expires_at) {
-                    // Fallback: columna plan_expires_at (de pagos via Mercado Pago)
-                    const fecha = new Date(user.plan_expires_at);
-                    datosEnriquecidos['fecha_proximo_cobro'] = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-                } else if (user.created_at || user.fecha_registro) {
-                    // Fallback final: calcular 30 días desde registro (plan activo antes de implementar el campo)
-                    const baseDate = new Date(user.created_at || user.fecha_registro);
-                    baseDate.setDate(baseDate.getDate() + 30);
-                    datosEnriquecidos['fecha_proximo_cobro'] = baseDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-                    console.log('[Dispatcher] fecha_proximo_cobro calculada desde created_at:', datosEnriquecidos['fecha_proximo_cobro']);
-                }
-                
-                // Calcular dias_restantes dinámicamente SIEMPRE al momento del envío.
-                // Una vez que la migración corra y el cron actualice el campo, podemos leerlo d BD.
-                // Por ahora: calcular al vuelo es la fuente de verdad más confiable.
+                // Fechas y Links
                 const fechaVenc = user.fecha_vencimiento_plan || user.plan_expires_at;
                 if (fechaVenc) {
-                    const hoy = new Date();
-                    hoy.setHours(0, 0, 0, 0);
                     const vencimiento = new Date(fechaVenc);
-                    vencimiento.setHours(0, 0, 0, 0);
-                    const diff = vencimiento.getTime() - hoy.getTime();
-                    const dias = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                    datosEnriquecidos['dias_restantes'] = String(Math.max(0, dias));
-                    datosEnriquecidos['fecha_vencimiento'] = vencimiento.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-                    console.log('[Dispatcher] dias_restantes calculado:', datosEnriquecidos['dias_restantes'], '| Vence:', datosEnriquecidos['fecha_vencimiento']);
-                } else if (user.created_at || user.fecha_registro) {
-                    // Fallback: created_at + 30 días (usuario sin fecha de vencimiento explícita)
-                    const base = new Date(user.created_at || user.fecha_registro);
-                    const venc = new Date(base);
-                    venc.setDate(venc.getDate() + 30);
                     const hoy = new Date(); hoy.setHours(0,0,0,0);
-                    venc.setHours(0,0,0,0);
-                    const diff = venc.getTime() - hoy.getTime();
-                    datosEnriquecidos['dias_restantes'] = String(Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24))));
-                    datosEnriquecidos['fecha_vencimiento'] = venc.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-                    console.log('[Dispatcher] dias_restantes (fallback created_at+30):', datosEnriquecidos['dias_restantes']);
+                    vencimiento.setHours(0,0,0,0);
+                    const diff = Math.ceil((vencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+                    
+                    datosEnriquecidos['fecha_proximo_cobro'] = vencimiento.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                    datosEnriquecidos['fecha_vencimiento'] = datosEnriquecidos['fecha_proximo_cobro'];
+                    datosEnriquecidos['dias_restantes'] = String(Math.max(0, diff));
                 }
-
+                
                 datosEnriquecidos['link_pago'] = user.link_pago_manual || `${appUrl}/configuracion`;
             }
         }
@@ -326,7 +290,7 @@ Deno.serve(async (req: Request) => {
             const senderName = plantilla.sender_name || nombreEmpresa;
             const fromEmail = `${senderPrefix}@${emailDomain}`;
             const fromFull = `${senderName} <${fromEmail}>`;
-            const toEmail = email_destino_prueba || datos['usuario_email'];
+            const toEmail = email_destino_prueba || datosEnriquecidos['email'] || datosEnriquecidos['usuario_email'] || datos['usuario_email'];
 
             if (!toEmail) {
                 return new Response(
@@ -342,10 +306,7 @@ Deno.serve(async (req: Request) => {
             let razonError: string | null = null;
 
             try {
-                // Construct the URL for the email-service function
                 const emailServiceUrl = `${supabaseUrl}/functions/v1/email-service`;
-                console.log('[email-trigger-dispatcher] Invoking email-service at:', emailServiceUrl);
-
                 const emailResponse = await fetch(emailServiceUrl, {
                     method: 'POST',
                     headers: {
@@ -360,16 +321,8 @@ Deno.serve(async (req: Request) => {
                     })
                 });
 
-                if (!emailResponse.ok) {
-                    const errorText = await emailResponse.text();
-                    console.error('[email-trigger-dispatcher] email-service failed with status:', emailResponse.status, errorText);
-                    throw new Error(`email-service responded ${emailResponse.status}: ${errorText}`);
-                } else {
-                    const responseData = await emailResponse.json().catch(() => ({}));
-                    console.log('[email-trigger-dispatcher] email-service success:', responseData);
-                }
+                if (!emailResponse.ok) throw new Error(`email-service responded ${emailResponse.status}`);
             } catch (sendError: any) {
-                console.error('[email-trigger-dispatcher] Exception calling email-service:', sendError);
                 estado = 'fallido';
                 razonError = sendError.message;
             }
@@ -378,7 +331,7 @@ Deno.serve(async (req: Request) => {
             await supabase.from('email_historial').insert({
                 plantilla_id: plantilla.id,
                 trigger_id: null,
-                usuario_id: datos['usuario_id'] || null,
+                usuario_id: targetUserId || null,
                 usuario_email: toEmail,
                 asunto_enviado: asuntoFinal,
                 contenido_html_enviado: htmlFinal,
@@ -408,13 +361,12 @@ Deno.serve(async (req: Request) => {
             .maybeSingle();
 
         if (triggerError || !trigger) {
-            console.error('[email-trigger-dispatcher] Trigger no encontrado:', codigo_evento, triggerError);
+            console.error('[email-trigger-dispatcher] Trigger no encontrado o inactivo:', codigo_evento);
             return new Response(
                 JSON.stringify({ emails_enviados: 0, mensaje: 'Trigger no encontrado o inactivo' }),
                 { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
         }
-
 
         // 3. Buscar plantillas asociadas al trigger (activas)
         let plantillasQuery = supabase
@@ -445,17 +397,13 @@ Deno.serve(async (req: Request) => {
 
         if (asocError) {
             console.error('[email-trigger-dispatcher] Error buscando plantillas:', asocError);
-            return new Response(
-                JSON.stringify({ error: 'Error buscando plantillas asociadas' }),
-                { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
+            return new Response( JSON.stringify({ error: 'Error interno' }), { status: 500, headers: corsHeaders });
         }
 
-        // Si no hay plantillas asociadas -> silencio (comportamiento esperado)
         if (!asociaciones || asociaciones.length === 0) {
             return new Response(
-                JSON.stringify({ emails_enviados: 0, mensaje: 'No hay plantillas activas asociadas al trigger' }),
-                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                JSON.stringify({ emails_enviados: 0, mensaje: 'No hay plantillas activas' }),
+                { status: 200, headers: corsHeaders }
             );
         }
 
@@ -467,23 +415,22 @@ Deno.serve(async (req: Request) => {
             const plantilla = (asociacion as any).email_templates;
             if (!plantilla) continue;
 
-            // Construir remitente desde la plantilla
             const senderPrefix = plantilla.sender_prefix || 'support';
             const senderName = plantilla.sender_name || nombreEmpresa;
             const fromEmail = `${senderPrefix}@${emailDomain}`;
             const fromFull = `${senderName} <${fromEmail}>`;
 
-            // Determinar email destinatario
-            const toEmail = tipo_envio === 'prueba' && email_destino_prueba
+            // Determinar email destinatario (Priorizar datosEnriquecidos)
+            const toEmail = (tipo_envio === 'prueba' && email_destino_prueba)
                 ? email_destino_prueba
-                : datos['usuario_email'] || datos['lider_email'];
+                : (datosEnriquecidos['email'] || datosEnriquecidos['usuario_email'] || datos['usuario_email'] || datos['email'] || datos['lider_email']);
 
             if (!toEmail) {
-                console.warn('[email-trigger-dispatcher] Sin email destinatario para trigger', codigo_evento);
+                console.warn('[email-trigger-dispatcher] Sin destinatario para trigger', codigo_evento);
                 continue;
             }
 
-            // Reemplazar variables en asunto y HTML
+            // Reemplazar variables
             const asuntoFinal = reemplazarVariables(plantilla.subject || '', datosEnriquecidos);
             const htmlFinal = reemplazarVariables(plantilla.html_content || '', datosEnriquecidos);
 
@@ -491,38 +438,27 @@ Deno.serve(async (req: Request) => {
             let razonError: string | null = null;
 
             try {
-                // 5. Llamar al email-service existente para enviar
                 const emailResponse = await fetch(`${supabaseUrl}/functions/v1/email-service`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${supabaseServiceKey}`,
                     },
-                    body: JSON.stringify({
-                        to: toEmail,
-                        from: fromFull,
-                        subject: asuntoFinal,
-                        html: htmlFinal,
-                    })
+                    body: JSON.stringify({ to: toEmail, from: fromFull, subject: asuntoFinal, html: htmlFinal })
                 });
 
-                if (!emailResponse.ok) {
-                    const errorBody = await emailResponse.text();
-                    throw new Error(`email-service respondió ${emailResponse.status}: ${errorBody}`);
-                }
-
+                if (!emailResponse.ok) throw new Error(`Status ${emailResponse.status}`);
                 emailsEnviados++;
             } catch (sendError: any) {
-                console.error('[email-trigger-dispatcher] Error enviando email:', sendError);
                 estado = 'fallido';
-                razonError = sendError.message || 'Error desconocido';
+                razonError = sendError.message;
             }
 
-            // 6. Registrar en email_historial
-            const historialEntry = {
+            // Registrar historial
+            await supabase.from('email_historial').insert({
                 plantilla_id: plantilla.id,
                 trigger_id: tipo_envio === 'prueba' ? null : trigger.id,
-                usuario_id: datos['usuario_id'] || null,
+                usuario_id: targetUserId || null,
                 usuario_email: toEmail,
                 asunto_enviado: asuntoFinal,
                 contenido_html_enviado: htmlFinal,
@@ -531,22 +467,9 @@ Deno.serve(async (req: Request) => {
                 estado,
                 razon_error: razonError,
                 tipo_envio,
-            };
-
-            const { error: historialError } = await supabase
-                .from('email_historial')
-                .insert(historialEntry);
-
-            if (historialError) {
-                console.error('[email-trigger-dispatcher] Error registrando en historial:', historialError);
-            }
-
-            resultados.push({
-                plantilla: plantilla.name,
-                email: toEmail,
-                estado,
-                razon_error: razonError
             });
+
+            resultados.push({ plantilla: plantilla.name, email: toEmail, estado });
         }
 
         return new Response(
