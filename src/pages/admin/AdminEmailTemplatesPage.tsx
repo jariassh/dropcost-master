@@ -1980,7 +1980,10 @@ export function AdminEmailTemplatesPage() {
 
         Object.entries(fallbacks).forEach(([key, val]) => {
             const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'gi');
-            rendered = rendered.replace(regex, val);
+            // NO reemplazar con string vacío: deja el placeholder visible
+            if (val !== '') {
+                rendered = rendered.replace(regex, val);
+            }
         });
 
         return rendered;
