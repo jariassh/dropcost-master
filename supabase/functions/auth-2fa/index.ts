@@ -6,16 +6,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Helper: disparar trigger de email (fire-and-forget)
+// Helper: disparar trigger de email (Esperar respuesta para depuración)
 async function dispararTrigger(supabaseUrl: string, serviceKey: string, codigo_evento: string, datos: Record<string, string>) {
     try {
-        await fetch(`${supabaseUrl}/functions/v1/email-trigger-dispatcher`, {
+        const response = await fetch(`${supabaseUrl}/functions/v1/email-trigger-dispatcher`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` },
+            headers: { 
+              'Content-Type': 'application/json', 
+              'Authorization': `Bearer ${serviceKey}` 
+            },
             body: JSON.stringify({ codigo_evento, datos }),
         });
+        
+        if (!response.ok) {
+          const errorBody = await response.text();
+          console.error(`[email-trigger] Dispatcher respondió error (${response.status}):`, errorBody);
+          return { success: false, status: response.status, error: errorBody };
+        }
+        
+        const result = await response.json();
+        return { success: true, ...result };
     } catch (e) {
         console.error(`[email-trigger] Error disparando ${codigo_evento}:`, e);
+        return { success: false, error: e.message };
     }
 }
 
@@ -45,7 +58,10 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const adminClient = createClient(supabaseUrl, supabaseServiceKey)
 
-    const { action, code } = await req.json()
+    const body = await req.json()
+    console.log(`[auth-2fa] Body recibido:`, JSON.stringify(body))
+    const { action, code } = body
+    console.log(`[auth-2fa] Acción: ${action} | Código: ${code ? '***' : 'N/A'}`)
 
     // ACCIÓN: SOLICITAR CÓDIGO
     if (action === 'request') {
@@ -245,6 +261,126 @@ serve(async (req) => {
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
+    }
+
+    // ACCIÓN: SOLICITAR CAMBIO DE EMAIL (OTP al correo nuevo)
+    if (action === 'request_email_change') {
+      const { new_email } = body;
+      if (!new_email) throw new Error('El nuevo correo es requerido');
+      
+      console.log(`Solicitando cambio de email para usuario ${user.id} a: ${new_email}`);
+
+      // 1. Validar que no sea el mismo correo
+      if (user.email === new_email) {
+          throw new Error('El nuevo correo debe ser diferente al actual');
+      }
+
+      // 2. Validar que el correo no esté en uso por otro usuario (opcional pero recomendado)
+      const { data: existingUser } = await adminClient
+          .from('users')
+          .select('id')
+          .eq('email', new_email)
+          .maybeSingle();
+      
+      if (existingUser) {
+          throw new Error('Este correo ya está registrado por otro usuario');
+      }
+
+      const otp = Math.floor(100000 + Math.random() * 900000).toString()
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 min para cambio email
+
+      // Guardar en la tabla auth_codes con metadatos
+      const { error: dbError } = await adminClient
+        .from('auth_codes')
+        .insert({
+          user_id: user.id,
+          code_hash: otp,
+          expires_at: expiresAt,
+          metadata: { action: 'email_change', new_email }
+        })
+
+      if (dbError) throw dbError;
+      
+      // Enviar email al NUEVO correo
+      console.log(`[auth-2fa] Disparando trigger AUTH_EMAIL_CHANGE_CODE hacia: ${new_email}`);
+      const triggerResult = await dispararTrigger(supabaseUrl, supabaseServiceKey, 'AUTH_EMAIL_CHANGE_CODE', {
+        usuario_id: user.id,
+        usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
+        email_nuevo: new_email,
+        email_anterior: user.email ?? '',
+        codigo_2fa: otp,
+        codigo: otp,
+        expira_en: '10 minutos'
+      });
+
+      console.log(`[auth-2fa] Resultado del dispatcher:`, JSON.stringify(triggerResult));
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: `Código generado. Estado del envío: ${triggerResult.success ? 'Enviado' : 'Fallo Dispatcher'}`,
+        debug_dispatcher: triggerResult 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // ACCIÓN: VERIFICAR Y CONFIRMAR CAMBIO DE EMAIL
+    if (action === 'verify_email_change') {
+        const inputCode = String(code).trim();
+        
+        if (!inputCode) throw new Error('Código es requerido');
+  
+        // 1. Buscar el código válido para cambio de email
+        const { data: codeData, error: fetchError } = await adminClient
+            .from('auth_codes')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('code_hash', inputCode)
+            .contains('metadata', { action: 'email_change' })
+            .gt('expires_at', new Date().toISOString())
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+    
+        if (fetchError || !codeData) {
+            return new Response(JSON.stringify({ success: false, error: 'Código inválido o ya expiró' }), {
+                status: 200,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
+        }
+
+        const newEmail = codeData.metadata?.new_email;
+        if (!newEmail) throw new Error('No se encontró el nuevo correo en la solicitud');
+
+        // 2. Ejecutar cambio en AUTH (Admin)
+        const { error: authUpdateError } = await adminClient.auth.admin.updateUserById(user.id, {
+            email: newEmail,
+            email_confirm: true
+        });
+
+        if (authUpdateError) throw authUpdateError;
+
+        // 3. Sincronizar tabla public.users (por si el trigger tarda o falla)
+        await adminClient
+            .from('users')
+            .update({ email: newEmail })
+            .eq('id', user.id);
+    
+        // 4. Limpiar códigos del usuario
+        await adminClient.from('auth_codes').delete().eq('user_id', user.id)
+        
+        // 5. Trigger final de confirmación (Notificación de éxito)
+        dispararTrigger(supabaseUrl, supabaseServiceKey, 'EMAIL_CAMBIADO', {
+            usuario_id: user.id,
+            usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
+            email_nuevo: newEmail,
+            email_anterior: user.email ?? '',
+            fecha_cambio: new Date().toISOString().split('T')[0]
+        });
+
+        return new Response(JSON.stringify({ success: true, message: 'Correo actualizado correctamente' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
     }
 
     throw new Error('Acción no reconocida')

@@ -1,4 +1,8 @@
 
+[functions.email-trigger-dispatcher]
+enabled = true
+verify_jwt = false
+
 [functions.auth-2fa]
 enabled = true
 verify_jwt = false

@@ -112,6 +112,8 @@ export interface AuthState {
     requestPasswordReset: (data: PasswordResetRequest) => Promise<boolean>;
     updatePassword: (newPassword: string) => Promise<boolean>;
     updateEmail: (newEmail: string) => Promise<boolean>;
+    requestEmailChange: (newEmail: string) => Promise<{ success: boolean; error?: string }>;
+    verifyEmailChange: (code: string) => Promise<boolean>;
     updateProfile: (userData: Partial<User>) => Promise<boolean>;
     request2FA: () => Promise<{ success: boolean; error?: string }>;
     resend2FACode: () => Promise<boolean>;
