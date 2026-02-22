@@ -145,7 +145,7 @@ export const configService = {
         }
         
         if (!data) {
-             console.warn('No se encontró configuración global. Using default.');
+             console.log('[ConfigService] Usando configuración por defecto (ID: ' + CONFIG_ID + ')');
              // Instead of throwing, we might just return default values or null
              // For now, let's return default values simulating a fetched config
              // so the app doesn't crash on login

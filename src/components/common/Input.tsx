@@ -9,6 +9,7 @@ interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'>
     rightIcon?: React.ReactNode;
     rightElement?: React.ReactNode;
     showPasswordToggle?: boolean;
+    children?: React.ReactNode;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -25,6 +26,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             id,
             className = '',
             disabled,
+            children,
             ...props
         },
         ref
@@ -156,6 +158,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                             {rightElement || rightIcon}
                         </span>
                     )}
+                    {children}
                 </div>
                 {error && (
                     <p style={{ fontSize: '12px', color: 'var(--color-error)', margin: 0 }}>
