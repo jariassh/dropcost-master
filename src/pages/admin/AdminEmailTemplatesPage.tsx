@@ -2640,27 +2640,13 @@ export function AdminEmailTemplatesPage() {
                                             }}
                                         >
                                             <option value="">Sin Disparador Automático</option>
-
-                                            {/* Categoría: Usuario */}
-                                            <optgroup label="Usuario">
-                                                {availableTriggers.filter(t => t.categoria === 'usuario').map(t => (
-                                                    <option key={t.id} value={t.codigo_evento}>{t.nombre_trigger}</option>
-                                                ))}
-                                            </optgroup>
-
-                                            {/* Categoría: Referidos */}
-                                            <optgroup label="Referidos">
-                                                {availableTriggers.filter(t => t.categoria === 'referido').map(t => (
-                                                    <option key={t.id} value={t.codigo_evento}>{t.nombre_trigger}</option>
-                                                ))}
-                                            </optgroup>
-
-                                            {/* Categoría: Pago */}
-                                            <optgroup label="Pagos">
-                                                {availableTriggers.filter(t => t.categoria === 'pago').map(t => (
-                                                    <option key={t.id} value={t.codigo_evento}>{t.nombre_trigger}</option>
-                                                ))}
-                                            </optgroup>
+                                            {Array.from(new Set(availableTriggers.map(t => t.categoria || 'otro'))).map(categoria => (
+                                                <optgroup key={categoria} label={categoria.charAt(0).toUpperCase() + categoria.slice(1)}>
+                                                    {availableTriggers.filter(t => (t.categoria || 'otro') === categoria).map(t => (
+                                                        <option key={t.id} value={t.codigo_evento}>{t.nombre_trigger}</option>
+                                                    ))}
+                                                </optgroup>
+                                            ))}
                                         </select>
                                     </div>
 
@@ -3391,27 +3377,15 @@ export function AdminEmailTemplatesPage() {
                                 }}
                             >
                                 <option value="">Sin Disparador Automático</option>
-                                {availableTriggers.length === 0 ? (
-                                    <option disabled>Cargando triggers...</option>
-                                ) : (
-                                    [
-                                        { key: 'usuario', label: '👤 Usuario' },
-                                        { key: 'referido', label: '🤝 Referidos' },
-                                        { key: 'pago', label: '💳 Pagos' },
-                                    ].map(({ key, label }) => {
-                                        const group = availableTriggers.filter(t => t.categoria === key);
-                                        if (group.length === 0) return null;
-                                        return (
-                                            <optgroup key={key} label={label}>
-                                                {group.map(t => (
-                                                    <option key={t.id} value={t.codigo_evento}>
-                                                        {t.nombre_trigger}
-                                                    </option>
-                                                ))}
-                                            </optgroup>
-                                        );
-                                    })
-                                )}
+                                {Array.from(new Set(availableTriggers.map(t => t.categoria || 'otro'))).map(categoria => (
+                                    <optgroup key={categoria} label={categoria.charAt(0).toUpperCase() + categoria.slice(1)}>
+                                        {availableTriggers.filter(t => (t.categoria || 'otro') === categoria).map(t => (
+                                            <option key={t.id} value={t.codigo_evento}>
+                                                {t.nombre_trigger}
+                                            </option>
+                                        ))}
+                                    </optgroup>
+                                ))}
                             </select>
                             {newItem.trigger_event && (() => {
                                 const selected = availableTriggers.find(t => t.codigo_evento === newItem.trigger_event);

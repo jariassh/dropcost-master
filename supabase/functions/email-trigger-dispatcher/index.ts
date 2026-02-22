@@ -19,11 +19,14 @@ interface TriggerPayload {
  * La búsqueda es insensible a mayúsculas para las llaves.
  */
 function reemplazarVariables(texto: string, datos: Record<string, any>): string {
-    return texto.replace(/\{\{\s*([^}]+)\s*\}\}/g, (match, key) => {
-        const cleanKey = key.trim().toLowerCase();
+    // Soportar tanto {{variable}} como ${variable}
+    const regex = /\{\{\s*([^}]+)\s*\}\}|\$\{\s*([^}]+)\s*\}/g;
+    
+    return texto.replace(regex, (match, key1, key2) => {
+        const key = (key1 || key2).trim().toLowerCase();
         
         // Buscar en los datos ignorando mayúsculas/minúsculas en las llaves
-        const actualKey = Object.keys(datos).find(k => k.toLowerCase() === cleanKey);
+        const actualKey = Object.keys(datos).find(k => k.toLowerCase() === key);
         
         if (actualKey && datos[actualKey] !== undefined && datos[actualKey] !== null) {
             const valor = String(datos[actualKey]);
@@ -47,9 +50,11 @@ Deno.serve(async (req: Request) => {
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
         const payload: any = await req.json();
+        console.log(`[Dispatcher] Payload recibido:`, JSON.stringify(payload));
         const { codigo_evento, datos, tipo_envio = 'automatico', targetId: payloadTargetId } = payload;
-
+        
         if (!codigo_evento) {
+            console.error(`[Dispatcher] ERROR: No se proporcionó codigo_evento`);
             return new Response(
                 JSON.stringify({ error: 'codigo_evento es requerido' }),
                 { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -342,7 +347,7 @@ Deno.serve(async (req: Request) => {
             await supabase.from('email_historial').insert({
                 plantilla_id: plantilla.id,
                 trigger_id: null,
-                usuario_id: targetUserId || null,
+                usuario_id: targetId || null,
                 usuario_email: toEmail,
                 asunto_enviado: asuntoFinal,
                 contenido_html_enviado: htmlFinal,
@@ -416,6 +421,8 @@ Deno.serve(async (req: Request) => {
             return new Response( JSON.stringify({ error: 'Error interno buscando asociaciones', details: asocError.message }), { status: 500, headers: corsHeaders });
         }
 
+        console.log(`[Dispatcher] Encontradas ${asociaciones ? asociaciones.length : 0} asociaciones totales para el trigger ${trigger.id}`);
+
         if (!asociaciones || asociaciones.length === 0) {
             return new Response(
                 JSON.stringify({ emails_enviados: 0, mensaje: `INFO: No hay plantillas vinculadas al evento '${codigo_evento}'.` }),
@@ -451,10 +458,14 @@ Deno.serve(async (req: Request) => {
             const fromEmail = `${senderPrefix}@${emailDomain}`;
             const fromFull = `${senderName} <${fromEmail}>`;
 
-            // Determinar email destinatario (Priorizar datosEnriquecidos)
+            // Determinar email destinatario (Priorizar datos específicos de destino si existen)
+            // Prioridad: email_nuevo (para cambios de correo) -> email_destino -> otros fallbacks
             const toEmail = (tipo_envio === 'prueba' && email_destino_prueba)
                 ? email_destino_prueba
-                : (datosEnriquecidos['email'] || datosEnriquecidos['usuario_email'] || datos['usuario_email'] || datos['email'] || datos['lider_email']);
+                : (datos['email_nuevo'] || datos['email_destino'] || datosEnriquecidos['email_nuevo'] || datosEnriquecidos['email'] || datosEnriquecidos['usuario_email'] || datos['usuario_email'] || datos['email'] || datos['lider_email']);
+
+            console.log(`[Dispatcher] Destinatario final para ${codigo_evento}: ${toEmail}`);
+            console.log(`[Dispatcher] Datos raw email_nuevo: ${datos['email_nuevo']}, email_destino: ${datos['email_destino']}`);
 
             if (!toEmail) {
                 console.warn('[email-trigger-dispatcher] Sin destinatario para trigger', codigo_evento);
@@ -523,7 +534,11 @@ Deno.serve(async (req: Request) => {
     } catch (error: any) {
         console.error('[email-trigger-dispatcher] Error inesperado:', error);
         return new Response(
-            JSON.stringify({ error: error.message || 'Error interno del servidor' }),
+            JSON.stringify({ 
+                error: error.message || 'Error interno del servidor',
+                stack: error.stack,
+                details: error
+            }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
     }

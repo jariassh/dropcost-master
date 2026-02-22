@@ -70,6 +70,8 @@ export function ConfiguracionPage() {
         user,
         updatePassword,
         updateEmail,
+        requestEmailChange,
+        verifyEmailChange,
         updateProfile,
         request2FA,
         confirm2FA,
@@ -178,6 +180,11 @@ export function ConfiguracionPage() {
     const [showOTPModal, setShowOTPModal] = useState(false);
     const [otpCode, setOtpCode] = useState('');
     const [isVerifying, setIsVerifying] = useState(false);
+
+    // Email Change Flow
+    const [showEmailOTPModal, setShowEmailOTPModal] = useState(false);
+    const [isRequestingEmailChange, setIsRequestingEmailChange] = useState(false);
+    const [isVerifyingEmailChange, setIsVerifyingEmailChange] = useState(false);
 
     useEffect(() => {
         setIs2FAEnabled(user?.twoFactorEnabled || false);
@@ -322,6 +329,8 @@ export function ConfiguracionPage() {
 
 
     const handleUpdateEmail = async () => {
+        console.log('[ConfiguracionPage] Click en Solicitar Cambio de Email. Nuevo:', emailData.newEmail);
+
         if (!emailData.newEmail || !emailData.newEmail.includes('@')) {
             toast.warning('Email inválido', 'Por favor ingresa un correo electrónico válido.');
             return;
@@ -331,15 +340,37 @@ export function ConfiguracionPage() {
             return;
         }
 
-        setIsUpdatingEmail(true);
-        const success = await updateEmail(emailData.newEmail);
-        setIsUpdatingEmail(false);
+        setIsRequestingEmailChange(true);
+        console.log('[ConfiguracionPage] Llamando a requestEmailChange desde el store...');
+        const result = await requestEmailChange(emailData.newEmail);
+        setIsRequestingEmailChange(false);
+
+        console.log('[ConfiguracionPage] Resultado de requestEmailChange:', result);
+
+        if (result.success) {
+            setOtpCode('');
+            setShowEmailOTPModal(true);
+            toast.success('Código enviado', `Hemos enviado un código de verificación a ${emailData.newEmail}`);
+        } else {
+            toast.error('Error', result.error || 'No pudimos procesar la solicitud de cambio de email.');
+        }
+    };
+
+    const handleVerifyEmailChange = async () => {
+        if (otpCode.length < 6) return;
+
+        setIsVerifyingEmailChange(true);
+        const success = await verifyEmailChange(otpCode);
+        setIsVerifyingEmailChange(false);
 
         if (success) {
+            setShowEmailOTPModal(false);
+            setOtpCode('');
             setEmailData({ newEmail: '' });
-            toast.success('Verificación enviada', 'Hemos enviado un link de confirmación a tu nuevo correo. El cambio se aplicará al confirmar.');
+            toast.success('Email actualizado', 'Tu correo ha sido cambiado correctamente.');
         } else {
-            toast.error('Error al actualizar', 'No pudimos procesar la solicitud de cambio de email.');
+            const errorMsg = useAuthStore.getState().error || 'Código incorrecto o expirado';
+            toast.error('Error de verificación', errorMsg);
         }
     };
 
@@ -755,13 +786,13 @@ export function ConfiguracionPage() {
                             className="dc-button-primary"
                             style={{ marginTop: '24px', width: '100%', gap: '8px', justifyContent: 'center' }}
                             onClick={handleUpdateEmail}
-                            disabled={isUpdatingEmail}
+                            disabled={isRequestingEmailChange || !emailData.newEmail}
                         >
-                            {isUpdatingEmail ? <Spinner size="sm" /> : <Save size={16} />}
+                            {isRequestingEmailChange ? <Spinner size="sm" /> : <Save size={16} />}
                             Solicitar Cambio de Email
                         </button>
                         <p style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-tertiary)', textAlign: 'center', fontStyle: 'italic' }}>
-                            * Se enviará un enlace de verificación a la nueva dirección.
+                            * Se enviará un código de verificación a la nueva dirección.
                         </p>
                     </Card>
 
@@ -1461,6 +1492,66 @@ export function ConfiguracionPage() {
                             disabled={otpCode.length < 6}
                         >
                             Verificar y Activar
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Modal OTP para Cambio de Email */}
+            <Modal
+                isOpen={showEmailOTPModal}
+                onClose={() => setShowEmailOTPModal(false)}
+                title="Confirmar Nuevo Correo"
+                size="sm"
+            >
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                        width: '64px', height: '64px', borderRadius: '50%',
+                        backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)', color: 'var(--color-primary)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        margin: '0 auto 20px'
+                    }}>
+                        <RefreshCw size={32} />
+                    </div>
+                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
+                        Ingresa el código enviado a <strong>{emailData.newEmail}</strong> para completar el cambio.
+                    </p>
+                    <input
+                        type="text"
+                        placeholder="000000"
+                        maxLength={6}
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                        style={{
+                            width: '100%',
+                            fontSize: '24px',
+                            fontWeight: 700,
+                            letterSpacing: '8px',
+                            textAlign: 'center',
+                            padding: '12px',
+                            borderRadius: '12px',
+                            border: '2px solid var(--border-color)',
+                            backgroundColor: 'var(--bg-secondary)',
+                            color: 'var(--text-primary)',
+                            marginBottom: '24px'
+                        }}
+                    />
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <Button
+                            variant="secondary"
+                            fullWidth
+                            onClick={() => setShowEmailOTPModal(false)}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            variant="primary"
+                            fullWidth
+                            onClick={handleVerifyEmailChange}
+                            isLoading={isVerifyingEmailChange}
+                            disabled={otpCode.length < 6}
+                        >
+                            Confirmar Cambio
                         </Button>
                     </div>
                 </div>

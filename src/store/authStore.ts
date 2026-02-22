@@ -211,6 +211,49 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
     },
 
+    requestEmailChange: async (newEmail: string) => {
+        console.log('[authStore] Solicitando cambio de email a:', newEmail);
+        set({ isLoading: true, error: null });
+        try {
+            const response = await authService.requestEmailChange(newEmail);
+            console.log('[authStore] Respuesta solicitud email change:', response);
+            
+            if (!response.success) {
+                const errorMsg = response.error || 'Error al solicitar cambio de email';
+                set({ isLoading: false, error: errorMsg });
+                return { success: false, error: errorMsg };
+            }
+            set({ isLoading: false });
+            return { success: true };
+        } catch (err) {
+            console.error('[authStore] Error en requestEmailChange:', err);
+            const errorMsg = 'Error al solicitar cambio de email';
+            set({ isLoading: false, error: errorMsg });
+            return { success: false, error: errorMsg };
+        }
+    },
+
+    verifyEmailChange: async (code: string) => {
+        console.log('[authStore] Verificando código de cambio de email:', code);
+        set({ isLoading: true, error: null });
+        try {
+            const response = await authService.verifyEmailChange(code);
+            console.log('[authStore] Respuesta verificación email change:', response);
+            
+            if (!response.success) {
+                set({ isLoading: false, error: response.error });
+                return false;
+            }
+            const user = await authService.getCurrentUser();
+            set({ isLoading: false, user });
+            return true;
+        } catch (err) {
+            console.error('[authStore] Error en verifyEmailChange:', err);
+            set({ isLoading: false, error: 'Error al verificar cambio de email' });
+            return false;
+        }
+    },
+
     updateProfile: async (userData: Partial<User>) => {
         set({ isLoading: true, error: null });
         try {

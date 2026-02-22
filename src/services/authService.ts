@@ -146,12 +146,17 @@ export async function getCurrentUser(): Promise<User | null> {
         
         // Si falla por slug, intentamos por id (backup strategy)
         if (planError || !planData) {
-             const { data: planDataById } = await supabase
-                .from('plans')
-                .select('name, limits')
-                .eq('id', profile.plan_id)
-                .maybeSingle();
-             planDetails = planDataById;
+             // Solo intentar si parece un UUID (evita error 400 con 'plan_free')
+             const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(profile.plan_id);
+             
+             if (isUUID) {
+                const { data: planDataById } = await supabase
+                    .from('plans')
+                    .select('name, limits')
+                    .eq('id', profile.plan_id)
+                    .maybeSingle();
+                planDetails = planDataById;
+             }
         } else {
              planDetails = planData;
         }
@@ -206,7 +211,17 @@ export async function updatePassword(newPassword: string): Promise<AuthResponse>
     return { success: true };
 }
 
+export async function requestEmailChange(newEmail: string): Promise<AuthResponse> {
+    return invoke2FA('request_email_change', { new_email: newEmail });
+}
+
+export async function verifyEmailChange(code: string): Promise<AuthResponse> {
+    return invoke2FA('verify_email_change', { code });
+}
+
 export async function updateEmail(newEmail: string): Promise<AuthResponse> {
+    // This is the legacy method that used direct Supabase link confirmation.
+    // We now prefer requestEmailChange + verifyEmailChange
     const { data: { user } } = await supabase.auth.getUser();
     const previousEmail = user?.email || '';
 
@@ -255,13 +270,18 @@ export async function resendVerificationEmail(email: string): Promise<AuthRespon
 // 2FA Functions using Edge Function
 
 async function invoke2FA(action: string, extra: any = {}): Promise<AuthResponse> {
+    console.log(`[authService] Invocando auth-2fa | acción: ${action}`, extra);
+    
     const { data, error } = await supabase.functions.invoke('auth-2fa', {
         body: { action, ...extra }
     });
 
     if (error) {
+        console.error(`[authService] Error invocando auth-2fa (${action}):`, error);
         return { success: false, error: translateError(error.message) };
     }
+    
+    console.log(`[authService] Respuesta de auth-2fa (${action}):`, data);
     
     // Edge function returns standard JSON format
     return data; 
