@@ -58,7 +58,9 @@ import {
     AlertTriangle,
     ShieldCheck,
     Star,
-    ArrowUpCircle
+    ArrowUpCircle,
+    ArrowRight,
+    CreditCard
 } from 'lucide-react';
 
 type TabType = 'perfil' | 'membresia' | 'seguridad' | 'notificaciones' | 'sesiones' | 'tiendas';
@@ -557,86 +559,124 @@ export function ConfiguracionPage() {
                 <div style={{ animation: 'fadeIn 0.3s' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '32px' }} className="dc-config-grid">
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                            <Card>
-                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px' }}>
-                                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                                        <div style={{
-                                            width: '56px', height: '56px', borderRadius: '16px',
-                                            backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            color: 'var(--color-primary)'
-                                        }}>
-                                            <Zap size={28} />
+                            {user?.estadoSuscripcion === 'activa' && (
+                                <Card>
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px' }}>
+                                        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                                            <div style={{
+                                                width: '56px', height: '56px', borderRadius: '16px',
+                                                backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                color: 'var(--color-primary)'
+                                            }}>
+                                                <Zap size={28} />
+                                            </div>
+                                            <div>
+                                                <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>
+                                                    {user?.plan?.name?.toLowerCase().includes('suscripción')
+                                                        ? user.plan.name
+                                                        : `Plan ${user?.plan?.name || 'Starter'}`}
+                                                </h3>
+                                                <p style={{ margin: '4px 0 0', fontSize: '14px', color: 'var(--text-tertiary)' }}>
+                                                    Estado: <Badge variant={user?.estadoSuscripcion === 'activa' ? 'success' : 'warning'}>
+                                                        {user?.estadoSuscripcion?.toUpperCase() || 'ACTIVA'}
+                                                    </Badge>
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>
-                                                Plan {user?.plan?.name || 'Básico'}
-                                            </h3>
-                                            <p style={{ margin: '4px 0 0', fontSize: '14px', color: 'var(--text-tertiary)' }}>
-                                                Estado: <Badge variant={user?.estadoSuscripcion === 'activa' ? 'success' : 'warning'}>
-                                                    {user?.estadoSuscripcion?.toUpperCase() || 'ACTIVA'}
-                                                </Badge>
-                                            </p>
-                                        </div>
-                                    </div>
-                                    {user?.planId !== 'plan_enterprise' && (
-                                        <Button
-                                            variant="primary"
-                                            onClick={() => navigate('/pricing')}
-                                            style={{ gap: '8px' }}
-                                        >
-                                            <ArrowUpCircle size={18} />
-                                            Mejorar Plan
-                                        </Button>
-                                    )}
-                                </div>
-
-                                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
-                                    <h4 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '16px', color: 'var(--text-primary)' }}> BENEFICIOS DE TU PLAN</h4>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                                        <FeatureItem label={`Máximo ${user?.plan?.limits?.stores} tiendas`} active />
-                                        <FeatureItem label={`${user?.plan?.limits?.costeos_limit || 'Ilimitados'} costeos`} active />
-                                        <FeatureItem label={`${user?.plan?.limits?.offers_limit || 'Ilimitadas'} ofertas sugeridas`} active />
-                                        <FeatureItem label="Soporte Prioritario" active={user?.planId !== 'plan_free'} />
-                                        <FeatureItem label="Acceso a Billetera" active={user?.plan?.limits?.access_wallet} />
-                                        <FeatureItem label="Sistema de Referidos" active={user?.plan?.limits?.access_referrals} />
-                                        <FeatureItem label="Duplicado de Costeos" active={user?.plan?.limits?.can_duplicate_costeos} />
-                                        <FeatureItem label="Duplicado de Ofertas" active={!!user?.plan?.limits?.can_duplicate_offers} />
-                                    </div>
-                                </div>
-                            </Card>
-
-                            <Card>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                                    <Clock size={20} color="var(--text-secondary)" />
-                                    <h4 style={{ margin: 0, fontWeight: 700 }}>Vencimiento de Suscripción</h4>
-                                </div>
-                                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 20px', lineHeight: 1.6 }}>
-                                    Tu suscripción no tiene cobros automáticos. Para mantener tus beneficios activos sin interrupciones, debes realizar el pago manualmente antes del <strong>{user?.fechaVencimiento ? new Date(user.fechaVencimiento).toLocaleDateString() : 'Próximamente'}.</strong> Contamos con un periodo de gracia de 3 días antes de la suspensión automática.
-                                </p>
-
-                                {(() => {
-                                    const daysRemaining = user?.fechaVencimiento
-                                        ? differenceInDays(parseISO(user.fechaVencimiento), new Date())
-                                        : 99;
-
-                                    if (daysRemaining <= 3) {
-                                        return (
+                                        {user?.planId !== 'plan_enterprise' && (
                                             <Button
                                                 variant="primary"
-                                                fullWidth
-                                                onClick={handleRenew}
-                                                isLoading={isRenewing}
-                                                style={{ gap: '8px', justifyContent: 'center' }}
+                                                onClick={() => navigate('/pricing')}
+                                                style={{ gap: '8px' }}
                                             >
-                                                <CreditCardIcon size={18} />
-                                                Renovar o Pagar Ahora
+                                                <ArrowUpCircle size={18} />
+                                                Mejorar Plan
                                             </Button>
-                                        );
-                                    }
-                                    return null;
-                                })()}
-                            </Card>
+                                        )}
+                                    </div>
+
+                                    <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
+                                        <h4 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '16px', color: 'var(--text-primary)' }}> BENEFICIOS DE TU PLAN</h4>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                            <FeatureItem label={`Máximo ${user?.plan?.limits?.stores} tiendas`} active />
+                                            <FeatureItem label={`${user?.plan?.limits?.costeos_limit || 'Ilimitados'} costeos`} active />
+                                            <FeatureItem label={`${user?.plan?.limits?.offers_limit || 'Ilimitadas'} ofertas sugeridas`} active />
+                                            <FeatureItem label="Soporte Prioritario" active={user?.planId !== 'plan_free'} />
+                                            <FeatureItem label="Acceso a Billetera" active={user?.plan?.limits?.access_wallet} />
+                                            <FeatureItem label="Sistema de Referidos" active={user?.plan?.limits?.access_referrals} />
+                                            <FeatureItem label="Duplicado de Costeos" active={user?.plan?.limits?.can_duplicate_costeos} />
+                                            <FeatureItem label="Duplicado de Ofertas" active={!!user?.plan?.limits?.can_duplicate_offers} />
+                                        </div>
+                                    </div>
+                                </Card>
+                            )}
+
+                            {user?.estadoSuscripcion === 'activa' ? (
+                                <Card>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                                        <Clock size={20} color="var(--text-secondary)" />
+                                        <h4 style={{ margin: 0, fontWeight: 700 }}>Vencimiento de Suscripción</h4>
+                                    </div>
+                                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 20px', lineHeight: 1.6 }}>
+                                        Tu suscripción no tiene cobros automáticos. Para mantener tus beneficios activos sin interrupciones, debes realizar el pago manualmente antes del <strong>{user?.fechaVencimiento ? new Date(user.fechaVencimiento).toLocaleDateString() : 'Próximamente'}.</strong> Contamos con un periodo de gracia de 3 días antes de la suspensión automática.
+                                    </p>
+
+                                    {(() => {
+                                        const daysRemaining = user?.fechaVencimiento
+                                            ? differenceInDays(parseISO(user.fechaVencimiento), new Date())
+                                            : 99;
+
+                                        if (daysRemaining <= 3) {
+                                            return (
+                                                <Button
+                                                    variant="primary"
+                                                    fullWidth
+                                                    onClick={handleRenew}
+                                                    isLoading={isRenewing}
+                                                    style={{ gap: '8px', justifyContent: 'center' }}
+                                                >
+                                                    <CreditCardIcon size={18} />
+                                                    Renovar o Pagar Ahora
+                                                </Button>
+                                            );
+                                        }
+                                        return null;
+                                    })()}
+                                </Card>
+                            ) : (
+                                <Card style={{
+                                    border: '1px dashed var(--color-primary)',
+                                    backgroundColor: 'rgba(0, 102, 255, 0.02)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '40px 24px',
+                                    textAlign: 'center'
+                                }}>
+                                    <div style={{
+                                        width: '64px', height: '64px', borderRadius: '50%',
+                                        backgroundColor: 'rgba(0, 102, 255, 0.1)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        color: 'var(--color-primary)', marginBottom: '20px'
+                                    }}>
+                                        <CreditCard size={32} />
+                                    </div>
+                                    <h4 style={{ margin: '0 0 8px', fontWeight: 800, fontSize: '18px', color: 'var(--text-primary)' }}>¡Activa tu Plan Starter hoy!</h4>
+                                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 24px', maxWidth: '300px', lineHeight: 1.5 }}>
+                                        Para comenzar a utilizar todas las herramientas de DropCost Master, necesitas una suscripción activa.
+                                    </p>
+                                    <Button
+                                        variant="primary"
+                                        onClick={() => navigate('/pricing')}
+                                        style={{ gap: '10px', padding: '12px 32px' }}
+                                    >
+                                        Ver Planes Disponibles
+                                        <ArrowRight size={18} />
+                                    </Button>
+                                </Card>
+                            )}
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -987,178 +1027,213 @@ export function ConfiguracionPage() {
                 </div>
             )}
 
-            {/* Contenido de Mis Tiendas */}
             {activeTab === 'tiendas' && (
                 <div style={{ animation: 'fadeIn 0.3s' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                        <div>
-                            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Gestión de Tiendas</h3>
-                            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                                Administra tus puntos de venta y sus integraciones
-                            </p>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            {/* Indicador de Cuota de Tiendas */}
-                            <div style={{
-                                padding: '8px 16px', backgroundColor: 'var(--bg-secondary)',
-                                borderRadius: '12px', border: '1px solid var(--border-color)',
-                                display: 'flex', alignItems: 'center', gap: '8px'
-                            }}>
-                                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                                    Cuota: <span style={{ color: tiendas.length >= (user?.plan?.limits?.stores || 0) && (user?.rol !== 'admin' && user?.rol !== 'superadmin') ? 'var(--color-error)' : 'var(--color-primary)' }}>
-                                        {tiendas.length}/{user?.plan?.limits?.stores || 0} Tiendas
-                                    </span>
+                    {user?.estadoSuscripcion === 'activa' ? (
+                        <>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                <div>
+                                    <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Gestión de Tiendas</h3>
+                                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                                        Administra tus puntos de venta y sus integraciones
+                                    </p>
                                 </div>
-                                <div style={{ width: '60px', height: '6px', backgroundColor: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    {/* Indicador de Cuota de Tiendas */}
                                     <div style={{
-                                        width: `${Math.min((tiendas.length / (user?.plan?.limits?.stores || 1)) * 100, 100)}%`,
-                                        height: '100%',
-                                        backgroundColor: tiendas.length >= (user?.plan?.limits?.stores || 0) && (user?.rol !== 'admin' && user?.rol !== 'superadmin') ? 'var(--color-error)' : 'var(--color-primary)'
-                                    }} />
+                                        padding: '8px 16px', backgroundColor: 'var(--bg-secondary)',
+                                        borderRadius: '12px', border: '1px solid var(--border-color)',
+                                        display: 'flex', alignItems: 'center', gap: '8px'
+                                    }}>
+                                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                            Cuota: <span style={{ color: tiendas.length >= (user?.plan?.limits?.stores || 0) && (user?.rol !== 'admin' && user?.rol !== 'superadmin') ? 'var(--color-error)' : 'var(--color-primary)' }}>
+                                                {tiendas.length}/{user?.plan?.limits?.stores || 0} Tiendas
+                                            </span>
+                                        </div>
+                                        <div style={{ width: '60px', height: '6px', backgroundColor: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
+                                            <div style={{
+                                                width: `${Math.min((tiendas.length / (user?.plan?.limits?.stores || 1)) * 100, 100)}%`,
+                                                height: '100%',
+                                                backgroundColor: tiendas.length >= (user?.plan?.limits?.stores || 0) && (user?.rol !== 'admin' && user?.rol !== 'superadmin') ? 'var(--color-error)' : 'var(--color-primary)'
+                                            }} />
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        className="dc-button-primary"
+                                        onClick={handleOpenCreateStore}
+                                        style={{ gap: '8px' }}
+                                    >
+                                        <Plus size={16} />
+                                        Nueva Tienda
+                                    </button>
                                 </div>
                             </div>
 
-                            <button
-                                className="dc-button-primary"
-                                onClick={handleOpenCreateStore}
-                                style={{ gap: '8px' }}
-                            >
-                                <Plus size={16} />
-                                Nueva Tienda
-                            </button>
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-                        {tiendas.map((tienda) => (
-                            <Card key={tienda.id}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                        <div style={{
-                                            width: '48px', height: '48px', borderRadius: '10px',
-                                            backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            overflow: 'hidden'
-                                        }}>
-                                            {tienda.logo_url ? (
-                                                <img src={tienda.logo_url} alt={tienda.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            ) : (
-                                                <Building2 size={24} style={{ color: 'var(--color-primary)' }} />
-                                            )}
-                                        </div>
-                                        <div>
-                                            <h4 style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>{tienda.nombre}</h4>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                                                <img
-                                                    src={`https://flagcdn.com/w40/${tienda.pais.toLowerCase()}.png`}
-                                                    alt={tienda.pais}
-                                                    style={{ width: '18px', borderRadius: '2px' }}
-                                                />
-                                                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
-                                                    {allCountries.find(p => p.codigo_iso_2.toUpperCase() === tienda.pais.toUpperCase())?.nombre_es || tienda.pais}
-                                                    <span style={{ margin: '0 4px', opacity: 0.5 }}>•</span>
-                                                    <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{tienda.moneda}</span>
-                                                </span>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+                                {tiendas.map((tienda) => (
+                                    <Card key={tienda.id}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                                <div style={{
+                                                    width: '48px', height: '48px', borderRadius: '10px',
+                                                    backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    overflow: 'hidden'
+                                                }}>
+                                                    {tienda.logo_url ? (
+                                                        <img src={tienda.logo_url} alt={tienda.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    ) : (
+                                                        <Building2 size={24} style={{ color: 'var(--color-primary)' }} />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <h4 style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>{tienda.nombre}</h4>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                                        <img
+                                                            src={`https://flagcdn.com/w40/${tienda.pais.toLowerCase()}.png`}
+                                                            alt={tienda.pais}
+                                                            style={{ width: '18px', borderRadius: '2px' }}
+                                                        />
+                                                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
+                                                            {allCountries.find(p => p.codigo_iso_2.toUpperCase() === tienda.pais.toUpperCase())?.nombre_es || tienda.pais}
+                                                            <span style={{ margin: '0 4px', opacity: 0.5 }}>•</span>
+                                                            <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{tienda.moneda}</span>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '4px' }}>
+                                                <button
+                                                    className="action-icon-btn"
+                                                    onClick={() => setEditingTienda(tienda)}
+                                                    title="Editar tienda"
+                                                >
+                                                    <Pencil size={14} />
+                                                </button>
+                                                {(user?.rol === 'admin' || user?.rol === 'superadmin' || user?.plan?.limits?.can_delete_stores) && (
+                                                    <button
+                                                        className="action-icon-btn danger"
+                                                        onClick={() => handleConfirmDeleteTienda(tienda.id)}
+                                                        title="Eliminar tienda"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '4px' }}>
-                                        <button
-                                            className="action-icon-btn"
-                                            onClick={() => setEditingTienda(tienda)}
-                                            title="Editar tienda"
-                                        >
-                                            <Pencil size={14} />
-                                        </button>
-                                        {(user?.rol === 'admin' || user?.rol === 'superadmin' || user?.plan?.limits?.can_delete_stores) && (
-                                            <button
-                                                className="action-icon-btn danger"
-                                                onClick={() => handleConfirmDeleteTienda(tienda.id)}
-                                                title="Eliminar tienda"
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <FileText size={14} style={{ color: 'var(--text-tertiary)' }} />
+                                                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Costeos Guardados</span>
+                                                </div>
+                                                <span style={{ fontSize: '14px', fontWeight: 700 }}>
+                                                    {(JSON.parse(localStorage.getItem('dropcost_costeos') || '[]').filter((c: any) => c.storeId === tienda.id)).length}
+                                                </span>
+                                            </div>
+
+                                            <Button
+                                                variant="secondary"
+                                                fullWidth
+                                                size="sm"
+                                                onClick={() => navigate('/simulador')}
+                                                style={{ fontSize: '12px', height: '36px' }}
                                             >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <FileText size={14} style={{ color: 'var(--text-tertiary)' }} />
-                                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Costeos Guardados</span>
+                                                <Settings2 size={14} style={{ marginRight: '6px' }} />
+                                                Gestionar Integraciones
+                                            </Button>
                                         </div>
-                                        <span style={{ fontSize: '14px', fontWeight: 700 }}>
-                                            {(JSON.parse(localStorage.getItem('dropcost_costeos') || '[]').filter((c: any) => c.storeId === tienda.id)).length}
-                                        </span>
+                                    </Card>
+                                ))}
+                            </div>
+
+                            {tiendas.length === 0 && !storesLoading && (
+                                <div style={{
+                                    textAlign: 'center',
+                                    padding: '60px 40px',
+                                    backgroundColor: 'var(--card-bg)',
+                                    borderRadius: '24px',
+                                    border: '1.5px dashed var(--border-color)',
+                                    marginTop: '20px'
+                                }}>
+                                    <div style={{
+                                        width: '80px', height: '80px', borderRadius: '20px',
+                                        backgroundColor: 'rgba(0,102,255,0.05)', color: 'var(--color-primary)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        margin: '0 auto 24px'
+                                    }}>
+                                        <Store size={40} />
                                     </div>
-
-                                    <Button
-                                        variant="secondary"
-                                        fullWidth
-                                        size="sm"
-                                        onClick={() => navigate('/simulador')}
-                                        style={{ fontSize: '12px', height: '36px' }}
+                                    <h4 style={{ margin: '0 0 12px', fontWeight: 800, fontSize: '20px' }}>No tienes tiendas registradas</h4>
+                                    <p style={{ fontSize: '15px', color: 'var(--text-tertiary)', maxWidth: '400px', margin: '0 auto 32px', lineHeight: 1.6 }}>
+                                        Crea tu primera tienda para empezar a costear tus productos y habilitar las integraciones automáticas.
+                                    </p>
+                                    <button
+                                        onClick={handleOpenCreateStore}
+                                        style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '10px',
+                                            padding: '12px 28px',
+                                            fontSize: '15px',
+                                            fontWeight: 700,
+                                            color: '#ffffff',
+                                            background: 'linear-gradient(135deg, #0066FF 0%, #003D99 100%)',
+                                            border: 'none',
+                                            borderRadius: '12px',
+                                            cursor: 'pointer',
+                                            boxShadow: '0 8px 15px -3px rgba(0, 102, 255, 0.3)',
+                                            transition: 'all 200ms ease',
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(-2px)';
+                                            e.currentTarget.style.boxShadow = '0 12px 20px -5px rgba(0, 102, 255, 0.4)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                            e.currentTarget.style.boxShadow = '0 8px 15px -3px rgba(0, 102, 255, 0.3)';
+                                        }}
                                     >
-                                        <Settings2 size={14} style={{ marginRight: '6px' }} />
-                                        Gestionar Integraciones
-                                    </Button>
+                                        <Plus size={18} />
+                                        Crear Primera Tienda
+                                    </button>
                                 </div>
-                            </Card>
-                        ))}
-                    </div>
-
-                    {tiendas.length === 0 && !storesLoading && (
-                        <div style={{
-                            textAlign: 'center',
-                            padding: '60px 40px',
-                            backgroundColor: 'var(--card-bg)',
-                            borderRadius: '24px',
-                            border: '1.5px dashed var(--border-color)',
-                            marginTop: '20px'
+                            )}
+                        </>
+                    ) : (
+                        <Card style={{
+                            border: '1px dashed var(--color-primary)',
+                            backgroundColor: 'rgba(0, 102, 255, 0.02)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '60px 24px',
+                            textAlign: 'center'
                         }}>
                             <div style={{
-                                width: '80px', height: '80px', borderRadius: '20px',
-                                backgroundColor: 'rgba(0,102,255,0.05)', color: 'var(--color-primary)',
+                                width: '64px', height: '64px', borderRadius: '50%',
+                                backgroundColor: 'rgba(0, 102, 255, 0.1)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                margin: '0 auto 24px'
+                                color: 'var(--color-primary)', marginBottom: '20px'
                             }}>
-                                <Store size={40} />
+                                <CreditCard size={32} />
                             </div>
-                            <h4 style={{ margin: '0 0 12px', fontWeight: 800, fontSize: '20px' }}>No tienes tiendas registradas</h4>
-                            <p style={{ fontSize: '15px', color: 'var(--text-tertiary)', maxWidth: '400px', margin: '0 auto 32px', lineHeight: 1.6 }}>
-                                Crea tu primera tienda para empezar a costear tus productos y habilitar las integraciones automáticas.
+                            <h4 style={{ margin: '0 0 8px', fontWeight: 800, fontSize: '20px', color: 'var(--text-primary)' }}>¡Activa tu Plan Starter hoy!</h4>
+                            <p style={{ fontSize: '15px', color: 'var(--text-secondary)', margin: '0 0 24px', maxWidth: '360px', lineHeight: 1.5 }}>
+                                Para comenzar a gestionar tus tiendas y utilizar todas las herramientas de DropCost Master, necesitas una suscripción activa.
                             </p>
-                            <button
-                                onClick={handleOpenCreateStore}
-                                style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '10px',
-                                    padding: '12px 28px',
-                                    fontSize: '15px',
-                                    fontWeight: 700,
-                                    color: '#ffffff',
-                                    background: 'linear-gradient(135deg, #0066FF 0%, #003D99 100%)',
-                                    border: 'none',
-                                    borderRadius: '12px',
-                                    cursor: 'pointer',
-                                    boxShadow: '0 8px 15px -3px rgba(0, 102, 255, 0.3)',
-                                    transition: 'all 200ms ease',
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-2px)';
-                                    e.currentTarget.style.boxShadow = '0 12px 20px -5px rgba(0, 102, 255, 0.4)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = '0 8px 15px -3px rgba(0, 102, 255, 0.3)';
-                                }}
+                            <Button
+                                variant="primary"
+                                onClick={() => navigate('/pricing')}
+                                style={{ gap: '10px', padding: '12px 32px' }}
                             >
-                                <Plus size={18} />
-                                Crear Primera Tienda
-                            </button>
-                        </div>
+                                Ver Planes Disponibles
+                                <ArrowRight size={18} />
+                            </Button>
+                        </Card>
                     )}
                 </div>
             )}
@@ -1457,14 +1532,15 @@ export function ConfiguracionPage() {
 }
 
 
-function Card({ children }: { children: React.ReactNode }) {
+function Card({ children, style }: { children: React.ReactNode, style?: React.CSSProperties }) {
     return (
         <div style={{
             backgroundColor: 'var(--card-bg)',
             border: '1px solid var(--card-border)',
             borderRadius: '16px',
             padding: '24px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+            ...style
         }}>
             {children}
         </div>

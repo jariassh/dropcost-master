@@ -177,7 +177,7 @@ export async function getCurrentUser(): Promise<User | null> {
         plan: {
             id: profile?.plan_id || 'plan_free',
             slug: profile?.plan_id || 'plan_free',
-            name: planDetails?.name || (profile?.plan_id === 'plan_pro' ? 'Plan Pro' : profile?.plan_id === 'plan_enterprise' ? 'Plan Enterprise' : 'Plan Gratis'),
+            name: planDetails?.name || (profile?.plan_id === 'plan_pro' ? 'PRO' : profile?.plan_id === 'plan_enterprise' ? 'ENTERPRISE' : 'Sin suscripción activa'),
             limits: (planDetails?.limits as any) || { stores: 1 }
         },
         bank_info: (profile as any)?.bank_info

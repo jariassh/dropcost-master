@@ -302,7 +302,7 @@ export const PricingPage: React.FC = () => {
                 </p>
                 {globalConfig?.telefono && (
                     <a
-                        href={`https://wa.me/${globalConfig.telefono.replace(/\+/g, '').replace(/\s/g, '')}?text=${encodeURIComponent('Hola, me gustaría recibir más información sobre los planes Enterprise de DropCost.')}`}
+                        href={`https://wa.me/${globalConfig.telefono.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hola, me gustaría recibir más información sobre los planes Enterprise de DropCost.')}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ textDecoration: 'none' }}

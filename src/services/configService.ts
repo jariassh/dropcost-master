@@ -206,7 +206,7 @@ export const configService = {
                 descripcion_empresa: 'Software de costeo',
                 sitio_web: 'https://dropcost.com',
                 email_contacto: 'soporte@dropcost.com',
-                telefono: '+57300000000',
+                telefono: '',
                 pais_operacion: 'CO',
                 
                 instagram_url: '',

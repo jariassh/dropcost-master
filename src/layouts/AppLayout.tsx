@@ -198,7 +198,16 @@ export function AppLayout() {
                     {/* Módulos Activos */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {navItems.filter(i => i.active).map((item) => {
-                            const isRestricted = !tiendaActual && (item.to === '/mis-costeos' || item.to === '/ofertas');
+                            const isRestrictedByStore = !tiendaActual && (item.to === '/mis-costeos' || item.to === '/ofertas');
+                            const isRestrictedBySubscription = user?.estadoSuscripcion !== 'activa' && item.to !== '/configuracion' && user?.rol !== 'admin' && user?.rol !== 'superadmin';
+                            const isRestricted = isRestrictedByStore || isRestrictedBySubscription;
+
+                            let tooltip = undefined;
+                            if (isRestrictedBySubscription) {
+                                tooltip = "Se requiere una suscripción activa para acceder";
+                            } else if (isRestrictedByStore) {
+                                tooltip = "Selecciona o crea una tienda para acceder";
+                            }
 
                             return (
                                 <SidebarNavItem
@@ -209,7 +218,7 @@ export function AppLayout() {
                                     end={item.to === '/'}
                                     onClick={() => setMobileOpen(false)}
                                     disabled={isRestricted}
-                                    tooltip={isRestricted ? "Selecciona o crea una tienda para acceder" : undefined}
+                                    tooltip={tooltip}
                                 />
                             );
                         })}
@@ -431,7 +440,14 @@ export function AppLayout() {
                                             <DropdownItem
                                                 icon={<Wallet size={17} />}
                                                 label="Mi Billetera"
-                                                onClick={() => { setUserMenuOpen(false); navigate('/billetera'); }}
+                                                onClick={() => {
+                                                    if (user?.estadoSuscripcion !== 'activa' && user?.rol !== 'admin' && user?.rol !== 'superadmin') {
+                                                        return;
+                                                    }
+                                                    setUserMenuOpen(false);
+                                                    navigate('/billetera');
+                                                }}
+                                                disabled={user?.estadoSuscripcion !== 'activa' && user?.rol !== 'admin' && user?.rol !== 'superadmin'}
                                             />
                                             <DropdownItem
                                                 icon={<LogOut size={17} />}
@@ -500,22 +516,25 @@ function HeaderButton({
 }
 
 function DropdownItem({
-    icon, label, onClick, danger = false,
+    icon, label, onClick, danger = false, disabled = false,
 }: {
-    icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean;
+    icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean; disabled?: boolean;
 }) {
     return (
         <button
             onClick={onClick}
+            disabled={disabled}
             style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
                 padding: '11px 14px', fontSize: '14px', fontWeight: 500,
                 color: danger ? 'var(--color-error)' : 'var(--text-primary)',
                 background: 'none', border: 'none', borderRadius: '10px',
-                cursor: 'pointer', transition: 'background-color 150ms',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                transition: 'background-color 150ms',
+                opacity: disabled ? 0.4 : 1,
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+            onMouseEnter={(e) => { if (!disabled) e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'; }}
+            onMouseLeave={(e) => { if (!disabled) e.currentTarget.style.backgroundColor = 'transparent'; }}
         >
             {icon}
             {label}
