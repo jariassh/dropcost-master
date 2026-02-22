@@ -190,12 +190,12 @@ export async function getCurrentUser(): Promise<User | null> {
 }
 
 export async function requestPasswordReset(data: PasswordResetRequest): Promise<AuthResponse> {
-    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/actualizar-contrasena`,
+    const { data: resData, error: resError } = await supabase.functions.invoke('auth-password-reset', {
+        body: { email: data.email }
     });
 
-    if (error) {
-        return { success: false, error: translateError(error.message) };
+    if (resError || !resData?.success) {
+        return { success: false, error: resError?.message || resData?.error || 'Error al solicitar recuperación' };
     }
 
     return { success: true };
@@ -206,6 +206,27 @@ export async function updatePassword(newPassword: string): Promise<AuthResponse>
 
     if (error) {
         return { success: false, error: translateError(error.message) };
+    }
+
+    // Disparar trigger CONTRASENA_CAMBIADA (fire-and-forget)
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            const { data: profile } = await supabase
+                .from('users')
+                .select('nombres, apellidos')
+                .eq('id', user.id)
+                .maybeSingle();
+
+            dispararTriggerEmail('CONTRASENA_CAMBIADA', {
+                usuario_id: user.id,
+                usuario_nombre: `${profile?.nombres || ''} ${profile?.apellidos || ''}`.trim(),
+                usuario_email: user.email || '',
+                fecha_actualizacion: new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+            });
+        }
+    } catch (e) {
+        console.warn('[authService] Error al disparar trigger de cambio de contraseña:', e);
     }
 
     return { success: true };

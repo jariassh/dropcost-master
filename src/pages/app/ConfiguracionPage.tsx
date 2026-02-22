@@ -42,7 +42,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useStoreStore } from '@/store/useStoreStore';
 import { Spinner } from '@/components/common/Spinner';
 import { SmartPhoneInput } from '@/components/common/SmartPhoneInput';
-import { useToast, Modal, ConfirmDialog, Button, Badge, SelectPais } from '@/components/common';
+import { useToast, Modal, ConfirmDialog, Button, Badge, SelectPais, Input } from '@/components/common';
 import { CreateStoreModal } from '@/components/layout/CreateStoreModal';
 import type { Tienda } from '@/types/store.types';
 import { cargarPaises, Pais } from '@/services/paisesService';
@@ -454,20 +454,16 @@ export function ConfiguracionPage() {
                     <Card>
                         <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 24px' }}>Información Personal</h3>
                         <div style={{ gap: '20px', marginBottom: '20px' }} className="dc-config-inner-grid">
-                            <InputGroup label="Nombres">
-                                <input
-                                    className="dc-input"
-                                    value={profileData.nombres}
-                                    onChange={e => setProfileData({ ...profileData, nombres: e.target.value })}
-                                />
-                            </InputGroup>
-                            <InputGroup label="Apellidos">
-                                <input
-                                    className="dc-input"
-                                    value={profileData.apellidos}
-                                    onChange={e => setProfileData({ ...profileData, apellidos: e.target.value })}
-                                />
-                            </InputGroup>
+                            <Input
+                                label="Nombres"
+                                value={profileData.nombres}
+                                onChange={e => setProfileData({ ...profileData, nombres: e.target.value })}
+                            />
+                            <Input
+                                label="Apellidos"
+                                value={profileData.apellidos}
+                                onChange={e => setProfileData({ ...profileData, apellidos: e.target.value })}
+                            />
                         </div>
 
                         <div style={{ marginBottom: '20px' }}>
@@ -490,21 +486,14 @@ export function ConfiguracionPage() {
                         </div>
 
                         <div style={{ marginBottom: '24px' }}>
-                            <InputGroup label="Código de Referido Personal">
-                                <div style={{ position: 'relative' }}>
-                                    <Share2 size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
-                                    <input
-                                        className="dc-input"
-                                        style={{ paddingLeft: '36px' }}
-                                        placeholder={`Ej: ${suggestedSlug}`}
-                                        value={profileData.codigoReferido}
-                                        onChange={e => setProfileData({ ...profileData, codigoReferido: e.target.value.toLowerCase().replace(/\s/g, '') })}
-                                    />
-                                </div>
-                                <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: '4px 0 0 4px' }}>
-                                    Este será tu link: {window.location.origin}/registro?ref={profileData.codigoReferido || suggestedSlug}
-                                </p>
-                            </InputGroup>
+                            <Input
+                                label="Código de Referido Personal"
+                                leftIcon={<Share2 size={16} />}
+                                placeholder={`Ej: ${suggestedSlug}`}
+                                value={profileData.codigoReferido}
+                                onChange={e => setProfileData({ ...profileData, codigoReferido: e.target.value.toLowerCase().replace(/\s/g, '') })}
+                                helperText={`Este será tu link: ${window.location.origin}/registro?ref=${profileData.codigoReferido || suggestedSlug}`}
+                            />
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
@@ -768,19 +757,13 @@ export function ConfiguracionPage() {
                             </div>
                         </div>
 
-                        <InputGroup label="Nuevo Correo Electrónico">
-                            <div style={{ position: 'relative' }}>
-                                <RefreshCw size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
-                                <input
-                                    type="email"
-                                    className="dc-input"
-                                    style={{ paddingLeft: '36px' }}
-                                    placeholder="nuevo@ejemplo.com"
-                                    value={emailData.newEmail}
-                                    onChange={e => setEmailData({ newEmail: e.target.value })}
-                                />
-                            </div>
-                        </InputGroup>
+                        <Input
+                            label="Nuevo Correo Electrónico"
+                            leftIcon={<RefreshCw size={16} />}
+                            placeholder="nuevo@ejemplo.com"
+                            value={emailData.newEmail}
+                            onChange={e => setEmailData({ newEmail: e.target.value })}
+                        />
 
                         <button
                             className="dc-button-primary"
@@ -812,132 +795,128 @@ export function ConfiguracionPage() {
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <InputGroup label="Contraseña Actual">
-                                <input
-                                    type="password"
-                                    className="dc-input"
-                                    placeholder="••••••••"
-                                    autoComplete="current-password"
-                                    value={passwordData.current}
-                                    onChange={e => setPasswordData({ ...passwordData, current: e.target.value })}
-                                />
-                            </InputGroup>
+                            <Input
+                                label="Contraseña Actual"
+                                type="password"
+                                placeholder="••••••••"
+                                autoComplete="current-password"
+                                value={passwordData.current}
+                                onChange={e => setPasswordData({ ...passwordData, current: e.target.value })}
+                                showPasswordToggle
+                            />
 
-                            <InputGroup label="Nueva Contraseña">
-                                <div style={{ position: 'relative' }}>
-                                    <input
-                                        type="password"
-                                        className="dc-input"
-                                        placeholder="Mínimo 8 caracteres"
-                                        autoComplete="new-password"
-                                        value={passwordData.new}
-                                        onChange={e => setPasswordData({ ...passwordData, new: e.target.value })}
-                                        onFocus={() => {
-                                            if (!passwordData.new && !suggestedPassword) {
-                                                generatePassword();
-                                            }
+                            <Input
+                                label="Nueva Contraseña"
+                                type="password"
+                                placeholder="Mínimo 8 caracteres"
+                                autoComplete="new-password"
+                                value={passwordData.new}
+                                onChange={e => setPasswordData({ ...passwordData, new: e.target.value })}
+                                showPasswordToggle
+                                onFocus={() => {
+                                    if (!passwordData.new && !suggestedPassword) {
+                                        generatePassword();
+                                    }
+                                }}
+                                onBlur={() => {
+                                    // Delay para permitir clics en los botones de la sugerencia
+                                    setTimeout(() => setSuggestedPassword(''), 200);
+                                }}
+                            >
+                                {/* Popover de Sugerencia Flotante */}
+                                {suggestedPassword && (
+                                    <div
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        style={{
+                                            position: 'absolute',
+                                            bottom: 'calc(100% - 10px)',
+                                            right: '0',
+                                            width: '280px',
+                                            zIndex: 100,
+                                            padding: '12px',
+                                            backgroundColor: 'var(--card-bg)',
+                                            borderRadius: '12px',
+                                            border: '1.5px solid var(--color-primary-light)',
+                                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                                            animation: 'scaleIn 200ms ease-out',
                                         }}
-                                        onBlur={() => {
-                                            // Delay para permitir clics en los botones de la sugerencia
-                                            setTimeout(() => setSuggestedPassword(''), 200);
-                                        }}
-                                    />
+                                    >
+                                        {/* Triángulo del tooltip */}
+                                        <div style={{
+                                            position: 'absolute',
+                                            bottom: '-6px',
+                                            right: '20px',
+                                            width: '12px',
+                                            height: '12px',
+                                            backgroundColor: 'var(--card-bg)',
+                                            borderRight: '1.5px solid var(--color-primary-light)',
+                                            borderBottom: '1.5px solid var(--color-primary-light)',
+                                            transform: 'rotate(45deg)',
+                                            zIndex: -1
+                                        }} />
 
-                                    {/* Popover de Sugerencia Flotante */}
-                                    {suggestedPassword && (
-                                        <div
-                                            onMouseDown={(e) => e.preventDefault()}
-                                            style={{
-                                                position: 'absolute',
-                                                bottom: 'calc(100% - 10px)',
-                                                right: '0',
-                                                width: '280px',
-                                                zIndex: 100,
-                                                padding: '12px',
-                                                backgroundColor: 'var(--card-bg)',
-                                                borderRadius: '12px',
-                                                border: '1.5px solid var(--color-primary-light)',
-                                                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-                                                animation: 'scaleIn 200ms ease-out',
-                                            }}
-                                        >
-                                            {/* Triángulo del tooltip */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                                             <div style={{
-                                                position: 'absolute',
-                                                bottom: '-6px',
-                                                right: '20px',
-                                                width: '12px',
-                                                height: '12px',
-                                                backgroundColor: 'var(--card-bg)',
-                                                borderRight: '1.5px solid var(--color-primary-light)',
-                                                borderBottom: '1.5px solid var(--color-primary-light)',
-                                                transform: 'rotate(45deg)',
-                                                zIndex: -1
-                                            }} />
-
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                                <div style={{
-                                                    padding: '5px',
-                                                    backgroundColor: 'var(--color-primary-light)',
-                                                    borderRadius: '6px',
-                                                    color: 'var(--color-primary)',
-                                                    display: 'flex'
-                                                }}>
-                                                    <Sparkles size={14} />
-                                                </div>
-                                                <p style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: 700, margin: 0 }}>
-                                                    Contraseña Sugerida
-                                                </p>
+                                                padding: '5px',
+                                                backgroundColor: 'var(--color-primary-light)',
+                                                borderRadius: '6px',
+                                                color: 'var(--color-primary)',
+                                                display: 'flex'
+                                            }}>
+                                                <Sparkles size={14} />
                                             </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                                                <code style={{
-                                                    flex: 1,
-                                                    padding: '8px',
-                                                    backgroundColor: 'var(--bg-primary)',
-                                                    borderRadius: '8px',
-                                                    fontSize: '13px',
-                                                    color: 'var(--color-primary)',
-                                                    fontWeight: 700,
-                                                    textAlign: 'center',
-                                                    border: '1px solid var(--border-color)',
-                                                    letterSpacing: '0.5px'
-                                                }}>
-                                                    {suggestedPassword}
-                                                </code>
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        generatePassword();
-                                                    }}
-                                                    style={{
-                                                        padding: '8px',
-                                                        backgroundColor: 'var(--bg-secondary)',
-                                                        border: '1px solid var(--border-color)',
-                                                        borderRadius: '8px',
-                                                        color: 'var(--text-secondary)',
-                                                        cursor: 'pointer',
-                                                        display: 'flex',
-                                                        transition: 'all 200ms'
-                                                    }}
-                                                >
-                                                    <RefreshCw size={14} />
-                                                </button>
-                                            </div>
-
-                                            <div style={{ display: 'flex', gap: '6px' }}>
-                                                <Button size="sm" fullWidth onClick={useSuggested} style={{ height: '32px', fontSize: '12px' }}>
-                                                    Usar
-                                                </Button>
-                                                <Button size="sm" variant="secondary" fullWidth onClick={() => setSuggestedPassword('')} style={{ height: '32px', fontSize: '12px' }}>
-                                                    Omitir
-                                                </Button>
-                                            </div>
+                                            <p style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: 700, margin: 0 }}>
+                                                Contraseña Sugerida
+                                            </p>
                                         </div>
-                                    )}
-                                </div>
-                            </InputGroup>
+
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                                            <code style={{
+                                                flex: 1,
+                                                padding: '8px',
+                                                backgroundColor: 'var(--bg-primary)',
+                                                borderRadius: '8px',
+                                                fontSize: '13px',
+                                                color: 'var(--color-primary)',
+                                                fontWeight: 700,
+                                                textAlign: 'center',
+                                                border: '1px solid var(--border-color)',
+                                                letterSpacing: '0.5px'
+                                            }}>
+                                                {suggestedPassword}
+                                            </code>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    generatePassword();
+                                                }}
+                                                style={{
+                                                    padding: '8px',
+                                                    backgroundColor: 'var(--bg-secondary)',
+                                                    border: '1px solid var(--border-color)',
+                                                    borderRadius: '8px',
+                                                    color: 'var(--text-secondary)',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    transition: 'all 200ms'
+                                                }}
+                                            >
+                                                <RefreshCw size={14} />
+                                            </button>
+                                        </div>
+
+                                        <div style={{ display: 'flex', gap: '6px' }}>
+                                            <Button size="sm" fullWidth onClick={useSuggested} style={{ height: '32px', fontSize: '12px' }}>
+                                                Usar
+                                            </Button>
+                                            <Button size="sm" variant="secondary" fullWidth onClick={() => setSuggestedPassword('')} style={{ height: '32px', fontSize: '12px' }}>
+                                                Omitir
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </Input>
 
                             {passwordData.new.length > 0 && !suggestedPassword && (
                                 <div style={{ marginTop: '8px', animation: 'fadeIn 200ms ease-out' }}>
@@ -964,16 +943,15 @@ export function ConfiguracionPage() {
                                 </div>
                             )}
 
-                            <InputGroup label="Confirmar Nueva Contraseña">
-                                <input
-                                    type="password"
-                                    className="dc-input"
-                                    placeholder="••••••••"
-                                    autoComplete="new-password"
-                                    value={passwordData.confirm}
-                                    onChange={e => setPasswordData({ ...passwordData, confirm: e.target.value })}
-                                />
-                            </InputGroup>
+                            <Input
+                                label="Confirmar Nueva Contraseña"
+                                type="password"
+                                placeholder="••••••••"
+                                autoComplete="new-password"
+                                value={passwordData.confirm}
+                                onChange={e => setPasswordData({ ...passwordData, confirm: e.target.value })}
+                                showPasswordToggle
+                            />
                         </div>
 
                         <button
@@ -1390,25 +1368,19 @@ export function ConfiguracionPage() {
                         </div>
                     </div>
 
-                    <InputGroup label="Nombre de la Tienda">
-                        <input
-                            className="dc-input"
-                            value={editingTienda?.nombre || ''}
-                            onChange={(e) => setEditingTienda(prev => prev ? { ...prev, nombre: e.target.value } : null)}
-                        />
-                    </InputGroup>
+                    <Input
+                        label="Nombre de la Tienda"
+                        value={editingTienda?.nombre || ''}
+                        onChange={(e) => setEditingTienda(prev => prev ? { ...prev, nombre: e.target.value } : null)}
+                    />
 
-                    <InputGroup label="URL del Logo (Opcional)">
-                        <input
-                            className="dc-input"
-                            placeholder="https://ejemplo.com/logo.png"
-                            value={editingTienda?.logo_url || ''}
-                            onChange={(e) => setEditingTienda(prev => prev ? { ...prev, logo_url: e.target.value } : null)}
-                        />
-                        <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                            Pega la URL de una imagen para usarla como logo de tu tienda.
-                        </p>
-                    </InputGroup>
+                    <Input
+                        label="URL del Logo (Opcional)"
+                        placeholder="https://ejemplo.com/logo.png"
+                        value={editingTienda?.logo_url || ''}
+                        onChange={(e) => setEditingTienda(prev => prev ? { ...prev, logo_url: e.target.value } : null)}
+                        helperText="Pega la URL de una imagen para usarla como logo de tu tienda."
+                    />
 
                     <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
                         <Button variant="secondary" fullWidth onClick={() => setEditingTienda(null)}>Cancelar</Button>
@@ -1633,15 +1605,6 @@ function Card({ children, style }: { children: React.ReactNode, style?: React.CS
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
             ...style
         }}>
-            {children}
-        </div>
-    );
-}
-
-function InputGroup({ label, children }: { label: string, children: React.ReactNode }) {
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>{label}</label>
             {children}
         </div>
     );
