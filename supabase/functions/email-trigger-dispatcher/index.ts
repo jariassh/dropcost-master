@@ -46,8 +46,8 @@ Deno.serve(async (req: Request) => {
 
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-        const payload: TriggerPayload = await req.json();
-        const { codigo_evento, datos, tipo_envio = 'automatico', plantilla_id_prueba, email_destino_prueba } = payload;
+        const payload: any = await req.json();
+        const { codigo_evento, datos, tipo_envio = 'automatico', targetId: payloadTargetId } = payload;
 
         if (!codigo_evento) {
             return new Response(
@@ -176,7 +176,7 @@ Deno.serve(async (req: Request) => {
         // ============================================================
         // CASO ESPECIAL: REFERIDO_REGISTRADO → email al LÍDER (referidor)
         // ============================================================
-        let targetId = datos['usuario_id'] || datos['id'];
+        let targetId = payloadTargetId || datos['usuario_id'] || datos['id'];
         const refersToUserId = datos['usuario_id']; // El nuevo usuario
 
         if (codigo_evento === 'REFERIDO_REGISTRADO' && datos['codigo_referido']) {
@@ -368,13 +368,19 @@ Deno.serve(async (req: Request) => {
             .from('email_triggers')
             .select('id, nombre_trigger, codigo_evento, activo')
             .eq('codigo_evento', codigo_evento)
-            .eq('activo', true)
-            .maybeSingle();
+            .maybeSingle(); // Quitamos .eq('activo', true) para reportar si existe pero está apagado
 
         if (triggerError || !trigger) {
-            console.error('[email-trigger-dispatcher] Trigger no encontrado o inactivo:', codigo_evento);
+            console.error('[email-trigger-dispatcher] Trigger no encontrado:', codigo_evento);
             return new Response(
-                JSON.stringify({ emails_enviados: 0, mensaje: 'Trigger no encontrado o inactivo' }),
+                JSON.stringify({ emails_enviados: 0, mensaje: `ERROR: El disparador '${codigo_evento}' no existe en la base de datos.` }),
+                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+        }
+
+        if (!trigger.activo) {
+            return new Response(
+                JSON.stringify({ emails_enviados: 0, mensaje: `INFO: El disparador '${codigo_evento}' está desactivado.` }),
                 { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
         }
@@ -388,6 +394,7 @@ Deno.serve(async (req: Request) => {
                 email_templates!inner (
                     id,
                     name,
+                    slug,
                     subject,
                     html_content,
                     sender_prefix,
@@ -395,9 +402,7 @@ Deno.serve(async (req: Request) => {
                     status
                 )
             `)
-            .eq('trigger_id', trigger.id)
-            .eq('activo', true)
-            .eq('email_templates.status', 'activo');
+            .eq('trigger_id', trigger.id); // Quitamos filtros activos para reportar motivos
 
         // Si es prueba manual con plantilla específica, filtrar solo esa
         if (tipo_envio === 'prueba' && plantilla_id_prueba) {
@@ -408,12 +413,27 @@ Deno.serve(async (req: Request) => {
 
         if (asocError) {
             console.error('[email-trigger-dispatcher] Error buscando plantillas:', asocError);
-            return new Response( JSON.stringify({ error: 'Error interno' }), { status: 500, headers: corsHeaders });
+            return new Response( JSON.stringify({ error: 'Error interno buscando asociaciones', details: asocError.message }), { status: 500, headers: corsHeaders });
         }
 
         if (!asociaciones || asociaciones.length === 0) {
             return new Response(
-                JSON.stringify({ emails_enviados: 0, mensaje: 'No hay plantillas activas' }),
+                JSON.stringify({ emails_enviados: 0, mensaje: `INFO: No hay plantillas vinculadas al evento '${codigo_evento}'.` }),
+                { status: 200, headers: corsHeaders }
+            );
+        }
+
+        // Filtrar activas manualmente para reportar si hay pero están apagadas
+        const asociacionesActivas = asociaciones.filter((a: any) => 
+            a.activo === true && a.email_templates.status === 'activo'
+        );
+
+        if (asociacionesActivas.length === 0) {
+            const motivos = asociaciones.map((a: any) => 
+                `Plantilla '${a.email_templates.name}' (${a.email_templates.slug}): Asoc.activa=${a.activo}, Status=${a.email_templates.status}`
+            ).join(' | ');
+            return new Response(
+                JSON.stringify({ emails_enviados: 0, mensaje: `INFO: Las plantillas vinculadas están desactivadas. Motivos: ${motivos}` }),
                 { status: 200, headers: corsHeaders }
             );
         }
@@ -421,8 +441,8 @@ Deno.serve(async (req: Request) => {
         let emailsEnviados = 0;
         const resultados: any[] = [];
 
-        // 4. Enviar un email por cada plantilla asociada
-        for (const asociacion of asociaciones) {
+        // 4. Enviar un email por cada plantilla asociada activa
+        for (const asociacion of asociacionesActivas) {
             const plantilla = (asociacion as any).email_templates;
             if (!plantilla) continue;
 
@@ -448,6 +468,8 @@ Deno.serve(async (req: Request) => {
             let estado: 'enviado' | 'fallido' = 'enviado';
             let razonError: string | null = null;
 
+            console.log(`[Dispatcher] Intentando enviar email a: ${toEmail} para trigger: ${codigo_evento}`);
+
             try {
                 const emailResponse = await fetch(`${supabaseUrl}/functions/v1/email-service`, {
                     method: 'POST',
@@ -458,18 +480,24 @@ Deno.serve(async (req: Request) => {
                     body: JSON.stringify({ to: toEmail, from: fromFull, subject: asuntoFinal, html: htmlFinal })
                 });
 
-                if (!emailResponse.ok) throw new Error(`Status ${emailResponse.status}`);
+                if (!emailResponse.ok) {
+                    const errorText = await emailResponse.text();
+                    throw new Error(`email-service error ${emailResponse.status}: ${errorText}`);
+                }
                 emailsEnviados++;
             } catch (sendError: any) {
+                console.error('[Dispatcher] Error enviando email:', sendError.message);
                 estado = 'fallido';
                 razonError = sendError.message;
             }
+
+            resultados.push({ plantilla: plantilla.name, to: toEmail, estado, error: razonError });
 
             // Registrar historial
             await supabase.from('email_historial').insert({
                 plantilla_id: plantilla.id,
                 trigger_id: tipo_envio === 'prueba' ? null : trigger.id,
-                usuario_id: targetUserId || null,
+                usuario_id: targetId || null,
                 usuario_email: toEmail,
                 asunto_enviado: asuntoFinal,
                 contenido_html_enviado: htmlFinal,
@@ -480,13 +508,13 @@ Deno.serve(async (req: Request) => {
                 tipo_envio,
             });
 
-            resultados.push({ plantilla: plantilla.name, email: toEmail, estado });
         }
 
         return new Response(
             JSON.stringify({
+                success: true,
                 emails_enviados: emailsEnviados,
-                total_plantillas: asociaciones.length,
+                total_plantillas: asociacionesActivas.length,
                 resultados,
             }),
             { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

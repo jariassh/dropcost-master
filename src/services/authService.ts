@@ -73,64 +73,35 @@ export async function loginUser(credentials: LoginCredentials): Promise<AuthResp
 }
 
 export async function registerUser(data: RegisterData): Promise<AuthResponse> {
-    const { data: authData, error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-            data: {
-                nombres: data.nombres,
-                apellidos: data.apellidos,
-                pais: data.pais,
-                telefono: data.telefono,
-                referred_by: data.referredBy,
-                rol: 'cliente',
-            }
+    // 1. Llamar a la Edge Function de registro custom (Silencioso para Supabase)
+    const response = await supabase.functions.invoke('auth-register', {
+        body: {
+            email: data.email,
+            password: data.password,
+            nombres: data.nombres,
+            apellidos: data.apellidos,
+            pais: data.pais,
+            telefono: data.telefono,
+            referred_by: data.referredBy
         }
     });
 
-    if (error) {
-        return { success: false, error: translateError(error.message) };
+    const { data: resData, error: resError } = response;
+
+    if (resError || !resData?.success) {
+        const errorMsg = resError?.message || resData?.error || 'Error en el registro';
+        console.error('[AuthService] Error en registro:', errorMsg);
+        return { 
+            success: false, 
+            error: errorMsg
+        };
     }
 
-    // Initialize session token for new user if auto-login happens
-    if (authData.user) {
-         const newSessionToken = crypto.randomUUID();
-         if (authData.session) {
-             const { error: updateError } = await supabase
-                .from('users')
-                .update({ session_token: newSessionToken } as any)
-                .eq('id', authData.user.id);
-             
-             if (!updateError) {
-                localStorage.setItem('dc_session_token', newSessionToken);
-             }
-         }
-
-         // Disparar trigger USUARIO_REGISTRADO (fire-and-forget)
-         dispararTriggerEmail('USUARIO_REGISTRADO', {
-             usuario_id: authData.user.id,
-             usuario_nombre: `${data.nombres} ${data.apellidos}`.trim(),
-             usuario_email: data.email,
-             fecha_registro: new Date().toISOString().split('T')[0],
-             codigo_referido: data.referredBy || '',
-         });
-
-         // Si se registró con código de referido, disparar REFERIDO_REGISTRADO
-         if (data.referredBy) {
-             dispararTriggerEmail('REFERIDO_REGISTRADO', {
-                 usuario_id: authData.user.id, // ID del referido (para lookup del líder en dispatcher)
-                 referido_nombre: `${data.nombres} ${data.apellidos}`.trim(),
-                 referido_email: data.email,
-                 codigo_referido: data.referredBy,
-                 fecha_registro: new Date().toISOString().split('T')[0],
-                 // No enviamos usuario_email aquí para que el dispatcher use el del líder
-             });
-         }
-    }
-
+    // 2. Devolvemos éxito e informamos que requiere verificación
     return {
         success: true,
-        data: { userId: authData.user?.id },
+        data: { userId: resData.userId },
+        mensaje: '¡Registro exitoso! Por favor, verifica tu correo electrónico para activar tu cuenta.'
     };
 }
 
