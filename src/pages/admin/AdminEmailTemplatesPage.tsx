@@ -1209,13 +1209,20 @@ export function AdminEmailTemplatesPage() {
         }
         const fetchPlan = async () => {
             const planId = selectedTestUser.plan_id;
-            // Intento 1: buscar por UUID (id)
-            let { data: plan } = await (supabase as any)
-                .from('plans')
-                .select('*')
-                .eq('id', planId)
-                .maybeSingle();
-            // Intento 2: si no encontró por ID, buscar por slug
+            let plan = null;
+            // Solo buscar por UUID si parece uno, para evitar error 400 de Postgres
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(planId);
+
+            if (isUUID) {
+                const { data } = await (supabase as any)
+                    .from('plans')
+                    .select('*')
+                    .eq('id', planId)
+                    .maybeSingle();
+                plan = data;
+            }
+
+            // Intento 2: si no es UUID o no encontró por ID, buscar por slug
             if (!plan) {
                 const { data: planBySlug } = await (supabase as any)
                     .from('plans')
@@ -1530,8 +1537,8 @@ export function AdminEmailTemplatesPage() {
             let finalHtml = selectedTemplate.html_content;
             if (selectedTemplate.mjml_content) {
                 try {
-                    // Al guardar, usamos validationLevel 'skip' para permitir que las variables {{color}} 
-                    // persistan en el HTML y puedan ser inyectadas dinámicamente por el dispatcher después.
+                    // Guardamos el MJML compilado con variables de color intactas ({{color_primary}}, etc.).
+                    // El dispatcher las reemplaza en el momento del envío con los colores del branding actual.
                     const result = mjml2html(selectedTemplate.mjml_content, { validationLevel: 'skip' });
                     finalHtml = result.html;
                 } catch (mjError) {

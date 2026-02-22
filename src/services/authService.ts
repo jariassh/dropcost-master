@@ -190,15 +190,35 @@ export async function getCurrentUser(): Promise<User | null> {
 }
 
 export async function requestPasswordReset(data: PasswordResetRequest): Promise<AuthResponse> {
-    const { data: resData, error: resError } = await supabase.functions.invoke('auth-password-reset', {
-        body: { email: data.email }
-    });
+    console.log('[authService] INICIO requestPasswordReset para:', data.email);
+    
+    try {
+        // Obtenemos la URL y la Key de las variables de entorno para una llamada manual si es necesario
+        // Pero usaremos el cliente de supabase para aprovechar la sesión si existe
+        const { data: resData, error: resError } = await (supabase as any).functions.invoke('auth-password-reset', {
+            body: { email: data.email }
+        });
 
-    if (resError || !resData?.success) {
-        return { success: false, error: resError?.message || resData?.error || 'Error al solicitar recuperación' };
+        if (resError) {
+            console.error('[authService] La función de Supabase devolvió un error:', resError);
+            // Intentar extraer el mensaje de error si viene en el body (a veces invoke lo pone en resError.context)
+            const detailText = (resError as any).context?.statusText || resError.message;
+            return { success: false, error: `Error del Servidor: ${detailText}` };
+        }
+
+        console.log('[authService] Respuesta de la función:', resData);
+
+        if (!resData?.success) {
+            console.error('[authService] Lógica de la función reportó fallo:', resData);
+            return { success: false, error: resData?.error || 'No se pudo procesar la solicitud' };
+        }
+
+        console.log('[authService] ÉXITO: Instrucciones enviadas');
+        return { success: true };
+    } catch (err: any) {
+        console.error('[authService] Error crítico ejecutando la función:', err);
+        return { success: false, error: 'Error de conexión' };
     }
-
-    return { success: true };
 }
 
 export async function updatePassword(newPassword: string): Promise<AuthResponse> {
@@ -220,9 +240,12 @@ export async function updatePassword(newPassword: string): Promise<AuthResponse>
 
             dispararTriggerEmail('CONTRASENA_CAMBIADA', {
                 usuario_id: user.id,
+                nombres: `${profile?.nombres || ''} ${profile?.apellidos || ''}`.trim(),
                 usuario_nombre: `${profile?.nombres || ''} ${profile?.apellidos || ''}`.trim(),
                 usuario_email: user.email || '',
+                email: user.email || '',
                 fecha_actualizacion: new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                login_url: `${window.location.origin}/login`,
             });
         }
     } catch (e) {
