@@ -94,6 +94,7 @@ export interface AuthResponse {
         sessionId?: string;
     };
     error?: string;
+    mensaje?: string;
 }
 
 export interface AuthState {
