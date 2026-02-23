@@ -495,16 +495,14 @@ Copia anónima de producción. Testea integraciones antes prod.
 
 ---
 
-## XVII. NOMENCLATURA
+## XVII. REGLAS CRÍTICAS
 
-**Código:** Inglés (calcularPrecio, fetchMetaData, tiendaId)  
-**APIs:** Inglés (POST /api/v1/costeos)  
-**BD:** snake_case inglés (data_meta_ads, user_profiles)  
-**Documentación:** Español Latino  
-**Commits:** feat(scope): descripción
+**IDIOMA:** Comunicación en Español | Código en Inglés | ❌ No mezclar
 
----
-
-**META FINAL:** Seguridad > Exactitud cálculos > Aislamiento tiendas > Performance > Testing
+**NO REGRESIÓN:** SI FUNCIONA → PREGUNTAR antes de tocar
+- Protocolo: Pausar → Preguntar → Entender → Proponer → Aprobación → Implementar
+- 🔒 Protegidos: Auth, Cálculos, Emails, Pagos, Queries BD
+- ❌ No: Limpiar código "raro" | Refactorizar sin razón | Cambios sin avisar
+- Resultado: Cambios no autorizados = revertidos
 
 ---

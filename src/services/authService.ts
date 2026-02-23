@@ -332,7 +332,7 @@ async function invoke2FA(action: string, extra: any = {}): Promise<AuthResponse>
 }
 
 export async function request2FAActivation(): Promise<AuthResponse> {
-    return invoke2FA('request');
+    return invoke2FA('request', { context: 'activation' });
 }
 
 export async function confirm2FAActivation(code: string): Promise<AuthResponse> {

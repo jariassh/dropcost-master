@@ -32,7 +32,18 @@ serve(async (req) => {
 
     const userId = authUser.user.id
 
-    // 2. Enviar Bienvenida Directamente
+    // 2. Generar link de verificación (signup)
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'signup',
+      email: email,
+      options: {
+        redirectTo: `${Deno.env.get('SITE_URL') || 'http://localhost:5173'}/login?verified=true`
+      }
+    })
+
+    const verificationLink = linkError ? '' : linkData.properties.action_link
+
+    // 3. Enviar Bienvenida Directamente
     console.log(`[auth-register] Enviando Bienvenida directa para: ${userId}`);
     let welcomeRes = null;
     let welcomeErr = null;
@@ -50,9 +61,14 @@ serve(async (req) => {
           datos: {
             usuario_id: userId,
             usuario_nombre: `${nombres} ${apellidos}`.trim(),
+            nombres: `${nombres} ${apellidos}`.trim(),
             usuario_email: email,
+            email: email,
             fecha_registro: new Date().toISOString().split('T')[0],
             codigo_referido: referred_by || '',
+            verification_link: verificationLink,
+            reset_link: verificationLink, // Por si acaso
+            link: verificationLink
           }
         })
       });
