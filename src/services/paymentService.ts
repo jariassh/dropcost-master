@@ -9,14 +9,11 @@ export const paymentService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('User not authenticated');
 
-        // Use a more unique test email to avoid session conflicts in MP SandBox
-        const testEmail = `tester_${Math.floor(Math.random() * 999999)}@dropcost-test.com`;
-
+        // NOT sending email to force a 100% clean guest checkout session
         const payload = { 
             planId, 
             period, 
             userId: user.id, 
-            email: testEmail, // Sending test email to avoid "buyer = seller" error
             returnUrl: window.location.origin 
         };
 
