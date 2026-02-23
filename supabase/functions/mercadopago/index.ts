@@ -36,24 +36,34 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
         return { status: "already_processed", message: "Este pago ya fue registrado anteriormente." };
     }
 
-    // Parse Metadata
-    let metadata;
-    try {
-        metadata = typeof paymentData.external_reference === 'string' 
-            ? JSON.parse(paymentData.external_reference) 
-            : paymentData.external_reference;
-    } catch (e) {
-        console.error("Error parsing metadata:", e);
-        // Fallback for empty metadata cases (should not happen if flow is correct)
-        return { error: "Invalid metadata in payment" };
+    // Parse Metadata (Prefer metadata field for structured data)
+    let metadata = paymentData.metadata;
+    if (!metadata || typeof metadata !== 'object') {
+        try {
+            metadata = typeof paymentData.external_reference === 'string' 
+                ? JSON.parse(paymentData.external_reference) 
+                : paymentData.external_reference;
+        } catch (e) {
+            console.error("Error parsing fallback external_reference:", e);
+            return { error: "Invalid metadata in payment" };
+        }
     }
 
-    if (!metadata || !metadata.userId || !metadata.planId) {
+    if (!metadata || !metadata.user_id || !metadata.plan_id) {
         console.error("Missing metadata required fields:", metadata);
-        return { error: "Missing metadata (userId/planId)" }; 
+        // Map old fields to new fields for backward compatibility during transition
+        const userId = metadata?.userId || metadata?.user_id;
+        const planId = metadata?.planId || metadata?.plan_id;
+        if (!userId || !planId) {
+            return { error: "Missing metadata (userId/planId)" };
+        }
+        metadata.userId = userId;
+        metadata.planId = planId;
     }
 
-    const { userId, planId, period } = metadata;
+    const userId = metadata.userId || metadata.user_id;
+    const planId = metadata.planId || metadata.plan_id;
+    const period = metadata.period;
 
     // Calculate Expiration
     const months = period === 'monthly' ? 1 : 6;
@@ -85,18 +95,21 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
     }).catch(e => console.error("Audit Log Error:", e));
 
     // 2. Transaction: Update User Subscription
+    console.log(`[mercadopago] Updating user ${userId} to plan ${planId}`);
     const { error: userError } = await supabase.from("users").update({
         plan_id: planId,
         estado_suscripcion: 'activa',
         plan_expires_at: expiresAt.toISOString(),
-        plan_precio_pagado: paymentData.transaction_amount, // Mantener el precio pagado para protección futura
+        fecha_vencimiento_plan: expiresAt.toISOString(),
+        plan_precio_pagado: paymentData.transaction_amount,
         plan_periodo: period
     }).eq("id", userId);
 
     if (userError) {
-        console.error("Error updating user:", userError);
+        console.error("[mercadopago] Error updating user:", userError);
         throw userError;
     }
+    console.log(`[mercadopago] User ${userId} successfully updated to plan ${planId}`);
 
     // AUDIT LOG: Plan Activated
     await supabase.from("audit_logs").insert({
@@ -108,13 +121,24 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
     // EMAIL TRIGGER: SUSCRIPCION_ACTIVADA
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    
     const { data: userData2 } = await supabase.from('users').select('nombres, apellidos, email').eq('id', userId).maybeSingle();
+    const { data: planData } = await supabase.from('plans').select('name, price_monthly, price_semiannual, features').eq('slug', planId).maybeSingle();
+
+    const planPrecio = period === 'monthly' ? (planData?.price_monthly || 0) : (planData?.price_semiannual || 0);
+    const planDetalles = Array.isArray(planData?.features) ? planData.features.join(', ') : '';
+    const fechaExpiracion = expiresAt.toISOString().split('T')[0];
+
     dispararTrigger(supabaseUrl, serviceKey, 'SUSCRIPCION_ACTIVADA', {
         usuario_id: userId,
         usuario_nombre: `${userData2?.nombres || ''} ${userData2?.apellidos || ''}`.trim(),
+        nombres: userData2?.nombres || '', // Alias explícito para la plantilla
         usuario_email: userData2?.email || '',
-        plan_nombre: planId,
-        fecha_vencimiento: expiresAt.toISOString().split('T')[0],
+        plan_nombre: planData?.name || planId,
+        plan_precio: planPrecio.toString(),
+        plan_detalles: planDetalles,
+        fecha_proximo_cobro: fechaExpiracion,
+        fecha_vencimiento: fechaExpiracion, // Compatibilidad
         periodo: period === 'monthly' ? 'Mensual' : 'Semestral',
     });
 
@@ -244,11 +268,14 @@ serve(async (req) => {
     const action = url.searchParams.get("action"); // 'create_preference', 'webhook', 'check_payment'
     
     // Config
-    const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
+    const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN")?.trim();
     if (!MP_ACCESS_TOKEN) {
       console.error("Missing MP_ACCESS_TOKEN");
       return new Response(JSON.stringify({ error: "Configuration Error: MP_ACCESS_TOKEN is missing." }), { status: 200, headers: corsHeaders });
     }
+
+    // DEBUG: Log token info (Prefix and Length only)
+    console.log(`[mercadopago] Token Debug -> Prefix: ${MP_ACCESS_TOKEN.substring(0, 12)}, Length: ${MP_ACCESS_TOKEN.length}`);
 
     // -----------------------------------------------------------------------
     // ACTION: CREATE_PREFERENCE
@@ -267,7 +294,7 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: "Missing required fields." }), { status: 200, headers: corsHeaders });
       }
 
-      // Get Plan and User Details
+      // 1. Obtener detalles del Plan
       const { data: plan, error: planError } = await supabase
         .from("plans")
         .select("*")
@@ -278,45 +305,39 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: `Plan not found: ${planId}` }), { status: 200, headers: corsHeaders });
       }
 
-      // Fetch user profile for Price Protection
+      // 2. Fetch user profile for Price Protection
       const { data: userProfile } = await supabase
         .from('users')
         .select('plan_id, plan_precio_pagado, plan_periodo')
         .eq('id', userId)
         .maybeSingle();
 
-      let price = period === 'monthly' ? plan.price_monthly : plan.price_semiannual;
+      let basePrice = period === 'monthly' ? plan.price_monthly : plan.price_semiannual;
 
-      // Price Protection Logic: Si el usuario ya está en este plan y periodo, usar su precio bloqueado
+      // Price Protection Logic: Mantener el precio pagado por el usuario en su primera activación
       if (userProfile && userProfile.plan_id === plan.slug && 
           Number(userProfile.plan_precio_pagado) > 0 && 
           userProfile.plan_periodo === period) {
-          
-          console.log(`[price-protection] Aplicando precio bloqueado para usuario ${userId}: ${userProfile.plan_precio_pagado}`);
-          price = Number(userProfile.plan_precio_pagado);
+          basePrice = Number(userProfile.plan_precio_pagado);
+          console.log(`[price-protection] Usando precio bloqueado: ${basePrice}`);
       }
 
-      // Dynamic Currency Conversion (USD -> COP)
-      let finalPrice = Number(price);
-      let exchangeRate = 1;
-      
+      // 3. Dynamic Currency Conversion (USD -> COP)
+      let finalPriceCOP = Number(basePrice);
       try {
-        console.log(`[currency-conversion] Fetching rates for USD...`);
         const rateResponse = await fetch('https://open.er-api.com/v6/latest/USD');
         const rateData = await rateResponse.json();
-        exchangeRate = rateData.rates.COP || 4000;
-        
-        // Convert to COP (Mercado Pago Colombia requires COP)
-        finalPrice = Math.round(finalPrice * exchangeRate);
-        console.log(`[currency-conversion] Converted USD ${price} to COP ${finalPrice} (Rate: ${exchangeRate})`);
+        const exchangeRate = rateData.rates.COP || 4000;
+        finalPriceCOP = Math.round(Number(basePrice) * exchangeRate);
+        console.log(`[currency-conversion] USD ${basePrice} converted to COP ${finalPriceCOP} (Rate: ${exchangeRate})`);
       } catch (conversionError) {
-        console.error("Error fetching exchange rates, using fallback 4000:", conversionError);
-        finalPrice = Number(price) * 4000;
+        console.error("Currency API failed, using fallback 4000:", conversionError);
+        finalPriceCOP = Number(basePrice) * 4000;
       }
 
       const title = `${plan.name} (${period === 'monthly' ? 'Mensual' : 'Semestral'})`;
 
-      // Construct Preference
+      // 4. Construct Preference (Minimalist structure based on functional commit 847daf3)
       const preferenceData = {
         items: [
           {
@@ -324,19 +345,20 @@ serve(async (req) => {
             title: title,
             quantity: 1,
             currency_id: "COP",
-            unit_price: finalPrice,
+            unit_price: finalPriceCOP,
           },
         ],
-        ...(email ? { payer: { email } } : {}),
+        payer: { email: email }, // Essential for the dynamic email from frontend to work
         back_urls: {
           success: `${returnUrl}/payment/status?status=approved`,
           failure: `${returnUrl}/payment/status?status=rejected`,
           pending: `${returnUrl}/payment/status?status=pending`,
         },
-        auto_return: (returnUrl.includes('localhost') || returnUrl.includes('127.0.0.1')) ? undefined : "approved", 
         external_reference: JSON.stringify({ userId, planId, period }),
         notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago?action=webhook`,
       };
+
+      console.log("[mercadopago] Creating preference:", JSON.stringify(preferenceData));
 
       const mpResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
         method: "POST",
@@ -350,14 +372,12 @@ serve(async (req) => {
       const mpData = await mpResponse.json();
 
       if (!mpResponse.ok) {
-        console.error("MP Error payload:", JSON.stringify(mpData));
-        const mpErrorMsg = mpData.message || (mpData.cause && mpData.cause[0] && mpData.cause[0].description) || "Unknown MP Error";
-        return new Response(JSON.stringify({ error: `Mercado Pago Error: ${mpErrorMsg}`, details: mpData }), { status: 200, headers: corsHeaders });
+        console.error("MP Error:", JSON.stringify(mpData));
+        return new Response(JSON.stringify({ error: "Error de Mercado Pago", details: mpData }), { status: 200, headers: corsHeaders });
       }
 
       return new Response(JSON.stringify({ 
-        init_point: mpData.init_point,
-        sandbox_init_point: mpData.sandbox_init_point,
+        init_point: mpData.init_point, 
         preference_id: mpData.id 
       }), { 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 

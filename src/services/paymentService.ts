@@ -9,11 +9,16 @@ export const paymentService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('User not authenticated');
 
-        // NOT sending email to force a 100% clean guest checkout session
+        // NOT sending email to force manual input in MP (avoids auto-login conflicts in Sandbox)
+        // Use a dynamic test email for SandBox stability (as seen in historical version 847daf3)
+        // This avoids session conflicts and "buyer=seller" errors
+        const testEmail = `test_user_dropcost_${Date.now()}@testuser.com`;
+
         const payload = { 
             planId, 
             period, 
             userId: user.id, 
+            email: testEmail,
             returnUrl: window.location.origin 
         };
 
@@ -47,7 +52,7 @@ export const paymentService = {
 
         console.log('Payment Service Response:', data);
 
-        const checkoutUrl = data.sandbox_init_point || data.init_point;
+        const checkoutUrl = data.recommended_url || data.sandbox_init_point || data.init_point;
         
         if (!checkoutUrl) {
             console.error('Missing checkout URL in response:', data);
