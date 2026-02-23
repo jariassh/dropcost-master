@@ -49,9 +49,9 @@ export function PaymentStatusPage() {
 
                     await initialize();
                     const updatedUser = useAuthStore.getState().user;
-                    const planName = updatedUser?.plan?.name || 'Premium';
+                    const planName = updatedUser?.plan?.name || 'Suscripción';
                     setVerificationResult('success');
-                    toast.success('¡Plan Activado!', `Tu suscripción ${planName} ya está activa.`);
+                    toast.success('¡Plan Activado!', `Tu nueva suscripción ya está lista para usar.`);
                 } catch (error) {
                     console.error("Verification failed:", error);
                     setVerificationResult('error');
@@ -170,9 +170,9 @@ export function PaymentStatusPage() {
             return (
                 <div style={containerStyle}>
                     {renderIcon('success')}
-                    <h3 style={titleStyle}>¡Suscripción Activada!</h3>
+                    <h3 style={titleStyle}>¡Suscripción Confirmada!</h3>
                     <p style={descriptionStyle}>
-                        Tu plan ha sido actualizado correctamente. Ya puedes disfrutar de las ventajas de tu nueva suscripción.
+                        Tu cuenta ha sido actualizada con éxito. Ya puedes disfrutar de todas las funcionalidades de tu nuevo plan.
                     </p>
                     <Button
                         variant="primary"

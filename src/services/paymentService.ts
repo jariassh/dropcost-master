@@ -52,15 +52,13 @@ export const paymentService = {
 
         console.log('Payment Service Response:', data);
 
-        const checkoutUrl = data.recommended_url || data.sandbox_init_point || data.init_point;
-        
-        if (!checkoutUrl) {
-            console.error('Missing checkout URL in response:', data);
+        if (!data.init_point) {
+            console.error('Missing init_point in response:', data);
             throw new Error('No se recibió el link de pago de Mercado Pago.');
         }
 
-        console.log('Redirecting to Checkout:', checkoutUrl);
-        return checkoutUrl;
+        console.log('Redirecting to Checkout:', data.init_point);
+        return data.init_point;
     },
 
     /**

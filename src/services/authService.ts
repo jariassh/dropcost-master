@@ -183,12 +183,7 @@ export async function getCurrentUser(): Promise<User | null> {
             id: profile?.plan_id || 'plan_free',
             slug: profile?.plan_id || 'plan_free',
             name: planDetails?.name || (
-                profile?.plan_id === 'plan_pro' ? 'PRO' : 
-                profile?.plan_id === 'plan_enterprise' ? 'ENTERPRISE' : 
-                profile?.plan_id?.toLowerCase().includes('starter') ? 'STARTER' :
-                profile?.plan_id?.toLowerCase().includes('pro') ? 'PRO' :
-                profile?.plan_id?.toLowerCase().includes('enterprise') ? 'ENTERPRISE' :
-                (profile?.plan_id && profile.plan_id !== 'plan_free' ? profile.plan_id.replace('plan_', '').toUpperCase() : 'Sin suscripción activa')
+                profile?.plan_id ? (profile.plan_id.replace('plan_', '').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')) : 'Plan Gratis'
             ),
             limits: (planDetails?.limits as any) || (
                 profile?.plan_id === 'plan_pro' ? { stores: 5, costeos_limit: 100 } :
