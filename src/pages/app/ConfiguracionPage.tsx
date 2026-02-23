@@ -177,6 +177,7 @@ export function ConfiguracionPage() {
     // 2FA Flow
     const [is2FAEnabled, setIs2FAEnabled] = useState(user?.twoFactorEnabled || false);
     const [showActivationConfirm, setShowActivationConfirm] = useState(false);
+    const [showDeactivationConfirm, setShowDeactivationConfirm] = useState(false);
     const [showOTPModal, setShowOTPModal] = useState(false);
     const [otpCode, setOtpCode] = useState('');
     const [isVerifying, setIsVerifying] = useState(false);
@@ -276,10 +277,17 @@ export function ConfiguracionPage() {
         if (!is2FAEnabled) {
             setShowActivationConfirm(true);
         } else {
-            const success = await disable2FA();
-            if (success) {
-                toast.info('Seguridad Actualizada', 'La autenticación de dos factores ha sido desactivada.');
-            }
+            setShowDeactivationConfirm(true);
+        }
+    };
+
+    const executeDisable2FA = async () => {
+        const success = await disable2FA();
+        if (success) {
+            toast.info('Seguridad Actualizada', 'La autenticación de dos factores ha sido desactivada.');
+            setShowDeactivationConfirm(false);
+        } else {
+            toast.error('Error', 'No se pudo desactivar el 2FA. Reintenta luego.');
         }
     };
 
@@ -1408,6 +1416,17 @@ export function ConfiguracionPage() {
                 variant="info"
                 onConfirm={requestActivation}
                 onCancel={() => setShowActivationConfirm(false)}
+            />
+
+            <ConfirmDialog
+                isOpen={showDeactivationConfirm}
+                title="¿Desactivar 2FA?"
+                description="Al desactivar el 2FA, tu cuenta será menos segura. ¿Estás seguro de que deseas continuar?"
+                confirmLabel="Desactivar Seguridad"
+                cancelLabel="Mantener Protegida"
+                variant="danger"
+                onConfirm={executeDisable2FA}
+                onCancel={() => setShowDeactivationConfirm(false)}
             />
 
             <Modal

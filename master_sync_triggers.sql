@@ -12,6 +12,7 @@ VALUES
 ('Seguridad - Código 2FA', 'Código de verificación para acciones sensibles.', 'AUTH_2FA', 'usuario', '["nombres", "usuario_email", "codigo", "expira_en"]', 'automatico', 'auth_codes', 'INSERT'),
 ('Seguridad - Código de Cambio de Email', 'Código enviado al nuevo correo para confirmar cambio.', 'AUTH_EMAIL_CHANGE_CODE', 'usuario', '["nombres", "email_nuevo", "email_anterior", "codigo", "expira_en"]', 'automatico', 'auth_codes', 'INSERT'),
 ('Seguridad - Solicitud de Activación 2FA', 'Código para activar la seguridad de dos factores.', '2FA_SOLICITUD_ACTIVACION', 'usuario', '["nombres", "usuario_email", "codigo", "expira_en"]', 'automatico', 'auth_codes', 'INSERT'),
+('Seguridad - 2FA Desactivado', 'Notificación enviada cuando se desactiva el 2FA.', '2FA_DESACTIVADO', 'usuario', '["nombres", "usuario_email", "fecha_desactivacion"]', 'automatico', 'users', 'UPDATE'),
 ('Email Cambiado (Confirmación)', 'Notificación de cambio de email exitoso.', 'EMAIL_CAMBIADO', 'usuario', '["nombres", "email_nuevo", "email_anterior", "fecha_cambio"]', 'automatico', 'users', 'UPDATE'),
 ('Suscripción Activada', 'Plan activado o renovado.', 'SUSCRIPCION_ACTIVADA', 'usuario', '["plan_nombre", "plan_precio", "fecha_proximo_cobro", "link_pago"]', 'automatico', 'users', 'UPDATE'),
 ('Recordatorio Renovación (2 días)', '2 días antes del vencimiento.', 'SUSCRIPCION_RENOVACION_2_DIAS', 'usuario', '["plan_nombre", "plan_precio", "fecha_proximo_cobro", "link_pago"]', 'cron', 'users', 'CRON'),
@@ -42,6 +43,7 @@ BEGIN
         UNION ALL SELECT '2FA_CODIGO_CONFIRMACION', ARRAY['2fa', 'codigo_2fa', 'auth_2fa']
         UNION ALL SELECT 'AUTH_EMAIL_CHANGE_CODE', ARRAY['cambio-email-codigo', 'email_change_code']
         UNION ALL SELECT '2FA_SOLICITUD_ACTIVACION', ARRAY['2FA_SOLICITUD_ACTIVACION', '2FA_ACTIVACION']
+        UNION ALL SELECT '2FA_DESACTIVADO', ARRAY['2FA_DESACTIVADO', 'desactivar_2fa']
         UNION ALL SELECT 'EMAIL_CAMBIADO', ARRAY['email-cambiado', 'email_changed']
         UNION ALL SELECT 'SUSCRIPCION_ACTIVADA', ARRAY['suscripcion-activada', 'subscription_active']
         UNION ALL SELECT 'PAGO_COMISIONES_APROBADO', ARRAY['pago-aprobado', 'withdrawal_approved']
