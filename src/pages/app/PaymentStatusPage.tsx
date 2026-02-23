@@ -39,10 +39,19 @@ export function PaymentStatusPage() {
                 setHasAttemptedVerification(true);
                 setIsVerifying(true);
                 try {
-                    await paymentService.checkPaymentStatus(paymentId);
+                    const result = await paymentService.checkPaymentStatus(paymentId);
+
+                    if (result.error || result.result?.error) {
+                        console.error("Payment verification internal error:", result.error || result.result?.error);
+                        setVerificationResult('error');
+                        return;
+                    }
+
                     await initialize();
+                    const updatedUser = useAuthStore.getState().user;
+                    const planName = updatedUser?.plan?.name || 'Premium';
                     setVerificationResult('success');
-                    toast.success('¡Plan Activado!', 'Tu suscripción PRO ya está activa.');
+                    toast.success('¡Plan Activado!', `Tu suscripción ${planName} ya está activa.`);
                 } catch (error) {
                     console.error("Verification failed:", error);
                     setVerificationResult('error');
@@ -108,7 +117,7 @@ export function PaymentStatusPage() {
                     {renderIcon('loading')}
                     <h3 style={titleStyle}>Verificando tu pago</h3>
                     <p style={descriptionStyle}>
-                        Estamos confirmando la transacción con Mercado Pago para activar tu plan PRO.
+                        Estamos confirmando la transacción con Mercado Pago para activar tu nueva suscripción.
                     </p>
                 </div>
             );
@@ -163,7 +172,7 @@ export function PaymentStatusPage() {
                     {renderIcon('success')}
                     <h3 style={titleStyle}>¡Suscripción Activada!</h3>
                     <p style={descriptionStyle}>
-                        Tu plan ha sido actualizado correctamente. Ya puedes disfrutar de las ventajas PRO.
+                        Tu plan ha sido actualizado correctamente. Ya puedes disfrutar de las ventajas de tu nueva suscripción.
                     </p>
                     <Button
                         variant="primary"

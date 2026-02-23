@@ -182,8 +182,19 @@ export async function getCurrentUser(): Promise<User | null> {
         plan: {
             id: profile?.plan_id || 'plan_free',
             slug: profile?.plan_id || 'plan_free',
-            name: planDetails?.name || (profile?.plan_id === 'plan_pro' ? 'PRO' : profile?.plan_id === 'plan_enterprise' ? 'ENTERPRISE' : 'Sin suscripción activa'),
-            limits: (planDetails?.limits as any) || { stores: 1 }
+            name: planDetails?.name || (
+                profile?.plan_id === 'plan_pro' ? 'PRO' : 
+                profile?.plan_id === 'plan_enterprise' ? 'ENTERPRISE' : 
+                profile?.plan_id?.toLowerCase().includes('starter') ? 'STARTER' :
+                profile?.plan_id?.toLowerCase().includes('pro') ? 'PRO' :
+                profile?.plan_id?.toLowerCase().includes('enterprise') ? 'ENTERPRISE' :
+                (profile?.plan_id && profile.plan_id !== 'plan_free' ? profile.plan_id.replace('plan_', '').toUpperCase() : 'Sin suscripción activa')
+            ),
+            limits: (planDetails?.limits as any) || (
+                profile?.plan_id === 'plan_pro' ? { stores: 5, costeos_limit: 100 } :
+                profile?.plan_id === 'plan_enterprise' ? { stores: 10, costeos_limit: 500 } :
+                { stores: 1 }
+            )
         },
         bank_info: (profile as any)?.bank_info
     };
