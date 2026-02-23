@@ -318,6 +318,13 @@ serve(async (req) => {
         auto_return: (returnUrl.includes('localhost') || returnUrl.includes('127.0.0.1')) ? undefined : "approved", 
         external_reference: JSON.stringify({ userId, planId, period }),
         notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago?action=webhook`,
+        // Force guest checkout by excluding account money and using card-only flow
+        payment_methods: {
+          excluded_payment_types: [
+            { id: "account_money" }
+          ],
+          installments: 1
+        },
       };
 
       const mpResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
@@ -338,7 +345,8 @@ serve(async (req) => {
       }
 
       return new Response(JSON.stringify({ 
-        init_point: mpData.init_point, 
+        init_point: mpData.init_point,
+        sandbox_init_point: mpData.sandbox_init_point,
         preference_id: mpData.id 
       }), { 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 

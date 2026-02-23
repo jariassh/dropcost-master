@@ -9,9 +9,8 @@ export const paymentService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('User not authenticated');
 
-        // Use a test email if we're testing (or user's email)
-        // This is a temporary fix to allow testing even if user uses same email as MP account
-        const testEmail = `test_user_dropcost_${Date.now()}@testuser.com`;
+        // Use a more unique test email to avoid session conflicts in MP SandBox
+        const testEmail = `tester_${Math.floor(Math.random() * 999999)}@dropcost-test.com`;
 
         const payload = { 
             planId, 
@@ -51,12 +50,15 @@ export const paymentService = {
 
         console.log('Payment Service Response:', data);
 
-        if (!data.init_point) {
-            console.error('Missing init_point in response:', data);
+        const checkoutUrl = data.sandbox_init_point || data.init_point;
+        
+        if (!checkoutUrl) {
+            console.error('Missing checkout URL in response:', data);
             throw new Error('No se recibió el link de pago de Mercado Pago.');
         }
 
-        return data.init_point;
+        console.log('Redirecting to Checkout:', checkoutUrl);
+        return checkoutUrl;
     },
 
     /**
