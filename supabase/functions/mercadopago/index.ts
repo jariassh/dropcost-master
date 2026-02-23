@@ -9,14 +9,24 @@ const corsHeaders = {
 
 // Helper: disparar trigger de email (fire-and-forget)
 async function dispararTrigger(supabaseUrl: string, serviceKey: string, codigo_evento: string, datos: Record<string, string>) {
+    console.log(`[email-trigger] Firing event: ${codigo_evento} for user: ${datos.usuario_id || 'unknown'}`);
     try {
-        await fetch(`${supabaseUrl}/functions/v1/email-trigger-dispatcher`, {
+        const response = await fetch(`${supabaseUrl}/functions/v1/email-trigger-dispatcher`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` },
             body: JSON.stringify({ codigo_evento, datos }),
         });
+        
+        const result = await response.json().catch(() => ({}));
+        if (response.ok) {
+            console.log(`[email-trigger] Success: Trigger ${codigo_evento} dispatched.`, JSON.stringify(result));
+        } else {
+            console.warn(`[email-trigger] Failed: Dispatcher returned ${response.status}`, JSON.stringify(result));
+        }
+        return result;
     } catch (e) {
-        console.error(`[email-trigger] Error disparando ${codigo_evento}:`, e);
+        console.error(`[email-trigger] Fatal Error firing ${codigo_evento}:`, e);
+        return { error: e.message };
     }
 }
 
@@ -36,34 +46,32 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
         return { status: "already_processed", message: "Este pago ya fue registrado anteriormente." };
     }
 
-    // Parse Metadata (Prefer metadata field for structured data)
+    // Parse Metadata (Prioritize structured metadata, fallback to external_reference)
     let metadata = paymentData.metadata;
-    if (!metadata || typeof metadata !== 'object') {
+    
+    // Check if metadata is truly empty (Mercado Pago often sends {} even if not provided)
+    const isMetadataEmpty = !metadata || typeof metadata !== 'object' || Object.keys(metadata).length === 0;
+
+    if (isMetadataEmpty) {
+        console.log("[mercadopago] Metadata is empty, parsing external_reference...");
         try {
-            metadata = typeof paymentData.external_reference === 'string' 
-                ? JSON.parse(paymentData.external_reference) 
-                : paymentData.external_reference;
+            const extRef = paymentData.external_reference;
+            metadata = typeof extRef === 'string' ? JSON.parse(extRef) : extRef;
         } catch (e) {
             console.error("Error parsing fallback external_reference:", e);
-            return { error: "Invalid metadata in payment" };
+            // Non-critical, we check fields below
         }
     }
 
-    if (!metadata || !metadata.user_id || !metadata.plan_id) {
-        console.error("Missing metadata required fields:", metadata);
-        // Map old fields to new fields for backward compatibility during transition
-        const userId = metadata?.userId || metadata?.user_id;
-        const planId = metadata?.planId || metadata?.plan_id;
-        if (!userId || !planId) {
-            return { error: "Missing metadata (userId/planId)" };
-        }
-        metadata.userId = userId;
-        metadata.planId = planId;
-    }
+    // Robust field extraction (supports snake_case and camelCase)
+    const userId = metadata?.user_id || metadata?.userId;
+    const planId = metadata?.plan_id || metadata?.planId;
+    const period = metadata?.period || metadata?.plan_periodo || 'monthly';
 
-    const userId = metadata.userId || metadata.user_id;
-    const planId = metadata.planId || metadata.plan_id;
-    const period = metadata.period;
+    if (!userId || !planId) {
+        console.error("Critical: Missing identification in payment data", { userId, planId, metadata, external: paymentData.external_reference });
+        return { error: `ERR_DC_REF_MISSING: No pudimos identificar tu usuario o plan en el pago. ID Pago: ${dataId}. Por favor contacta a soporte.` };
+    }
 
     // Calculate Expiration
     const months = period === 'monthly' ? 1 : 6;
@@ -95,21 +103,52 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
     }).catch(e => console.error("Audit Log Error:", e));
 
     // 2. Transaction: Update User Subscription
-    console.log(`[mercadopago] Updating user ${userId} to plan ${planId}`);
-    const { error: userError } = await supabase.from("users").update({
+    console.log(`[mercadopago] !!! PROJECT_DEBUG !!! Attempting update for user ID: "${userId}"`);
+    
+    // Safety check: Does user exist?
+    let finalUserId = userId;
+    const { data: checkUser, error: checkUserErr } = await supabase.from("users").select("id, email, plan_id").eq("id", userId).maybeSingle();
+    
+    if (checkUserErr) {
+        console.error("[mercadopago] Error checking user existence:", checkUserErr);
+    } else if (!checkUser) {
+        console.warn(`[mercadopago] CRITICAL: User with ID "${userId}" NOT FOUND in public.users table. Searching by email...`);
+        const targetEmail = metadata.email || metadata.user_email || paymentData.payer?.email;
+        if (targetEmail) {
+            const { data: fallbackUser } = await supabase.from("users").select("id").eq("email", targetEmail).maybeSingle();
+            if (fallbackUser) {
+                console.log(`[mercadopago] Found user by email (${targetEmail})! Correcting ID to ${fallbackUser.id}`);
+                finalUserId = fallbackUser.id;
+            } else {
+                console.error(`[mercadopago] User NOT FOUND by ID nor by Email (${targetEmail}). Activation will likely fail.`);
+            }
+        }
+    } else {
+        console.log(`[mercadopago] User found! Current plan: ${checkUser.plan_id}. Proceeding with update...`);
+    }
+
+    const updatePayload = {
         plan_id: planId,
         estado_suscripcion: 'activa',
         plan_expires_at: expiresAt.toISOString(),
         fecha_vencimiento_plan: expiresAt.toISOString(),
         plan_precio_pagado: paymentData.transaction_amount,
-        plan_periodo: period
-    }).eq("id", userId);
+        plan_periodo: period,
+        updated_at: new Date().toISOString()
+    };
+
+    const { data: updateData, error: userError } = await supabase.from("users").update(updatePayload).eq("id", finalUserId).select();
 
     if (userError) {
-        console.error("[mercadopago] Error updating user:", userError);
+        console.error("[mercadopago] Update Error:", userError);
         throw userError;
     }
-    console.log(`[mercadopago] User ${userId} successfully updated to plan ${planId}`);
+    
+    if (!updateData || updateData.length === 0) {
+        console.warn(`[mercadopago] Update finished with 0 rows affected for ID: ${finalUserId}`);
+    } else {
+        console.log(`[mercadopago] SUCCESS! User ${finalUserId} updated. Plan: ${planId}`);
+    }
 
     // AUDIT LOG: Plan Activated
     await supabase.from("audit_logs").insert({
@@ -119,26 +158,29 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
     }).catch(e => console.error("Audit Log Error:", e));
 
     // EMAIL TRIGGER: SUSCRIPCION_ACTIVADA
+    console.log(`[mercadopago] Starting email trigger for user: ${userId}`);
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     
     const { data: userData2 } = await supabase.from('users').select('nombres, apellidos, email').eq('id', userId).maybeSingle();
     const { data: planData } = await supabase.from('plans').select('name, price_monthly, price_semiannual, features').eq('slug', planId).maybeSingle();
 
+    console.log(`[mercadopago] Data for email: User=${userData2?.email}, Plan=${planData?.name || planId}`);
+
     const planPrecio = period === 'monthly' ? (planData?.price_monthly || 0) : (planData?.price_semiannual || 0);
     const planDetalles = Array.isArray(planData?.features) ? planData.features.join(', ') : '';
     const fechaExpiracion = expiresAt.toISOString().split('T')[0];
 
-    dispararTrigger(supabaseUrl, serviceKey, 'SUSCRIPCION_ACTIVADA', {
+    await dispararTrigger(supabaseUrl, serviceKey, 'SUSCRIPCION_ACTIVADA', {
         usuario_id: userId,
         usuario_nombre: `${userData2?.nombres || ''} ${userData2?.apellidos || ''}`.trim(),
-        nombres: userData2?.nombres || '', // Alias explícito para la plantilla
+        nombres: userData2?.nombres || '',
         usuario_email: userData2?.email || '',
         plan_nombre: planData?.name || planId,
         plan_precio: planPrecio.toString(),
         plan_detalles: planDetalles,
         fecha_proximo_cobro: fechaExpiracion,
-        fecha_vencimiento: fechaExpiracion, // Compatibilidad
+        fecha_vencimiento: fechaExpiracion,
         periodo: period === 'monthly' ? 'Mensual' : 'Semestral',
     });
 
@@ -355,6 +397,7 @@ serve(async (req) => {
           pending: `${returnUrl}/payment/status?status=pending`,
         },
         external_reference: JSON.stringify({ userId, planId, period }),
+        auto_return: "all",
         notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago?action=webhook`,
       };
 
