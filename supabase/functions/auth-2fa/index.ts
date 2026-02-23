@@ -52,7 +52,10 @@ serve(async (req) => {
 
     // Obtener usuario autenticado
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
-    if (userError || !user) throw new Error('No autorizado o sesión expirada')
+    if (userError || !user) {
+      console.error("[auth-2fa] Auth Error:", userError);
+      throw new Error(`No autorizado o sesión expirada${userError ? ': ' + userError.message : ''}`);
+    }
 
     // 2. Inicializar cliente con Service Role para operaciones privilegiadas
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -255,10 +258,12 @@ serve(async (req) => {
       if (updateError) throw updateError
 
       // EMAIL TRIGGER: 2FA_DESACTIVADO
-      dispararTrigger(supabaseUrl, supabaseServiceKey, '2FA_DESACTIVADO', {
+      await dispararTrigger(supabaseUrl, supabaseServiceKey, '2FA_DESACTIVADO', {
           usuario_id: user.id,
           usuario_email: user.email ?? '',
           usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
+          nombres: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
+          fecha_desactivacion: new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
       });
 
       return new Response(JSON.stringify({ success: true }), {
