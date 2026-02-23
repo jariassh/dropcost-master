@@ -87,8 +87,11 @@ serve(async (req) => {
 
       console.log("Código insertado en DB, disparando trigger de email...");
       
+      const { context } = body;
+      const trigger_code = (context === 'activation') ? '2FA_SOLICITUD_ACTIVACION' : 'AUTH_2FA';
+
       // Enviar email usando el disparador centralizado
-      await dispararTrigger(supabaseUrl, supabaseServiceKey, '2FA_CODIGO_CONFIRMACION', {
+      await dispararTrigger(supabaseUrl, supabaseServiceKey, trigger_code, {
         usuario_id: user.id,
         usuario_email: user.email ?? '',
         usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',

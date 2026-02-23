@@ -113,10 +113,13 @@ Deno.serve(async (req: Request) => {
                 // Priorizamos lo que ya viene en datos (payload) sobre lo que hay en DB
                 const dbNombre = `${authUser.user_metadata?.nombres || ''} ${authUser.user_metadata?.apellidos || ''}`.trim();
                 
+                // CRITICAL FIX: Si es un cambio de email, el destinatario DEBE ser el email_nuevo
+                const payloadEmail = datosEnriquecidos['email_nuevo'] || datosEnriquecidos['usuario_email'] || datosEnriquecidos['email'];
+                
                 datosEnriquecidos['usuario_nombre'] = datosEnriquecidos['usuario_nombre'] || datosEnriquecidos['nombres'] || dbNombre;
                 datosEnriquecidos['nombres'] = datosEnriquecidos['nombres'] || datosEnriquecidos['usuario_nombre'];
-                datosEnriquecidos['usuario_email'] = datosEnriquecidos['usuario_email'] || datosEnriquecidos['email'] || authUser.email;
-                datosEnriquecidos['email'] = datosEnriquecidos['email'] || datosEnriquecidos['usuario_email'];
+                datosEnriquecidos['usuario_email'] = payloadEmail || authUser.email;
+                datosEnriquecidos['email'] = datosEnriquecidos['usuario_email'];
             }
         }
 
