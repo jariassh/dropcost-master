@@ -62,6 +62,14 @@ Deno.serve(async (req: Request) => {
             .limit(1)
             .maybeSingle();
 
+        // --- Configuración de Referidos ---
+        const { data: refConfig } = await supabase
+            .from('sistema_referidos_config')
+            .select('*')
+            .order('fecha_actualizacion', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
         const emailDomain = config?.email_domain || 'dropcost.jariash.com';
         const nombreEmpresa = config?.nombre_empresa || 'DropCost Master';
         let appUrl = (config?.site_url || config?.sitio_web || 'https://app.dropcost.com').trim().replace(/\/+$/, '');
@@ -73,6 +81,10 @@ Deno.serve(async (req: Request) => {
             empresa: nombreEmpresa,
             logo_url: logoUrl,
             app_url: appUrl,
+            // Variables de referidos (globales)
+            comision_referido_nivel1: refConfig?.comision_nivel_1 || '15',
+            comision_referido_nivel2: refConfig?.comision_nivel_2 || '5',
+            vigencia_meses_comision: refConfig?.meses_vigencia_comision || '12',
             // Colores del branding (se reemplazan al enviar, no al guardar la plantilla)
             // Así cualquier cambio de branding se aplica automáticamente a todos los correos
             color_primary: config?.color_primary || '#0066FF',
