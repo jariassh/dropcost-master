@@ -296,6 +296,24 @@ serve(async (req) => {
           price = Number(userProfile.plan_precio_pagado);
       }
 
+      // Dynamic Currency Conversion (USD -> COP)
+      let finalPrice = Number(price);
+      let exchangeRate = 1;
+      
+      try {
+        console.log(`[currency-conversion] Fetching rates for USD...`);
+        const rateResponse = await fetch('https://open.er-api.com/v6/latest/USD');
+        const rateData = await rateResponse.json();
+        exchangeRate = rateData.rates.COP || 4000;
+        
+        // Convert to COP (Mercado Pago Colombia requires COP)
+        finalPrice = Math.round(finalPrice * exchangeRate);
+        console.log(`[currency-conversion] Converted USD ${price} to COP ${finalPrice} (Rate: ${exchangeRate})`);
+      } catch (conversionError) {
+        console.error("Error fetching exchange rates, using fallback 4000:", conversionError);
+        finalPrice = Number(price) * 4000;
+      }
+
       const title = `${plan.name} (${period === 'monthly' ? 'Mensual' : 'Semestral'})`;
 
       // Construct Preference
@@ -306,10 +324,10 @@ serve(async (req) => {
             title: title,
             quantity: 1,
             currency_id: "COP",
-            unit_price: Number(price),
+            unit_price: finalPrice,
           },
         ],
-        payer: { email: email },
+        ...(email ? { payer: { email } } : {}),
         back_urls: {
           success: `${returnUrl}/payment/status?status=approved`,
           failure: `${returnUrl}/payment/status?status=rejected`,
@@ -318,13 +336,6 @@ serve(async (req) => {
         auto_return: (returnUrl.includes('localhost') || returnUrl.includes('127.0.0.1')) ? undefined : "approved", 
         external_reference: JSON.stringify({ userId, planId, period }),
         notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago?action=webhook`,
-        // Force guest checkout by excluding account money and using card-only flow
-        payment_methods: {
-          excluded_payment_types: [
-            { id: "account_money" }
-          ],
-          installments: 1
-        },
       };
 
       const mpResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
