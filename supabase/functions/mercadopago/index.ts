@@ -33,54 +33,24 @@ async function dispararTrigger(supabaseUrl: string, serviceKey: string, codigo_e
 // Helper function to process approved payment
 async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClient) {
     const dataId = String(paymentData.id);
-    
-    // Idempotency Check: Critical to avoid double commissions
-    const { data: existingPayment, error: checkError } = await supabase
-        .from("payments")
-        .select("id")
-        .eq("provider_payment_id", dataId)
-        .maybeSingle();
 
-    if (existingPayment) {
-        console.log("!!! [BACKEND] Idempotencia: Pago ya registrado previamente:", dataId);
-        
-        // RE-ACTIVATION SAFETY: If payment exists but user is still FREE/INACTIVE, retry the activation
-        // Buscamos al usuario basado en el user_id guardado en el pago
-        const { data: userData } = await supabase.from("users").select("id, plan_id, estado_suscripcion").eq("id", existingPayment.user_id).maybeSingle();
-        
-        console.log("!!! [BACKEND] Idempotencia - Estado actual del usuario vinculado al pago:", JSON.stringify(userData, null, 2));
-
-        if (userData && (userData.plan_id === 'plan_free' || userData.estado_suscripcion !== 'activa')) {
-            console.log(`!!! [BACKEND] RE-ACTIVACIÓN: El usuario ${userData.id} sigue en ${userData.plan_id}. Forzando actualización de plan...`);
-            // Continuamos el proceso ignorando el 'return' de idempotencia para asegurar que el plan se active
-        } else if (!userData) {
-            console.warn("!!! [BACKEND] ALERTA CRÍTICA: El pago existe pero el usuario vinculado NO se encontró en la tabla users. ID buscado:", existingPayment.user_id);
-            // Intentamos recuperar el ID desde los metadatos del pago por si hubo un error de escritura inicial
-            console.log("Intentando procesar como pago nuevo para forzar vinculación...");
-        } else {
-            console.log("!!! [BACKEND] Idempotencia: El pago ya fue procesado y el usuario tiene el plan activo. Terminando ejecución.");
-            return { status: "already_processed", message: "Este pago ya fue registrado y el plan está activo.", debug: { userData } };
-        }
-    }
-
-    // Parse Metadata (Prioritize external_reference because it is our source of truth)
+    // Parse Metadata (external_reference is our source of truth)
     let metadata;
     try {
         const extRef = paymentData.external_reference;
         metadata = typeof extRef === 'string' ? JSON.parse(extRef) : extRef;
-        console.log("[mercadopago] Data parsed from external_reference:", JSON.stringify(metadata));
+        console.log("[mercadopago] external_reference parsed:", JSON.stringify(metadata));
     } catch (e) {
-        console.warn("[mercadopago] Failed to parse external_reference, trying metadata object...");
+        console.warn("[mercadopago] external_reference parse failed, fallback to metadata object");
         metadata = paymentData.metadata;
     }
 
-    // Robust field extraction
     const userId = metadata?.user_id || metadata?.userId;
     const planId = metadata?.plan_id || metadata?.planId;
     const period = metadata?.period || metadata?.plan_periodo || 'monthly';
 
     if (!userId || !planId) {
-        console.error("Critical: Missing identification in payment data", { userId, planId, metadata, external: paymentData.external_reference });
+        console.error("Critical: Missing userId or planId", { userId, planId, metadata });
         return { error: `ERR_DC_REF_MISSING: No pudimos identificar tu usuario o plan. ID Pago: ${dataId}.` };
     }
 
@@ -89,9 +59,14 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + months);
 
-    // 1. Transaction: Record Payment (Solo si no es una reactivación de un pago ya existente)
-    if (!existingPayment) {
-        const { error: payError } = await supabase.from("payments").insert({
+    // ─────────────────────────────────────────────────────────────────────────
+    // IDEMPOTENCIA ATÓMICA: Intentamos insertar el pago.
+    // La restricción UNIQUE en provider_payment_id garantiza que si dos webhooks
+    // llegan simultáneamente, solo UNO tendrá éxito. El otro retornará null.
+    // ─────────────────────────────────────────────────────────────────────────
+    const { data: insertedPayment, error: payError } = await supabase
+        .from("payments")
+        .upsert({
             user_id: userId,
             amount: paymentData.transaction_amount,
             currency: paymentData.currency_id,
@@ -100,24 +75,32 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
             plan_id: planId,
             period: period,
             metadata: paymentData
-        });
+        }, { onConflict: 'provider_payment_id', ignoreDuplicates: true })
+        .select("id")
+        .maybeSingle();
 
-        if (payError) {
-            console.error("Error inserting payment:", payError);
-            throw payError;
-        }
-
-        // AUDIT LOG: Payment Received
-        try {
-            await supabase.from("audit_logs").insert({
-                usuario_id: userId,
-                accion: 'PAYMENT_RECEIVED',
-                detalles: { payment_id: dataId, amount: paymentData.transaction_amount, currency: paymentData.currency_id }
-            });
-        } catch (e) { console.error("Audit Log Error (PAYMENT_RECEIVED):", e); }
-    } else {
-        console.log("!!! [BACKEND] Saltando inserción en 'payments' y log de pago recibido por ser RE-ACTIVACIÓN de pago existente.");
+    if (payError) {
+        console.error("!!! [BACKEND] Error en upsert de pago:", payError);
+        throw payError;
     }
+
+    if (!insertedPayment) {
+        // Este webhook llegó tarde — otro ya procesó este pago
+        console.log(`!!! [BACKEND] IDEMPOTENCIA: Pago ${dataId} ya fue procesado por otra ejecución. Descartando duplicado.`);
+        return { status: "already_processed", message: "Este pago ya fue registrado." };
+    }
+
+    console.log(`!!! [BACKEND] NUEVO PAGO registrado correctamente. ID interno: ${insertedPayment.id}. Procediendo con activación...`);
+
+    // AUDIT LOG: Payment Received
+    try {
+        await supabase.from("audit_logs").insert({
+            usuario_id: userId,
+            accion: 'PAYMENT_RECEIVED',
+            detalles: { payment_id: dataId, amount: paymentData.transaction_amount, currency: paymentData.currency_id }
+        });
+    } catch (e) { console.error("Audit Log Error (PAYMENT_RECEIVED):", e); }
+
 
     // 2. Transaction: Update User Subscription
     console.log(`[mercadopago] !!! PROJECT_DEBUG !!! Attempting update for user ID: "${userId}"`);
@@ -180,49 +163,32 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
         });
     } catch (e) { console.error("Audit Log Error (PLAN_ACTIVATED):", e); }
 
-    // EMAIL TRIGGER: SUSCRIPCION_ACTIVADA (con idempotencia para evitar duplicados)
+    // EMAIL TRIGGER: SUSCRIPCION_ACTIVADA
+    // La idempotencia atómica del upsert garantiza que solo llegamos aquí UNA vez por pago.
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-    // Verificar si el email ya fue enviado para este pago
-    const { data: paymentEmailFlag } = await supabase
-        .from('payments')
-        .select('email_suscripcion_enviado')
-        .eq('provider_payment_id', dataId)
-        .maybeSingle();
+    const { data: userData2 } = await supabase.from('users').select('nombres, apellidos, email').eq('id', finalUserId).maybeSingle();
+    const { data: planData } = await supabase.from('plans').select('name, price_monthly, price_semiannual, features').eq('slug', planId).maybeSingle();
 
-    if (!paymentEmailFlag?.email_suscripcion_enviado) {
-        console.log(`!!! [BACKEND] Email NO enviado aún para pago ${dataId}. Disparando trigger...`);
+    const planPrecio = period === 'monthly' ? (Number(planData?.price_monthly) || 0) : (Number(planData?.price_semiannual) || 0);
+    const planDetalles = Array.isArray(planData?.features) ? planData.features.join(', ') : '';
+    const fechaExpiracion = expiresAt.toISOString().split('T')[0];
 
-        const { data: userData2 } = await supabase.from('users').select('nombres, apellidos, email').eq('id', finalUserId).maybeSingle();
-        const { data: planData } = await supabase.from('plans').select('name, price_monthly, price_semiannual, features').eq('slug', planId).maybeSingle();
+    console.log(`!!! [BACKEND] Disparando email SUSCRIPCION_ACTIVADA. Plan: ${planData?.name}, Precio: ${planPrecio}, Email: ${userData2?.email}`);
 
-        const planPrecio = period === 'monthly' ? (planData?.price_monthly || 0) : (planData?.price_semiannual || 0);
-        const planDetalles = Array.isArray(planData?.features) ? planData.features.join(', ') : '';
-        const fechaExpiracion = expiresAt.toISOString().split('T')[0];
-
-        await dispararTrigger(supabaseUrl, serviceKey, 'SUSCRIPCION_ACTIVADA', {
-            usuario_id: finalUserId,
-            usuario_nombre: `${userData2?.nombres || ''} ${userData2?.apellidos || ''}`.trim(),
-            nombres: userData2?.nombres || '',
-            usuario_email: userData2?.email || '',
-            plan_nombre: planData?.name || planId,
-            plan_precio: planPrecio.toString(),
-            plan_detalles: planDetalles,
-            fecha_proximo_cobro: fechaExpiracion,
-            fecha_vencimiento: fechaExpiracion,
-            periodo: period === 'monthly' ? 'Mensual' : 'Semestral',
-        });
-
-        // Marcar el email como enviado para garantizar idempotencia
-        await supabase.from('payments')
-            .update({ email_suscripcion_enviado: true })
-            .eq('provider_payment_id', dataId);
-
-        console.log(`!!! [BACKEND] Email de suscripción marcado como enviado para pago ${dataId}.`);
-    } else {
-        console.log(`!!! [BACKEND] Email ya enviado previamente para pago ${dataId}. Omitiendo para evitar duplicado.`);
-    }
+    await dispararTrigger(supabaseUrl, serviceKey, 'SUSCRIPCION_ACTIVADA', {
+        usuario_id: finalUserId,
+        usuario_nombre: `${userData2?.nombres || ''} ${userData2?.apellidos || ''}`.trim(),
+        nombres: userData2?.nombres || '',
+        usuario_email: userData2?.email || '',
+        plan_nombre: planData?.name || planId,
+        plan_precio: String(planPrecio),
+        plan_detalles: planDetalles,
+        fecha_proximo_cobro: fechaExpiracion,
+        fecha_vencimiento: fechaExpiracion,
+        periodo: period === 'monthly' ? 'Mensual' : 'Semestral',
+    });
 
     // 3. COMMISSION LOGIC (Referrals)
     try {
