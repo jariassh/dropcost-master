@@ -455,11 +455,23 @@ export function RegisterPage() {
                     />
                     <span style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
                         Acepto los{' '}
-                        <a href="/terminos" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>
+                        <a
+                            href="/terminos"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: 'var(--color-primary)', textDecoration: 'none' }}
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); window.open('/terminos', '_blank'); }}
+                        >
                             Términos y Condiciones
                         </a>{' '}
                         y la{' '}
-                        <a href="/privacidad" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>
+                        <a
+                            href="/privacidad"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: 'var(--color-primary)', textDecoration: 'none' }}
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); window.open('/privacidad', '_blank'); }}
+                        >
                             Política de Privacidad
                         </a>
                     </span>
