@@ -32,6 +32,7 @@ import { SubscriptionGuard } from '@/components/common/SubscriptionGuard';
 import { PaymentStatusPage } from '@/pages/app/PaymentStatusPage';
 import { TerminosPage } from '@/pages/legal/TerminosPage';
 import { PrivacidadPage } from '@/pages/legal/PrivacidadPage';
+import { AffiliateTracker } from '@/components/common/AffiliateTracker';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -55,82 +56,85 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 export function AppRouter() {
     return (
-        <Routes>
-            {/* Rutas de autenticación */}
-            <Route
-                element={
-                    <PublicRoute>
-                        <AuthLayout />
-                    </PublicRoute>
-                }
-            >
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/registro" element={<RegisterPage />} />
-                <Route path="/verificar-email" element={<VerifyEmailPage />} />
-                <Route path="/2fa" element={<TwoFactorPage />} />
-                <Route path="/recuperar-contrasena" element={<PasswordResetPage />} />
-            </Route>
+        <>
+            <AffiliateTracker />
+            <Routes>
+                {/* Rutas de autenticación */}
+                <Route
+                    element={
+                        <PublicRoute>
+                            <AuthLayout />
+                        </PublicRoute>
+                    }
+                >
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/registro" element={<RegisterPage />} />
+                    <Route path="/verificar-email" element={<VerifyEmailPage />} />
+                    <Route path="/2fa" element={<TwoFactorPage />} />
+                    <Route path="/recuperar-contrasena" element={<PasswordResetPage />} />
+                </Route>
 
-            {/* Caso especial: Actualizar contraseña usa AuthLayout pero NO PublicRoute 
+                {/* Caso especial: Actualizar contraseña usa AuthLayout pero NO PublicRoute 
                 porque el enlace de recuperación crea una sesión temporal */}
-            <Route element={<AuthLayout />}>
-                <Route path="/actualizar-contrasena" element={<UpdatePasswordPage />} />
-            </Route>
+                <Route element={<AuthLayout />}>
+                    <Route path="/actualizar-contrasena" element={<UpdatePasswordPage />} />
+                </Route>
 
-            {/* Rutas protegidas de la app */}
-            <Route
-                element={
-                    <ProtectedRoute>
-                        <AppLayout />
-                    </ProtectedRoute>
-                }
-            >
-                <Route path="/" element={<Navigate to="/mis-costeos" replace />} />
+                {/* Rutas protegidas de la app */}
+                <Route
+                    element={
+                        <ProtectedRoute>
+                            <AppLayout />
+                        </ProtectedRoute>
+                    }
+                >
+                    <Route path="/" element={<Navigate to="/mis-costeos" replace />} />
 
-                {/* Rutas de Planes (Públicas dentro de la App) */}
-                <Route path="/pricing" element={<PricingPage />} />
+                    {/* Rutas de Planes (Públicas dentro de la App) */}
+                    <Route path="/pricing" element={<PricingPage />} />
 
-                {/* Rutas con Paywall (Requieren suscripción activa) */}
-                <Route path="/mis-costeos" element={<SubscriptionGuard><MisCosteos /></SubscriptionGuard>} />
-                <Route path="/mis-costeos/:id" element={<SubscriptionGuard><SimuladorPage /></SubscriptionGuard>} />
-                <Route path="/dashboard" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
-                <Route path="/ofertas" element={<SubscriptionGuard><OfertasPage /></SubscriptionGuard>} />
-                <Route path="/analisis-regional" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
+                    {/* Rutas con Paywall (Requieren suscripción activa) */}
+                    <Route path="/mis-costeos" element={<SubscriptionGuard><MisCosteos /></SubscriptionGuard>} />
+                    <Route path="/mis-costeos/:id" element={<SubscriptionGuard><SimuladorPage /></SubscriptionGuard>} />
+                    <Route path="/dashboard" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
+                    <Route path="/ofertas" element={<SubscriptionGuard><OfertasPage /></SubscriptionGuard>} />
+                    <Route path="/analisis-regional" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
 
-                <Route path="/configuracion" element={<ConfiguracionPage />} />
-                <Route path="/referidos" element={<SubscriptionGuard><ReferidosPage /></SubscriptionGuard>} />
-                <Route path="/billetera" element={<SubscriptionGuard><WalletPage /></SubscriptionGuard>} />
-                <Route path="/historial" element={<UserAuditLogsPage />} />
-                <Route path="/payment/status" element={<PaymentStatusPage />} />
-            </Route>
+                    <Route path="/configuracion" element={<ConfiguracionPage />} />
+                    <Route path="/referidos" element={<SubscriptionGuard><ReferidosPage /></SubscriptionGuard>} />
+                    <Route path="/billetera" element={<SubscriptionGuard><WalletPage /></SubscriptionGuard>} />
+                    <Route path="/historial" element={<UserAuditLogsPage />} />
+                    <Route path="/payment/status" element={<PaymentStatusPage />} />
+                </Route>
 
-            {/* Rutas de Administración (Independientes) */}
-            <Route
-                path="/admin"
-                element={
-                    <ProtectedRoute>
-                        <AdminLayout />
-                    </ProtectedRoute>
-                }
-            >
-                <Route index element={<AdminDashboard />} />
-                <Route path="users" element={<AdminUsersPage />} />
-                <Route path="plans" element={<AdminPlansPage />} />
-                <Route path="referrals" element={<AdminReferralPage />} />
-                <Route path="withdrawals" element={<AdminWithdrawalsPage />} />
-                <Route path="promo-codes" element={<AdminDashboard />} />
-                <Route path="logs" element={<AdminAuditLogsPage />} />
-                <Route path="settings" element={<AdminSettingsPage />} />
-                <Route path="email-templates" element={<AdminEmailTemplatesPage />} />
-                <Route path="email-triggers" element={<AdminEmailTriggersPage />} />
-            </Route>
+                {/* Rutas de Administración (Independientes) */}
+                <Route
+                    path="/admin"
+                    element={
+                        <ProtectedRoute>
+                            <AdminLayout />
+                        </ProtectedRoute>
+                    }
+                >
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="users" element={<AdminUsersPage />} />
+                    <Route path="plans" element={<AdminPlansPage />} />
+                    <Route path="referrals" element={<AdminReferralPage />} />
+                    <Route path="withdrawals" element={<AdminWithdrawalsPage />} />
+                    <Route path="promo-codes" element={<AdminDashboard />} />
+                    <Route path="logs" element={<AdminAuditLogsPage />} />
+                    <Route path="settings" element={<AdminSettingsPage />} />
+                    <Route path="email-templates" element={<AdminEmailTemplatesPage />} />
+                    <Route path="email-triggers" element={<AdminEmailTriggersPage />} />
+                </Route>
 
-            {/* Rutas Públicas (sin layout, accesibles por cualquier persona) */}
-            <Route path="/terminos" element={<TerminosPage />} />
-            <Route path="/privacidad" element={<PrivacidadPage />} />
+                {/* Rutas Públicas (sin layout, accesibles por cualquier persona) */}
+                <Route path="/terminos" element={<TerminosPage />} />
+                <Route path="/privacidad" element={<PrivacidadPage />} />
 
-            {/* Catch-all */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+                {/* Catch-all */}
+                <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+        </>
     );
 }
