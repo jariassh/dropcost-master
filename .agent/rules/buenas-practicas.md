@@ -402,6 +402,9 @@ git checkout develop
 git pull origin develop
 git checkout -b feat/ciclo-febrero-semana1
 
+# Unir dos o mas instrucciones en Powershell
+Siempre usa ";" como concatenador, evita usar "&&" para unir sentencias en powershell.
+
 # Trabajar múltiples features EN ESA rama
 # Feature 1: editar, commit
 git add . ; git commit -m "feat(simulador): implementar costeo"
