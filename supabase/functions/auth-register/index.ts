@@ -68,7 +68,8 @@ serve(async (req) => {
             codigo_referido: referred_by || '',
             verification_link: verificationLink,
             reset_link: verificationLink, // Por si acaso
-            link: verificationLink
+            link: verificationLink,
+            horas_validez: '24'
           }
         })
       });
