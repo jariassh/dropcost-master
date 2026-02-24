@@ -42,35 +42,46 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
         .maybeSingle();
 
     if (existingPayment) {
-        console.log("PAYMENT_ALREADY_PROCESSED: Skipping to avoid duplicate commissions for ID:", dataId);
-        return { status: "already_processed", message: "Este pago ya fue registrado anteriormente." };
-    }
+        console.log("!!! [BACKEND] Idempotencia: Pago ya registrado previamente:", dataId);
+        
+        // RE-ACTIVATION SAFETY: If payment exists but user is still FREE/INACTIVE, retry the activation
+        // Buscamos al usuario basado en el user_id guardado en el pago
+        const { data: userData } = await supabase.from("users").select("id, plan_id, estado_suscripcion").eq("id", existingPayment.user_id).maybeSingle();
+        
+        console.log("!!! [BACKEND] Idempotencia - Estado actual del usuario vinculado al pago:", JSON.stringify(userData, null, 2));
 
-    // Parse Metadata (Prioritize structured metadata, fallback to external_reference)
-    let metadata = paymentData.metadata;
-    
-    // Check if metadata is truly empty (Mercado Pago often sends {} even if not provided)
-    const isMetadataEmpty = !metadata || typeof metadata !== 'object' || Object.keys(metadata).length === 0;
-
-    if (isMetadataEmpty) {
-        console.log("[mercadopago] Metadata is empty, parsing external_reference...");
-        try {
-            const extRef = paymentData.external_reference;
-            metadata = typeof extRef === 'string' ? JSON.parse(extRef) : extRef;
-        } catch (e) {
-            console.error("Error parsing fallback external_reference:", e);
-            // Non-critical, we check fields below
+        if (userData && (userData.plan_id === 'plan_free' || userData.estado_suscripcion !== 'activa')) {
+            console.log(`!!! [BACKEND] RE-ACTIVACIÓN: El usuario ${userData.id} sigue en ${userData.plan_id}. Forzando actualización de plan...`);
+            // Continuamos el proceso ignorando el 'return' de idempotencia para asegurar que el plan se active
+        } else if (!userData) {
+            console.warn("!!! [BACKEND] ALERTA CRÍTICA: El pago existe pero el usuario vinculado NO se encontró en la tabla users. ID buscado:", existingPayment.user_id);
+            // Intentamos recuperar el ID desde los metadatos del pago por si hubo un error de escritura inicial
+            console.log("Intentando procesar como pago nuevo para forzar vinculación...");
+        } else {
+            console.log("!!! [BACKEND] Idempotencia: El pago ya fue procesado y el usuario tiene el plan activo. Terminando ejecución.");
+            return { status: "already_processed", message: "Este pago ya fue registrado y el plan está activo.", debug: { userData } };
         }
     }
 
-    // Robust field extraction (supports snake_case and camelCase)
+    // Parse Metadata (Prioritize external_reference because it is our source of truth)
+    let metadata;
+    try {
+        const extRef = paymentData.external_reference;
+        metadata = typeof extRef === 'string' ? JSON.parse(extRef) : extRef;
+        console.log("[mercadopago] Data parsed from external_reference:", JSON.stringify(metadata));
+    } catch (e) {
+        console.warn("[mercadopago] Failed to parse external_reference, trying metadata object...");
+        metadata = paymentData.metadata;
+    }
+
+    // Robust field extraction
     const userId = metadata?.user_id || metadata?.userId;
     const planId = metadata?.plan_id || metadata?.planId;
     const period = metadata?.period || metadata?.plan_periodo || 'monthly';
 
     if (!userId || !planId) {
         console.error("Critical: Missing identification in payment data", { userId, planId, metadata, external: paymentData.external_reference });
-        return { error: `ERR_DC_REF_MISSING: No pudimos identificar tu usuario o plan en el pago. ID Pago: ${dataId}. Por favor contacta a soporte.` };
+        return { error: `ERR_DC_REF_MISSING: No pudimos identificar tu usuario o plan. ID Pago: ${dataId}.` };
     }
 
     // Calculate Expiration
@@ -78,29 +89,35 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + months);
 
-    // 1. Transaction: Record Payment
-    const { error: payError } = await supabase.from("payments").insert({
-        user_id: userId,
-        amount: paymentData.transaction_amount,
-        currency: paymentData.currency_id,
-        status: 'approved',
-        provider_payment_id: dataId,
-        plan_id: planId,
-        period: period,
-        metadata: paymentData
-    });
+    // 1. Transaction: Record Payment (Solo si no es una reactivación de un pago ya existente)
+    if (!existingPayment) {
+        const { error: payError } = await supabase.from("payments").insert({
+            user_id: userId,
+            amount: paymentData.transaction_amount,
+            currency: paymentData.currency_id,
+            status: 'approved',
+            provider_payment_id: dataId,
+            plan_id: planId,
+            period: period,
+            metadata: paymentData
+        });
 
-    if (payError) {
-        console.error("Error inserting payment:", payError);
-        throw payError;
+        if (payError) {
+            console.error("Error inserting payment:", payError);
+            throw payError;
+        }
+
+        // AUDIT LOG: Payment Received
+        try {
+            await supabase.from("audit_logs").insert({
+                usuario_id: userId,
+                accion: 'PAYMENT_RECEIVED',
+                detalles: { payment_id: dataId, amount: paymentData.transaction_amount, currency: paymentData.currency_id }
+            });
+        } catch (e) { console.error("Audit Log Error (PAYMENT_RECEIVED):", e); }
+    } else {
+        console.log("!!! [BACKEND] Saltando inserción en 'payments' y log de pago recibido por ser RE-ACTIVACIÓN de pago existente.");
     }
-
-    // AUDIT LOG: Payment Received
-    await supabase.from("audit_logs").insert({
-        usuario_id: userId,
-        accion: 'PAYMENT_RECEIVED',
-        detalles: { payment_id: dataId, amount: paymentData.transaction_amount, currency: paymentData.currency_id }
-    }).catch(e => console.error("Audit Log Error:", e));
 
     // 2. Transaction: Update User Subscription
     console.log(`[mercadopago] !!! PROJECT_DEBUG !!! Attempting update for user ID: "${userId}"`);
@@ -133,29 +150,35 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
         plan_expires_at: expiresAt.toISOString(),
         fecha_vencimiento_plan: expiresAt.toISOString(),
         plan_precio_pagado: paymentData.transaction_amount,
-        plan_periodo: period,
-        updated_at: new Date().toISOString()
+        plan_periodo: period
     };
+
+    console.log(`!!! [BACKEND] INTENTO DE UPDATE EN DB PARA USUARIO: ${finalUserId} !!!`);
+    console.log("!!! [BACKEND] PAYLOAD DE ACTUALIZACIÓN:", JSON.stringify(updatePayload, null, 2));
 
     const { data: updateData, error: userError } = await supabase.from("users").update(updatePayload).eq("id", finalUserId).select();
 
     if (userError) {
-        console.error("[mercadopago] Update Error:", userError);
-        throw userError;
+        console.error("!!! [BACKEND] ERROR CRÍTICO AL ACTUALIZAR USUARIO:", userError);
+        return { error: "DATABASE_UPDATE_FAILED", details: userError };
     }
     
-    if (!updateData || updateData.length === 0) {
-        console.warn(`[mercadopago] Update finished with 0 rows affected for ID: ${finalUserId}`);
+    const rowsAffected = updateData?.length || 0;
+    if (rowsAffected === 0) {
+        console.warn(`!!! [BACKEND] ALERTA: El update terminó pero 0 FILAS AFECTADAS para el ID: ${finalUserId}. ¿Existe este ID en la tabla users?`);
     } else {
-        console.log(`[mercadopago] SUCCESS! User ${finalUserId} updated. Plan: ${planId}`);
+        console.log(`!!! [BACKEND] ÉXITO: Usuario ${finalUserId} actualizado correctamente al plan: ${planId}`);
+        console.log("!!! [BACKEND] Datos actualizados devueltos por DB:", JSON.stringify(updateData[0], null, 2));
     }
 
     // AUDIT LOG: Plan Activated
-    await supabase.from("audit_logs").insert({
-        usuario_id: userId,
-        accion: 'PLAN_ACTIVATED',
-        detalles: { plan_id: planId, expires_at: expiresAt.toISOString() }
-    }).catch(e => console.error("Audit Log Error:", e));
+    try {
+        await supabase.from("audit_logs").insert({
+            usuario_id: userId,
+            accion: 'PLAN_ACTIVATED',
+            detalles: { plan_id: planId, expires_at: expiresAt.toISOString() }
+        });
+    } catch (e) { console.error("Audit Log Error (PLAN_ACTIVATED):", e); }
 
     // EMAIL TRIGGER: SUSCRIPCION_ACTIVADA
     console.log(`[mercadopago] Starting email trigger for user: ${userId}`);
@@ -291,7 +314,17 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
         console.error("Error processing referral commission (non-blocking):", refError);
     }
 
-    return { status: "processed" };
+    return { 
+        status: "success", 
+        plan: planId, 
+        userId: finalUserId, 
+        debug: { 
+            rowsAffected: updateData?.length || 0, 
+            planId, 
+            finalUserId,
+            originalUserId: userId
+        }
+    };
 }
 
 serve(async (req) => {
@@ -331,8 +364,9 @@ serve(async (req) => {
       }
 
       const { planId, period, userId, email, returnUrl } = body;
+      console.log(`!!! DEBUG create_preference !!! Received: planId=${planId}, email=${email}, userId=${userId}`);
 
-      if (!planId || !period || !userId || !returnUrl) {
+      if (!planId || !userId) {
         return new Response(JSON.stringify({ error: "Missing required fields." }), { status: 200, headers: corsHeaders });
       }
 
@@ -347,16 +381,19 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: `Plan not found: ${planId}` }), { status: 200, headers: corsHeaders });
       }
 
-      // 2. Fetch user profile for Price Protection
+      // Use dynamic test email from body (crucial for Sandbox stability)
+      const finalEmail = email;
+      console.log(`[mercadopago] Payer email: ${finalEmail}`);
+
+      let basePrice = period === 'monthly' ? plan.price_monthly : plan.price_semiannual;
+
+      // Price Protection Logic
       const { data: userProfile } = await supabase
         .from('users')
         .select('plan_id, plan_precio_pagado, plan_periodo')
         .eq('id', userId)
         .maybeSingle();
 
-      let basePrice = period === 'monthly' ? plan.price_monthly : plan.price_semiannual;
-
-      // Price Protection Logic: Mantener el precio pagado por el usuario en su primera activación
       if (userProfile && userProfile.plan_id === plan.slug && 
           Number(userProfile.plan_precio_pagado) > 0 && 
           userProfile.plan_periodo === period) {
@@ -371,15 +408,17 @@ serve(async (req) => {
         const rateData = await rateResponse.json();
         const exchangeRate = rateData.rates.COP || 4000;
         finalPriceCOP = Math.round(Number(basePrice) * exchangeRate);
-        console.log(`[currency-conversion] USD ${basePrice} converted to COP ${finalPriceCOP} (Rate: ${exchangeRate})`);
-      } catch (conversionError) {
-        console.error("Currency API failed, using fallback 4000:", conversionError);
+        console.log(`[currency-conversion] USD ${basePrice} converted to COP ${finalPriceCOP}`);
+      } catch (e) {
         finalPriceCOP = Number(basePrice) * 4000;
       }
 
       const title = `${plan.name} (${period === 'monthly' ? 'Mensual' : 'Semestral'})`;
 
-      // 4. Construct Preference (Minimalist structure based on functional commit 847daf3)
+      // Dynamic redirection logic: Manual for localhost, Automatic for remote
+      const isLocalhost = returnUrl.includes("localhost") || returnUrl.includes("127.0.0.1");
+
+      // 4. Construct Preference
       const preferenceData = {
         items: [
           {
@@ -390,14 +429,14 @@ serve(async (req) => {
             unit_price: finalPriceCOP,
           },
         ],
-        payer: { email: email }, // Essential for the dynamic email from frontend to work
+        payer: { email: finalEmail },
         back_urls: {
           success: `${returnUrl}/payment/status?status=approved`,
           failure: `${returnUrl}/payment/status?status=rejected`,
           pending: `${returnUrl}/payment/status?status=pending`,
         },
+        auto_return: isLocalhost ? undefined : "approved",
         external_reference: JSON.stringify({ userId, planId, period }),
-        auto_return: "all",
         notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago?action=webhook`,
       };
 
@@ -455,9 +494,12 @@ serve(async (req) => {
         }
 
         if (paymentData.status === 'approved') {
+            console.log("!!! [BACKEND] Pago APROBADO en Mercado Pago. Iniciando procesamiento de activación...");
             const result = await processSuccessfulPayment(paymentData, supabase);
+            console.log("!!! [BACKEND] Resultado de processSuccessfulPayment:", JSON.stringify(result, null, 2));
             return new Response(JSON.stringify({ status: "approved", result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         } else {
+            console.log(`!!! [BACKEND] El pago NO está aprobado. Estado MP: ${paymentData.status}`);
             return new Response(JSON.stringify({ status: paymentData.status }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
     }
