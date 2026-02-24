@@ -14,6 +14,8 @@ interface SimuladorResultsProps {
     onManualPriceChange: (val: number | null) => void;
     manualVolumePrice: number | null;
     onManualVolumePriceChange: (val: number | null) => void;
+    currency?: string;
+    country?: string;
 }
 
 export function SimuladorResults({
@@ -27,12 +29,23 @@ export function SimuladorResults({
     onManualPriceChange,
     manualVolumePrice,
     onManualVolumePriceChange,
+    currency = 'COP',
+    country = 'CO',
 }: SimuladorResultsProps) {
     const [inputValue, setInputValue] = useState('');
     const [volumeInputValue, setVolumeInputValue] = useState('');
+    const [isFocused, setIsFocused] = useState(false);
+    const [isVolumeFocused, setIsVolumeFocused] = useState(false);
 
-    const formatCurrency = (val: number) =>
-        '$' + Math.round(val).toLocaleString('es-CO');
+    const formatCurrency = (val: number) => {
+        const locale = country === 'CO' ? 'es-CO' : country === 'MX' ? 'es-MX' : country === 'PE' ? 'es-PE' : 'en-US';
+        return new Intl.NumberFormat(locale, {
+            style: 'currency',
+            currency: currency,
+            minimumFractionDigits: currency === 'COP' ? 0 : 2,
+            maximumFractionDigits: 2
+        }).format(val);
+    };
 
     const isVolumeActive = volumeStrategy.enabled && maxUnits > 1;
     const currentResults = (isVolumeActive && volumeResults) ? volumeResults : results;
@@ -52,7 +65,8 @@ export function SimuladorResults({
         if (manualPrice === null) {
             setInputValue('');
         } else {
-            setInputValue(Math.round(manualPrice).toString());
+            // No redondeamos forzosamente a entero aquí para permitir decimales si manualPrice los tiene
+            setInputValue(manualPrice.toString());
         }
     }, [manualPrice]);
 
@@ -60,7 +74,7 @@ export function SimuladorResults({
         if (manualVolumePrice === null) {
             setVolumeInputValue('');
         } else {
-            setVolumeInputValue(Math.round(manualVolumePrice).toString());
+            setVolumeInputValue(manualVolumePrice.toString());
         }
     }, [manualVolumePrice]);
 
@@ -73,7 +87,8 @@ export function SimuladorResults({
 
     const handleInputChange = (val: string) => {
         setInputValue(val);
-        const num = parseInt(val.replace(/\D/g, ''));
+        const cleaned = val.replace(/[^0-9.]/g, ''); // Allow decimal point
+        const num = parseFloat(cleaned);
         if (!isNaN(num)) {
             onManualPriceChange(num);
         } else if (val === '') {
@@ -83,7 +98,8 @@ export function SimuladorResults({
 
     const handleVolumeInputChange = (val: string) => {
         setVolumeInputValue(val);
-        const num = parseInt(val.replace(/\D/g, ''));
+        const cleaned = val.replace(/[^0-9.]/g, '');
+        const num = parseFloat(cleaned);
         if (!isNaN(num)) {
             onManualVolumePriceChange(num);
         } else if (val === '') {
@@ -143,7 +159,7 @@ export function SimuladorResults({
                 }}
             >
                 <div style={{ height: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '12px' }}>
-                    {hasOverride ? (
+                    {hasOverride || isFocused ? (
                         <div style={{
                             padding: '4px 10px', borderRadius: '20px',
                             backgroundColor: 'rgba(255,255,255,0.15)',
@@ -153,7 +169,10 @@ export function SimuladorResults({
                         }}>
                             Sugerido: {formatCurrency(originalSuggestedPrice)}
                             <button
-                                onClick={() => onManualPriceChange(null)}
+                                onClick={() => {
+                                    onManualPriceChange(null);
+                                    setInputValue('');
+                                }}
                                 style={{ background: 'none', border: 'none', padding: 0, color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                             >
                                 <RotateCcw size={12} />
@@ -167,20 +186,32 @@ export function SimuladorResults({
                 </div>
 
                 <div style={{ position: 'relative', marginBottom: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                        <span style={{ fontSize: '32px', fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>$</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                        {/* El símbolo de moneda es dinámico ahora a través de formatCurrency, pero aquí lo mantenemos simple para el input */}
+                        <span style={{ fontSize: '32px', fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>
+                            {currency === 'USD' ? '$' : currency === 'MXN' ? '$' : currency === 'COP' ? '$' : ''}
+                        </span>
                         <input
                             type="text"
-                            value={hasOverride ? inputValue : Math.round(results?.suggestedPrice ?? 0).toLocaleString('es-CO')}
+                            value={isFocused ? inputValue : (hasOverride ? inputValue : (results?.suggestedPrice ?? 0).toLocaleString(undefined, { minimumFractionDigits: currency === 'COP' ? 0 : 2, maximumFractionDigits: 2 }))}
                             disabled={isVolumeActive}
+                            placeholder={(results?.suggestedPrice ?? 0).toString()}
                             onChange={(e) => handleInputChange(e.target.value)}
                             onFocus={(e) => {
+                                setIsFocused(true);
                                 const target = e.target;
                                 if (!hasOverride) {
-                                    setInputValue(Math.round(results?.suggestedPrice ?? 0).toString());
-                                    onManualPriceChange(Math.round(results?.suggestedPrice ?? 0));
+                                    const initialVal = (results?.suggestedPrice ?? 0);
+                                    setInputValue(initialVal.toString());
                                 }
                                 setTimeout(() => target.select(), 10);
+                            }}
+                            onBlur={() => {
+                                setIsFocused(false);
+                                if (inputValue === '' || parseFloat(inputValue) === results?.suggestedPrice) {
+                                    onManualPriceChange(null);
+                                    setInputValue('');
+                                }
                             }}
                             style={{
                                 background: 'transparent', border: 'none', outline: 'none', color: '#fff',
@@ -226,24 +257,37 @@ export function SimuladorResults({
                         <p style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
                             Precio por {maxUnits} unidades
                         </p>
-                        {hasVolumeOverride && (
-                            <button onClick={() => onManualVolumePriceChange(null)} style={{ background: 'none', border: 'none', padding: 0, color: 'rgba(255,255,255,0.8)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                        {hasVolumeOverride || isVolumeFocused ? (
+                            <button onClick={() => {
+                                onManualVolumePriceChange(null);
+                                setVolumeInputValue('');
+                            }} style={{ background: 'none', border: 'none', padding: 0, color: 'rgba(255,255,255,0.8)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                                 <RotateCcw size={12} />
                             </button>
-                        )}
+                        ) : null}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginBottom: '14px' }}>
-                        <span style={{ fontSize: '24px', fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>$</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px', marginBottom: '14px' }}>
+                        <span style={{ fontSize: '24px', fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>
+                            {currency === 'USD' ? '$' : currency === 'MXN' ? '$' : '$'}
+                        </span>
                         <input
                             type="text"
-                            value={hasVolumeOverride ? volumeInputValue : Math.round(vPrice).toLocaleString('es-CO')}
+                            value={isVolumeFocused ? volumeInputValue : (hasVolumeOverride ? volumeInputValue : (vPrice).toLocaleString(undefined, { minimumFractionDigits: currency === 'COP' ? 0 : 2, maximumFractionDigits: 2 }))}
                             onChange={(e) => handleVolumeInputChange(e.target.value)}
+                            placeholder={vPrice.toString()}
                             onFocus={(e) => {
+                                setIsVolumeFocused(true);
                                 if (!hasVolumeOverride) {
-                                    setVolumeInputValue(Math.round(vPrice).toString());
-                                    onManualVolumePriceChange(Math.round(vPrice));
+                                    setVolumeInputValue(vPrice.toString());
                                 }
                                 setTimeout(() => e.target.select(), 10);
+                            }}
+                            onBlur={() => {
+                                setIsVolumeFocused(false);
+                                if (volumeInputValue === '' || parseFloat(volumeInputValue) === vPrice) {
+                                    onManualVolumePriceChange(null);
+                                    setVolumeInputValue('');
+                                }
                             }}
                             style={{ background: 'transparent', border: 'none', outline: 'none', color: '#fff', fontSize: '32px', fontWeight: 700, textAlign: 'center', width: '180px' }}
                         />
