@@ -12,6 +12,7 @@ import { Mail, Lock, User, Phone, Globe, ChevronDown, Sparkles, RefreshCw, Check
 import { Button, Input, Alert, SmartPhoneInput } from '@/components/common';
 import { useAuthStore } from '@/store/authStore';
 import { getReferrerNameByCode, incrementReferralClicks } from '@/services/referralService';
+import { affiliateService } from '@/services/affiliateService';
 
 const registerSchema = z
     .object({
@@ -45,7 +46,10 @@ export function RegisterPage() {
     const [registered, setRegistered] = useState(false);
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const referralCode = searchParams.get('ref') || '';
+
+    // Obtener de URL o de Cookie (90 días)
+    const referralCode = searchParams.get('ref') || affiliateService.getAffiliateId() || '';
+
     const [referrerName, setReferrerName] = useState<string | null>(null);
     const { register: registerUser, isLoading, error, clearError } = useAuthStore();
 
