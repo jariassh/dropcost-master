@@ -60,31 +60,14 @@ Para ejecutar este proyecto localmente, sigue estos pasos:
 
 ---
 
-## 📅 Últimas Actualizaciones (Milestones)
-
-### [v1.1.0] - Febrero 2026
-- **🔥 Integración Simulador & Ofertas:** Creación automática de "Ofertas Irresistibles" tipo Bundle al guardar un costeo con estrategia de volumen activa.
-- **🛡️ Integridad de Datos:** Implementación de restricciones de borrado cruzado; no se pueden eliminar costeos vinculados a ofertas activas sin gestión previa.
-- **✨ UX/UI Refinada:** Rediseño de la tabla de "Mis Costeos" con indicadores visuales de precios manuales vs sugeridos por sistema.
-- **🎯 Exactitud Financiera:** Mejora en la persistencia de precios modificados manualmente y redondeos inteligentes en el simulador.
-- **🏬 Gestión de Tiendas Avanzada:** Módulo completo de creación, edición y borrado de tiendas integrado en Configuración, con sistema de protección de integridad de datos vinculado a costeos operativos.
-- **👁️ Auditoría y Seguridad:** Implementación de historial de actividad completo. Registro inmutable de acciones críticas (Login, Creación/Borrado de Tiendas, Cambios de Configuración) con detalles de IP y Agente de Usuario, visible tanto para administradores como para el propio usuario.
-- **🔒 Control de Acceso por Plan (Paywall):** Implementación de restricciones estrictas basadas en el plan de suscripción del usuario. Rutas premium como "Sistema de Referidos" y "Billetera" ahora están protegidas. Validación de límites de creación de tiendas en tiempo real (UI y Lógica de Negocio) para asegurar el cumplimiento de las cuotas del plan.
-- **🌎 Precios Dinámicos Multi-Moneda:** Sistema inteligente de conversión de precios en tiempo real. Los planes base pueden configurarse en COP, USD, MXN o EUR, y los usuarios ven los precios automáticamente convertidos a su moneda local (ej. PEN, CLP, BRL) utilizando tasas de cambio actualizadas vía API externa.
-- **🚀 Sistema de Referidos de 2 Niveles (V3):** Lanzamiento del programa de afiliados avanzado. Implementación de seguimiento de clicks, comisiones recurrentes de 12 meses y ascenso automático a Líder.
-- **💎 Modal de Detalles de Red:** Nueva funcionalidad que permite a los líderes visualizar el impacto y comisiones generadas por cada uno de sus referidos directos (Nivel 2).
-- **🛡️ Corrección de Identidad y Roles**: Desacoplamiento total de roles administrativos de los logros de red para asegurar que badges de "LÍDER" reflejen el éxito real en el sistema de referidos.
-- **👮 Gestión de Usuarios y Auditoría:** Nueva capacidad para suspender usuarios, reenviar correos de verificación y visualizar el estado real de las suscripciones. Implementación de rastreo de actividad detallado que captura IP y fecha de última interacción para una seguridad robusta.
-
-### [v1.2.0] - Febrero 2026 (Actual)
-- **🎨 Sistema de Branding Dinámico:** Implementación de carga y persistencia de logos variantes (claro/oscuro) y favicons gestionables desde el panel administrativo.
-- **⚡ Optimización de Carga Visual:** Implementación de caché de LocalStorage para activos de marca, reduciendo el tiempo de carga del favicon y logos a prácticamente cero.
-- **🌐 SEO y Metadatos Avanzados:** Módulo de configuración global para títulos, descripciones, palabras clave, URL del sitio y URL del sitemap dinámicos.
-- **💳 Mercado Pago V2:** Integración robusta de pagos con manejo mejorado de webhooks, validación de firmas y sincronización automática de suscripciones Pro.
-- **💰 Billetera y Wallet:** Sistema de gestión de saldo, retiros y comisiones por referidos totalmente funcional con estados de aprobación administrativa.
-- **🤝 Refinamiento de Referidos:** Corrección en el conteo de clicks, visualización en tiempo real de la red de invitados y asignación precisa de comisiones por niveles.
-- **📧 Sistema de Plantillas de Email:** Módulo administrativo completo para gestionar correos transaccionales. Incluye editor HTML en vivo con previsualización responsive (móvil/pc), sistema de carpetas para organización y autocompletado de variables dinámicas ($tienda, $usuario, $codigo).
-- **🤖 Servicio de Correos Automático:** Implementación de Edge Function para el procesamiento y envío de emails personalizados mediante placeholders dinámicos.
+### [v1.0.0] - Lanzamiento Oficial (Febrero 2026) 🚀
+¡Versión lista para producción! Esta versión consolida todo el ecosistema de DropCost Master:
+- **💰 Pagos Reales:** Integración completa con Mercado Pago Pro (Checkout Transparente) y manejo automatizado de suscripciones mediante Webhooks.
+- **📈 Sistema de Referidos Profesional:** Atribución persistente mediante cookies de 90 días con modelo "Last Click Wins", red de 2 niveles y billetera de comisiones.
+- **🎨 Branding & Personalización:** Gestión dinámica de logos, favicons y metadatos SEO (Open Graph, robots.txt, sitemap.xml) desde el panel administrativo.
+- **🏢 Core Robusto:** Simulador de costeo avanzado con lógica de bundles, gestión multi-tienda y paywall por planes.
+- **📧 Comunicaciones Automáticas:** Sistema de plantillas MJML/HTML para correos transaccionales y notificaciones de sistema.
+- **🛡️ Seguridad & Auditoría:** Registros de actividad persistentes, 2FA y aislamiento total de datos (RLS).
 
 ---
 
