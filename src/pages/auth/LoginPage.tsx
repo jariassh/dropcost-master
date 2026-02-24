@@ -104,9 +104,9 @@ export function LoginPage() {
                 </span>
             </div>
 
-            <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px', textAlign: 'center' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px', textAlign: 'center' }}>
                 Bienvenido
-            </h2>
+            </h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '32px', textAlign: 'center', lineHeight: 1.5 }}>
                 Ingresa tus credenciales para acceder a tu cuenta
             </p>
