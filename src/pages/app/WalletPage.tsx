@@ -101,10 +101,15 @@ export const WalletPage: React.FC = () => {
             setMinimumWithdrawal(minWithdrawal);
             setRetentionDays(days);
 
-            // Determinar moneda de visualización
-            if (user?.pais === 'MX') setDisplayCurrency('MXN');
-            else if (user?.pais === 'EC') setDisplayCurrency('USD');
-            else setDisplayCurrency('COP');
+            // Determinar moneda de visualización según el país del usuario
+            let currency = 'COP';
+            if (user?.pais === 'MX') currency = 'MXN';
+            else if (user?.pais === 'PE') currency = 'PEN';
+            else if (user?.pais === 'CL') currency = 'CLP';
+            else if (['EC', 'US', 'PA', 'PR', 'SV'].includes(user?.pais || '')) currency = 'USD';
+            else if (['ES', 'FR', 'IT', 'DE'].includes(user?.pais || '')) currency = 'EUR';
+
+            setDisplayCurrency(currency);
 
         } catch (error) {
             console.error('Error loading wallet data:', error);

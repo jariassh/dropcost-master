@@ -490,6 +490,8 @@ export function ConfiguracionPage() {
                                 value={profileData.pais}
                                 onChange={(iso) => setProfileData({ ...profileData, pais: iso })}
                                 showMoneda={false}
+                                disabled={!!user?.pais}
+                                helperText={user?.pais ? "El país no se puede cambiar después del registro por motivos de facturación." : undefined}
                             />
                         </div>
 
@@ -1024,10 +1026,9 @@ export function ConfiguracionPage() {
                             </div>
                             <h3 style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 12px' }}>Sesión Segura Activa</h3>
                             <p style={{ maxWidth: '480px', margin: '0 auto 24px', fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                                <strong>DropCost Master</strong> utiliza una política de <strong>Sesión Única</strong> para garantizar la máxima seguridad de tu cuenta.
+                                Tu cuenta utiliza <strong>Session Guard</strong>. Por seguridad, si inicias sesión en un nuevo dispositivo, cualquier sesión anterior se cerrará automáticamente.
                                 <br /><br />
-                                Esto significa que al iniciar sesión en un nuevo dispositivo, cualquier sesión anterior se cerrará automáticamente.
-                                Tu cuenta está protegida contra el uso compartido no autorizado.
+                                Esta medida previene el uso no autorizado de tu cuenta. Para una protección total, te recomendamos activar la <strong>Autenticación de Dos Factores (2FA)</strong> en la pestaña de Seguridad.
                             </p>
 
                             <div style={{

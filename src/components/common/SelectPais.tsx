@@ -11,6 +11,7 @@ export interface SelectPaisProps {
     disabled?: boolean;
     label?: string;
     error?: string;
+    helperText?: string;
     required?: boolean;
     className?: string;
 }
@@ -24,6 +25,7 @@ export function SelectPais({
     disabled = false,
     label,
     error,
+    helperText,
     required = false,
     className = ""
 }: SelectPaisProps) {
@@ -243,6 +245,12 @@ export function SelectPais({
             {error && (
                 <p style={{ fontSize: '12px', color: 'var(--color-error)', margin: 0, marginTop: '2px' }}>
                     {error}
+                </p>
+            )}
+
+            {helperText && !error && (
+                <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: 0, marginTop: '2px', fontStyle: 'italic' }}>
+                    {helperText}
                 </p>
             )}
 

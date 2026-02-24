@@ -38,6 +38,7 @@ export function SimuladorPage() {
     const navigate = useNavigate();
     const toast = useToast();
     const { user } = useAuthStore();
+    const { tiendas, fetchTiendas } = useStoreStore();
 
     // --- Estado del Costeo ---
     const [costeoPadre, setCosteoPadre] = useState<SavedCosteo | null>(null);
@@ -196,6 +197,10 @@ export function SimuladorPage() {
             : null
     ) ?? null;
 
+    const activeStore = tiendas.find(t => t.id === costeoPadre?.tienda_id);
+    const currency = activeStore?.moneda || 'USD';
+    const country = activeStore?.pais || 'US';
+
     const volumeResults = (volumeStrategy.enabled && maxUnits > 1 && results && results.suggestedPrice > 0 && currentVolumePrice)
         ? calculateVolumeMetrics(inputs, maxUnits, currentVolumePrice)
         : null;
@@ -287,6 +292,8 @@ export function SimuladorPage() {
                     suggestedPrice={results?.suggestedPrice ?? 0}
                     netProfit={results?.netProfitPerSale ?? 0}
                     productCost={inputs.productCost}
+                    currency={currency}
+                    country={country}
                 />
 
                 <SimuladorResults
@@ -300,6 +307,8 @@ export function SimuladorPage() {
                     onManualPriceChange={setManualPrice}
                     manualVolumePrice={manualVolumePrice}
                     onManualVolumePriceChange={setManualVolumePrice}
+                    currency={currency}
+                    country={country}
                 />
             </div>
 

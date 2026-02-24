@@ -41,6 +41,8 @@ interface SimuladorFormProps {
     suggestedPrice: number;
     netProfit: number;
     productCost: number;
+    currency?: string;
+    country?: string;
 }
 
 export function SimuladorForm({
@@ -48,6 +50,7 @@ export function SimuladorForm({
     volumeStrategy, onVolumeStrategyChange,
     maxUnits, onMaxUnitsChange,
     suggestedPrice, netProfit, productCost,
+    currency = 'COP', country = 'CO',
 }: SimuladorFormProps) {
     function handleNumericChange(field: keyof SimulatorInputs) {
         return (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,8 +99,15 @@ export function SimuladorForm({
         }
     }
 
-    const formatCurrency = (val: number) =>
-        '$' + val.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    const formatCurrency = (val: number) => {
+        const locale = country === 'CO' ? 'es-CO' : country === 'MX' ? 'es-MX' : country === 'PE' ? 'es-PE' : 'en-US';
+        return new Intl.NumberFormat(locale, {
+            style: 'currency',
+            currency: currency,
+            minimumFractionDigits: currency === 'COP' ? 0 : 2,
+            maximumFractionDigits: 2
+        }).format(val);
+    };
 
     // Only the X-units row (skip 1 ud, already shown in price card)
     const rowN = volumeStrategy.priceTable.find((r) => r.quantity === maxUnits);
