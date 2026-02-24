@@ -22,7 +22,7 @@ export const paymentService = {
             returnUrl: window.location.origin 
         };
 
-        console.log('Sending checkout payload:', payload);
+        console.log('!!! DEBUG !!! Creating Checkout with payload:', JSON.stringify(payload, null, 2));
 
         // Direct fetch to avoid 401 auth issues
         const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mercadopago?action=create_preference`;
