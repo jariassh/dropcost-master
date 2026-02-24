@@ -180,32 +180,49 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
         });
     } catch (e) { console.error("Audit Log Error (PLAN_ACTIVATED):", e); }
 
-    // EMAIL TRIGGER: SUSCRIPCION_ACTIVADA
-    console.log(`[mercadopago] Starting email trigger for user: ${userId}`);
+    // EMAIL TRIGGER: SUSCRIPCION_ACTIVADA (con idempotencia para evitar duplicados)
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    
-    const { data: userData2 } = await supabase.from('users').select('nombres, apellidos, email').eq('id', userId).maybeSingle();
-    const { data: planData } = await supabase.from('plans').select('name, price_monthly, price_semiannual, features').eq('slug', planId).maybeSingle();
 
-    console.log(`[mercadopago] Data for email: User=${userData2?.email}, Plan=${planData?.name || planId}`);
+    // Verificar si el email ya fue enviado para este pago
+    const { data: paymentEmailFlag } = await supabase
+        .from('payments')
+        .select('email_suscripcion_enviado')
+        .eq('provider_payment_id', dataId)
+        .maybeSingle();
 
-    const planPrecio = period === 'monthly' ? (planData?.price_monthly || 0) : (planData?.price_semiannual || 0);
-    const planDetalles = Array.isArray(planData?.features) ? planData.features.join(', ') : '';
-    const fechaExpiracion = expiresAt.toISOString().split('T')[0];
+    if (!paymentEmailFlag?.email_suscripcion_enviado) {
+        console.log(`!!! [BACKEND] Email NO enviado aún para pago ${dataId}. Disparando trigger...`);
 
-    await dispararTrigger(supabaseUrl, serviceKey, 'SUSCRIPCION_ACTIVADA', {
-        usuario_id: userId,
-        usuario_nombre: `${userData2?.nombres || ''} ${userData2?.apellidos || ''}`.trim(),
-        nombres: userData2?.nombres || '',
-        usuario_email: userData2?.email || '',
-        plan_nombre: planData?.name || planId,
-        plan_precio: planPrecio.toString(),
-        plan_detalles: planDetalles,
-        fecha_proximo_cobro: fechaExpiracion,
-        fecha_vencimiento: fechaExpiracion,
-        periodo: period === 'monthly' ? 'Mensual' : 'Semestral',
-    });
+        const { data: userData2 } = await supabase.from('users').select('nombres, apellidos, email').eq('id', finalUserId).maybeSingle();
+        const { data: planData } = await supabase.from('plans').select('name, price_monthly, price_semiannual, features').eq('slug', planId).maybeSingle();
+
+        const planPrecio = period === 'monthly' ? (planData?.price_monthly || 0) : (planData?.price_semiannual || 0);
+        const planDetalles = Array.isArray(planData?.features) ? planData.features.join(', ') : '';
+        const fechaExpiracion = expiresAt.toISOString().split('T')[0];
+
+        await dispararTrigger(supabaseUrl, serviceKey, 'SUSCRIPCION_ACTIVADA', {
+            usuario_id: finalUserId,
+            usuario_nombre: `${userData2?.nombres || ''} ${userData2?.apellidos || ''}`.trim(),
+            nombres: userData2?.nombres || '',
+            usuario_email: userData2?.email || '',
+            plan_nombre: planData?.name || planId,
+            plan_precio: planPrecio.toString(),
+            plan_detalles: planDetalles,
+            fecha_proximo_cobro: fechaExpiracion,
+            fecha_vencimiento: fechaExpiracion,
+            periodo: period === 'monthly' ? 'Mensual' : 'Semestral',
+        });
+
+        // Marcar el email como enviado para garantizar idempotencia
+        await supabase.from('payments')
+            .update({ email_suscripcion_enviado: true })
+            .eq('provider_payment_id', dataId);
+
+        console.log(`!!! [BACKEND] Email de suscripción marcado como enviado para pago ${dataId}.`);
+    } else {
+        console.log(`!!! [BACKEND] Email ya enviado previamente para pago ${dataId}. Omitiendo para evitar duplicado.`);
+    }
 
     // 3. COMMISSION LOGIC (Referrals)
     try {
@@ -265,11 +282,13 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
                 });
 
                 // AUDIT LOG: Commission Earned
-                await supabase.from("audit_logs").insert({
-                    usuario_id: leader.user_id,
-                    accion: 'COMMISSION_EARNED',
-                    detalles: { amount_usd: commissionAmountUSD, from_user: userId, payment_id: dataId }
-                }).catch(e => console.error("Audit Log Error:", e));
+                try {
+                    await supabase.from("audit_logs").insert({
+                        usuario_id: leader.user_id,
+                        accion: 'COMMISSION_EARNED',
+                        detalles: { amount_usd: commissionAmountUSD, from_user: userId, payment_id: dataId }
+                    });
+                } catch (e) { console.error("Audit Log Error (COMMISSION_EARNED):", e); }
 
                 // B. Update User Wallet Balance (Atomic-like)
                 const { data: userData } = await supabase.from('users').select('wallet_saldo').eq('id', leader.user_id).single();
