@@ -17,7 +17,7 @@ interface TriggerPayload {
 function reemplazarVariables(texto: string, datos: Record<string, any>): string {
     if (!texto) return '';
     // Soporta {{var}}, ${var} y variables con guiones o puntos
-    const regex = /\{\{\s*([^{}]+)\s*\}\}|\$\{\s*([^}]+)\s*\}/g;
+    const regex = /\{\{\s*([^{}]+)\s*\}\}|\$\{\s*([^{}]+)\s*\}/g;
     
     return texto.replace(regex, (match, p1, p2) => {
         const key = (p1 || p2 || '').trim();
@@ -105,6 +105,8 @@ Deno.serve(async (req: Request) => {
             color_admin_bg: config?.color_admin_bg || '#0F172A',
             color_admin_sidebar: config?.color_admin_sidebar || '#1E293B',
             color_admin_text: config?.color_admin_text || '#F8FAFC',
+            // Variables de contacto
+            email_soporte: config?.email_soporte || config?.email_contacto || 'soporte@dropcost.com',
         };
 
         let targetId = payloadTargetId || datos['usuario_id'];
