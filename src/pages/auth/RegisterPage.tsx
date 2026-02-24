@@ -455,11 +455,11 @@ export function RegisterPage() {
                     />
                     <span style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
                         Acepto los{' '}
-                        <a href="#" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>
+                        <a href="/terminos" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>
                             Términos y Condiciones
                         </a>{' '}
                         y la{' '}
-                        <a href="#" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>
+                        <a href="/privacidad" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>
                             Política de Privacidad
                         </a>
                     </span>

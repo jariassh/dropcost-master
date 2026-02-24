@@ -30,6 +30,8 @@ import { useAuthStore } from '@/store/authStore';
 import UserAuditLogsPage from '@/pages/UserAuditLogsPage';
 import { SubscriptionGuard } from '@/components/common/SubscriptionGuard';
 import { PaymentStatusPage } from '@/pages/app/PaymentStatusPage';
+import { TerminosPage } from '@/pages/legal/TerminosPage';
+import { PrivacidadPage } from '@/pages/legal/PrivacidadPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -122,6 +124,10 @@ export function AppRouter() {
                 <Route path="email-templates" element={<AdminEmailTemplatesPage />} />
                 <Route path="email-triggers" element={<AdminEmailTriggersPage />} />
             </Route>
+
+            {/* Rutas Públicas (sin layout, accesibles por cualquier persona) */}
+            <Route path="/terminos" element={<TerminosPage />} />
+            <Route path="/privacidad" element={<PrivacidadPage />} />
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/login" replace />} />
