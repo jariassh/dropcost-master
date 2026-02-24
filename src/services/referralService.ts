@@ -230,7 +230,7 @@ export async function getLevel2ReferredUsers(): Promise<any[]> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
 
-    console.log('[Referral] Fetching Nivel 2 for user:', user.email);
+    // console.log('[Referral] Fetching Nivel 2 for user:', user.email);
 
     // 1. Obtener mi ID de líder
     const { data: liderLink, error: liderError } = await supabase
@@ -244,7 +244,7 @@ export async function getLevel2ReferredUsers(): Promise<any[]> {
         console.warn('[Referral] No leader profile found for current user. Level 2 impossible.');
         return [];
     }
-    console.log('[Referral] Step 1 OK. My Lider ID:', liderLink.id);
+    // console.log('[Referral] Step 1 OK. My Lider ID:', liderLink.id);
 
     // 2. Obtener los IDs de mis referidos directos
     const { data: directReferrals, error: directError } = await supabase
@@ -259,7 +259,7 @@ export async function getLevel2ReferredUsers(): Promise<any[]> {
     }
     
     const directUserIds = directReferrals.map(dr => dr.usuario_id);
-    console.log('[Referral] Step 2 OK. Direct Referral IDs:', directUserIds);
+    // console.log('[Referral] Step 2 OK. Direct Referral IDs:', directUserIds);
 
     // 3. Obtener los IDs de líderes de mis referidos (los sub-líderes que traen Nivel 2)
     const { data: subLeadersData, error: subLeadersError } = await supabase
@@ -274,7 +274,7 @@ export async function getLevel2ReferredUsers(): Promise<any[]> {
     }
     
     const subLeaderIds = subLeadersData.map(sl => sl.id);
-    console.log('[Referral] Step 3 OK. Sub-Leader IDs (Level 2 Roots):', subLeaderIds);
+    // console.log('[Referral] Step 3 OK. Sub-Leader IDs (Level 2 Roots):', subLeaderIds);
 
     // 4. Obtener los usuarios invitados por estos sub-líderes (Nivel 2)
     const { data, error } = await supabase
@@ -298,7 +298,7 @@ export async function getLevel2ReferredUsers(): Promise<any[]> {
         return [];
     }
 
-    console.log('[Referral] Step 4 OK. Found Level 2 users:', data?.length || 0);
+    // console.log('[Referral] Step 4 OK. Found Level 2 users:', data?.length || 0);
 
     return (data || []).map((r: any) => ({
         id: r.usuario_id,

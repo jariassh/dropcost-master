@@ -1231,7 +1231,7 @@ export function AdminEmailTemplatesPage() {
                     .maybeSingle();
                 plan = planBySlug;
             }
-            console.log('[Preview] Plan resuelto:', plan?.name || 'NO ENCONTRADO', '| price_monthly:', plan?.price_monthly, '| planId era:', planId);
+            // console.log('[Preview] Plan resuelto:', plan?.name || 'NO ENCONTRADO', '| price_monthly:', plan?.price_monthly, '| planId era:', planId);
             setSelectedUserPlan(plan);
         };
         fetchPlan();

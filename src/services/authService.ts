@@ -162,17 +162,19 @@ export async function getCurrentUser(): Promise<User | null> {
         }
     }
 
-    console.log("!!! [AUTH-SERVICE] PERFIL CRUDO OBTENIDO DE TABLA 'users' !!!");
-    console.log("Datos:", JSON.stringify({ 
-        id_perfil: profile?.id,
-        email_perfil: profile?.email,
-        plan_id_perfil: profile?.plan_id,
-        estado_suscripcion: profile?.estado_suscripcion,
-        vencimiento: (profile as any)?.plan_expires_at
-    }, null, 2));
+    // console.log("!!! [AUTH-SERVICE] PERFIL CRUDO OBTENIDO DE TABLA 'users' !!!");
+    // console.log("Datos:", JSON.stringify({ 
+    //     id_perfil: profile?.id,
+    //     email_perfil: profile?.email,
+    //     plan_id_perfil: profile?.plan_id,
+    //     estado_suscripcion: profile?.estado_suscripcion,
+    //     vencimiento: (profile as any)?.plan_expires_at
+    // }, null, 2));
 
+    /*
     console.log("!!! [AUTH-SERVICE] DETALLES DEL PLAN OBTENIDOS DE TABLA 'plans' !!!");
     console.log("Plan:", JSON.stringify(planDetails, null, 2));
+    */
 
     return {
         id: user.id,
@@ -208,7 +210,7 @@ export async function getCurrentUser(): Promise<User | null> {
 }
 
 export async function requestPasswordReset(data: PasswordResetRequest): Promise<AuthResponse> {
-    console.log('[authService] INICIO requestPasswordReset para:', data.email);
+    // console.log('[authService] INICIO requestPasswordReset para:', data.email);
     
     try {
         // Obtenemos la URL y la Key de las variables de entorno para una llamada manual si es necesario
@@ -224,14 +226,14 @@ export async function requestPasswordReset(data: PasswordResetRequest): Promise<
             return { success: false, error: `Error del Servidor: ${detailText}` };
         }
 
-        console.log('[authService] Respuesta de la función:', resData);
+        // console.log('[authService] Respuesta de la función:', resData);
 
         if (!resData?.success) {
             console.error('[authService] Lógica de la función reportó fallo:', resData);
             return { success: false, error: resData?.error || 'No se pudo procesar la solicitud' };
         }
 
-        console.log('[authService] ÉXITO: Instrucciones enviadas');
+        // console.log('[authService] ÉXITO: Instrucciones enviadas');
         return { success: true };
     } catch (err: any) {
         console.error('[authService] Error crítico ejecutando la función:', err);
@@ -332,7 +334,7 @@ export async function resendVerificationEmail(email: string): Promise<AuthRespon
 // 2FA Functions using Edge Function
 
 async function invoke2FA(action: string, extra: any = {}): Promise<AuthResponse> {
-    console.log(`[authService] Invocando auth-2fa | acción: ${action}`, extra);
+    // console.log(`[authService] Invocando auth-2fa | acción: ${action}`, extra);
     
     const { data, error } = await supabase.functions.invoke('auth-2fa', {
         body: { action, ...extra }
@@ -343,7 +345,7 @@ async function invoke2FA(action: string, extra: any = {}): Promise<AuthResponse>
         return { success: false, error: translateError(error.message) };
     }
     
-    console.log(`[authService] Respuesta de auth-2fa (${action}):`, data);
+    // console.log(`[authService] Respuesta de auth-2fa (${action}):`, data);
     
     // Edge function returns standard JSON format
     return data; 

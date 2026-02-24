@@ -145,7 +145,7 @@ export const configService = {
         }
         
         if (!data) {
-             console.log('[ConfigService] Usando configuración por defecto (ID: ' + CONFIG_ID + ')');
+             // console.log('[ConfigService] Usando configuración por defecto (ID: ' + CONFIG_ID + ')');
              // Instead of throwing, we might just return default values or null
              // For now, let's return default values simulating a fetched config
              // so the app doesn't crash on login
@@ -270,6 +270,7 @@ export const configService = {
             }
         });
 
+        /*
         console.log('>>> DB UPDATE START:', targetId);
         console.log('>>> ALL KEYS IN CHANGES:', Object.keys(changes));
         console.log('>>> BRANDING VALUES TO SAVE:', {
@@ -278,6 +279,7 @@ export const configService = {
             variante: updateData.logo_variante_url,
             og: updateData.og_image_url
         });
+        */
 
         const { data, error } = await supabase
             .from('configuracion_global' as any)
@@ -298,7 +300,7 @@ export const configService = {
             throw new Error('No se pudo actualizar el registro. Es posible que no tengas permisos de administrador (RLS).');
         }
 
-        console.log('>>> DB UPDATE SUCCESS:', data[0]);
+        // console.log('>>> DB UPDATE SUCCESS:', data[0]);
         
         // Actualizamos la caché local inmediatamente
         localStorage.setItem(CACHE_KEY, JSON.stringify(data[0]));
