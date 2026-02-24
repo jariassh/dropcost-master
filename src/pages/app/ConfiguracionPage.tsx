@@ -337,7 +337,7 @@ export function ConfiguracionPage() {
 
 
     const handleUpdateEmail = async () => {
-        console.log('[ConfiguracionPage] Click en Solicitar Cambio de Email. Nuevo:', emailData.newEmail);
+        // console.log('[ConfiguracionPage] Click en Solicitar Cambio de Email. Nuevo:', emailData.newEmail);
 
         if (!emailData.newEmail || !emailData.newEmail.includes('@')) {
             toast.warning('Email inválido', 'Por favor ingresa un correo electrónico válido.');
@@ -349,11 +349,11 @@ export function ConfiguracionPage() {
         }
 
         setIsRequestingEmailChange(true);
-        console.log('[ConfiguracionPage] Llamando a requestEmailChange desde el store...');
+        // console.log('[ConfiguracionPage] Llamando a requestEmailChange desde el store...');
         const result = await requestEmailChange(emailData.newEmail);
         setIsRequestingEmailChange(false);
 
-        console.log('[ConfiguracionPage] Resultado de requestEmailChange:', result);
+        // console.log('[ConfiguracionPage] Resultado de requestEmailChange:', result);
 
         if (result.success) {
             setOtpCode('');

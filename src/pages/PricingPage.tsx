@@ -133,7 +133,7 @@ export const PricingPage: React.FC = () => {
                 throw new Error('No se pudo generar el link de pago.');
             }
 
-            console.log('Redirecting to:', initPoint);
+            // console.log('Redirecting to:', initPoint);
             // Redirect to Mercado Pago
             window.location.href = initPoint;
         } catch (error: any) {

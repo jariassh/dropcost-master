@@ -61,7 +61,7 @@ export function AdminSettingsPage() {
         try {
             setIsLoading(true);
             const data = await configService.getConfig();
-            console.log('>>> CONFIG LOADED FROM DB:', data);
+            // console.log('>>> CONFIG LOADED FROM DB:', data);
 
             // Aseguramos que las llaves nuevas existan para que React las rastree
             const sanitized = {
@@ -86,7 +86,7 @@ export function AdminSettingsPage() {
             setIsSaving(true);
             // Creamos una copia local para asegurar que enviamos lo que el usuario ve
             const payload = { ...config };
-            console.log('>>> ENVIANDO A GUARDAR:', payload);
+            // console.log('>>> ENVIANDO A GUARDAR:', payload);
 
             const updated = await configService.updateConfig(payload);
 

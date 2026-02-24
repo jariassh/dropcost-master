@@ -212,11 +212,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     requestEmailChange: async (newEmail: string) => {
-        console.log('[authStore] Solicitando cambio de email a:', newEmail);
+        // console.log('[authStore] Solicitando cambio de email a:', newEmail);
         set({ isLoading: true, error: null });
         try {
             const response = await authService.requestEmailChange(newEmail);
-            console.log('[authStore] Respuesta solicitud email change:', response);
+            // console.log('[authStore] Respuesta solicitud email change:', response);
             
             if (!response.success) {
                 const errorMsg = response.error || 'Error al solicitar cambio de email';
@@ -234,11 +234,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     verifyEmailChange: async (code: string) => {
-        console.log('[authStore] Verificando código de cambio de email:', code);
+        // console.log('[authStore] Verificando código de cambio de email:', code);
         set({ isLoading: true, error: null });
         try {
             const response = await authService.verifyEmailChange(code);
-            console.log('[authStore] Respuesta verificación email change:', response);
+            // console.log('[authStore] Respuesta verificación email change:', response);
             
             if (!response.success) {
                 set({ isLoading: false, error: response.error });

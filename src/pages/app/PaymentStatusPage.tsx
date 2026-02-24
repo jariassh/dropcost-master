@@ -24,6 +24,7 @@ export function PaymentStatusPage() {
     const [hasAttemptedVerification, setHasAttemptedVerification] = useState(false);
 
     useEffect(() => {
+        /*
         console.log("!!! [FRONTEND] INICIO DE PÁGINA DE ESTADO DE PAGO !!!");
         console.log("Parámetros URL detectados:", {
             status,
@@ -32,10 +33,11 @@ export function PaymentStatusPage() {
             mockStatus,
             fullURL: window.location.href
         });
+        */
 
         // MODO MOCK PARA PREVISUALIZACIÓN DE DISEÑO
         if (mockStatus) {
-            console.log("!!! [FRONTEND] MODO MOCK ACTIVO:", mockStatus);
+            // console.log("!!! [FRONTEND] MODO MOCK ACTIVO:", mockStatus);
             if (mockStatus === 'approved') setVerificationResult('success');
             else if (mockStatus === 'verifying') setIsVerifying(true);
             else if (mockStatus === 'error') setVerificationResult('error');
@@ -44,18 +46,18 @@ export function PaymentStatusPage() {
 
         const verifyPayment = async () => {
             if (hasAttemptedVerification) {
-                console.log("!!! [FRONTEND] Verificación ya intentada, omitiendo re-ejecución.");
+                // console.log("!!! [FRONTEND] Verificación ya intentada, omitiendo re-ejecución.");
                 return;
             }
 
             if (status === 'approved' && paymentId) {
-                console.log("!!! [FRONTEND] PAGO APROBADO DETECTADO. Iniciando verificación manual...");
+                // console.log("!!! [FRONTEND] PAGO APROBADO DETECTADO. Iniciando verificación manual...");
                 setHasAttemptedVerification(true);
                 setIsVerifying(true);
                 try {
-                    console.log(`!!! [FRONTEND] LLAMANDO A checkPaymentStatus PARA ID: ${paymentId}`);
+                    // console.log(`!!! [FRONTEND] LLAMANDO A checkPaymentStatus PARA ID: ${paymentId}`);
                     const result = await paymentService.checkPaymentStatus(paymentId);
-                    console.log("!!! [FRONTEND] RESPUESTA DEL SERVIDOR (RAW):", JSON.stringify(result, null, 2));
+                    // console.log("!!! [FRONTEND] RESPUESTA DEL SERVIDOR (RAW):", JSON.stringify(result, null, 2));
 
                     if (result.error || result.result?.error) {
                         console.error("!!! [FRONTEND] ERROR EN VERIFICACIÓN DE SERVIDOR:", result.error || result.result?.error);
@@ -63,10 +65,11 @@ export function PaymentStatusPage() {
                         return;
                     }
 
-                    console.log("!!! [FRONTEND] VERIFICACIÓN EXITOSA EN BACKEND. Refrescando estado local del usuario...");
+                    // console.log("!!! [FRONTEND] VERIFICACIÓN EXITOSA EN BACKEND. Refrescando estado local del usuario...");
                     await initialize();
 
                     const userAfterInit = useAuthStore.getState().user;
+                    /*
                     console.log("!!! [FRONTEND] ESTADO DEL USUARIO TRAS INITIALIZE:", {
                         id: userAfterInit?.id,
                         planId: userAfterInit?.planId,
@@ -74,11 +77,12 @@ export function PaymentStatusPage() {
                         estadoSuscripcion: userAfterInit?.estadoSuscripcion,
                         tokenSesion: localStorage.getItem('dc_session_token') ? 'Existe' : 'No existe'
                     });
+                    */
 
                     if (userAfterInit?.planId === 'plan_free') {
                         console.warn("!!! [FRONTEND] ATENCIÓN: El usuario se refrescó pero SIGUE EN PLAN FREE.");
                     } else {
-                        console.log(`!!! [FRONTEND] ÉXITO TOTAL: El usuario ahora está en ${userAfterInit?.planId}`);
+                        // console.log(`!!! [FRONTEND] ÉXITO TOTAL: El usuario ahora está en ${userAfterInit?.planId}`);
                     }
 
                     setVerificationResult('success');
@@ -90,12 +94,12 @@ export function PaymentStatusPage() {
                     setIsVerifying(false);
                 }
             } else if (status === 'approved' && !paymentId) {
-                console.log("!!! [FRONTEND] Pago aprobado pero falta ID. Intentando refrescar estado...");
+                // console.log("!!! [FRONTEND] Pago aprobado pero falta ID. Intentando refrescar estado...");
                 setHasAttemptedVerification(true);
                 await initialize();
                 setVerificationResult('success');
             } else {
-                console.log("!!! [FRONTEND] El estado del pago no es 'approved' o faltan datos. Status:", status);
+                // console.log("!!! [FRONTEND] El estado del pago no es 'approved' o faltan datos. Status:", status);
             }
         };
 

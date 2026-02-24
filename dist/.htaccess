@@ -1,17 +1,15 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  # Redirecciones para SEO Dinámico (Edge Functions)
+  RewriteRule ^robots\.txt$ https://wauqudcethbrebrdacqi.supabase.co/functions/v1/robots [L,R=301]
+  RewriteRule ^sitemap\.xml$ https://wauqudcethbrebrdacqi.supabase.co/functions/v1/sitemap [L,R=301]
+
+  # Configuración para Aplicaciones React (SPA)
   RewriteBase /
-
-  # 1. Redirigir robots.txt a Supabase Edge Function
-  # Reemplaza la URL si tienes un dominio personalizado para Supabase
-  RewriteRule ^robots\.txt$ https://jariassh.supabase.co/functions/v1/robots [L,R=301]
-
-  # 2. Redirigir sitemap.xml a Supabase Edge Function
-  RewriteRule ^sitemap\.xml$ https://jariassh.supabase.co/functions/v1/sitemap [L,R=301]
-
-  # 3. Soporte para React Router (SPA)
-  # Si el archivo o directorio solicitado no existe, envía a index.html
+  RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-l
   RewriteRule . /index.html [L]
 </IfModule>
