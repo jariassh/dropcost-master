@@ -5,7 +5,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 console.log("Hello from sitemap.xml!");
 
 serve(async (req) => {
-  const APP_URL = Deno.env.get("VITE_APP_URL") || "http://localhost:3000";
+  const host = req.headers.get("host") || "localhost:3000";
+  const protocol = host.includes("localhost") ? "http" : "https";
+  const APP_URL = `${protocol}://${host}`;
   
   // Initialize Supabase Client
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
