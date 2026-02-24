@@ -162,6 +162,18 @@ export async function getCurrentUser(): Promise<User | null> {
         }
     }
 
+    console.log("!!! [AUTH-SERVICE] PERFIL CRUDO OBTENIDO DE TABLA 'users' !!!");
+    console.log("Datos:", JSON.stringify({ 
+        id_perfil: profile?.id,
+        email_perfil: profile?.email,
+        plan_id_perfil: profile?.plan_id,
+        estado_suscripcion: profile?.estado_suscripcion,
+        vencimiento: (profile as any)?.plan_expires_at
+    }, null, 2));
+
+    console.log("!!! [AUTH-SERVICE] DETALLES DEL PLAN OBTENIDOS DE TABLA 'plans' !!!");
+    console.log("Plan:", JSON.stringify(planDetails, null, 2));
+
     return {
         id: user.id,
         email: user.email!,
@@ -183,7 +195,7 @@ export async function getCurrentUser(): Promise<User | null> {
             id: profile?.plan_id || 'plan_free',
             slug: profile?.plan_id || 'plan_free',
             name: planDetails?.name || (
-                profile?.plan_id ? (profile.plan_id.replace('plan_', '').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')) : 'Plan Gratis'
+                profile?.plan_id ? (profile.plan_id.replace('plan_', '').split('_').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')) : 'Plan Gratis'
             ),
             limits: (planDetails?.limits as any) || (
                 profile?.plan_id === 'plan_pro' ? { stores: 5, costeos_limit: 100 } :
