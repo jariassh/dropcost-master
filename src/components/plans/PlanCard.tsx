@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, CheckCircle2 } from 'lucide-react';
+import { Check, CheckCircle2, MinusCircle } from 'lucide-react';
 import { Button } from '../common/Button';
 import { Plan } from '@/types/plans.types';
 import { formatCurrency } from '@/lib/format';
@@ -61,7 +61,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                 }
             }}
         >
-            {isCurrent && (
+            {isCurrent ? (
                 <div style={{
                     position: 'absolute',
                     top: '-12px',
@@ -77,9 +77,32 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                     letterSpacing: '0.05em',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px'
+                    gap: '6px',
+                    zIndex: 10
                 }}>
                     <CheckCircle2 size={14} /> Tu Plan Actual
+                </div>
+            ) : isPro && (
+                <div style={{
+                    position: 'absolute',
+                    top: '-12px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    backgroundColor: 'var(--color-primary)',
+                    color: 'white',
+                    padding: '4px 16px',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    zIndex: 10,
+                    boxShadow: '0 4px 12px rgba(0, 102, 255, 0.3)'
+                }}>
+                    MÁS COMPRADO
                 </div>
             )}
 
@@ -103,17 +126,11 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                 </span>
             </div>
 
-            {/* Features */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
                 {plan.features?.map((feature: string, index: number) => {
-                    // Logic to show forbidden emoji if offers_limit is 0
-                    let displayText = feature;
-                    if (feature.toLowerCase().includes('0 ofertas') || feature.includes('Crear ofertas')) {
-                        const offersLimit = (plan.limits as any)?.offers_limit;
-                        if (offersLimit === 0) {
-                            displayText = '⛔ Crear ofertas';
-                        }
-                    }
+                    // Si la característica comienza con ⛔, lo usamos como icono principal (estilo negativo)
+                    const isManualNegative = feature.startsWith('⛔');
+                    const displayText = isManualNegative ? feature.replace('⛔', '').trim() : feature;
 
                     return (
                         <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
@@ -121,16 +138,23 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                                 marginTop: '2px',
                                 width: '20px',
                                 height: '20px',
-                                borderRadius: '50%',
-                                backgroundColor: 'var(--bg-secondary)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 flexShrink: 0
                             }}>
-                                <Check size={12} style={{ color: 'var(--color-primary)' }} />
+                                {isManualNegative ? (
+                                    <MinusCircle size={18} style={{ color: '#EF4444' }} />
+                                ) : (
+                                    <Check size={18} style={{ color: 'var(--color-primary)' }} />
+                                )}
                             </div>
-                            <span style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                            <span style={{
+                                fontSize: '14px',
+                                color: isManualNegative ? 'var(--text-tertiary)' : 'var(--text-secondary)',
+                                fontWeight: isManualNegative ? 400 : 500,
+                                lineHeight: '1.5'
+                            }}>
                                 {displayText}
                             </span>
                         </div>

@@ -7,13 +7,14 @@ import { auditService } from './auditService';
 
 export const costeoService = {
     /**
-     * Lista todos los costeos de una tienda.
+     * Lista todos los costeos de una tienda, validando que pertenece al usuario.
      */
-    async listCosteos(tiendaId: string): Promise<SavedCosteo[]> {
+    async listCosteos(tiendaId: string, userId: string): Promise<SavedCosteo[]> {
         const { data, error } = await supabase
             .from('costeos')
             .select('*')
             .eq('tienda_id', tiendaId)
+            .eq('usuario_id', userId) // Filtrado doble: por tienda e ID de usuario
             .order('created_at', { ascending: false });
 
         if (error) {

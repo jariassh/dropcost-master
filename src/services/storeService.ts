@@ -7,12 +7,13 @@ import { auditService } from './auditService';
 
 export const storeService = {
     /**
-     * Obtiene todas las tiendas vinculadas al usuario actual.
+     * Obtiene todas las tiendas vinculadas a un usuario específico.
      */
-    async getTiendas(): Promise<Tienda[]> {
+    async getTiendas(userId: string): Promise<Tienda[]> {
         const { data, error } = await supabase
             .from('tiendas')
             .select('*')
+            .eq('usuario_id', userId)
             .eq('active', true)
             .order('created_at', { ascending: false });
 
