@@ -113,7 +113,7 @@ export function ReferidosPage() {
     if (isLoading && !isRestricted) return <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '100px' }}><Spinner /></div>;
 
     const referralCode = stats?.referralCode || user?.codigoReferido || user?.id?.split('-')[0] || '';
-    const referralLink = `${window.location.origin}/registro?ref=${referralCode}`;
+    const referralLink = `${window.location.origin}/?ref=${referralCode}`;
 
     const handleCopy = () => {
         navigator.clipboard.writeText(referralLink);
