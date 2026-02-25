@@ -43,5 +43,22 @@ export const affiliateService = {
     clearAffiliateId: () => {
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(EXPIRY_KEY);
+    },
+
+    /**
+     * Verifica si el clic ya fue contado para un código específico en este navegador.
+     */
+    isClickCounted: (refCode: string): boolean => {
+        const countedClicks = JSON.parse(localStorage.getItem('dc_counted_clicks') || '{}');
+        return !!countedClicks[refCode.toLowerCase()];
+    },
+
+    /**
+     * Marca un código como contado para evitar incrementos duplicados.
+     */
+    markClickAsCounted: (refCode: string) => {
+        const countedClicks = JSON.parse(localStorage.getItem('dc_counted_clicks') || '{}');
+        countedClicks[refCode.toLowerCase()] = Date.now();
+        localStorage.setItem('dc_counted_clicks', JSON.stringify(countedClicks));
     }
 };
