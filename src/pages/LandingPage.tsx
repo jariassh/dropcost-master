@@ -196,6 +196,50 @@ export function LandingPage() {
                     .hero-grid { grid-template-columns: 1fr !important; text-align: center; }
                     .hero-content { align-items: center !important; }
                 }
+                .feature-card {
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                    border: 1px solid var(--border-color) !important;
+                }
+                .feature-card:hover {
+                    transform: translateY(-12px) !important;
+                    border-color: var(--color-primary) !important;
+                    box-shadow: 0 10px 40px rgba(0, 102, 255, 0.2), 0 0 20px rgba(0, 102, 255, 0.1) !important;
+                    background-color: var(--bg-primary);
+                }
+                .feature-card:hover .icon-container {
+                    background-color: rgba(0, 102, 255, 0.1) !important;
+                    transform: scale(1.1);
+                }
+                .icon-container {
+                    transition: all 0.3s ease;
+                }
+                .testimonial-card {
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                    border: 1px solid var(--border-color) !important;
+                }
+                .testimonial-card:hover {
+                    transform: translateY(-12px) !important;
+                    border-color: var(--color-primary) !important;
+                    box-shadow: 0 10px 40px rgba(0, 102, 255, 0.2), 0 0 20px rgba(0, 102, 255, 0.1) !important;
+                    background-color: var(--bg-primary);
+                }
+                .hero-btn-primary {
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                }
+                .hero-btn-primary:hover {
+                    transform: scale(1.05);
+                    box-shadow: 0 12px 32px rgba(0, 102, 255, 0.45) !important;
+                    filter: brightness(1.1);
+                }
+                .hero-btn-secondary {
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                }
+                .hero-btn-secondary:hover {
+                    transform: scale(1.05);
+                    background-color: var(--bg-primary) !important;
+                    border-color: var(--color-primary) !important;
+                    color: var(--color-primary) !important;
+                }
             `}</style>
 
             {/* HERO SECTION - Initial reveal for better UX */}
@@ -217,8 +261,8 @@ export function LandingPage() {
                             La única herramienta diseñada por dropshippers para resolver la falta de rentabilidad del COD. Deja de adivinar y empieza a escalar.
                         </p>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-                            <a href="#pricing" style={{ padding: '16px 32px', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: '12px', fontWeight: 700, textDecoration: 'none', fontSize: '18px', boxShadow: '0 8px 24px rgba(0, 102, 255, 0.3)' }}>Comenzar Ahora</a>
-                            <a href="#comparison" style={{ padding: '16px 32px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', borderRadius: '12px', fontWeight: 700, textDecoration: 'none', fontSize: '18px', border: '1px solid var(--border-color)' }}>Ver Simulador</a>
+                            <a href="#pricing" className="hero-btn-primary" style={{ padding: '16px 32px', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: '12px', fontWeight: 700, textDecoration: 'none', fontSize: '18px', boxShadow: '0 8px 24px rgba(0, 102, 255, 0.3)' }}>Comenzar Ahora</a>
+                            <a href="#comparison" className="hero-btn-secondary" style={{ padding: '16px 32px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', borderRadius: '12px', fontWeight: 700, textDecoration: 'none', fontSize: '18px', border: '1px solid var(--border-color)' }}>Ver Simulador</a>
                         </div>
                     </div>
                     {/* Hero Image / Mockup */}
@@ -552,17 +596,19 @@ export function LandingPage() {
 
 function FeatureItem({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
     return (
-        <Card style={{
-            padding: '32px',
-            backgroundColor: 'var(--bg-primary)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '20px',
-            transition: 'transform 0.3s'
-        }} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-8px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-            <div style={{ color: 'var(--color-primary)', padding: '12px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', alignSelf: 'flex-start' }}>
+        <Card
+            className="feature-card"
+            style={{
+                padding: '32px',
+                backgroundColor: 'var(--bg-primary)',
+                borderRadius: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '20px',
+                height: '100%'
+            }}
+        >
+            <div className="icon-container" style={{ color: 'var(--color-primary)', padding: '12px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', alignSelf: 'flex-start' }}>
                 {icon}
             </div>
             <h3 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>{title}</h3>
@@ -584,20 +630,22 @@ function TestimonialCard({ name, location, countryCode, content, image, revenue,
     const hasHalfStar = rating % 1 !== 0;
 
     return (
-        <Card style={{
-            padding: '32px',
-            backgroundColor: 'var(--bg-primary)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '24px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '24px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
-            position: 'relative',
-            minWidth: '350px',
-            maxWidth: '450px',
-            userSelect: 'none'
-        }}>
+        <Card
+            className="testimonial-card"
+            style={{
+                padding: '32px',
+                backgroundColor: 'var(--bg-primary)',
+                borderRadius: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '24px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+                position: 'relative',
+                minWidth: '350px',
+                maxWidth: '450px',
+                userSelect: 'none'
+            }}
+        >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', gap: '4px', color: '#F59E0B' }}>
                     {[...Array(5)].map((_, i) => {
