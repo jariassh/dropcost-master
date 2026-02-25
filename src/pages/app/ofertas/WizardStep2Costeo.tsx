@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { ExternalLink, DollarSign, TrendingUp, Package } from 'lucide-react';
 import { useStoreStore } from '@/store/useStoreStore';
 import { costeoService } from '@/services/costeoService';
+import { useAuthStore } from '@/store/authStore';
 
 interface WizardStep2Props {
     selectedCosteoId: string;
@@ -18,11 +19,12 @@ interface WizardStep2Props {
 export function WizardStep2Costeo({ selectedCosteoId, onSelect }: WizardStep2Props) {
     const [costeos, setCosteos] = useState<SavedCosteo[]>([]);
     const { tiendaActual } = useStoreStore();
+    const { user } = useAuthStore();
 
     useEffect(() => {
-        if (!tiendaActual?.id) return;
-        costeoService.listCosteos(tiendaActual.id).then(setCosteos);
-    }, [tiendaActual]);
+        if (!tiendaActual?.id || !user?.id) return;
+        costeoService.listCosteos(tiendaActual.id, user.id).then(setCosteos);
+    }, [tiendaActual, user?.id]);
 
     const formatCurrency = (val: number) =>
         '$' + val.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });

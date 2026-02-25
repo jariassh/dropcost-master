@@ -59,7 +59,7 @@ export function OfertasPage() {
             return;
         }
 
-        const costeos = await costeoService.listCosteos(tiendaActual.id);
+        const costeos = await costeoService.listCosteos(tiendaActual.id, user?.id || '');
         if (costeos.length === 0) {
             toast.info('Sin costeos guardados', 'Primero debes crear un costeo en el simulador para basar tu oferta en él.');
             navigate('/mis-costeos');

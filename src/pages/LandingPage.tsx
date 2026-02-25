@@ -196,6 +196,10 @@ export function LandingPage() {
                     .hero-grid { grid-template-columns: 1fr !important; text-align: center; }
                     .hero-content { align-items: center !important; }
                 }
+                @media (max-width: 425px) {
+                    .hero-content { align-items: center !important; text-align: center; }
+                    .hero-buttons { justify-content: center !important; }
+                }
                 .feature-card {
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
                     border: 1px solid var(--border-color) !important;
@@ -240,6 +244,27 @@ export function LandingPage() {
                     border-color: var(--color-primary) !important;
                     color: var(--color-primary) !important;
                 }
+                .plan-card-wrapper {
+                    display: flex;
+                    width: 100%;
+                    max-width: 500px;
+                }
+                @media (min-width: 1024px) {
+                    .plan-card-wrapper {
+                        max-width: 300px;
+                    }
+                    .pricing-grid-container {
+                        gap: 16px !important;
+                    }
+                }
+                @media (min-width: 1025px) {
+                    .plan-card-wrapper {
+                        max-width: 340px;
+                    }
+                    .pricing-grid-container {
+                        gap: 24px !important;
+                    }
+                }
             `}</style>
 
             {/* HERO SECTION - Initial reveal for better UX */}
@@ -260,7 +285,7 @@ export function LandingPage() {
                         <p style={{ fontSize: '20px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '40px', maxWidth: '500px' }}>
                             La única herramienta diseñada por dropshippers para resolver la falta de rentabilidad del COD. Deja de adivinar y empieza a escalar.
                         </p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+                        <div className="hero-buttons" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
                             <a href="#pricing" className="hero-btn-primary" style={{ padding: '16px 32px', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: '12px', fontWeight: 700, textDecoration: 'none', fontSize: '18px', boxShadow: '0 8px 24px rgba(0, 102, 255, 0.3)' }}>Comenzar Ahora</a>
                             <a href="#comparison" className="hero-btn-secondary" style={{ padding: '16px 32px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', borderRadius: '12px', fontWeight: 700, textDecoration: 'none', fontSize: '18px', border: '1px solid var(--border-color)' }}>Ver Simulador</a>
                         </div>
@@ -890,7 +915,7 @@ function LocalPricingSection({
                     </button>
                 </div>
 
-                <div style={{
+                <div className="pricing-grid-container" style={{
                     display: 'flex',
                     justifyContent: 'center',
                     gap: '24px',
@@ -926,7 +951,7 @@ function LocalPricingSection({
                         }
 
                         return (
-                            <div key={plan.id} style={{ display: 'flex', maxWidth: '350px', width: '100%' }}>
+                            <div key={plan.id} className="plan-card-wrapper">
                                 <PlanCard
                                     plan={plan}
                                     period={billingCycle}
