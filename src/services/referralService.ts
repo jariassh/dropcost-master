@@ -29,6 +29,7 @@ export interface ReferredUser {
     email: string;
     nombres?: string;
     apellidos?: string;
+    avatar_url?: string;
     status: 'pending' | 'completed';
     planId?: string;
     emailVerificado?: boolean;
@@ -148,7 +149,7 @@ export async function getReferredUsers(): Promise<ReferredUser[]> {
             id,
             fecha_registro,
             usuario_id,
-            users:usuario_id (email, nombres, apellidos, plan_id, email_verificado, estado_suscripcion),
+            users:usuario_id (email, nombres, apellidos, avatar_url, plan_id, email_verificado, estado_suscripcion),
             referidos_lideres!inner (user_id)
         `)
         .eq('referidos_lideres.user_id', user.id);
@@ -166,6 +167,7 @@ export async function getReferredUsers(): Promise<ReferredUser[]> {
         planId: r.users?.plan_id,
         emailVerificado: r.users?.email_verificado,
         estadoSuscripcion: r.users?.estado_suscripcion,
+        avatar_url: r.users?.avatar_url,
         status: 'completed',
         createdAt: r.fecha_registro
     }));
@@ -182,7 +184,7 @@ export interface ReferredUserDetails extends ReferredUser {
 export async function getReferredUserDetails(referredUserId: string): Promise<ReferredUserDetails | null> {
     const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('id, email, nombres, apellidos, plan_id, email_verificado, estado_suscripcion, created_at')
+        .select('id, email, nombres, apellidos, avatar_url, plan_id, email_verificado, estado_suscripcion, created_at')
         .eq('id', referredUserId)
         .single();
 
@@ -216,6 +218,7 @@ export async function getReferredUserDetails(referredUserId: string): Promise<Re
         planId: userData.plan_id || undefined,
         emailVerificado: userData.email_verificado ?? undefined,
         estadoSuscripcion: userData.estado_suscripcion || undefined,
+        avatar_url: userData.avatar_url || undefined,
         status: 'completed',
         createdAt: userData.created_at,
         referralsCount: referralsCount,
@@ -283,7 +286,7 @@ export async function getLevel2ReferredUsers(): Promise<any[]> {
             id,
             fecha_registro,
             usuario_id,
-            users:usuario_id (email, nombres, apellidos, plan_id, email_verificado, estado_suscripcion),
+            users:usuario_id (email, nombres, apellidos, avatar_url, plan_id, email_verificado, estado_suscripcion),
             lider:lider_id (
                 nombre,
                 user_id,
@@ -308,6 +311,7 @@ export async function getLevel2ReferredUsers(): Promise<any[]> {
         planId: r.users?.plan_id,
         emailVerificado: r.users?.email_verificado,
         estadoSuscripcion: r.users?.estado_suscripcion,
+        avatar_url: r.users?.avatar_url,
         referenteDe: r.lider?.nombre || (r.lider?.users ? `${r.lider.users.nombres || ''} ${r.lider.users.apellidos || ''}`.trim() : 'Referente'),
         createdAt: r.fecha_registro
     }));

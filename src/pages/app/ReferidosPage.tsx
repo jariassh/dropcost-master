@@ -328,8 +328,29 @@ export function ReferidosPage() {
                                         >
                                             <td style={{ padding: '16px 24px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                    <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, var(--color-primary), #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '14px', flexShrink: 0 }}>
-                                                        {(r.nombres?.charAt(0) || '')}{(r.apellidos?.charAt(0) || r.email.charAt(0)).toUpperCase()}
+                                                    <div style={{
+                                                        width: '40px',
+                                                        height: '40px',
+                                                        borderRadius: '12px',
+                                                        background: r.avatar_url ? 'transparent' : 'linear-gradient(135deg, var(--color-primary), #6366f1)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        color: 'white',
+                                                        fontWeight: 700,
+                                                        fontSize: '14px',
+                                                        flexShrink: 0,
+                                                        overflow: 'hidden'
+                                                    }}>
+                                                        {r.avatar_url ? (
+                                                            <img
+                                                                src={r.avatar_url}
+                                                                alt={`${r.nombres} ${r.apellidos}`}
+                                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                            />
+                                                        ) : (
+                                                            <>{(r.nombres?.charAt(0) || '')}{(r.apellidos?.charAt(0) || r.email.charAt(0)).toUpperCase()}</>
+                                                        )}
                                                     </div>
                                                     <div>
                                                         <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{r.nombres ? `${r.nombres} ${r.apellidos}` : 'Nuevo Miembro'}</div>
@@ -486,7 +507,31 @@ function DetailsModal({ isOpen, onClose, user, details, isLoading, commissionRat
             <div style={{ backgroundColor: 'var(--card-bg)', maxWidth: '500px', width: '100%', borderRadius: '24px', padding: '32px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', position: 'relative' }}>
                 <button onClick={onClose} style={{ position: 'absolute', top: '24px', right: '24px', background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer' }}><X size={20} /></button>
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                    <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'linear-gradient(135deg, var(--color-primary), #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: '24px', margin: '0 auto 16px', boxShadow: '0 10px 20px rgba(0, 102, 255, 0.2)' }}>{(user?.nombres?.charAt(0) || '')}{(user?.apellidos?.charAt(0) || (user?.email || '').charAt(0)).toUpperCase()}</div>
+                    <div style={{
+                        width: '64px',
+                        height: '64px',
+                        borderRadius: '20px',
+                        background: user?.avatar_url ? 'transparent' : 'linear-gradient(135deg, var(--color-primary), #6366f1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontWeight: 800,
+                        fontSize: '24px',
+                        margin: '0 auto 16px',
+                        boxShadow: '0 10px 20px rgba(0, 102, 255, 0.2)',
+                        overflow: 'hidden'
+                    }}>
+                        {user?.avatar_url ? (
+                            <img
+                                src={user.avatar_url}
+                                alt={`${user?.nombres} ${user?.apellidos}`}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                        ) : (
+                            <>{(user?.nombres?.charAt(0) || '')}{(user?.apellidos?.charAt(0) || (user?.email || '').charAt(0)).toUpperCase()}</>
+                        )}
+                    </div>
                     <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>{user?.nombres ? `${user.nombres} ${user.apellidos}` : 'Nuevo Miembro'}</h2>
                     <div style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginBottom: '12px' }}>{user?.email}</div>
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>

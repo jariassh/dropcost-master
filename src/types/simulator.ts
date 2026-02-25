@@ -41,6 +41,8 @@ export interface SimulatorResults {
     effectivenessFunnel: EffectivenessFunnel;
     /** Manual price override used */
     manualPrice?: number;
+    /** Manual volume price override used */
+    manualVolumePrice?: number;
 }
 
 /** Detailed cost breakdown for the price */

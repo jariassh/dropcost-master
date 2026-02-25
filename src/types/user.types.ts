@@ -20,6 +20,7 @@ export interface User {
 
     fecha_registro: string;
     ultima_actividad?: string;
+    avatar_url?: string;
     plan_id?: string; // ID del plan suscrito
 }
 

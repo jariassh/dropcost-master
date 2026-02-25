@@ -183,6 +183,7 @@ export async function getCurrentUser(): Promise<User | null> {
         apellidos: profile?.apellidos || (user.user_metadata?.apellidos as string) || '',
         telefono: profile?.telefono || (user.user_metadata?.telefono as string),
         pais: profile?.pais || (user.user_metadata?.pais as string),
+        avatarUrl: profile?.avatar_url || (user.user_metadata?.avatar_url as string),
         rol: (profile?.rol || user.user_metadata?.rol || 'cliente') as any,
         estadoSuscripcion: (profile?.estado_suscripcion || 'pendiente') as any,
         emailVerificado: !!user.email_confirmed_at,
@@ -191,6 +192,7 @@ export async function getCurrentUser(): Promise<User | null> {
         codigoReferido: profile?.codigo_referido_personal || undefined,
         planId: profile?.plan_id || 'plan_free',
         fechaVencimiento: (profile as any)?.plan_expires_at,
+        sessionToken: profile?.session_token || undefined,
         plan_precio_pagado: (profile as any)?.plan_precio_pagado || 0,
         plan_periodo: (profile as any)?.plan_periodo,
         plan: {
@@ -385,32 +387,37 @@ export async function updateUserProfile(userData: Partial<User>): Promise<AuthRe
     if (!user) return { success: false, error: 'Sesión no encontrada' };
 
     // 1. Actualizar metadata de Auth
-    const { error: authError } = await supabase.auth.updateUser({
-        data: {
-            nombres: userData.nombres,
-            apellidos: userData.apellidos,
-            telefono: userData.telefono,
-            pais: userData.pais
-        }
-    });
+    const authUpdate: any = {};
+    if (userData.nombres !== undefined) authUpdate.nombres = userData.nombres;
+    if (userData.apellidos !== undefined) authUpdate.apellidos = userData.apellidos;
+    if (userData.telefono !== undefined) authUpdate.telefono = userData.telefono;
+    if (userData.pais !== undefined) authUpdate.pais = userData.pais;
+    if (userData.avatarUrl !== undefined) authUpdate.avatar_url = userData.avatarUrl;
 
-    if (authError) return { success: false, error: translateError(authError.message) };
+    if (Object.keys(authUpdate).length > 0) {
+        const { error: authError } = await supabase.auth.updateUser({
+            data: authUpdate
+        });
+        if (authError) return { success: false, error: translateError(authError.message) };
+    }
 
     // 2. Actualizar tabla public.users
-    const updates: any = {
-        nombres: userData.nombres,
-        apellidos: userData.apellidos,
-        telefono: userData.telefono,
-        pais: userData.pais,
-        codigo_referido_personal: userData.codigoReferido
-    };
+    const updates: any = {};
+    if (userData.nombres !== undefined) updates.nombres = userData.nombres;
+    if (userData.apellidos !== undefined) updates.apellidos = userData.apellidos;
+    if (userData.telefono !== undefined) updates.telefono = userData.telefono;
+    if (userData.pais !== undefined) updates.pais = userData.pais;
+    if (userData.avatarUrl !== undefined) updates.avatar_url = userData.avatarUrl;
+    if (userData.codigoReferido !== undefined) updates.codigo_referido_personal = userData.codigoReferido;
 
-    const { error: profileError } = await supabase
-        .from('users')
-        .update(updates)
-        .eq('id', user.id);
+    if (Object.keys(updates).length > 0) {
+        const { error: profileError } = await supabase
+            .from('users')
+            .update(updates)
+            .eq('id', user.id);
 
-    if (profileError) return { success: false, error: translateError(profileError.message) };
+        if (profileError) return { success: false, error: translateError(profileError.message) };
+    }
 
     // Disparar trigger PERFIL_ACTUALIZADO (fire-and-forget)
     dispararTriggerEmail('PERFIL_ACTUALIZADO', {

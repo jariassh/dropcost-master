@@ -8,6 +8,7 @@ interface TooltipProps {
     delay?: number;
     disabled?: boolean;
     offset?: number;
+    show?: boolean; // Nueva prop para forzar visibilidad
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({
@@ -17,8 +18,10 @@ export const Tooltip: React.FC<TooltipProps> = ({
     delay = 200,
     disabled = false,
     offset = 6,
+    show, // Control externo
 }) => {
-    const [isVisible, setIsVisible] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+    const isVisible = (show || isHovered) && !disabled;
     const [coords, setCoords] = useState({ top: 0, left: 0 });
     const triggerRef = useRef<HTMLDivElement>(null);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -59,7 +62,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         if (disabled) return;
         updatePosition();
         timeoutRef.current = setTimeout(() => {
-            setIsVisible(true);
+            setIsHovered(true);
         }, delay);
     };
 
@@ -68,7 +71,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
             clearTimeout(timeoutRef.current);
             timeoutRef.current = null;
         }
-        setIsVisible(false);
+        setIsHovered(false);
     };
 
     useEffect(() => {

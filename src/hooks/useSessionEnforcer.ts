@@ -68,15 +68,19 @@ export function useSessionEnforcer() {
 
     const handleForceLogout = () => {
         if (isLoggingOut.current) return;
+        
+        // No forzar logout si ya estamos en login o no hay usuario
+        if (window.location.pathname === '/login' || !user?.id) return;
+
         isLoggingOut.current = true;
         
         toast.error('Sesión cerrada', 'Se ha iniciado sesión en otro dispositivo. Tu sesión actual ha sido cerrada por seguridad.');
         
         // Dar un pequeño tiempo para que el usuario lea el toast si es necesario, 
         // pero idealmente cerrar rápido para evitar acceso no autorizado.
-        setTimeout(() => {
-            logout();
-            window.location.href = '/login'; // Force reload/redirect
+        setTimeout(async () => {
+            await logout();
+            window.location.href = '/login'; // Force reload/redirect to clear everything
         }, 2000);
     };
 }

@@ -582,6 +582,7 @@ export type Database = {
         Row: {
           "2fa_habilitado": boolean | null
           apellidos: string | null
+          avatar_url: string | null
           codigo_referido_personal: string | null
           created_at: string
           email: string
