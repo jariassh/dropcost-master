@@ -49,6 +49,7 @@ export function RegisterPage() {
 
     // Obtener de URL o de Cookie (90 días)
     const referralCode = searchParams.get('ref') || affiliateService.getAffiliateId() || '';
+    const selectedPlan = searchParams.get('plan');
 
     const [referrerName, setReferrerName] = useState<string | null>(null);
     const { register: registerUser, isLoading, error, clearError } = useAuthStore();
@@ -227,6 +228,25 @@ export function RegisterPage() {
                             <>Has sido invitado por <b>{referralCode}</b>. ¡Únete a la comunidad de Dropshippers más avanzada y optimiza tus costos hoy!</>
                         )}
                     </p>
+                </div>
+            )}
+
+            {selectedPlan && (
+                <div style={{
+                    marginBottom: '24px',
+                    padding: '12px 16px',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    border: '1px solid rgba(16, 185, 129, 0.2)',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px'
+                }}>
+                    <CheckCircle2 size={18} style={{ color: '#10B981' }} />
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        Plan seleccionado: <span style={{ textTransform: 'uppercase', color: 'var(--color-primary)' }}>{selectedPlan.replace('plan_', '')}</span>
+                    </span>
+                    <Link to="/#pricing" style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--color-primary)', textDecoration: 'none' }}>Cambiar</Link>
                 </div>
             )}
 
