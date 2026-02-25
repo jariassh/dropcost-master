@@ -311,33 +311,46 @@ function FormSection({ icon, title, color, children }: {
 function FormInput({ label, tooltip, isCurrency, ...inputProps }: {
     label: string; tooltip?: string; isCurrency?: boolean;
 } & any) {
+    const [isFocused, setIsFocused] = useState(false);
+
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+        setIsFocused(true);
+        if (inputProps.onFocus) inputProps.onFocus(e);
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        setIsFocused(false);
+        if (inputProps.onBlur) inputProps.onBlur(e);
+    };
+
     return (
         <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
                 <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>
                     {label}
                 </span>
-                {tooltip && <InfoTooltip text={tooltip} />}
+                {tooltip && <InfoTooltip text={tooltip} forceShow={isFocused} />}
             </div>
             {isCurrency ? (
-                <FormattedInput {...inputProps} />
+                <FormattedInput {...inputProps} onFocus={handleFocus} onBlur={handleBlur} />
             ) : (
-                <Input {...inputProps} />
+                <Input {...inputProps} onFocus={handleFocus} onBlur={handleBlur} />
             )}
         </div>
     );
 }
 
-function InfoTooltip({ text }: { text: string }) {
-    const [show, setShow] = useState(false);
+function InfoTooltip({ text, forceShow = false }: { text: string; forceShow?: boolean }) {
+    const [isHovered, setIsHovered] = useState(false);
+    const show = forceShow || isHovered;
 
     return (
         <span
             style={{ position: 'relative', display: 'inline-flex', cursor: 'help' }}
-            onMouseEnter={() => setShow(true)}
-            onMouseLeave={() => setShow(false)}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
         >
-            <Info size={14} style={{ color: 'var(--text-tertiary)' }} />
+            <Info size={14} style={{ color: show ? 'var(--color-primary)' : 'var(--text-tertiary)', transition: 'color 200ms ease' }} />
             {show && (
                 <div
                     style={{
@@ -349,12 +362,14 @@ function InfoTooltip({ text }: { text: string }) {
                         borderRadius: '10px',
                         fontSize: '12px',
                         lineHeight: 1.5,
-                        backgroundColor: 'var(--tooltip-bg, #1e293b)',
-                        color: '#e2e8f0',
+                        backgroundColor: 'var(--tooltip-bg, #1F2937)',
+                        color: '#f8fafc',
                         width: '240px',
                         zIndex: 50,
-                        boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
                         pointerEvents: 'none',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        animation: 'fadeIn 150ms ease-out',
                     }}
                 >
                     {text}
@@ -367,7 +382,7 @@ function InfoTooltip({ text }: { text: string }) {
                             width: 0, height: 0,
                             borderLeft: '6px solid transparent',
                             borderRight: '6px solid transparent',
-                            borderTop: '6px solid var(--tooltip-bg, #1e293b)',
+                            borderTop: '6px solid var(--tooltip-bg, #1F2937)',
                         }}
                     />
                 </div>
