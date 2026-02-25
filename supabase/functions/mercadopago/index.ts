@@ -7,88 +7,188 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper: disparar trigger de email (fire-and-forget)
+async function dispararTrigger(supabaseUrl: string, serviceKey: string, codigo_evento: string, datos: Record<string, string>) {
+    console.log(`[email-trigger] Firing event: ${codigo_evento} for user: ${datos.usuario_id || 'unknown'}`);
+    try {
+        const response = await fetch(`${supabaseUrl}/functions/v1/email-trigger-dispatcher`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` },
+            body: JSON.stringify({ codigo_evento, datos }),
+        });
+        
+        const result = await response.json().catch(() => ({}));
+        if (response.ok) {
+            console.log(`[email-trigger] Success: Trigger ${codigo_evento} dispatched.`, JSON.stringify(result));
+        } else {
+            console.warn(`[email-trigger] Failed: Dispatcher returned ${response.status}`, JSON.stringify(result));
+        }
+        return result;
+    } catch (e) {
+        console.error(`[email-trigger] Fatal Error firing ${codigo_evento}:`, e);
+        return { error: e.message };
+    }
+}
+
 // Helper function to process approved payment
 async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClient) {
     const dataId = String(paymentData.id);
-    
-    // Idempotency Check: Critical to avoid double commissions
-    const { data: existingPayment, error: checkError } = await supabase
-        .from("payments")
-        .select("id")
-        .eq("provider_payment_id", dataId)
-        .maybeSingle();
 
-    if (existingPayment) {
-        console.log("PAYMENT_ALREADY_PROCESSED: Skipping to avoid duplicate commissions for ID:", dataId);
-        return { status: "already_processed", message: "Este pago ya fue registrado anteriormente." };
-    }
-
-    // Parse Metadata
+    // Parse Metadata (external_reference is our source of truth)
     let metadata;
     try {
-        metadata = typeof paymentData.external_reference === 'string' 
-            ? JSON.parse(paymentData.external_reference) 
-            : paymentData.external_reference;
+        const extRef = paymentData.external_reference;
+        metadata = typeof extRef === 'string' ? JSON.parse(extRef) : extRef;
+        console.log("[mercadopago] external_reference parsed:", JSON.stringify(metadata));
     } catch (e) {
-        console.error("Error parsing metadata:", e);
-        // Fallback for empty metadata cases (should not happen if flow is correct)
-        return { error: "Invalid metadata in payment" };
+        console.warn("[mercadopago] external_reference parse failed, fallback to metadata object");
+        metadata = paymentData.metadata;
     }
 
-    if (!metadata || !metadata.userId || !metadata.planId) {
-        console.error("Missing metadata required fields:", metadata);
-        return { error: "Missing metadata (userId/planId)" }; 
-    }
+    const userId = metadata?.user_id || metadata?.userId;
+    const planId = metadata?.plan_id || metadata?.planId;
+    const period = metadata?.period || metadata?.plan_periodo || 'monthly';
 
-    const { userId, planId, period } = metadata;
+    if (!userId || !planId) {
+        console.error("Critical: Missing userId or planId", { userId, planId, metadata });
+        return { error: `ERR_DC_REF_MISSING: No pudimos identificar tu usuario o plan. ID Pago: ${dataId}.` };
+    }
 
     // Calculate Expiration
     const months = period === 'monthly' ? 1 : 6;
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + months);
 
-    // 1. Transaction: Record Payment
-    const { error: payError } = await supabase.from("payments").insert({
-        user_id: userId,
-        amount: paymentData.transaction_amount,
-        currency: paymentData.currency_id,
-        status: 'approved',
-        provider_payment_id: dataId,
-        plan_id: planId,
-        period: period,
-        metadata: paymentData
-    });
+    // ─────────────────────────────────────────────────────────────────────────
+    // IDEMPOTENCIA ATÓMICA: Intentamos insertar el pago.
+    // La restricción UNIQUE en provider_payment_id garantiza que si dos webhooks
+    // llegan simultáneamente, solo UNO tendrá éxito. El otro retornará null.
+    // ─────────────────────────────────────────────────────────────────────────
+    const { data: insertedPayment, error: payError } = await supabase
+        .from("payments")
+        .upsert({
+            user_id: userId,
+            amount: paymentData.transaction_amount,
+            currency: paymentData.currency_id,
+            status: 'approved',
+            provider_payment_id: dataId,
+            plan_id: planId,
+            period: period,
+            metadata: paymentData
+        }, { onConflict: 'provider_payment_id', ignoreDuplicates: true })
+        .select("id")
+        .maybeSingle();
 
     if (payError) {
-        console.error("Error inserting payment:", payError);
+        console.error("!!! [BACKEND] Error en upsert de pago:", payError);
         throw payError;
     }
 
+    if (!insertedPayment) {
+        // Este webhook llegó tarde — otro ya procesó este pago
+        console.log(`!!! [BACKEND] IDEMPOTENCIA: Pago ${dataId} ya fue procesado por otra ejecución. Descartando duplicado.`);
+        return { status: "already_processed", message: "Este pago ya fue registrado." };
+    }
+
+    console.log(`!!! [BACKEND] NUEVO PAGO registrado correctamente. ID interno: ${insertedPayment.id}. Procediendo con activación...`);
+
     // AUDIT LOG: Payment Received
-    await supabase.from("audit_logs").insert({
-        usuario_id: userId,
-        accion: 'PAYMENT_RECEIVED',
-        detalles: { payment_id: dataId, amount: paymentData.transaction_amount, currency: paymentData.currency_id }
-    }).catch(e => console.error("Audit Log Error:", e));
+    try {
+        await supabase.from("audit_logs").insert({
+            usuario_id: userId,
+            accion: 'PAYMENT_RECEIVED',
+            detalles: { payment_id: dataId, amount: paymentData.transaction_amount, currency: paymentData.currency_id }
+        });
+    } catch (e) { console.error("Audit Log Error (PAYMENT_RECEIVED):", e); }
+
 
     // 2. Transaction: Update User Subscription
-    const { error: userError } = await supabase.from("users").update({
+    console.log(`[mercadopago] !!! PROJECT_DEBUG !!! Attempting update for user ID: "${userId}"`);
+    
+    // Safety check: Does user exist?
+    let finalUserId = userId;
+    const { data: checkUser, error: checkUserErr } = await supabase.from("users").select("id, email, plan_id").eq("id", userId).maybeSingle();
+    
+    if (checkUserErr) {
+        console.error("[mercadopago] Error checking user existence:", checkUserErr);
+    } else if (!checkUser) {
+        console.warn(`[mercadopago] CRITICAL: User with ID "${userId}" NOT FOUND in public.users table. Searching by email...`);
+        const targetEmail = metadata.email || metadata.user_email || paymentData.payer?.email;
+        if (targetEmail) {
+            const { data: fallbackUser } = await supabase.from("users").select("id").eq("email", targetEmail).maybeSingle();
+            if (fallbackUser) {
+                console.log(`[mercadopago] Found user by email (${targetEmail})! Correcting ID to ${fallbackUser.id}`);
+                finalUserId = fallbackUser.id;
+            } else {
+                console.error(`[mercadopago] User NOT FOUND by ID nor by Email (${targetEmail}). Activation will likely fail.`);
+            }
+        }
+    } else {
+        console.log(`[mercadopago] User found! Current plan: ${checkUser.plan_id}. Proceeding with update...`);
+    }
+
+    const updatePayload = {
         plan_id: planId,
         estado_suscripcion: 'activa',
-        plan_expires_at: expiresAt.toISOString()
-    }).eq("id", userId);
+        plan_expires_at: expiresAt.toISOString(),
+        fecha_vencimiento_plan: expiresAt.toISOString(),
+        plan_precio_pagado: paymentData.transaction_amount,
+        plan_periodo: period
+    };
+
+    console.log(`!!! [BACKEND] INTENTO DE UPDATE EN DB PARA USUARIO: ${finalUserId} !!!`);
+    console.log("!!! [BACKEND] PAYLOAD DE ACTUALIZACIÓN:", JSON.stringify(updatePayload, null, 2));
+
+    const { data: updateData, error: userError } = await supabase.from("users").update(updatePayload).eq("id", finalUserId).select();
 
     if (userError) {
-        console.error("Error updating user:", userError);
-        throw userError;
+        console.error("!!! [BACKEND] ERROR CRÍTICO AL ACTUALIZAR USUARIO:", userError);
+        return { error: "DATABASE_UPDATE_FAILED", details: userError };
+    }
+    
+    const rowsAffected = updateData?.length || 0;
+    if (rowsAffected === 0) {
+        console.warn(`!!! [BACKEND] ALERTA: El update terminó pero 0 FILAS AFECTADAS para el ID: ${finalUserId}. ¿Existe este ID en la tabla users?`);
+    } else {
+        console.log(`!!! [BACKEND] ÉXITO: Usuario ${finalUserId} actualizado correctamente al plan: ${planId}`);
+        console.log("!!! [BACKEND] Datos actualizados devueltos por DB:", JSON.stringify(updateData[0], null, 2));
     }
 
     // AUDIT LOG: Plan Activated
-    await supabase.from("audit_logs").insert({
-        usuario_id: userId,
-        accion: 'PLAN_ACTIVATED',
-        detalles: { plan_id: planId, expires_at: expiresAt.toISOString() }
-    }).catch(e => console.error("Audit Log Error:", e));
+    try {
+        await supabase.from("audit_logs").insert({
+            usuario_id: userId,
+            accion: 'PLAN_ACTIVATED',
+            detalles: { plan_id: planId, expires_at: expiresAt.toISOString() }
+        });
+    } catch (e) { console.error("Audit Log Error (PLAN_ACTIVATED):", e); }
+
+    // EMAIL TRIGGER: SUSCRIPCION_ACTIVADA
+    // La idempotencia atómica del upsert garantiza que solo llegamos aquí UNA vez por pago.
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+    const { data: userData2 } = await supabase.from('users').select('nombres, apellidos, email').eq('id', finalUserId).maybeSingle();
+    const { data: planData } = await supabase.from('plans').select('name, price_monthly, price_semiannual, features').eq('slug', planId).maybeSingle();
+
+    const planPrecio = period === 'monthly' ? (Number(planData?.price_monthly) || 0) : (Number(planData?.price_semiannual) || 0);
+    const planDetalles = Array.isArray(planData?.features) ? planData.features.join(', ') : '';
+    const fechaExpiracion = expiresAt.toISOString().split('T')[0];
+
+    console.log(`!!! [BACKEND] Disparando email SUSCRIPCION_ACTIVADA. Plan: ${planData?.name}, Precio: ${planPrecio}, Email: ${userData2?.email}`);
+
+    await dispararTrigger(supabaseUrl, serviceKey, 'SUSCRIPCION_ACTIVADA', {
+        usuario_id: finalUserId,
+        usuario_nombre: `${userData2?.nombres || ''} ${userData2?.apellidos || ''}`.trim(),
+        nombres: userData2?.nombres || '',
+        usuario_email: userData2?.email || '',
+        plan_nombre: planData?.name || planId,
+        plan_precio: String(planPrecio),
+        plan_detalles: planDetalles,
+        fecha_proximo_cobro: fechaExpiracion,
+        fecha_vencimiento: fechaExpiracion,
+        periodo: period === 'monthly' ? 'Mensual' : 'Semestral',
+    });
 
     // 3. COMMISSION LOGIC (Referrals)
     try {
@@ -148,11 +248,13 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
                 });
 
                 // AUDIT LOG: Commission Earned
-                await supabase.from("audit_logs").insert({
-                    usuario_id: leader.user_id,
-                    accion: 'COMMISSION_EARNED',
-                    detalles: { amount_usd: commissionAmountUSD, from_user: userId, payment_id: dataId }
-                }).catch(e => console.error("Audit Log Error:", e));
+                try {
+                    await supabase.from("audit_logs").insert({
+                        usuario_id: leader.user_id,
+                        accion: 'COMMISSION_EARNED',
+                        detalles: { amount_usd: commissionAmountUSD, from_user: userId, payment_id: dataId }
+                    });
+                } catch (e) { console.error("Audit Log Error (COMMISSION_EARNED):", e); }
 
                 // B. Update User Wallet Balance (Atomic-like)
                 const { data: userData } = await supabase.from('users').select('wallet_saldo').eq('id', leader.user_id).single();
@@ -165,13 +267,49 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
                 const newTotal = Math.round(((Number(leadStats?.total_comisiones_generadas) || 0) + commissionAmountUSD) * 100) / 100;
                 
                 await supabase.from('referidos_lideres').update({ total_comisiones_generadas: newTotal }).eq('id', leader.id);
+
+                // EMAIL TRIGGER: REFERIDO_PRIMER_PAGO (notificar al líder)
+                const { data: leaderUser } = await supabase.from('users').select('nombres, apellidos, email').eq('id', leader.user_id).maybeSingle();
+                const { data: referidoUser } = await supabase.from('users').select('nombres, apellidos, email').eq('id', userId).maybeSingle();
+                // Obtener nombre legible del plan
+                let planNombreLegible = planId;
+                const { data: planInfo } = await supabase.from('plans').select('name').eq('slug', planId).maybeSingle();
+                if (planInfo?.name) planNombreLegible = planInfo.name;
+                dispararTrigger(supabaseUrl, serviceKey, 'REFERIDO_PRIMER_PAGO', {
+                    usuario_id: leader.user_id,
+                    usuario_nombre: `${leaderUser?.nombres || ''} ${leaderUser?.apellidos || ''}`.trim(),
+                    nombres: leaderUser?.nombres || '',
+                    apellidos: leaderUser?.apellidos || '',
+                    usuario_email: leaderUser?.email || '',
+                    referido_nombre: `${referidoUser?.nombres || ''} ${referidoUser?.apellidos || ''}`.trim(),
+                    referido_email: referidoUser?.email || '',
+                    // Variables financieras del pago — TODO en USD para consistencia
+                    monto_pago: (Math.round((commissionAmountUSD * 100 / commissionPercent) * 100) / 100).toFixed(2),
+                    comision_ganada: commissionAmountUSD.toFixed(2),
+                    monto_comision: commissionAmountUSD.toFixed(2),
+                    plan_referido: `${planNombreLegible} (${period === 'monthly' ? 'Mensual' : 'Semestral'})`,
+                    plan_nombre: planNombreLegible,
+                    fecha_pago_referido: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
+                    fecha_proximo_pago: expiresAt.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
+                    saldo_billetera: newBalance.toFixed(2),
+                });
             }
         }
     } catch (refError) {
         console.error("Error processing referral commission (non-blocking):", refError);
     }
 
-    return { status: "processed" };
+    return { 
+        status: "success", 
+        plan: planId, 
+        userId: finalUserId, 
+        debug: { 
+            rowsAffected: updateData?.length || 0, 
+            planId, 
+            finalUserId,
+            originalUserId: userId
+        }
+    };
 }
 
 serve(async (req) => {
@@ -190,11 +328,14 @@ serve(async (req) => {
     const action = url.searchParams.get("action"); // 'create_preference', 'webhook', 'check_payment'
     
     // Config
-    const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
+    const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN")?.trim();
     if (!MP_ACCESS_TOKEN) {
       console.error("Missing MP_ACCESS_TOKEN");
       return new Response(JSON.stringify({ error: "Configuration Error: MP_ACCESS_TOKEN is missing." }), { status: 200, headers: corsHeaders });
     }
+
+    // DEBUG: Log token info (Prefix and Length only)
+    console.log(`[mercadopago] Token Debug -> Prefix: ${MP_ACCESS_TOKEN.substring(0, 12)}, Length: ${MP_ACCESS_TOKEN.length}`);
 
     // -----------------------------------------------------------------------
     // ACTION: CREATE_PREFERENCE
@@ -208,12 +349,13 @@ serve(async (req) => {
       }
 
       const { planId, period, userId, email, returnUrl } = body;
+      console.log(`!!! DEBUG create_preference !!! Received: planId=${planId}, email=${email}, userId=${userId}`);
 
-      if (!planId || !period || !userId || !returnUrl) {
+      if (!planId || !userId) {
         return new Response(JSON.stringify({ error: "Missing required fields." }), { status: 200, headers: corsHeaders });
       }
 
-      // Get Plan Details
+      // 1. Obtener detalles del Plan
       const { data: plan, error: planError } = await supabase
         .from("plans")
         .select("*")
@@ -224,10 +366,44 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: `Plan not found: ${planId}` }), { status: 200, headers: corsHeaders });
       }
 
-      const price = period === 'monthly' ? plan.price_monthly : plan.price_semiannual;
+      // Use dynamic test email from body (crucial for Sandbox stability)
+      const finalEmail = email;
+      console.log(`[mercadopago] Payer email: ${finalEmail}`);
+
+      let basePrice = period === 'monthly' ? plan.price_monthly : plan.price_semiannual;
+
+      // Price Protection Logic
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('plan_id, plan_precio_pagado, plan_periodo')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (userProfile && userProfile.plan_id === plan.slug && 
+          Number(userProfile.plan_precio_pagado) > 0 && 
+          userProfile.plan_periodo === period) {
+          basePrice = Number(userProfile.plan_precio_pagado);
+          console.log(`[price-protection] Usando precio bloqueado: ${basePrice}`);
+      }
+
+      // 3. Dynamic Currency Conversion (USD -> COP)
+      let finalPriceCOP = Number(basePrice);
+      try {
+        const rateResponse = await fetch('https://open.er-api.com/v6/latest/USD');
+        const rateData = await rateResponse.json();
+        const exchangeRate = rateData.rates.COP || 4000;
+        finalPriceCOP = Math.round(Number(basePrice) * exchangeRate);
+        console.log(`[currency-conversion] USD ${basePrice} converted to COP ${finalPriceCOP}`);
+      } catch (e) {
+        finalPriceCOP = Number(basePrice) * 4000;
+      }
+
       const title = `${plan.name} (${period === 'monthly' ? 'Mensual' : 'Semestral'})`;
 
-      // Construct Preference
+      // Dynamic redirection logic: Manual for localhost, Automatic for remote
+      const isLocalhost = returnUrl.includes("localhost") || returnUrl.includes("127.0.0.1");
+
+      // 4. Construct Preference
       const preferenceData = {
         items: [
           {
@@ -235,19 +411,21 @@ serve(async (req) => {
             title: title,
             quantity: 1,
             currency_id: "COP",
-            unit_price: Number(price),
+            unit_price: finalPriceCOP,
           },
         ],
-        payer: { email: email },
+        payer: { email: finalEmail },
         back_urls: {
           success: `${returnUrl}/payment/status?status=approved`,
           failure: `${returnUrl}/payment/status?status=rejected`,
           pending: `${returnUrl}/payment/status?status=pending`,
         },
-        auto_return: (returnUrl.includes('localhost') || returnUrl.includes('127.0.0.1')) ? undefined : "approved", 
+        auto_return: isLocalhost ? undefined : "approved",
         external_reference: JSON.stringify({ userId, planId, period }),
         notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago?action=webhook`,
       };
+
+      console.log("[mercadopago] Creating preference:", JSON.stringify(preferenceData));
 
       const mpResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
         method: "POST",
@@ -261,9 +439,8 @@ serve(async (req) => {
       const mpData = await mpResponse.json();
 
       if (!mpResponse.ok) {
-        console.error("MP Error payload:", JSON.stringify(mpData));
-        const mpErrorMsg = mpData.message || (mpData.cause && mpData.cause[0] && mpData.cause[0].description) || "Unknown MP Error";
-        return new Response(JSON.stringify({ error: `Mercado Pago Error: ${mpErrorMsg}`, details: mpData }), { status: 200, headers: corsHeaders });
+        console.error("MP Error:", JSON.stringify(mpData));
+        return new Response(JSON.stringify({ error: "Error de Mercado Pago", details: mpData }), { status: 200, headers: corsHeaders });
       }
 
       return new Response(JSON.stringify({ 
@@ -302,9 +479,12 @@ serve(async (req) => {
         }
 
         if (paymentData.status === 'approved') {
+            console.log("!!! [BACKEND] Pago APROBADO en Mercado Pago. Iniciando procesamiento de activación...");
             const result = await processSuccessfulPayment(paymentData, supabase);
+            console.log("!!! [BACKEND] Resultado de processSuccessfulPayment:", JSON.stringify(result, null, 2));
             return new Response(JSON.stringify({ status: "approved", result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         } else {
+            console.log(`!!! [BACKEND] El pago NO está aprobado. Estado MP: ${paymentData.status}`);
             return new Response(JSON.stringify({ status: paymentData.status }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
     }

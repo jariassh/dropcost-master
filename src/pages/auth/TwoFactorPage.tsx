@@ -123,7 +123,7 @@ export function TwoFactorPage() {
                     Verificación en dos pasos
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
-                    Ingresa el código de 6 dígitos de tu aplicación de autenticación
+                    Ingresa el código de 6 dígitos enviado a tu correo electrónico. Es válido por 5 minutos.
                 </p>
             </div>
 

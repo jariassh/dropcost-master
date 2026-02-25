@@ -108,8 +108,17 @@ export const AssignPlanModal: React.FC<AssignPlanModalProps> = ({ isOpen, onClos
                     </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
-                    <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+                <div style={{
+                    marginTop: '16px',
+                    paddingTop: '16px',
+                    borderTop: '1px solid var(--border-color)',
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    gap: '12px'
+                }}>
+                    <Button variant="secondary" onClick={onClose} style={{ borderColor: 'var(--border-color)' }}>
+                        Cancelar
+                    </Button>
                     <Button variant="primary" onClick={handleSubmit} disabled={submitting || !selectedPlanId}>
                         {submitting ? 'Asignando...' : 'Guardar Cambios'}
                     </Button>

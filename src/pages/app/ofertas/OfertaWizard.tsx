@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Modal, StepIndicator, useToast } from '@/components/common';
+import { Modal, StepIndicator, useToast, Spinner } from '@/components/common';
 import { WizardStep1Strategy } from './WizardStep1Strategy';
 import { WizardStep2Costeo } from './WizardStep2Costeo';
 import { WizardStep3Builder } from './WizardStep3Builder';
@@ -8,6 +8,9 @@ import { calculateDiscount, calculateBundle, calculateGift } from './ofertasCalc
 import type { StrategyType, DiscountConfig, BundleConfig, GiftConfig, Oferta } from '@/types/ofertas';
 import type { SavedCosteo } from '@/types/simulator';
 import { ChevronLeft, ChevronRight, Sparkles, X, Gift } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+import { useStoreStore } from '@/store/useStoreStore';
+import { ofertaService } from '@/services/ofertaService';
 
 const STEPS = ['Estrategia', 'Costeo', 'Configurar', 'Confirmar'];
 
@@ -30,6 +33,10 @@ export function OfertaWizard({ isOpen, onClose }: OfertaWizardProps) {
     const [bundleConfig, setBundleConfig] = useState<BundleConfig>(DEFAULT_BUNDLE);
     const [giftConfig, setGiftConfig] = useState<GiftConfig>(DEFAULT_GIFT);
 
+    const { user } = useAuthStore();
+    const tiendaActual = useStoreStore((state) => state.tiendaActual);
+    const [isActivating, setIsActivating] = useState(false);
+
     const canGoNext = useCallback((): boolean => {
         if (step === 1) return strategyType !== null;
         if (step === 2) return selectedCosteo !== null;
@@ -40,9 +47,9 @@ export function OfertaWizard({ isOpen, onClose }: OfertaWizardProps) {
         if (!canGoNext()) return;
 
         if (step === 2 && selectedCosteo) {
-            const price = selectedCosteo.results.suggestedPrice;
-            const profit = selectedCosteo.results.netProfitPerSale;
-            const supplierCost = selectedCosteo.inputs.productCost;
+            const price = selectedCosteo.results_json?.suggestedPrice ?? 0;
+            const profit = selectedCosteo.results_json?.netProfitPerSale ?? 0;
+            const supplierCost = selectedCosteo.inputs_json?.productCost ?? 0;
 
             if (strategyType === 'descuento') {
                 const res = calculateDiscount(price, profit, 10);
@@ -62,49 +69,62 @@ export function OfertaWizard({ isOpen, onClose }: OfertaWizardProps) {
         setStep(Math.max(1, step - 1));
     }
 
-    function handleActivate() {
-        if (!strategyType || !selectedCosteo) return;
+    async function handleActivate() {
+        if (!strategyType || !selectedCosteo || !user?.id || !tiendaActual?.id) return;
 
-        let estimatedProfit = 0;
-        let estimatedMargin = 0;
+        setIsActivating(true);
+        try {
+            const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+            const offersLimit = user?.plan?.limits?.offers_limit ?? 5;
 
-        if (strategyType === 'descuento') {
-            estimatedProfit = discountConfig.newProfit;
-            estimatedMargin = discountConfig.newMarginPercent;
-        } else if (strategyType === 'bundle') {
-            const lastRow = bundleConfig.priceTable[bundleConfig.priceTable.length - 1];
-            estimatedProfit = lastRow?.totalProfit ?? 0;
-            estimatedMargin = selectedCosteo.inputs.desiredMarginPercent;
-        } else {
-            estimatedProfit = giftConfig.newProfit;
-            estimatedMargin = selectedCosteo.results.suggestedPrice > 0
-                ? (giftConfig.newProfit / selectedCosteo.results.suggestedPrice) * 100
-                : 0;
+            // Check Quota
+            if (!isAdmin && offersLimit !== -1) {
+                const currentCount = await ofertaService.getOfertasCount(user.id);
+                if (currentCount >= offersLimit) {
+                    toast.warning('Límite de Ofertas', `Tu plan actual permite un máximo de ${offersLimit} ofertas. Mejora tu plan para habilitar más.`);
+                    setIsActivating(false);
+                    return;
+                }
+            }
+
+            let estimatedProfit = 0;
+            let estimatedMargin = 0;
+
+            if (strategyType === 'descuento') {
+                estimatedProfit = discountConfig.newProfit;
+                estimatedMargin = discountConfig.newMarginPercent;
+            } else if (strategyType === 'bundle') {
+                const lastRow = bundleConfig.priceTable[bundleConfig.priceTable.length - 1];
+                estimatedProfit = lastRow?.totalProfit ?? 0;
+                estimatedMargin = selectedCosteo.inputs_json?.desiredMarginPercent ?? 0;
+            } else {
+                const suggestedPrice = selectedCosteo.results_json?.suggestedPrice ?? 0;
+                estimatedProfit = giftConfig.newProfit;
+                estimatedMargin = suggestedPrice > 0
+                    ? (giftConfig.newProfit / suggestedPrice) * 100
+                    : 0;
+            }
+
+            await ofertaService.createOferta({
+                userId: user.id,
+                storeId: tiendaActual.id,
+                costeoId: selectedCosteo.id,
+                productName: selectedCosteo.nombre_producto,
+                strategyType,
+                discountConfig: strategyType === 'descuento' ? discountConfig : undefined,
+                bundleConfig: strategyType === 'bundle' ? bundleConfig : undefined,
+                giftConfig: strategyType === 'obsequio' ? giftConfig : undefined,
+                estimatedProfit: Math.round(estimatedProfit * 100) / 100,
+                estimatedMarginPercent: Math.round(estimatedMargin * 100) / 100
+            });
+
+            toast.success('¡Oferta activada!', `${selectedCosteo.nombre_producto} con estrategia ${strategyType}`);
+            onClose();
+        } catch (error) {
+            toast.error('Error al activar oferta');
+        } finally {
+            setIsActivating(false);
         }
-
-        const oferta: Oferta = {
-            id: crypto.randomUUID(),
-            userId: 'default',
-            storeId: 'default',
-            costeoId: selectedCosteo.id,
-            productName: selectedCosteo.productName,
-            strategyType,
-            discountConfig: strategyType === 'descuento' ? discountConfig : undefined,
-            bundleConfig: strategyType === 'bundle' ? bundleConfig : undefined,
-            giftConfig: strategyType === 'obsequio' ? giftConfig : undefined,
-            estimatedProfit: Math.round(estimatedProfit * 100) / 100,
-            estimatedMarginPercent: Math.round(estimatedMargin * 100) / 100,
-            status: 'activa',
-            createdAt: new Date().toISOString(),
-            activatedAt: new Date().toISOString(),
-        };
-
-        const existing = JSON.parse(localStorage.getItem('dropcost_ofertas') || '[]') as Oferta[];
-        existing.unshift(oferta);
-        localStorage.setItem('dropcost_ofertas', JSON.stringify(existing));
-
-        toast.success('¡Oferta activada!', `${selectedCosteo.productName} con estrategia ${strategyType}`);
-        onClose();
     }
 
     return (

@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { translateError } from '@/lib/errorTranslations';
 import { auditService } from './auditService';
+import { dispararTriggerEmail } from '@/utils/emailTrigger';
 import type {
     LoginCredentials,
     RegisterData,
@@ -56,7 +57,7 @@ export async function loginUser(credentials: LoginCredentials): Promise<AuthResp
         await auditService.recordLog({
             accion: 'LOGIN',
             entidad: 'USER',
-            entidad_id: data.user?.id,
+            entidadId: data.user?.id,
             detalles: { method: 'email', success: true }
         });
     }
@@ -72,43 +73,35 @@ export async function loginUser(credentials: LoginCredentials): Promise<AuthResp
 }
 
 export async function registerUser(data: RegisterData): Promise<AuthResponse> {
-    const { data: authData, error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-            data: {
-                nombres: data.nombres,
-                apellidos: data.apellidos,
-                pais: data.pais,
-                telefono: data.telefono,
-                referred_by: data.referredBy,
-                rol: 'cliente',
-            }
+    // 1. Llamar a la Edge Function de registro custom (Silencioso para Supabase)
+    const response = await supabase.functions.invoke('auth-register', {
+        body: {
+            email: data.email,
+            password: data.password,
+            nombres: data.nombres,
+            apellidos: data.apellidos,
+            pais: data.pais,
+            telefono: data.telefono,
+            referred_by: data.referredBy
         }
     });
 
-    if (error) {
-        return { success: false, error: translateError(error.message) };
+    const { data: resData, error: resError } = response;
+
+    if (resError || !resData?.success) {
+        const errorMsg = resError?.message || resData?.error || 'Error en el registro';
+        console.error('[AuthService] Error en registro:', errorMsg);
+        return { 
+            success: false, 
+            error: errorMsg
+        };
     }
 
-    // Initialize session token for new user if auto-login happens
-    if (authData.user) {
-         const newSessionToken = crypto.randomUUID();
-         if (authData.session) {
-             const { error: updateError } = await supabase
-                .from('users')
-                .update({ session_token: newSessionToken } as any)
-                .eq('id', authData.user.id);
-             
-             if (!updateError) {
-                localStorage.setItem('dc_session_token', newSessionToken);
-             }
-         }
-    }
-
+    // 2. Devolvemos éxito e informamos que requiere verificación
     return {
         success: true,
-        data: { userId: authData.user?.id },
+        data: { userId: resData.userId },
+        mensaje: '¡Registro exitoso! Por favor, verifica tu correo electrónico para activar tu cuenta.'
     };
 }
 
@@ -153,16 +146,35 @@ export async function getCurrentUser(): Promise<User | null> {
         
         // Si falla por slug, intentamos por id (backup strategy)
         if (planError || !planData) {
-             const { data: planDataById } = await supabase
-                .from('plans')
-                .select('name, limits')
-                .eq('id', profile.plan_id)
-                .maybeSingle();
-             planDetails = planDataById;
+             // Solo intentar si parece un UUID (evita error 400 con 'plan_free')
+             const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(profile.plan_id);
+             
+             if (isUUID) {
+                const { data: planDataById } = await supabase
+                    .from('plans')
+                    .select('name, limits')
+                    .eq('id', profile.plan_id)
+                    .maybeSingle();
+                planDetails = planDataById;
+             }
         } else {
              planDetails = planData;
         }
     }
+
+    // console.log("!!! [AUTH-SERVICE] PERFIL CRUDO OBTENIDO DE TABLA 'users' !!!");
+    // console.log("Datos:", JSON.stringify({ 
+    //     id_perfil: profile?.id,
+    //     email_perfil: profile?.email,
+    //     plan_id_perfil: profile?.plan_id,
+    //     estado_suscripcion: profile?.estado_suscripcion,
+    //     vencimiento: (profile as any)?.plan_expires_at
+    // }, null, 2));
+
+    /*
+    console.log("!!! [AUTH-SERVICE] DETALLES DEL PLAN OBTENIDOS DE TABLA 'plans' !!!");
+    console.log("Plan:", JSON.stringify(planDetails, null, 2));
+    */
 
     return {
         id: user.id,
@@ -178,23 +190,55 @@ export async function getCurrentUser(): Promise<User | null> {
         fechaRegistro: user.created_at,
         codigoReferido: profile?.codigo_referido_personal || undefined,
         planId: profile?.plan_id || 'plan_free',
-        plan: planDetails ? {
-            name: planDetails.name,
-            limits: planDetails.limits as any
-        } : undefined
+        fechaVencimiento: (profile as any)?.plan_expires_at,
+        plan_precio_pagado: (profile as any)?.plan_precio_pagado || 0,
+        plan_periodo: (profile as any)?.plan_periodo,
+        plan: {
+            id: profile?.plan_id || 'plan_free',
+            slug: profile?.plan_id || 'plan_free',
+            name: planDetails?.name || (
+                profile?.plan_id ? (profile.plan_id.replace('plan_', '').split('_').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')) : 'Plan Gratis'
+            ),
+            limits: (planDetails?.limits as any) || (
+                profile?.plan_id === 'plan_pro' ? { stores: 5, costeos_limit: 100 } :
+                profile?.plan_id === 'plan_enterprise' ? { stores: 10, costeos_limit: 500 } :
+                { stores: 1 }
+            )
+        },
+        bank_info: (profile as any)?.bank_info
     };
 }
 
 export async function requestPasswordReset(data: PasswordResetRequest): Promise<AuthResponse> {
-    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/actualizar-contrasena`,
-    });
+    // console.log('[authService] INICIO requestPasswordReset para:', data.email);
+    
+    try {
+        // Obtenemos la URL y la Key de las variables de entorno para una llamada manual si es necesario
+        // Pero usaremos el cliente de supabase para aprovechar la sesión si existe
+        const { data: resData, error: resError } = await (supabase as any).functions.invoke('auth-password-reset', {
+            body: { email: data.email }
+        });
 
-    if (error) {
-        return { success: false, error: translateError(error.message) };
+        if (resError) {
+            console.error('[authService] La función de Supabase devolvió un error:', resError);
+            // Intentar extraer el mensaje de error si viene en el body (a veces invoke lo pone en resError.context)
+            const detailText = (resError as any).context?.statusText || resError.message;
+            return { success: false, error: `Error del Servidor: ${detailText}` };
+        }
+
+        // console.log('[authService] Respuesta de la función:', resData);
+
+        if (!resData?.success) {
+            console.error('[authService] Lógica de la función reportó fallo:', resData);
+            return { success: false, error: resData?.error || 'No se pudo procesar la solicitud' };
+        }
+
+        // console.log('[authService] ÉXITO: Instrucciones enviadas');
+        return { success: true };
+    } catch (err: any) {
+        console.error('[authService] Error crítico ejecutando la función:', err);
+        return { success: false, error: 'Error de conexión' };
     }
-
-    return { success: true };
 }
 
 export async function updatePassword(newPassword: string): Promise<AuthResponse> {
@@ -204,14 +248,68 @@ export async function updatePassword(newPassword: string): Promise<AuthResponse>
         return { success: false, error: translateError(error.message) };
     }
 
+    // Disparar trigger CONTRASENA_CAMBIADA (fire-and-forget)
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            const { data: profile } = await supabase
+                .from('users')
+                .select('nombres, apellidos')
+                .eq('id', user.id)
+                .maybeSingle();
+
+            dispararTriggerEmail('CONTRASENA_CAMBIADA', {
+                usuario_id: user.id,
+                nombres: `${profile?.nombres || ''} ${profile?.apellidos || ''}`.trim(),
+                usuario_nombre: `${profile?.nombres || ''} ${profile?.apellidos || ''}`.trim(),
+                usuario_email: user.email || '',
+                email: user.email || '',
+                fecha_actualizacion: new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                login_url: `${window.location.origin}/login`,
+            });
+        }
+    } catch (e) {
+        console.warn('[authService] Error al disparar trigger de cambio de contraseña:', e);
+    }
+
     return { success: true };
 }
 
+export async function requestEmailChange(newEmail: string): Promise<AuthResponse> {
+    return invoke2FA('request_email_change', { new_email: newEmail });
+}
+
+export async function verifyEmailChange(code: string): Promise<AuthResponse> {
+    return invoke2FA('verify_email_change', { code });
+}
+
 export async function updateEmail(newEmail: string): Promise<AuthResponse> {
+    // This is the legacy method that used direct Supabase link confirmation.
+    // We now prefer requestEmailChange + verifyEmailChange
+    const { data: { user } } = await supabase.auth.getUser();
+    const previousEmail = user?.email || '';
+
     const { error } = await supabase.auth.updateUser({ email: newEmail });
 
     if (error) {
         return { success: false, error: translateError(error.message) };
+    }
+
+    // Disparar trigger EMAIL_CAMBIADO (fire-and-forget)
+    if (user) {
+        const { data: profile } = await supabase
+            .from('users')
+            .select('nombres, apellidos')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        dispararTriggerEmail('EMAIL_CAMBIADO', {
+            usuario_id: user.id,
+            usuario_nombre: `${profile?.nombres || ''} ${profile?.apellidos || ''}`.trim(),
+            email_nuevo: newEmail,
+            email_anterior: previousEmail,
+            fecha_cambio: new Date().toISOString().split('T')[0],
+        });
     }
 
     return { success: true };
@@ -236,20 +334,25 @@ export async function resendVerificationEmail(email: string): Promise<AuthRespon
 // 2FA Functions using Edge Function
 
 async function invoke2FA(action: string, extra: any = {}): Promise<AuthResponse> {
+    // console.log(`[authService] Invocando auth-2fa | acción: ${action}`, extra);
+    
     const { data, error } = await supabase.functions.invoke('auth-2fa', {
         body: { action, ...extra }
     });
 
     if (error) {
+        console.error(`[authService] Error invocando auth-2fa (${action}):`, error);
         return { success: false, error: translateError(error.message) };
     }
+    
+    // console.log(`[authService] Respuesta de auth-2fa (${action}):`, data);
     
     // Edge function returns standard JSON format
     return data; 
 }
 
 export async function request2FAActivation(): Promise<AuthResponse> {
-    return invoke2FA('request');
+    return invoke2FA('request', { context: 'activation' });
 }
 
 export async function confirm2FAActivation(code: string): Promise<AuthResponse> {
@@ -308,6 +411,14 @@ export async function updateUserProfile(userData: Partial<User>): Promise<AuthRe
         .eq('id', user.id);
 
     if (profileError) return { success: false, error: translateError(profileError.message) };
+
+    // Disparar trigger PERFIL_ACTUALIZADO (fire-and-forget)
+    dispararTriggerEmail('PERFIL_ACTUALIZADO', {
+        usuario_id: user.id,
+        usuario_nombre: `${userData.nombres || ''} ${userData.apellidos || ''}`.trim(),
+        usuario_email: user.email || '',
+        fecha_actualizacion: new Date().toISOString().split('T')[0],
+    });
 
     return { success: true };
 }

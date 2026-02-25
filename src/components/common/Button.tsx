@@ -42,6 +42,7 @@ const hoverBgMap: Record<ButtonVariant, string> = {
 };
 
 const sizeMap: Record<ButtonSize, React.CSSProperties> = {
+    xs: { padding: '6px 12px', fontSize: '11px', gap: '4px' },
     sm: { padding: '8px 16px', fontSize: '12px', gap: '6px' },
     md: { padding: '12px 28px', fontSize: '14px', gap: '8px' },
     lg: { padding: '14px 32px', fontSize: '15px', gap: '10px' },
@@ -94,14 +95,26 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 onMouseEnter={(e) => {
                     if (isDisabled) return;
                     const el = e.currentTarget;
-                    el.style.backgroundColor = hoverBg;
-                    if (variant === 'primary') el.style.transform = 'translateY(-2px)';
-                    if (variant === 'primary') el.style.boxShadow = '0 6px 20px rgba(0,102,255,0.35)';
+                    // Si el componente tiene un color de fondo personalizado o no es el default, usamos brillo
+                    if (style?.backgroundColor) {
+                        el.style.filter = 'brightness(0.9)';
+                    } else {
+                        el.style.backgroundColor = hoverBg;
+                    }
+
+                    if (variant === 'primary') {
+                        el.style.transform = 'translateY(-2px)';
+                        el.style.boxShadow = '0 6px 20px rgba(0,102,255,0.35)';
+                    }
                 }}
                 onMouseLeave={(e) => {
                     if (isDisabled) return;
                     const el = e.currentTarget;
-                    el.style.backgroundColor = baseVariant.backgroundColor || '';
+                    if (style?.backgroundColor) {
+                        el.style.filter = 'none';
+                    } else {
+                        el.style.backgroundColor = baseVariant.backgroundColor || '';
+                    }
                     el.style.transform = 'translateY(0)';
                     el.style.boxShadow = 'none';
                 }}

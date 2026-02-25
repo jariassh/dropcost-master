@@ -8,6 +8,7 @@ const CONTROLLED_FEATURES: { key: keyof PlanLimits; label: string; text: string;
     { key: 'access_wallet', label: 'Acceso a Billetera', text: 'Acceso a Billetera y Retiros', type: 'boolean' },
     { key: 'access_referrals', label: 'Sistema de Referidos', text: 'Sistema de Referidos', type: 'boolean' },
     { key: 'can_duplicate_costeos', label: 'Duplicar Costeos', text: 'Duplicar Costeos', type: 'boolean' },
+    { key: 'can_duplicate_offers', label: 'Duplicar Ofertas', text: 'Duplicar Ofertas', type: 'boolean' },
     { key: 'can_delete_costeos', label: 'Eliminar Costeos', text: 'Eliminar Costeos', type: 'boolean' },
     { key: 'can_delete_offers', label: 'Eliminar Ofertas', text: 'Eliminar Ofertas', type: 'boolean' },
     { key: 'can_delete_stores', label: 'Eliminar Tiendas', text: 'Eliminar Tiendas', type: 'boolean' },
@@ -60,7 +61,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
         limits: initialLimits,
         is_active: true,
         is_public: true,
-        currency: 'COP'
+        currency: 'USD'
     });
 
     const [newFeature, setNewFeature] = useState('');
@@ -79,7 +80,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                 limits: initialData.limits || { stores: 1 },
                 is_active: initialData.is_active ?? true,
                 is_public: initialData.is_public ?? true,
-                currency: initialData.currency || 'COP'
+                currency: initialData.currency || 'USD'
             });
         } else {
             setFormData({
@@ -92,7 +93,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                 limits: { stores: 1 },
                 is_active: true,
                 is_public: true,
-                currency: 'COP'
+                currency: 'USD'
             });
         }
     }, [initialData, isOpen]);
@@ -223,7 +224,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
             pattern = /^\d+ Costeos$/;
             altPattern = /^Costeos Ilimitados$/;
         } else if (key === 'offers_limit') {
-            newText = getOffersText(value);
+            newText = value >= INFINITY_THRESHOLD ? 'Ofertas Ilimitadas' : (value <= 0 ? '⛔ Crear ofertas' : `${value} Ofertas`);
             pattern = /^\d+ Ofertas$/;
             altPattern = /^Ofertas Ilimitadas$/;
         }
@@ -287,9 +288,11 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                                     style={{
-                                        padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)',
-                                        backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '14px', width: '100%', boxSizing: 'border-box'
+                                        padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--border-color)',
+                                        backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '14px', width: '100%', boxSizing: 'border-box', outline: 'none', transition: 'all 200ms ease'
                                     }}
+                                    onFocus={(e) => { e.target.style.borderColor = 'var(--color-primary)'; e.target.style.boxShadow = '0 0 0 4px rgba(0,102,255,0.1)'; }}
+                                    onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none'; }}
                                     placeholder="Ej. Plan Pro"
                                 />
                             </div>
@@ -301,9 +304,11 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                     value={formData.slug}
                                     onChange={handleSlugChange}
                                     style={{
-                                        padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)',
-                                        backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '14px', width: '100%', boxSizing: 'border-box'
+                                        padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--border-color)',
+                                        backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '14px', width: '100%', boxSizing: 'border-box', outline: 'none', transition: 'all 200ms ease'
                                     }}
+                                    onFocus={(e) => { e.target.style.borderColor = 'var(--color-primary)'; e.target.style.boxShadow = '0 0 0 4px rgba(0,102,255,0.1)'; }}
+                                    onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none'; }}
                                     placeholder="Ej. plan_pro"
                                 />
                                 <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
@@ -318,10 +323,12 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                 value={formData.description}
                                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                                 style={{
-                                    padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)',
-                                    backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '14px',
-                                    minHeight: '80px', resize: 'vertical', width: '100%', boxSizing: 'border-box'
+                                    padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--border-color)',
+                                    backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '14px',
+                                    minHeight: '80px', resize: 'vertical', width: '100%', boxSizing: 'border-box', outline: 'none', transition: 'all 200ms ease'
                                 }}
+                                onFocus={(e) => { e.target.style.borderColor = 'var(--color-primary)'; e.target.style.boxShadow = '0 0 0 4px rgba(0,102,255,0.1)'; }}
+                                onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none'; }}
                                 placeholder="Descripción corta de los beneficios..."
                             />
                         </div>
@@ -336,10 +343,12 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                     value={formData.currency}
                                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
                                     style={{
-                                        padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)',
+                                        padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--border-color)',
                                         backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '14px',
-                                        width: '100%', cursor: 'pointer'
+                                        width: '100%', cursor: 'pointer', outline: 'none', transition: 'all 200ms ease'
                                     }}
+                                    onFocus={(e) => { e.target.style.borderColor = 'var(--color-primary)'; e.target.style.boxShadow = '0 0 0 4px rgba(0,102,255,0.1)'; }}
+                                    onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none'; }}
                                 >
                                     <option value="COP">Peso Colombiano (COP)</option>
                                     <option value="USD">Dólar Estadounidense (USD)</option>
@@ -421,7 +430,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                         <div style={{
                                             padding: '10px', backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)',
                                             borderRadius: '8px', fontSize: '14px', color: 'var(--text-tertiary)', textAlign: 'center'
-                                        }}>Ilimitdos</div>
+                                        }}>Ilimitados</div>
                                     ) : (
                                         <CurrencyInput
                                             value={formData.limits.costeos_limit || 0}
@@ -647,10 +656,14 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                 </div>
 
                 <div style={{
-                    padding: '20px 24px', borderTop: '1px solid var(--border-color)',
-                    display: 'flex', justifyContent: 'flex-end', gap: '12px'
+                    padding: '16px 24px',
+                    borderTop: '1px solid var(--border-color)',
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    gap: '12px',
+                    backgroundColor: 'var(--card-bg)'
                 }}>
-                    <Button variant="secondary" onClick={onClose} disabled={isLoading}>
+                    <Button variant="secondary" onClick={onClose} disabled={isLoading} style={{ borderColor: 'var(--border-color)' }}>
                         Cancelar
                     </Button>
                     <Button type="submit" form="plan-form" isLoading={isLoading} leftIcon={<Save size={18} />}>

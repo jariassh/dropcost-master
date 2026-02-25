@@ -1,6 +1,7 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+﻿import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { AppLayout } from '@/layouts/AppLayout';
+import { LandingLayout } from '@/layouts/LandingLayout';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { RegisterPage } from '@/pages/auth/RegisterPage';
 import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage';
@@ -24,6 +25,7 @@ import { AdminWithdrawalsPage } from '@/pages/admin/AdminWithdrawalsPage';
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { PricingPage } from '@/pages/PricingPage';
+import { LandingPage } from '@/pages/LandingPage';
 import { useAuthStore } from '@/store/authStore';
 import UserAuditLogsPage from '@/pages/UserAuditLogsPage';
 import { SubscriptionGuard } from '@/components/common/SubscriptionGuard';
@@ -43,55 +45,66 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
     if (isAuthenticated) {
-        return <Navigate to="/simulador" replace />;
+        return <Navigate to="/mis-costeos" replace />;
     }
 
     return <>{children}</>;
 }
 
 export function AppRouter() {
+    const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
     return (
-        <Routes>
-            {/* Rutas de autenticación */}
-            <Route
-                element={
-                    <PublicRoute>
-                        <AuthLayout />
-                    </PublicRoute>
-                }
-            >
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/registro" element={<RegisterPage />} />
-                <Route path="/verificar-email" element={<VerifyEmailPage />} />
-                <Route path="/2fa" element={<TwoFactorPage />} />
-                <Route path="/recuperar-contrasena" element={<PasswordResetPage />} />
-            </Route>
+        <>
+            <AffiliateTracker />
+            <Routes>
+                {/* Landing Page Route */}
+                <Route element={<LandingLayout />}>
+                    <Route path="/" element={
+                        isAuthenticated ? <Navigate to="/mis-costeos" replace /> : <LandingPage />
+                    } />
+                </Route>
 
-            {/* Caso especial: Actualizar contraseña usa AuthLayout pero NO PublicRoute 
+                {/* Rutas de autenticación */}
+                <Route
+                    element={
+                        <PublicRoute>
+                            <AuthLayout />
+                        </PublicRoute>
+                    }
+                >
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/registro" element={<RegisterPage />} />
+                    <Route path="/verificar-email" element={<VerifyEmailPage />} />
+                    <Route path="/2fa" element={<TwoFactorPage />} />
+                    <Route path="/recuperar-contrasena" element={<PasswordResetPage />} />
+                </Route>
+
+                {/* Caso especial: Actualizar contraseña usa AuthLayout pero NO PublicRoute 
                 porque el enlace de recuperación crea una sesión temporal */}
-            <Route element={<AuthLayout />}>
-                <Route path="/actualizar-contrasena" element={<UpdatePasswordPage />} />
-            </Route>
+                <Route element={<AuthLayout />}>
+                    <Route path="/actualizar-contrasena" element={<UpdatePasswordPage />} />
+                </Route>
 
-            {/* Rutas protegidas de la app */}
-            <Route
-                element={
-                    <ProtectedRoute>
-                        <AppLayout />
-                    </ProtectedRoute>
-                }
-            >
-                <Route path="/" element={<Navigate to="/simulador" replace />} />
+                {/* Rutas protegidas de la app */}
+                <Route
+                    element={
+                        <ProtectedRoute>
+                            <AppLayout />
+                        </ProtectedRoute>
+                    }
+                >
+                    {/* Quitamos Navigate to="/" para no chocar con la landing */}
 
-                {/* Rutas de Planes (Públicas dentro de la App) */}
-                <Route path="/pricing" element={<PricingPage />} />
+                    {/* Rutas de Planes (Públicas dentro de la App) */}
+                    <Route path="/pricing" element={<PricingPage />} />
 
-                {/* Rutas con Paywall (Requieren suscripción activa) */}
-                <Route path="/simulador" element={<SubscriptionGuard><SimuladorPage /></SubscriptionGuard>} />
-                <Route path="/simulador/mis-costeos" element={<SubscriptionGuard><MisCosteos /></SubscriptionGuard>} />
-                <Route path="/dashboard" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
-                <Route path="/ofertas" element={<SubscriptionGuard><OfertasPage /></SubscriptionGuard>} />
-                <Route path="/analisis-regional" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
+                    {/* Rutas con Paywall (Requieren suscripción activa) */}
+                    <Route path="/mis-costeos" element={<SubscriptionGuard><MisCosteos /></SubscriptionGuard>} />
+                    <Route path="/mis-costeos/:id" element={<SubscriptionGuard><SimuladorPage /></SubscriptionGuard>} />
+                    <Route path="/dashboard" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
+                    <Route path="/ofertas" element={<SubscriptionGuard><OfertasPage /></SubscriptionGuard>} />
+                    <Route path="/analisis-regional" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
 
                 <Route path="/configuracion" element={<ConfiguracionPage />} />
                 <Route path="/referidos" element={<SubscriptionGuard><ReferidosPage /></SubscriptionGuard>} />
@@ -119,8 +132,14 @@ export function AppRouter() {
                 <Route path="settings" element={<AdminSettingsPage />} />
             </Route>
 
-            {/* Catch-all */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+                {/* Rutas Públicas (sin layout, accesibles por cualquier persona) */}
+                <Route path="/terminos" element={<TerminosPage />} />
+                <Route path="/privacidad" element={<PrivacidadPage />} />
+                <Route path="/cookies" element={<CookiesPage />} />
+
+                {/* Catch-all */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+        </>
     );
 }

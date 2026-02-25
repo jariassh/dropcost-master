@@ -12,6 +12,7 @@ import { Mail, Lock, User, Phone, Globe, ChevronDown, Sparkles, RefreshCw, Check
 import { Button, Input, Alert, SmartPhoneInput } from '@/components/common';
 import { useAuthStore } from '@/store/authStore';
 import { getReferrerNameByCode, incrementReferralClicks } from '@/services/referralService';
+import { affiliateService } from '@/services/affiliateService';
 
 const registerSchema = z
     .object({
@@ -45,7 +46,11 @@ export function RegisterPage() {
     const [registered, setRegistered] = useState(false);
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const referralCode = searchParams.get('ref') || '';
+
+    // Obtener de URL o de Cookie (90 días)
+    const referralCode = searchParams.get('ref') || affiliateService.getAffiliateId() || '';
+    const selectedPlan = searchParams.get('plan');
+
     const [referrerName, setReferrerName] = useState<string | null>(null);
     const { register: registerUser, isLoading, error, clearError } = useAuthStore();
 
@@ -226,15 +231,34 @@ export function RegisterPage() {
                 </div>
             )}
 
-            <h2 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+            {selectedPlan && (
+                <div style={{
+                    marginBottom: '24px',
+                    padding: '12px 16px',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    border: '1px solid rgba(16, 185, 129, 0.2)',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px'
+                }}>
+                    <CheckCircle2 size={18} style={{ color: '#10B981' }} />
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        Plan seleccionado: <span style={{ textTransform: 'uppercase', color: 'var(--color-primary)' }}>{selectedPlan.replace('plan_', '')}</span>
+                    </span>
+                    <Link to="/#pricing" style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--color-primary)', textDecoration: 'none' }}>Cambiar</Link>
+                </div>
+            )}
+
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px', textAlign: 'center' }}>
                 Crear cuenta
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '24px' }}>
+            </h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '32px', textAlign: 'center', lineHeight: 1.5 }}>
                 Completa tus datos para comenzar
             </p>
 
             {error && (
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: '24px' }}>
                     <Alert type="error" dismissible onDismiss={clearError}>
                         {error}
                     </Alert>
@@ -455,11 +479,23 @@ export function RegisterPage() {
                     />
                     <span style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
                         Acepto los{' '}
-                        <a href="#" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>
+                        <a
+                            href="/terminos"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: 'var(--color-primary)', textDecoration: 'none' }}
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); window.open('/terminos', '_blank'); }}
+                        >
                             Términos y Condiciones
                         </a>{' '}
                         y la{' '}
-                        <a href="#" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>
+                        <a
+                            href="/privacidad"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: 'var(--color-primary)', textDecoration: 'none' }}
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); window.open('/privacidad', '_blank'); }}
+                        >
                             Política de Privacidad
                         </a>
                     </span>
@@ -475,11 +511,13 @@ export function RegisterPage() {
                 </Button>
             </form>
 
-            <p style={{ textAlign: 'center', fontSize: '14px', color: 'var(--text-secondary)', marginTop: '24px' }}>
+            <p style={{ textAlign: 'center', fontSize: '15px', color: 'var(--text-secondary)', marginTop: '32px' }}>
                 ¿Ya tienes una cuenta?{' '}
                 <Link
                     to="/login"
-                    style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}
+                    style={{ color: 'var(--color-primary)', fontWeight: 700, textDecoration: 'none' }}
+                    onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
+                    onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
                 >
                     Inicia sesión
                 </Link>

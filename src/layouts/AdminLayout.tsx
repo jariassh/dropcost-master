@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { configService } from '@/services/configService';
 import {
@@ -24,6 +24,8 @@ import {
     Share,
     Menu,
     X,
+    Mail,
+    Zap,
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
@@ -33,17 +35,28 @@ const SIDEBAR_OPEN = 260;
 const SIDEBAR_COLLAPSED = 72;
 
 const adminNavItems = [
-    { to: '/admin', icon: LayoutDashboard, label: 'Admin Dashboard', end: true },
-    { to: '/admin/users', icon: Users, label: 'Gestión Usuarios' },
-    { to: '/admin/traffic', icon: PieChart, label: 'Análisis de Tráfico', disabled: true },
-    { to: '/admin/shortener', icon: Link2, label: 'Acortador de Enlaces', disabled: true },
-    { to: '/admin/ads', icon: Megaphone, label: 'Ads & Creatividades', disabled: true },
-    { to: '/admin/plans', icon: CreditCard, label: 'Planes y Membresías' },
-    { to: '/admin/referrals', icon: Share, label: 'Sistema de Referidos' },
-    { to: '/admin/withdrawals', icon: CreditCard, label: 'Gestión de Retiros' },
-    { to: '/admin/promo-codes', icon: Ticket, label: 'Códigos Promocionales', disabled: true },
-    { to: '/admin/logs', icon: History, label: 'Logs de Auditoría' },
-    { to: '/admin/settings', icon: Settings, label: 'Ajustes Globales' },
+    // PRINCIPAL
+    { to: '/admin', icon: LayoutDashboard, label: 'Admin Dashboard', end: true, active: true },
+
+    // GESTIÓN DE USUARIOS
+    { to: '/admin/users', icon: Users, label: 'Gestión Usuarios', active: true },
+    { to: '/admin/email-templates', icon: Mail, label: 'Plantillas de Email', active: true },
+    { to: '/admin/email-triggers', icon: Zap, label: 'Triggers de Email', active: true },
+
+    // FINANCIERO & CRECIMIENTO
+    { to: '/admin/plans', icon: CreditCard, label: 'Planes y Membresías', active: true },
+    { to: '/admin/referrals', icon: Share, label: 'Sistema de Referidos', active: true },
+    { to: '/admin/withdrawals', icon: CreditCard, label: 'Gestión de Retiros', active: true },
+
+    // SISTEMA
+    { to: '/admin/settings', icon: Settings, label: 'Ajustes Globales', active: true },
+    { to: '/admin/logs', icon: History, label: 'Logs de Auditoría', active: true },
+
+    // PRÓXIMAMENTE (Inactivos)
+    { to: '/admin/traffic', icon: PieChart, label: 'Análisis de Tráfico', active: false },
+    { to: '/admin/shortener', icon: Link2, label: 'Acortador de Enlaces', active: false },
+    { to: '/admin/ads', icon: Megaphone, label: 'Ads & Creatividades', active: false },
+    { to: '/admin/promo-codes', icon: Ticket, label: 'Códigos Promocionales', active: false },
 ];
 
 export function AdminLayout() {
@@ -78,7 +91,7 @@ export function AdminLayout() {
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-primary)', '--sidebar-width': `${sidebarWidth}px` } as any}>
-            {/* ─── Admin Sidebar ─── */}
+            {/* ÔöÇÔöÇÔöÇ Admin Sidebar ÔöÇÔöÇÔöÇ */}
             <aside
                 style={{
                     position: 'fixed',
@@ -86,7 +99,7 @@ export function AdminLayout() {
                     left: undefined,
                     bottom: 0,
                     width: mobileOpen ? '280px' : `${sidebarWidth}px`,
-                    backgroundColor: '#111827', // Darker for Admin
+                    backgroundColor: 'var(--sidebar-bg)', // Dinámico
                     display: 'flex',
                     flexDirection: 'column',
                     zIndex: 50,
@@ -94,7 +107,7 @@ export function AdminLayout() {
                     overflow: 'hidden',
                     ...(mobileOpen ? { left: 0 } : {})
                 }}
-                className={`lg:left-0 ${!mobileOpen ? 'max-lg:-left-full' : ''}`}
+                className={`lg:left-0 ${!mobileOpen ? 'max-lg:-left-full' : ''} border-r border-white/10`}
             >
                 {/* Admin Badge/Header */}
                 <div
@@ -103,7 +116,7 @@ export function AdminLayout() {
                         alignItems: 'center',
                         justifyContent: effectivelyCollapsed ? 'center' : 'space-between',
                         padding: effectivelyCollapsed ? '0' : '0 16px 0 20px',
-                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        borderBottom: '1px solid rgba(255,255,255,0.1)',
                         height: '64px',
                         background: 'linear-gradient(90deg, #1F2937, #111827)',
                     }}
@@ -126,7 +139,7 @@ export function AdminLayout() {
                                     <div
                                         style={{
                                             width: '32px', height: '32px',
-                                            backgroundColor: '#EF4444',
+                                            backgroundColor: 'var(--color-admin-sidebar_active, #EF4444)',
                                             borderRadius: '8px',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             flexShrink: 0
@@ -135,7 +148,7 @@ export function AdminLayout() {
                                         <ShieldCheck size={18} color="#fff" />
                                     </div>
                                     <span style={{ color: '#fff', fontWeight: 800, fontSize: '15px', letterSpacing: '0.02em' }}>
-                                        ADMIN<span style={{ color: '#EF4444' }}>PANEL</span>
+                                        ADMIN<span style={{ color: 'var(--color-admin-sidebar-active, #EF4444)' }}>PANEL</span>
                                     </span>
                                 </div>
                             )}
@@ -175,7 +188,7 @@ export function AdminLayout() {
                             gap: '12px',
                             padding: '10px 14px',
                             borderRadius: '10px',
-                            backgroundColor: 'rgba(255,255,255,0.05)',
+                            backgroundColor: 'var(--color-admin-sidebar-return)',
                             color: '#fff',
                             border: 'none',
                             cursor: 'pointer',
@@ -183,8 +196,8 @@ export function AdminLayout() {
                             fontWeight: 600,
                             transition: 'background 150ms'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--color-admin-sidebar-return) 80%, white)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-admin-sidebar-return)'}
                     >
                         <ArrowLeft size={18} />
                         {!effectivelyCollapsed && "Volver a la App"}
@@ -192,15 +205,49 @@ export function AdminLayout() {
                 </div>
 
                 {/* Admin Nav */}
-                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', padding: effectivelyCollapsed ? '12px 8px' : '16px 12px' }}>
-                    {adminNavItems.map((item) => (
-                        <AdminSidebarNavItem
-                            key={item.to}
-                            {...item}
-                            collapsed={effectivelyCollapsed}
-                            onClick={() => setMobileOpen(false)}
-                        />
-                    ))}
+                <nav
+                    style={{
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px',
+                        padding: effectivelyCollapsed ? '12px 8px' : '16px 12px',
+                        overflowY: 'auto',
+                        scrollbarWidth: 'none'
+                    }}
+                    className="scrollbar-hide"
+                >
+                    {/* Módulos Activos */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {adminNavItems.filter(i => i.active).map((item) => (
+                            <AdminSidebarNavItem
+                                key={item.to}
+                                {...item}
+                                collapsed={effectivelyCollapsed}
+                                isDark={isDark}
+                                onClick={() => setMobileOpen(false)}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Módulos Próximamente */}
+                    <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {!effectivelyCollapsed && (
+                            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '14px', marginBottom: '8px' }}>
+                                Próximamente
+                            </span>
+                        )}
+                        {adminNavItems.filter(i => !i.active).map((item) => (
+                            <AdminSidebarNavItem
+                                key={item.to}
+                                {...item}
+                                disabled
+                                collapsed={effectivelyCollapsed}
+                                isDark={isDark}
+                                onClick={() => setMobileOpen(false)}
+                            />
+                        ))}
+                    </div>
                 </nav>
             </aside>
 
@@ -222,6 +269,7 @@ export function AdminLayout() {
                     minWidth: 0,
                     marginLeft: 'var(--sidebar-width, 0px)',
                     transition: 'margin-left 300ms ease',
+                    backgroundColor: 'var(--bg-primary)',
                 }}
                 className="max-lg:!ml-0"
             >
@@ -263,7 +311,7 @@ export function AdminLayout() {
                                 onClick={() => setUserMenuOpen((v) => !v)}
                                 style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px', background: 'none', border: 'none', cursor: 'pointer' }}
                             >
-                                <div style={{ width: '34px', height: '34px', backgroundColor: '#EF4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '13px', fontWeight: 700 }}>
+                                <div style={{ width: '34px', height: '34px', backgroundColor: 'var(--color-admin-sidebar-active, #EF4444)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '13px', fontWeight: 700 }}>
                                     {user?.nombres?.[0] || 'A'}
                                 </div>
                                 <ChevronDown size={14} color="var(--text-tertiary)" />
@@ -301,7 +349,7 @@ export function AdminLayout() {
     );
 }
 
-function AdminSidebarNavItem({ to, icon: Icon, label, collapsed, disabled, end, onClick }: any) {
+function AdminSidebarNavItem({ to, icon: Icon, label, collapsed, disabled, end, isDark, onClick }: any) {
     const [hovered, setHovered] = useState(false);
 
     if (disabled) {
@@ -335,8 +383,8 @@ function AdminSidebarNavItem({ to, icon: Icon, label, collapsed, disabled, end, 
                 display: 'flex', alignItems: 'center', gap: '12px', padding: collapsed ? '12px' : '10px 14px',
                 borderRadius: '10px', fontSize: '14px', fontWeight: isActive ? 600 : 500,
                 textDecoration: 'none', transition: 'all 150ms ease',
-                backgroundColor: isActive ? '#EF4444' : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
-                color: isActive ? '#fff' : hovered ? '#fff' : 'rgba(255,255,255,0.6)',
+                backgroundColor: isActive ? 'var(--color-admin-sidebar-active)' : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
+                color: isActive ? '#fff' : hovered ? '#fff' : 'var(--sidebar-text)',
             })}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}

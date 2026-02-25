@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, CheckCircle2 } from 'lucide-react';
+import { Check, CheckCircle2, MinusCircle } from 'lucide-react';
 import { Button } from '../common/Button';
 import { Plan } from '@/types/plans.types';
 import { formatCurrency } from '@/lib/format';
@@ -7,12 +7,22 @@ import { formatCurrency } from '@/lib/format';
 interface PlanCardProps {
     plan: Plan;
     isCurrent?: boolean;
+    isDisabled?: boolean;
+    disabledReason?: string;
     onSelect?: (plan: Plan) => void;
     displayedPrice?: string;
     period?: 'monthly' | 'semiannual';
 }
 
-export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onSelect, displayedPrice, period = 'monthly' }) => {
+export const PlanCard: React.FC<PlanCardProps> = ({
+    plan,
+    isCurrent = false,
+    isDisabled = false,
+    disabledReason,
+    onSelect,
+    displayedPrice,
+    period = 'monthly'
+}) => {
 
     // Logic based on slug for styling
     const isEnterprise = plan.slug === 'plan_enterprise';
@@ -23,30 +33,35 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onS
             padding: '32px',
             backgroundColor: 'var(--card-bg)',
             border: isCurrent ? '2px solid var(--color-primary)' : '1px solid var(--border-color)',
-            borderRadius: '24px',
+            borderRadius: '16px', // Standardized from 24px
             display: 'flex',
             flexDirection: 'column',
             gap: '24px',
             position: 'relative',
-            boxShadow: isCurrent ? '0 10px 30px -10px rgba(0, 102, 255, 0.15)' : 'var(--shadow-sm)',
-            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+            boxShadow: isCurrent ? '0 10px 30px -10px rgba(0, 102, 255, 0.2)' : 'var(--shadow-sm)',
+            transition: 'all 0.3s ease', // Smoother transition
             height: '100%',
-            flex: 1
+            flex: 1,
+            pointerEvents: (isDisabled && !isCurrent) ? 'none' : 'auto',
+            filter: (isDisabled && !isCurrent) ? 'grayscale(0.5) opacity(0.6)' : 'none',
+            cursor: (isDisabled && !isCurrent) ? 'not-allowed' : 'default'
         }}
             onMouseEnter={(e) => {
                 if (!isCurrent) {
                     e.currentTarget.style.transform = 'translateY(-4px)';
                     e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                    e.currentTarget.style.borderColor = 'var(--color-primary-light, #60A5FA)'; // Subtle border highlight
                 }
             }}
             onMouseLeave={(e) => {
                 if (!isCurrent) {
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                    e.currentTarget.style.borderColor = 'var(--border-color)';
                 }
             }}
         >
-            {isCurrent && (
+            {isCurrent ? (
                 <div style={{
                     position: 'absolute',
                     top: '-12px',
@@ -62,9 +77,32 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onS
                     letterSpacing: '0.05em',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px'
+                    gap: '6px',
+                    zIndex: 10
                 }}>
                     <CheckCircle2 size={14} /> Tu Plan Actual
+                </div>
+            ) : isPro && (
+                <div style={{
+                    position: 'absolute',
+                    top: '-12px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    backgroundColor: 'var(--color-primary)',
+                    color: 'white',
+                    padding: '4px 16px',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    zIndex: 10,
+                    boxShadow: '0 4px 12px rgba(0, 102, 255, 0.3)'
+                }}>
+                    MÁS COMPRADO
                 </div>
             )}
 
@@ -81,51 +119,66 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent = false, onS
             {/* Price */}
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
                 <span style={{ fontSize: '36px', fontWeight: 800, color: 'var(--text-primary)' }}>
-                    {displayedPrice ? displayedPrice.replace(/\s/g, '') : formatCurrency(plan.price_monthly).replace(/\s/g, '')}
+                    {displayedPrice || formatCurrency(plan.price_monthly)}
                 </span>
                 <span style={{ fontSize: '14px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
                     {period === 'monthly' ? '/mes' : '/semestre'}
                 </span>
             </div>
 
-            {/* Features */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
-                {plan.features?.map((feature: string, index: number) => (
-                    <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                        <div style={{
-                            marginTop: '2px',
-                            width: '20px',
-                            height: '20px',
-                            borderRadius: '50%',
-                            backgroundColor: 'var(--bg-secondary)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0
-                        }}>
-                            <Check size={12} style={{ color: 'var(--color-primary)' }} />
+                {plan.features?.map((feature: string, index: number) => {
+                    // Si la característica comienza con ⛔, lo usamos como icono principal (estilo negativo)
+                    const isManualNegative = feature.startsWith('⛔');
+                    const displayText = isManualNegative ? feature.replace('⛔', '').trim() : feature;
+
+                    return (
+                        <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <div style={{
+                                marginTop: '2px',
+                                width: '20px',
+                                height: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                            }}>
+                                {isManualNegative ? (
+                                    <MinusCircle size={18} style={{ color: '#EF4444' }} />
+                                ) : (
+                                    <Check size={18} style={{ color: 'var(--color-primary)' }} />
+                                )}
+                            </div>
+                            <span style={{
+                                fontSize: '14px',
+                                color: isManualNegative ? 'var(--text-tertiary)' : 'var(--text-secondary)',
+                                fontWeight: isManualNegative ? 400 : 500,
+                                lineHeight: '1.5'
+                            }}>
+                                {displayText}
+                            </span>
                         </div>
-                        <span style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                            {feature}
-                        </span>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Action Button */}
-            <Button
-                variant={isCurrent ? 'secondary' : (isPro ? 'primary' : 'secondary')}
-                fullWidth
-                onClick={() => onSelect && onSelect(plan)}
-                disabled={isCurrent}
-                style={{
-                    height: '48px',
-                    fontSize: '15px',
-                    ...(isEnterprise ? { backgroundColor: 'var(--text-primary)', color: 'var(--bg-primary)', border: 'none' } : {})
-                }}
-            >
-                {isCurrent ? 'Plan Activo' : 'Seleccionar Plan'}
-            </Button>
+            <div title={disabledReason}>
+                <Button
+                    variant={isCurrent ? 'secondary' : (isPro ? 'primary' : 'secondary')}
+                    fullWidth
+                    onClick={() => onSelect && onSelect(plan)}
+                    disabled={isCurrent || isDisabled}
+                    style={{
+                        height: '48px',
+                        fontSize: '15px',
+                        ...(isEnterprise ? { backgroundColor: 'var(--text-primary)', color: 'var(--bg-primary)', border: 'none' } : {}),
+                        ...((isDisabled && !isCurrent) ? { opacity: 0.5, cursor: 'not-allowed' } : {})
+                    }}
+                >
+                    {isCurrent ? 'Plan Activo' : (isDisabled ? 'No Disponible' : 'Seleccionar Plan')}
+                </Button>
+            </div>
         </div>
     );
 };

@@ -24,6 +24,8 @@ export interface WithdrawalRequest {
     banco_nombre: string;
     cuenta_numero: string;
     cuenta_tipo: string;
+    titular_nombre: string;
+    documento_id: string;
     fecha_solicitud: string;
 }
 
@@ -37,13 +39,13 @@ export const walletService = {
 
         // 1. Obtener configuración de días de retención
         const { data: config } = await supabase
-            .from('sistema_referidos_config')
+            .from('sistema_referidos_config' as any)
             .select('dias_retencion_comision')
             .order('fecha_actualizacion', { ascending: false })
             .limit(1)
             .maybeSingle();
 
-        const retentionDays = config?.dias_retencion_comision ?? 30;
+        const retentionDays = (config as any)?.dias_retencion_comision ?? 30;
 
         // 2. Calcular fecha límite para comisiones disponibles
         const retentionDate = new Date();
@@ -71,13 +73,26 @@ export const walletService = {
             })
             .reduce((acc, m) => acc + Number(m.amount || 0), 0);
 
-        // Saldo disponible (>= días de retención)
-        const available_balance = movementsArray
+        // 4. Obtener retiros pendientes, en proceso o completados (no rechazados)
+        const { data: withdrawals, error: withdrawalsError } = await supabase
+            .from('retiros_referidos' as any)
+            .select('monto_usd, estado')
+            .eq('user_id', user.id)
+            .neq('estado', 'rechazado');
+
+        if (withdrawalsError) throw withdrawalsError;
+
+        const total_withdrawals = (withdrawals || []).reduce((acc: number, w: any) => acc + Number(w.monto_usd || 0), 0);
+
+        // Saldo disponible (>= días de retención) - Retiros
+        const gross_available = movementsArray
             .filter(m => {
                 const createdDate = new Date(m.created_at);
                 return !isNaN(createdDate.getTime()) && createdDate <= retentionDate;
             })
             .reduce((acc, m) => acc + Number(m.amount || 0), 0);
+
+        const available_balance = Math.max(0, gross_available - total_withdrawals);
 
         return {
             available_balance: available_balance,
@@ -194,6 +209,6 @@ export const walletService = {
             .limit(1)
             .maybeSingle();
 
-        return config?.monto_minimo_retiro_usd ?? 10.00;
+        return (config as any)?.monto_minimo_retiro_usd ?? 10.00;
     }
 };

@@ -9,6 +9,7 @@ import { UserStatusBadge } from './UserStatusBadge';
 import { UserPlanBadge } from './UserPlanBadge';
 import { UserDetailSlideOver } from './UserDetailSlideOver';
 import { Button, Spinner, Card } from '../common';
+import { cargarPaises, Pais } from '../../services/paisesService';
 
 export const UserList: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
@@ -24,6 +25,7 @@ export const UserList: React.FC = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
     const [plans, setPlans] = useState<Plan[]>([]);
+    const [allCountries, setAllCountries] = useState<Pais[]>([]);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -48,6 +50,7 @@ export const UserList: React.FC = () => {
 
     useEffect(() => {
         plansService.getPlans(false).then(setPlans);
+        cargarPaises().then(setAllCountries);
     }, []);
 
     // Sync selected user when users list is updated (e.g. after plan change)
@@ -190,11 +193,11 @@ export const UserList: React.FC = () => {
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
                             <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
-                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Usuario</th>
-                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rol</th>
-                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plan</th>
-                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Estado</th>
-                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actividad</th>
+                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Usuario</th>
+                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rol</th>
+                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plan</th>
+                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Estado</th>
+                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actividad</th>
                                 <th style={{ padding: '16px 24px' }}></th>
                             </tr>
                         </thead>
@@ -236,9 +239,9 @@ export const UserList: React.FC = () => {
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
                                                         color: 'white',
-                                                        fontWeight: 700,
                                                         fontSize: '14px',
-                                                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+                                                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                                                        fontWeight: 600
                                                     }}>
                                                         {user.nombres.charAt(0)}{user.apellidos.charAt(0)}
                                                     </div>
@@ -248,14 +251,29 @@ export const UserList: React.FC = () => {
                                                         right: '-2px',
                                                         width: '12px',
                                                         height: '12px',
-                                                        backgroundColor: '#10B981',
+                                                        backgroundColor: user.estado_suscripcion === 'activa' ? '#10B981' : '#6B7280',
                                                         border: '2px solid var(--card-bg)',
                                                         borderRadius: '50%'
-                                                    }} />
+                                                    }} title={user.estado_suscripcion === 'activa' ? 'En línea / Activo' : 'Inactivo'} />
                                                 </div>
                                                 <div>
-                                                    <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>{user.nombres} {user.apellidos}</div>
-                                                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{user.email}</div>
+                                                    <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        {user.nombres} {user.apellidos}
+                                                    </div>
+                                                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        {user.email}
+                                                        {user.pais && (
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.8 }}>
+                                                                <span style={{ color: 'var(--text-tertiary)', fontSize: '10px' }}>•</span>
+                                                                <img
+                                                                    src={`https://flagcdn.com/w40/${user.pais.toLowerCase()}.png`}
+                                                                    alt={user.pais}
+                                                                    style={{ width: '14px', height: '10px', borderRadius: '1px', objectFit: 'cover' }}
+                                                                    title={allCountries.find(p => p.codigo_iso_2.toUpperCase() === user.pais?.toUpperCase())?.nombre_es || user.pais}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>

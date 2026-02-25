@@ -8,12 +8,14 @@ import { supabase } from '@/lib/supabase';
 import { UserStatusBadge } from '@/components/admin/UserStatusBadge';
 import { plansService } from '@/services/plansService';
 import { Plan } from '@/types/plans.types';
+import { cargarPaises, Pais } from '@/services/paisesService';
 
 export const AdminDashboard: React.FC = () => {
     const [stats, setStats] = useState<AdminStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [metaStatus, setMetaStatus] = useState<'operativo' | 'pendiente' | 'error'>('pendiente');
     const [plans, setPlans] = useState<Plan[]>([]);
+    const [allCountries, setAllCountries] = useState<Pais[]>([]);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -35,6 +37,7 @@ export const AdminDashboard: React.FC = () => {
             setLoading(false);
         };
         fetchStats();
+        cargarPaises().then(setAllCountries);
     }, []);
 
     const statCards = [
@@ -127,17 +130,28 @@ export const AdminDashboard: React.FC = () => {
                                             justifyContent: 'center',
                                             color: '#fff',
                                             fontSize: '13px',
-                                            fontWeight: 700,
+                                            fontWeight: 600,
                                             flexShrink: 0
                                         }}>
                                             {user.nombres?.[0] || 'U'}
                                         </div>
                                         <div style={{ minWidth: 0 }}>
-                                            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                 {user.nombres} {user.apellidos}
                                             </p>
                                             <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: '2px 0 0 0', whiteSpace: 'nowrap' }}>
                                                 {plans.find(p => p.slug === user.plan_id || p.id === user.plan_id)?.name || 'Plan Gratis'} • {new Date(user.fecha_registro).toLocaleDateString()}
+                                                {user.pais && (
+                                                    <>
+                                                        <span style={{ margin: '0 4px', opacity: 0.5 }}>•</span>
+                                                        <img
+                                                            src={`https://flagcdn.com/w40/${user.pais.toLowerCase()}.png`}
+                                                            alt={user.pais}
+                                                            style={{ width: '14px', height: '10px', borderRadius: '1px', objectFit: 'cover', display: 'inline-block', verticalAlign: 'middle' }}
+                                                            title={allCountries.find(p => p.codigo_iso_2.toUpperCase() === user.pais.toUpperCase())?.nombre_es || user.pais}
+                                                        />
+                                                    </>
+                                                )}
                                             </p>
                                         </div>
                                     </div>
@@ -172,7 +186,7 @@ export const AdminDashboard: React.FC = () => {
                                 border: '1px solid var(--border-color)',
                                 gap: '16px'
                             }}>
-                                <span style={{ flex: 1, fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <span style={{ flex: 1, fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                     {item.name}
                                 </span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
@@ -184,7 +198,7 @@ export const AdminDashboard: React.FC = () => {
                                     }} />
                                     <span style={{
                                         fontSize: '13px',
-                                        fontWeight: 700,
+                                        fontWeight: 600,
                                         color: item.type === 'success' ? 'var(--color-success)' : 'var(--color-warning)'
                                     }}>
                                         {item.status}

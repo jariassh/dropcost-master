@@ -224,28 +224,59 @@ export async function getReferredUserDetails(referredUserId: string): Promise<Re
 }
 
 /**
- * Obtiene los referidos de nivel 2 para un líder.
- * (Usuarios invitados por los invitados directos del líder)
+ * Obtiene los referidos de nivel 2 para un líder con logs de depuración.
  */
 export async function getLevel2ReferredUsers(): Promise<any[]> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
 
+    // console.log('[Referral] Fetching Nivel 2 for user:', user.email);
+
     // 1. Obtener mi ID de líder
-    const { data: liderLink } = await supabase
+    const { data: liderLink, error: liderError } = await supabase
         .from('referidos_lideres')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
     
-    if (!liderLink) return [];
+    if (liderError) console.error('[Referral] Error Step 1 (My Leader ID):', liderError);
+    if (!liderLink) {
+        console.warn('[Referral] No leader profile found for current user. Level 2 impossible.');
+        return [];
+    }
+    // console.log('[Referral] Step 1 OK. My Lider ID:', liderLink.id);
 
-    // 2. Obtener mis referidos directos que también son líderes (para que tengan referidos propios)
-    const { data: directReferred } = await supabase
+    // 2. Obtener los IDs de mis referidos directos
+    const { data: directReferrals, error: directError } = await supabase
         .from('referidos_usuarios')
-        .select('usuario_id');
+        .select('usuario_id')
+        .eq('lider_id', liderLink.id);
 
-    // 3. Obtener el ID de los referidos de mis referidos
+    if (directError) console.error('[Referral] Error Step 2 (Direct Referrals):', directError);
+    if (!directReferrals || directReferrals.length === 0) {
+        console.warn('[Referral] No direct referrals found (Level 1 is empty).');
+        return [];
+    }
+    
+    const directUserIds = directReferrals.map(dr => dr.usuario_id);
+    // console.log('[Referral] Step 2 OK. Direct Referral IDs:', directUserIds);
+
+    // 3. Obtener los IDs de líderes de mis referidos (los sub-líderes que traen Nivel 2)
+    const { data: subLeadersData, error: subLeadersError } = await supabase
+        .from('referidos_lideres')
+        .select('id, nombre, user_id')
+        .in('user_id', directUserIds);
+
+    if (subLeadersError) console.error('[Referral] Error Step 3 (Sub-Leaders):', subLeadersError);
+    if (!subLeadersData || subLeadersData.length === 0) {
+        console.warn('[Referral] None of your direct referrals are "leaders" yet (no secondary network).');
+        return [];
+    }
+    
+    const subLeaderIds = subLeadersData.map(sl => sl.id);
+    // console.log('[Referral] Step 3 OK. Sub-Leader IDs (Level 2 Roots):', subLeaderIds);
+
+    // 4. Obtener los usuarios invitados por estos sub-líderes (Nivel 2)
     const { data, error } = await supabase
         .from('referidos_usuarios')
         .select(`
@@ -254,18 +285,20 @@ export async function getLevel2ReferredUsers(): Promise<any[]> {
             usuario_id,
             users:usuario_id (email, nombres, apellidos, plan_id, email_verificado, estado_suscripcion),
             lider:lider_id (
-                nombre
+                nombre,
+                user_id,
+                users:user_id (nombres, apellidos)
             )
         `)
-        // Esta es la parte difícil: filtrar usuarios cuyo líder es uno de mis referidos directos
-        // Usamos una subquery o filtrado manual si es necesario.
-        // Optimizamos: buscamos referidos_lideres vinculados a mis referidos directos.
+        .in('lider_id', subLeaderIds)
+        .order('fecha_registro', { ascending: false });
         
-    // Simplificamos la lógica de fetch
     if (error) {
-        console.error('Error fetching level 2 users:', error);
+        console.error('[Referral] Error Step 4 (Level 2 Users):', error);
         return [];
     }
+
+    // console.log('[Referral] Step 4 OK. Found Level 2 users:', data?.length || 0);
 
     return (data || []).map((r: any) => ({
         id: r.usuario_id,
@@ -275,7 +308,7 @@ export async function getLevel2ReferredUsers(): Promise<any[]> {
         planId: r.users?.plan_id,
         emailVerificado: r.users?.email_verificado,
         estadoSuscripcion: r.users?.estado_suscripcion,
-        referenteDe: r.lider?.nombre,
+        referenteDe: r.lider?.nombre || (r.lider?.users ? `${r.lider.users.nombres || ''} ${r.lider.users.apellidos || ''}`.trim() : 'Referente'),
         createdAt: r.fecha_registro
     }));
 }

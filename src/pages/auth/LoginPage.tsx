@@ -73,76 +73,48 @@ export function LoginPage() {
 
     return (
         <div style={{ animation: 'fadeIn 400ms ease-out' }}>
-            {/* Mobile logo */}
-            <div
-                className="lg:hidden"
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    marginBottom: '32px',
-                }}
-            >
-                <div
-                    style={{
-                        width: '36px',
-                        height: '36px',
-                        backgroundColor: 'var(--color-primary)',
-                        borderRadius: '10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#fff',
-                        fontWeight: 700,
-                        fontSize: '14px',
-                    }}
-                >
-                    DC
-                </div>
-                <span style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: '18px' }}>
-                    DropCost Master
-                </span>
-            </div>
 
-            <h2 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px', textAlign: 'center' }}>
                 Bienvenido
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '32px' }}>
+            </h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '32px', textAlign: 'center', lineHeight: 1.5 }}>
                 Ingresa tus credenciales para acceder a tu cuenta
             </p>
 
             {error && (
-                <div style={{ marginBottom: '20px' }}>
+                <div style={{ marginBottom: '24px' }}>
                     <Alert type="error" dismissible onDismiss={clearError}>
                         {error}
                     </Alert>
                 </div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <Input
-                    label="Correo electrónico"
-                    type="email"
-                    placeholder="nombre@ejemplo.com"
-                    leftIcon={<Mail size={18} />}
-                    error={errors.email?.message}
-                    autoComplete="email"
-                    {...register('email')}
-                />
+            <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <Input
+                        label="Correo electrónico"
+                        type="email"
+                        placeholder="nombre@ejemplo.com"
+                        leftIcon={<Mail size={18} />}
+                        error={errors.email?.message}
+                        autoComplete="email"
+                        {...register('email')}
+                    />
 
-                <Input
-                    label="Contraseña"
-                    type="password"
-                    placeholder="Mínimo 8 caracteres"
-                    leftIcon={<Lock size={18} />}
-                    showPasswordToggle
-                    error={errors.password?.message}
-                    autoComplete="current-password"
-                    {...register('password')}
-                />
+                    <Input
+                        label="Contraseña"
+                        type="password"
+                        placeholder="Mínimo 8 caracteres"
+                        leftIcon={<Lock size={18} />}
+                        showPasswordToggle
+                        error={errors.password?.message}
+                        autoComplete="current-password"
+                        {...register('password')}
+                    />
+                </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
                         <input
                             type="checkbox"
                             {...register('rememberMe')}
@@ -163,7 +135,7 @@ export function LoginPage() {
                             fontSize: '14px',
                             color: 'var(--color-primary)',
                             textDecoration: 'none',
-                            fontWeight: 500,
+                            fontWeight: 600,
                         }}
                         onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
                         onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
@@ -178,14 +150,14 @@ export function LoginPage() {
             </form>
 
             {/* Separador */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '28px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '32px 0' }}>
                 <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-color)' }} />
-                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>o continúa con</span>
+                <span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 500 }}>o continúa con</span>
                 <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-color)' }} />
             </div>
 
             {/* Social login */}
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ display: 'flex', gap: '16px' }}>
                 <Button variant="secondary" fullWidth disabled>
                     Google
                 </Button>
@@ -194,11 +166,11 @@ export function LoginPage() {
                 </Button>
             </div>
 
-            <p style={{ textAlign: 'center', fontSize: '14px', color: 'var(--text-secondary)', marginTop: '28px' }}>
+            <p style={{ textAlign: 'center', fontSize: '15px', color: 'var(--text-secondary)', marginTop: '32px' }}>
                 ¿No tienes una cuenta?{' '}
                 <Link
                     to="/registro"
-                    style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}
+                    style={{ color: 'var(--color-primary)', fontWeight: 700, textDecoration: 'none' }}
                     onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
                     onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
                 >
