@@ -28,6 +28,7 @@ import { AdminEmailTriggersPage } from '@/pages/admin/AdminEmailTriggersPage';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { PricingPage } from '@/pages/PricingPage';
 import { LandingPage } from '@/pages/LandingPage';
+import CookiesPage from '@/pages/CookiesPage';
 import { useAuthStore } from '@/store/authStore';
 import UserAuditLogsPage from '@/pages/UserAuditLogsPage';
 import { SubscriptionGuard } from '@/components/common/SubscriptionGuard';
@@ -68,6 +69,7 @@ export function AppRouter() {
                     <Route path="/" element={
                         isAuthenticated ? <Navigate to="/mis-costeos" replace /> : <LandingPage />
                     } />
+                    <Route path="/cookies" element={<CookiesPage />} />
                 </Route>
 
                 {/* Rutas de autenticación */}

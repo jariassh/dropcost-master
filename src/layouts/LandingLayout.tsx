@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { configService, GlobalConfig } from '@/services/configService';
+import { CookieBanner } from '@/components/common/CookieBanner';
+import { CookiePreferencesModal } from '@/components/common/CookiePreferencesModal';
 
 /**
  * LandingLayout: Layout para la página de ventas.
@@ -391,6 +393,8 @@ export function LandingLayout() {
                     .mobile-toggle { display: none; }
                 }
             `}</style>
+            <CookieBanner />
+            <CookiePreferencesModal />
         </div>
     );
 }
