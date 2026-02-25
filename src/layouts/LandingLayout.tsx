@@ -356,9 +356,10 @@ export function LandingLayout() {
                         <div style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>
                             © {new Date().getFullYear()} DropCost Master. Todos los derechos reservados.
                         </div>
-                        <div style={{ display: 'flex', gap: '32px' }}>
+                        <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
                             <FooterLink href={config?.terminos_condiciones_url || "/terminos"}>Términos</FooterLink>
                             <FooterLink href={config?.politica_privacidad_url || "/privacidad"}>Privacidad</FooterLink>
+                            <FooterLink href="/cookies">Cookies</FooterLink>
                         </div>
                         <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                             <img src="https://img.icons8.com/color/48/000000/mercado-pago.png" alt="Mercado Pago" style={{ height: '24px', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'} />

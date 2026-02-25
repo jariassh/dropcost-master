@@ -214,12 +214,20 @@ export function TerminosPage() {
                     justifyContent: 'space-between',
                     fontSize: '14px',
                 }}>
-                    <Link
-                        to="/privacidad"
-                        style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}
-                    >
-                        Política de Privacidad →
-                    </Link>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                        <Link
+                            to="/privacidad"
+                            style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}
+                        >
+                            ← Privacidad
+                        </Link>
+                        <Link
+                            to="/cookies"
+                            style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}
+                        >
+                            Cookies →
+                        </Link>
+                    </div>
                     <Link
                         to="/registro"
                         style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}
