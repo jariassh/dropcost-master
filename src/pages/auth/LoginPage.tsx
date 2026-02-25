@@ -73,36 +73,6 @@ export function LoginPage() {
 
     return (
         <div style={{ animation: 'fadeIn 400ms ease-out' }}>
-            {/* Mobile logo */}
-            <div
-                className="lg:hidden"
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    marginBottom: '32px',
-                }}
-            >
-                <div
-                    style={{
-                        width: '36px',
-                        height: '36px',
-                        backgroundColor: 'var(--color-primary)',
-                        borderRadius: '10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#fff',
-                        fontWeight: 700,
-                        fontSize: '14px',
-                    }}
-                >
-                    DC
-                </div>
-                <span style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: '18px' }}>
-                    DropCost Master
-                </span>
-            </div>
 
             <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px', textAlign: 'center' }}>
                 Bienvenido

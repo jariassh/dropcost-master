@@ -3,8 +3,8 @@
  * Izquierda: gradiente azul con branding DropCost Master.
  * Derecha: formulario (children vía Outlet).
  */
-import { Outlet } from 'react-router-dom';
-import { BarChart3, ShieldCheck, Sun, Moon } from 'lucide-react';
+import { Outlet, Link } from 'react-router-dom';
+import { BarChart3, ShieldCheck, Sun, Moon, ArrowLeft } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useGlobalConfig } from '@/hooks/useGlobalConfig';
 import { configService, GlobalConfig } from '@/services/configService';
@@ -40,7 +40,7 @@ export function AuthLayout() {
                 }}
             >
                 {/* Logo */}
-                <div className="flex items-center gap-3">
+                <Link to="/" className="flex items-center gap-3" style={{ textDecoration: 'none' }}>
                     {logos.dark || logos.light ? (
                         <img
                             src={logos.dark || logos.light || ''}
@@ -64,7 +64,7 @@ export function AuthLayout() {
                             </span>
                         </>
                     )}
-                </div>
+                </Link>
 
                 {/* Texto principal */}
                 <div
@@ -152,36 +152,74 @@ export function AuthLayout() {
                     position: 'relative',
                 }}
             >
-                {/* Toggle tema */}
-                <button
-                    onClick={toggleTheme}
-                    aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-                    style={{
-                        position: 'absolute',
-                        top: '20px',
-                        right: '24px',
-                        padding: '10px',
-                        borderRadius: '12px',
-                        background: 'none',
-                        border: '1px solid var(--border-color)',
-                        color: 'var(--text-secondary)',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 200ms ease',
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
-                        e.currentTarget.style.color = 'var(--text-primary)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = 'var(--text-secondary)';
-                    }}
-                >
-                    {isDark ? <Sun size={18} /> : <Moon size={18} />}
-                </button>
+                {/* Navegación y Toggle Tema */}
+                <div style={{
+                    position: 'absolute',
+                    top: '20px',
+                    left: '24px',
+                    right: '24px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    zIndex: 10
+                }}>
+                    <Link
+                        to="/"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            color: 'var(--text-secondary)',
+                            textDecoration: 'none',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            padding: '8px 12px',
+                            borderRadius: '10px',
+                            border: '1px solid var(--border-color)',
+                            transition: 'all 200ms ease',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                            e.currentTarget.style.color = 'var(--text-primary)';
+                            e.currentTarget.style.transform = 'translateX(-2px)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = 'var(--text-secondary)';
+                            e.currentTarget.style.transform = 'none';
+                        }}
+                    >
+                        <ArrowLeft size={16} />
+                        Volver al inicio
+                    </Link>
+
+                    <button
+                        onClick={toggleTheme}
+                        aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                        style={{
+                            padding: '10px',
+                            borderRadius: '12px',
+                            background: 'none',
+                            border: '1px solid var(--border-color)',
+                            color: 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 200ms ease',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                            e.currentTarget.style.color = 'var(--text-primary)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = 'var(--text-secondary)';
+                        }}
+                    >
+                        {isDark ? <Sun size={18} /> : <Moon size={18} />}
+                    </button>
+                </div>
 
                 <div style={{ width: '100%', maxWidth: '420px' }}>
                     <Outlet />

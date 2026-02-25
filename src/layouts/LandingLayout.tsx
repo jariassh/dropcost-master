@@ -131,7 +131,7 @@ export function LandingLayout() {
                     </Link>
 
                     {/* Desktop Nav */}
-                    <nav style={{ display: 'flex', alignItems: 'center', gap: '32px' }} className="desktop-view">
+                    <nav className="desktop-view" style={{ alignItems: 'center', gap: '32px' }}>
                         <NavLink href="#features">Funciones</NavLink>
                         <NavLink href="#comparison">Excel vs Nos</NavLink>
                         <NavLink href="#pricing">Planes</NavLink>
@@ -280,14 +280,13 @@ export function LandingLayout() {
                 padding: '80px var(--main-padding) 40px'
             }}>
                 <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                    <div style={{
+                    <div className="footer-grid" style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                         gap: '48px',
                         marginBottom: '64px'
                     }}>
                         {/* Column 1: Brand */}
-                        <div style={{ gridColumn: 'span 2' }}>
+                        <div className="footer-column footer-brand" style={{ maxWidth: '400px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
                                 {/* Unificamos lógica con el header: Variante para Dark, Principal para Light */}
                                 {theme === 'dark' && config?.logo_variante_url ? (
@@ -316,7 +315,7 @@ export function LandingLayout() {
                             <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '32px', maxWidth: '320px' }}>
                                 La plataforma definitiva para optimizar tu rentabilidad en el dropshipping COD. Diseñada para que escales con números reales, no con supuestos.
                             </p>
-                            <div style={{ display: 'flex', gap: '16px' }}>
+                            <div className="footer-socials" style={{ display: 'flex', gap: '16px' }}>
                                 <SocialIcon icon={<Instagram size={20} />} href={config?.instagram_url} />
                                 <SocialIcon icon={<Twitter size={20} />} href={config?.twitter_url} />
                                 <SocialIcon icon={<Linkedin size={20} />} href={config?.linkedin_url} />
@@ -325,7 +324,7 @@ export function LandingLayout() {
                         </div>
 
                         {/* Column 2: Product */}
-                        <div>
+                        <div className="footer-column">
                             <h4 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '24px' }}>Producto</h4>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <FooterLink href="#features">Funciones</FooterLink>
@@ -336,7 +335,7 @@ export function LandingLayout() {
                         </div>
 
                         {/* Column 3: Soporte */}
-                        <div>
+                        <div className="footer-column">
                             <h4 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '24px' }}>Soporte</h4>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <FooterLink href={`mailto:${config?.email_contacto || 'soporte@dropcost.com'}`} icon={<Mail size={16} />}>Email de Soporte</FooterLink>
@@ -388,9 +387,20 @@ export function LandingLayout() {
             <style>{`
                 .desktop-view { display: none; }
                 .mobile-toggle { display: block; }
-                @media (min-width: 992px) {
+                @media (min-width: 1024px) {
                     .desktop-view { display: flex; }
                     .mobile-toggle { display: none; }
+                }
+                .footer-grid { grid-template-columns: 1fr; }
+                .footer-column { display: flex; flex-direction: column; }
+                @media (min-width: 768px) {
+                    .footer-grid { grid-template-columns: 1.5fr 1fr 1fr; }
+                }
+                @media (max-width: 425px) {
+                    .footer-grid { text-align: center; }
+                    .footer-brand { margin: 0 auto !important; align-items: center !important; }
+                    .footer-socials { justify-content: center !important; }
+                    .footer-column { align-items: center !important; }
                 }
             `}</style>
             <CookieBanner />
