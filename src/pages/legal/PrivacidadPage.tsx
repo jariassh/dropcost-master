@@ -206,12 +206,20 @@ export function PrivacidadPage() {
                     justifyContent: 'space-between',
                     fontSize: '14px',
                 }}>
-                    <Link
-                        to="/terminos"
-                        style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}
-                    >
-                        ← Términos y Condiciones
-                    </Link>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                        <Link
+                            to="/terminos"
+                            style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}
+                        >
+                            ← Términos
+                        </Link>
+                        <Link
+                            to="/cookies"
+                            style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}
+                        >
+                            Cookies →
+                        </Link>
+                    </div>
                     <Link
                         to="/registro"
                         style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}

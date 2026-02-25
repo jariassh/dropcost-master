@@ -40,7 +40,7 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
 
         setIsLoading(true);
         try {
-            const data = await ofertaService.getOfertas(tiendaActual.id);
+            const data = await ofertaService.getOfertas(tiendaActual.id, user!.id);
             setOfertas(data);
 
             const limit = user?.plan?.limits?.offers_limit ?? 0;
@@ -75,7 +75,7 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                 const localOfertas = JSON.parse(legacyData) as any[];
                 if (Array.isArray(localOfertas) && localOfertas.length > 0) {
                     // Solo migrar si no hay ofertas en DB
-                    const dbOfertas = await ofertaService.getOfertas(tiendaActual.id);
+                    const dbOfertas = await ofertaService.getOfertas(tiendaActual.id, user.id);
                     if (dbOfertas.length === 0) {
                         toast.info('Detectamos ofertas locales. Migrando a la nube...');
                         for (const o of localOfertas) {

@@ -58,7 +58,7 @@ export function MisCosteos() {
         isFetching.current = true;
         setIsLoading(true);
         try {
-            const data = await costeoService.listCosteos(tiendaActual.id);
+            const data = await costeoService.listCosteos(tiendaActual.id, user!.id);
             setCosteos(data);
 
             // Obtener cuota - El límite viene del plan del usuario
@@ -91,7 +91,7 @@ export function MisCosteos() {
                 const localCosteos = JSON.parse(legacyData);
                 if (Array.isArray(localCosteos) && localCosteos.length > 0) {
                     // Solo migrar si no hay costeos en DB (para no duplicar en cada refresh si algo falla)
-                    const dbCosteos = await costeoService.listCosteos(tiendaActual.id);
+                    const dbCosteos = await costeoService.listCosteos(tiendaActual.id, user!.id);
 
                     if (dbCosteos.length === 0) {
                         toast.info('Detectamos costeos locales. Migrando a la nube...', 'Espera un momento');
