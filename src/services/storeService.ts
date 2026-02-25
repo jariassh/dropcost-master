@@ -7,12 +7,13 @@ import { auditService } from './auditService';
 
 export const storeService = {
     /**
-     * Obtiene todas las tiendas vinculadas al usuario actual.
+     * Obtiene todas las tiendas vinculadas a un usuario específico.
      */
-    async getTiendas(): Promise<Tienda[]> {
+    async getTiendas(userId: string): Promise<Tienda[]> {
         const { data, error } = await supabase
             .from('tiendas')
             .select('*')
+            .eq('usuario_id', userId)
             .eq('active', true)
             .order('created_at', { ascending: false });
 
@@ -43,7 +44,7 @@ export const storeService = {
             auditService.recordLog({
                 accion: 'CREATE_STORE',
                 entidad: 'STORE',
-                entidad_id: data.id,
+                entidadId: data.id,
                 detalles: { nombre: data.nombre, pais: data.pais }
             });
         }
@@ -71,7 +72,7 @@ export const storeService = {
             auditService.recordLog({
                 accion: 'UPDATE_STORE',
                 entidad: 'STORE',
-                entidad_id: data.id,
+                entidadId: data.id,
                 detalles: cambios
             });
         }
@@ -105,7 +106,7 @@ export const storeService = {
         auditService.recordLog({
             accion: 'DELETE_STORE',
             entidad: 'STORE',
-            entidad_id: id,
+            entidadId: id,
             detalles: { 
                 id, 
                 nombre: tienda?.nombre || 'Tienda eliminada (Nombre desconocido)',

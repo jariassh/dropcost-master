@@ -4,12 +4,15 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Badge, EmptyState, useToast, ConfirmDialog } from '@/components/common';
+import { Badge, EmptyState, useToast, ConfirmDialog, Spinner } from '@/components/common';
+import { Card } from '@/components/common/Card';
 import { OfertaDetailPanel } from './components/OfertaDetailPanel';
-import type { Oferta, StrategyType, OfertaStatus } from '@/types/ofertas';
+import type { Oferta, StrategyType } from '@/types/ofertas';
 import { STRATEGIES } from '@/types/ofertas';
-import { Plus, Eye, Pause, Play, Trash2, Gift, Filter } from 'lucide-react';
+import { Plus, Eye, Trash2, Gift, Filter, Copy } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { useStoreStore } from '@/store/useStoreStore';
+import { ofertaService } from '@/services/ofertaService';
 
 interface OfertasDashboardProps {
     onCreateNew: () => void;
@@ -19,52 +22,139 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
     const navigate = useNavigate();
     const toast = useToast();
     const { user } = useAuthStore();
+    const tiendaActual = useStoreStore((state) => state.tiendaActual);
+
     const [ofertas, setOfertas] = useState<Oferta[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchParams] = useSearchParams();
     const [filterStrategy, setFilterStrategy] = useState<StrategyType | 'todas'>('todas');
-    const [filterStatus, setFilterStatus] = useState<OfertaStatus | 'todas'>('todas');
     const [detailOferta, setDetailOferta] = useState<Oferta | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+    const [quota, setQuota] = useState({ used: 0, limit: 0 });
 
-    useEffect(() => {
-        const stored = localStorage.getItem('dropcost_ofertas');
-        if (stored) {
-            const parsed = JSON.parse(stored) as Oferta[];
-            setOfertas(parsed);
+    const fetchOfertas = useCallback(async () => {
+        if (!tiendaActual?.id) {
+            setIsLoading(false);
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const data = await ofertaService.getOfertas(tiendaActual.id, user!.id);
+            setOfertas(data);
+
+            const limit = user?.plan?.limits?.offers_limit ?? 0;
+            setQuota({ used: data.length, limit });
 
             // Check for ID in URL to open detail
             const id = searchParams.get('id');
             if (id) {
-                const found = parsed.find(o => o.id === id);
+                const found = data.find((o) => o.id === id);
                 if (found) setDetailOferta(found);
             }
+        } catch (error) {
+            toast.error('Error al cargar ofertas');
+        } finally {
+            setIsLoading(false);
         }
-    }, [searchParams]);
+    }, [tiendaActual?.id, user?.plan?.limits?.offers_limit, searchParams, toast]);
 
-    function saveOfertas(updated: Oferta[]) {
-        setOfertas(updated);
-        localStorage.setItem('dropcost_ofertas', JSON.stringify(updated));
-    }
+    useEffect(() => {
+        fetchOfertas();
+    }, [fetchOfertas]);
+
+    // Migración de localStorage a Supabase
+    useEffect(() => {
+        const doMigration = async () => {
+            if (!tiendaActual?.id || !user?.id) return;
+
+            const legacyData = localStorage.getItem('dropcost_ofertas');
+            if (!legacyData) return;
+
+            try {
+                const localOfertas = JSON.parse(legacyData) as any[];
+                if (Array.isArray(localOfertas) && localOfertas.length > 0) {
+                    // Solo migrar si no hay ofertas en DB
+                    const dbOfertas = await ofertaService.getOfertas(tiendaActual.id, user.id);
+                    if (dbOfertas.length === 0) {
+                        toast.info('Detectamos ofertas locales. Migrando a la nube...');
+                        for (const o of localOfertas) {
+                            await ofertaService.createOferta({
+                                userId: user.id,
+                                storeId: tiendaActual.id,
+                                costeoId: o.costeoId,
+                                productName: o.productName,
+                                strategyType: o.strategyType,
+                                discountConfig: o.discountConfig,
+                                bundleConfig: o.bundleConfig,
+                                giftConfig: o.giftConfig,
+                                estimatedProfit: o.estimatedProfit,
+                                estimatedMarginPercent: o.estimatedMarginPercent
+                            });
+                        }
+                        toast.success('Migración completada');
+                        fetchOfertas();
+                    }
+                }
+                localStorage.removeItem('dropcost_ofertas');
+            } catch (error) {
+                console.error('Error migrando ofertas:', error);
+            }
+        };
+
+        doMigration();
+    }, [tiendaActual?.id, user?.id, toast, fetchOfertas]);
 
     const filtered = ofertas.filter((o) => {
         if (filterStrategy !== 'todas' && o.strategyType !== filterStrategy) return false;
-        if (filterStatus !== 'todas' && o.status !== filterStatus) return false;
         return true;
     });
 
-    function handleToggleStatus(id: string) {
-        const updated = ofertas.map((o) =>
-            o.id === id ? { ...o, status: (o.status === 'activa' ? 'pausada' : 'activa') as OfertaStatus } : o,
-        );
-        saveOfertas(updated);
-        toast.success('Estado actualizado');
+    async function handleDuplicate(oferta: Oferta) {
+        if (!user?.id || !tiendaActual?.id) return;
+
+        const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+        const canDuplicate = user?.plan?.limits?.can_duplicate_offers;
+
+        if (!isAdmin && !canDuplicate) {
+            toast.warning('Función Premium', 'La duplicación de ofertas no está habilitada en tu plan actual.');
+            return;
+        }
+
+        if (!isAdmin && quota.limit !== -1 && quota.used >= quota.limit) {
+            toast.warning('Límite de Ofertas', `Has alcanzado el máximo de ${quota.limit} ofertas permitidas en tu plan.`);
+            return;
+        }
+
+        try {
+            await ofertaService.createOferta({
+                userId: user.id,
+                storeId: tiendaActual.id,
+                costeoId: oferta.costeoId,
+                productName: `${oferta.productName} (copia)`,
+                strategyType: oferta.strategyType,
+                discountConfig: oferta.discountConfig,
+                bundleConfig: oferta.bundleConfig,
+                giftConfig: oferta.giftConfig,
+                estimatedProfit: oferta.estimatedProfit,
+                estimatedMarginPercent: oferta.estimatedMarginPercent
+            });
+            toast.success('Oferta duplicada');
+            fetchOfertas();
+        } catch (error) {
+            toast.error('Error al duplicar oferta');
+        }
     }
 
-    function handleDelete(id: string) {
-        const updated = ofertas.filter((o) => o.id !== id);
-        saveOfertas(updated);
-        setDeleteConfirm(null);
-        toast.info('Oferta eliminada');
+    async function handleDelete(id: string) {
+        try {
+            await ofertaService.deleteOferta(id);
+            setDeleteConfirm(null);
+            toast.info('Oferta eliminada');
+            fetchOfertas();
+        } catch (error) {
+            toast.error('Error al eliminar oferta');
+        }
     }
 
     function checkDelete(id: string) {
@@ -83,6 +173,14 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
 
     const getStrategyInfo = (type: StrategyType) => STRATEGIES.find((s) => s.type === type)!;
 
+    if (isLoading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}>
+                <Spinner size="lg" />
+            </div>
+        );
+    }
+
     if (ofertas.length === 0) {
         return (
             <EmptyState
@@ -96,75 +194,56 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
 
     return (
         <div>
-            {/* Filters */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <Filter size={14} style={{ color: 'var(--text-tertiary)' }} />
-                {['todas', 'descuento', 'bundle', 'obsequio'].map((s) => (
-                    <button
-                        key={s}
-                        onClick={() => setFilterStrategy(s as StrategyType | 'todas')}
-                        style={{
-                            padding: '6px 14px',
-                            borderRadius: '9999px',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            border: '1px solid var(--border-color)',
-                            backgroundColor: filterStrategy === s ? 'var(--color-primary)' : 'var(--card-bg)',
-                            color: filterStrategy === s ? '#fff' : 'var(--text-secondary)',
-                            cursor: 'pointer',
-                            transition: 'all 100ms',
-                        }}
-                    >
-                        {s === 'todas' ? 'Todas' : getStrategyInfo(s as StrategyType).icon + ' ' + getStrategyInfo(s as StrategyType).label}
-                    </button>
-                ))}
+            {/* Filters & Quota */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <Filter size={14} style={{ color: 'var(--text-tertiary)' }} />
+                    {['todas', 'descuento', 'bundle', 'obsequio'].map((s) => (
+                        <button
+                            key={s}
+                            onClick={() => setFilterStrategy(s as StrategyType | 'todas')}
+                            style={{
+                                padding: '6px 14px',
+                                borderRadius: '9999px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                border: '1px solid var(--border-color)',
+                                backgroundColor: filterStrategy === s ? 'var(--color-primary)' : 'var(--card-bg)',
+                                color: filterStrategy === s ? '#fff' : 'var(--text-secondary)',
+                                cursor: 'pointer',
+                                transition: 'all 100ms',
+                            }}
+                        >
+                            {s === 'todas' ? 'Todas' : getStrategyInfo(s as StrategyType).icon + ' ' + getStrategyInfo(s as StrategyType).label}
+                        </button>
+                    ))}
+                </div>
 
-                <span style={{ width: '1px', height: '20px', backgroundColor: 'var(--border-color)', margin: '0 4px' }} />
-
-                {['todas', 'activa', 'pausada'].map((s) => (
-                    <button
-                        key={s}
-                        onClick={() => setFilterStatus(s as OfertaStatus | 'todas')}
-                        style={{
-                            padding: '6px 12px',
-                            borderRadius: '9999px',
-                            fontSize: '12px',
-                            fontWeight: 500,
-                            border: '1px solid var(--border-color)',
-                            backgroundColor: filterStatus === s ? 'var(--bg-secondary)' : 'transparent',
-                            color: filterStatus === s ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                            cursor: 'pointer',
-                        }}
-                    >
-                        {s === 'todas' ? 'Todos' : s === 'activa' ? '🟢 Activas' : '⏸️ Pausadas'}
-                    </button>
-                ))}
             </div>
 
+
             {/* Table (desktop) */}
-            <div
-                style={{
-                    borderRadius: '12px',
-                    border: '1px solid var(--card-border)',
-                    overflow: 'hidden',
-                }}
-            >
+            <Card noPadding style={{
+                boxShadow: 'var(--shadow-lg)',
+                borderRadius: '16px',
+                border: '1px solid var(--border-color)',
+                overflow: 'hidden'
+            }}>
                 <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                         <thead>
-                            <tr style={{ backgroundColor: 'var(--bg-secondary)' }}>
-                                {['Producto', 'Estrategia', 'Ganancia Est.', 'Estado', 'Acciones'].map((col) => (
+                            <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                                {['Producto', 'Estrategia', 'Ganancia Est.', 'Acciones'].map((col) => (
                                     <th
                                         key={col}
                                         style={{
-                                            padding: '12px 16px',
+                                            padding: '16px 24px',
                                             textAlign: 'left',
                                             fontWeight: 600,
                                             color: 'var(--text-secondary)',
                                             fontSize: '12px',
                                             textTransform: 'uppercase',
                                             letterSpacing: '0.05em',
-                                            borderBottom: '1px solid var(--border-color)',
                                         }}
                                     >
                                         {col}
@@ -178,33 +257,26 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                                 return (
                                     <tr
                                         key={o.id}
-                                        style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 100ms' }}
-                                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-secondary)')}
+                                        style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.2s' }}
+                                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)')}
                                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                                     >
-                                        <td style={{ padding: '14px 16px', fontWeight: 600 }}>{o.productName}</td>
-                                        <td style={{ padding: '14px 16px' }}>
+                                        <td style={{ padding: '16px 24px', fontWeight: 600 }}>{o.productName}</td>
+                                        <td style={{ padding: '16px 24px' }}>
                                             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                 {info.icon} {info.label}
                                             </span>
                                         </td>
-                                        <td style={{ padding: '14px 16px', fontWeight: 600, color: 'var(--color-success)' }}>
+                                        <td style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--color-success)' }}>
                                             {formatCurrency(o.estimatedProfit)}
                                         </td>
-                                        <td style={{ padding: '14px 16px' }}>
-                                            <Badge variant={o.status === 'activa' ? 'modern-success' : 'modern-warning'}>
-                                                {o.status === 'activa' ? 'Activa' : 'Pausada'}
-                                            </Badge>
-                                        </td>
-                                        <td style={{ padding: '14px 16px' }}>
+                                        <td style={{ padding: '16px 24px' }}>
                                             <div style={{ display: 'flex', gap: '6px' }}>
                                                 <ActionBtn icon={<Eye size={14} />} title="Ver" onClick={() => setDetailOferta(o)} />
-                                                <ActionBtn
-                                                    icon={o.status === 'activa' ? <Pause size={14} /> : <Play size={14} />}
-                                                    title={o.status === 'activa' ? 'Pausar' : 'Reanudar'}
-                                                    onClick={() => handleToggleStatus(o.id)}
-                                                />
-                                                <ActionBtn icon={<Trash2 size={14} />} title="Eliminar" onClick={() => checkDelete(o.id)} danger />
+                                                <ActionBtn icon={<Copy size={14} />} title="Duplicar" onClick={() => handleDuplicate(o)} />
+                                                {(user?.rol === 'admin' || user?.rol === 'superadmin' || user?.plan?.limits?.can_delete_offers) && (
+                                                    <ActionBtn icon={<Trash2 size={14} />} title="Eliminar" onClick={() => checkDelete(o.id)} danger />
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -213,7 +285,7 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </Card>
 
             {filtered.length === 0 && ofertas.length > 0 && (
                 <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
@@ -226,7 +298,6 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                 <OfertaDetailPanel
                     oferta={detailOferta}
                     onClose={() => setDetailOferta(null)}
-                    onToggleStatus={handleToggleStatus}
                     onDelete={(id: string) => {
                         setDetailOferta(null);
                         setDeleteConfirm(id);

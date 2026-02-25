@@ -9,6 +9,8 @@ export interface User {
     pais?: string;
     planId?: string;
     plan?: {
+        id: string;
+        slug: string;
         name: string;
         limits: {
             stores: number;
@@ -24,7 +26,10 @@ export interface User {
             [key: string]: number | boolean | undefined;
         };
     };
-    estadoSuscripcion?: 'activa' | 'cancelada' | 'suspendida' | 'trial' | 'inactiva';
+    estadoSuscripcion?: 'activa' | 'cancelada' | 'suspendida' | 'trial' | 'inactiva' | 'pendiente';
+    fechaVencimiento?: string;
+    plan_precio_pagado?: number;
+    plan_periodo?: 'monthly' | 'semiannual';
     emailVerificado: boolean;
     twoFactorEnabled: boolean;
     rol?: 'cliente' | 'lider' | 'admin' | 'superadmin';
@@ -89,6 +94,7 @@ export interface AuthResponse {
         sessionId?: string;
     };
     error?: string;
+    mensaje?: string;
 }
 
 export interface AuthState {
@@ -106,6 +112,8 @@ export interface AuthState {
     requestPasswordReset: (data: PasswordResetRequest) => Promise<boolean>;
     updatePassword: (newPassword: string) => Promise<boolean>;
     updateEmail: (newEmail: string) => Promise<boolean>;
+    requestEmailChange: (newEmail: string) => Promise<{ success: boolean; error?: string }>;
+    verifyEmailChange: (code: string) => Promise<boolean>;
     updateProfile: (userData: Partial<User>) => Promise<boolean>;
     request2FA: () => Promise<{ success: boolean; error?: string }>;
     resend2FACode: () => Promise<boolean>;

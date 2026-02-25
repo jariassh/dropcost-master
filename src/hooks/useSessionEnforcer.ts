@@ -49,7 +49,7 @@ export function useSessionEnforcer() {
 
                          // Si el token cambió en la BD y es diferente al nuestro -> Bye bye
                          if (newSessionToken && localToken && newSessionToken !== localToken) {
-                             console.log("Session token mismatch detected via Realtime. Logging out.");
+                             // console.log("Session token mismatch detected via Realtime. Logging out.");
                              handleForceLogout();
                          }
                     }

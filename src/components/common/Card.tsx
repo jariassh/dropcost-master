@@ -1,15 +1,21 @@
-import type { HTMLAttributes } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
     hoverable?: boolean;
     noPadding?: boolean;
     title?: string;
+    icon?: ReactNode;
+    headerAction?: ReactNode;
+    description?: string | ReactNode;
 }
 
 export function Card({
     hoverable = false,
     noPadding = false,
     title,
+    description,
+    icon,
+    headerAction,
     children,
     className = '',
     style,
@@ -47,16 +53,54 @@ export function Card({
                 <div style={{
                     borderBottom: '1px solid var(--border-color)',
                     paddingBottom: '16px',
-                    marginBottom: noPadding ? '16px' : '0'
+                    marginBottom: noPadding ? '16px' : '0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px'
                 }}>
-                    <h3 style={{
-                        fontSize: '16px',
-                        fontWeight: 700,
-                        color: 'var(--text-primary)',
-                        margin: 0
-                    }}>
-                        {title}
-                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        {icon && (
+                            <div style={{
+                                padding: '8px',
+                                backgroundColor: 'var(--bg-secondary)',
+                                borderRadius: '10px',
+                                border: '1px solid var(--border-color)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'var(--color-primary)'
+                            }}>
+                                {icon}
+                            </div>
+                        )}
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <h3 style={{
+                                fontSize: '16px',
+                                fontWeight: 700,
+                                color: 'var(--text-primary)',
+                                margin: 0
+                            }}>
+                                {title}
+                            </h3>
+                            {description && (
+                                <p style={{
+                                    fontSize: '12px',
+                                    color: 'var(--text-tertiary)',
+                                    margin: '4px 0 0',
+                                    fontWeight: 400,
+                                    lineHeight: '1.4'
+                                }}>
+                                    {description}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                    {headerAction && (
+                        <div>
+                            {headerAction}
+                        </div>
+                    )}
                 </div>
             )}
             {children}

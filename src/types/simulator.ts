@@ -39,6 +39,8 @@ export interface SimulatorResults {
     costBreakdown: CostBreakdown;
     /** Effectiveness funnel data */
     effectivenessFunnel: EffectivenessFunnel;
+    /** Manual price override used */
+    manualPrice?: number;
 }
 
 /** Detailed cost breakdown for the price */
@@ -89,23 +91,36 @@ export interface VolumeTableRow {
     totalProfit: number;
 }
 
-/** A saved costeo record */
+/** A saved costeo record from database */
 export interface SavedCosteo {
     id: string;
-    /** Associated store ID */
-    storeId: string;
-    /** Product name */
-    productName: string;
-    /** Meta campaign ID (optional) */
-    metaCampaignId?: string;
-    /** All input parameters */
-    inputs: SimulatorInputs;
-    /** Calculated results */
-    results: SimulatorResults;
-    /** Volume strategy (if enabled) */
-    volumeStrategy?: VolumeStrategy;
-    /** Creation date ISO string */
-    createdAt: string;
-    /** Last update date ISO string */
-    updatedAt: string;
+    usuario_id: string;
+    tienda_id: string;
+    
+    nombre_producto: string;
+    meta_campaign_id?: string;
+    
+    // Parámetros de entrada (opcionales para estado 'vacio')
+    costo_producto?: number;
+    costo_flete?: number;
+    gastos_adicionales?: number;
+    cpa?: number;
+    margen?: number;
+    devoluciones?: number;
+    comision_recaudo_porcentaje?: number;
+    cancelacion_pre_envio_porcentaje?: number;
+    
+    // Resultados
+    precio_final?: number;
+    utilidad_neta?: number;
+    
+    estado: 'vacio' | 'guardado';
+    
+    // UI related or complex objects (we can store them as JSONB in DB or map them)
+    results_json?: SimulatorResults;
+    inputs_json?: SimulatorInputs;
+    volume_strategy?: VolumeStrategy;
+    
+    created_at: string;
+    updated_at: string;
 }

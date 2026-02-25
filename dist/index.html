@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <!-- Fast Favicon Load: Lee caché antes de que cargue React -->
+  <script>
+    (function () {
+      try {
+        const cache = localStorage.getItem('dc_global_config_cache');
+        if (cache) {
+          const config = JSON.parse(cache);
+          if (config.favicon_url) {
+            const link = document.createElement('link');
+            link.rel = 'icon';
+            link.href = config.favicon_url;
+            document.head.appendChild(link);
+          }
+        }
+      } catch (e) { }
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Calcula costos, márgenes y CPA en tiempo real. La herramienta #1 para optimizar tu dropshipping en LATAM. Acceso gratuito." />
+
+  <!-- SEO & Social Media Fallback -->
+  <meta property="og:title" content="DropCost Master - Calculadora de Costos para Dropshipping" />
+  <meta property="og:description"
+    content="Calcula costos, márgenes y CPA en tiempo real. La herramienta #1 para optimizar tu dropshipping en LATAM. Acceso gratuito." />
+  <meta property="og:image"
+    content="https://wauqudcethbrebrdacqi.supabase.co/storage/v1/object/public/branding/og-image.png" />
+  <meta property="og:url" content="https://dropcost.jariash.com" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <title>DropCost Master - Calculadora de Costos para Dropshipping</title>
+  <script type="module" crossorigin src="/assets/index.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index.css">
+</head>
+
+<body>
+  <div id="root"></div>
+</body>
+
+</html>

@@ -7,6 +7,9 @@ import { Select } from '@/components/common';
 import type { SavedCosteo } from '@/types/simulator';
 import { Link } from 'react-router-dom';
 import { ExternalLink, DollarSign, TrendingUp, Package } from 'lucide-react';
+import { useStoreStore } from '@/store/useStoreStore';
+import { costeoService } from '@/services/costeoService';
+import { useAuthStore } from '@/store/authStore';
 
 interface WizardStep2Props {
     selectedCosteoId: string;
@@ -15,21 +18,21 @@ interface WizardStep2Props {
 
 export function WizardStep2Costeo({ selectedCosteoId, onSelect }: WizardStep2Props) {
     const [costeos, setCosteos] = useState<SavedCosteo[]>([]);
+    const { tiendaActual } = useStoreStore();
+    const { user } = useAuthStore();
 
     useEffect(() => {
-        const stored = localStorage.getItem('dropcost_costeos');
-        if (stored) {
-            setCosteos(JSON.parse(stored));
-        }
-    }, []);
+        if (!tiendaActual?.id || !user?.id) return;
+        costeoService.listCosteos(tiendaActual.id, user.id).then(setCosteos);
+    }, [tiendaActual, user?.id]);
 
     const formatCurrency = (val: number) =>
         '$' + val.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
     const options = costeos.map((c) => ({
         value: c.id,
-        label: c.productName,
-        details: `Precio: ${formatCurrency(c.results.suggestedPrice)} · Ganancia: ${formatCurrency(c.results.netProfitPerSale)}`,
+        label: c.nombre_producto,
+        details: `Precio: ${formatCurrency(c.precio_final || 0)} · Ganancia: ${formatCurrency(c.utilidad_neta || 0)}`,
     }));
 
     const selectedCosteo = costeos.find((c) => c.id === selectedCosteoId);
@@ -64,7 +67,7 @@ export function WizardStep2Costeo({ selectedCosteoId, onSelect }: WizardStep2Pro
                         Primero crea un costeo en el simulador
                     </p>
                     <Link
-                        to="/simulador"
+                        to="/mis-costeos"
                         style={{
                             display: 'inline-flex',
                             alignItems: 'center',
@@ -110,29 +113,29 @@ export function WizardStep2Costeo({ selectedCosteoId, onSelect }: WizardStep2Pro
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                 <DetailItem
                                     icon={<DollarSign size={14} />}
-                                    label="Precio sugerido"
-                                    value={formatCurrency(selectedCosteo.results.suggestedPrice)}
+                                    label="Precio final"
+                                    value={formatCurrency(selectedCosteo.precio_final || 0)}
                                 />
                                 <DetailItem
                                     icon={<TrendingUp size={14} />}
-                                    label="Ganancia/venta"
-                                    value={formatCurrency(selectedCosteo.results.netProfitPerSale)}
+                                    label="Utilidad neta"
+                                    value={formatCurrency(selectedCosteo.utilidad_neta || 0)}
                                     color="var(--color-success)"
                                 />
                                 <DetailItem
                                     icon={<Package size={14} />}
                                     label="Costo producto"
-                                    value={formatCurrency(selectedCosteo.inputs.productCost)}
+                                    value={formatCurrency(selectedCosteo.costo_producto || 0)}
                                 />
                                 <DetailItem
                                     icon={<TrendingUp size={14} />}
-                                    label="Margen"
-                                    value={`${selectedCosteo.inputs.desiredMarginPercent}%`}
+                                    label="Margen deseado"
+                                    value={`${selectedCosteo.margen || 0}%`}
                                 />
                             </div>
-                            {selectedCosteo.metaCampaignId && (
+                            {selectedCosteo.meta_campaign_id && (
                                 <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '12px' }}>
-                                    ID Campaña Meta: {selectedCosteo.metaCampaignId}
+                                    ID Campaña Meta: {selectedCosteo.meta_campaign_id}
                                 </p>
                             )}
                         </div>

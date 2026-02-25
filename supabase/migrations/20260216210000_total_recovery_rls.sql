@@ -18,7 +18,13 @@ DROP POLICY IF EXISTS "Leaders view direct referrals" ON public.referidos_usuari
 DROP POLICY IF EXISTS "Admin full access referidos_lideres" ON public.referidos_lideres;
 DROP POLICY IF EXISTS "Admin full access referidos_usuarios" ON public.referidos_usuarios;
 DROP POLICY IF EXISTS "Admins view all lideres" ON public.referidos_lideres;
-DROP POLICY IF EXISTS "Admins view all referred users" ON public.referidos_usuarios;
+DROP POLICY IF EXISTS "dc_users_self_view" ON public.users;
+DROP POLICY IF EXISTS "dc_users_self_update" ON public.users;
+DROP POLICY IF EXISTS "dc_admin_users_view" ON public.users;
+DROP POLICY IF EXISTS "dc_lideres_self_view" ON public.referidos_lideres;
+DROP POLICY IF EXISTS "dc_referentes_self_view" ON public.referidos_usuarios;
+DROP POLICY IF EXISTS "dc_admin_referral_view" ON public.referidos_lideres;
+DROP POLICY IF EXISTS "dc_admin_referral_users_view" ON public.referidos_usuarios;
 
 -- 3. Restore Basic RLS (Safe, Non-recursive)
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -39,7 +45,7 @@ CREATE POLICY "dc_lideres_self_view" ON public.referidos_lideres FOR SELECT USIN
 CREATE POLICY "dc_referentes_self_view" ON public.referidos_usuarios FOR SELECT USING (usuario_id = auth.uid());
 
 -- 4. Clean up the function to make sure it's not used in current policies
-DROP FUNCTION IF EXISTS public.is_admin();
+DROP FUNCTION IF EXISTS public.is_admin() CASCADE;
 
 -- 5. Give Admin power via JWT
 CREATE POLICY "dc_admin_referral_view" ON public.referidos_lideres FOR ALL 

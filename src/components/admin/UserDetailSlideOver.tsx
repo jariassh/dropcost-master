@@ -315,15 +315,20 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                                     <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 500 }}>{user.telefono || 'No registrado'}</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-                                    <Globe size={18} style={{ color: 'var(--text-tertiary)' }} />
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    {countryData ? (
+                                        <img
+                                            src={`https://flagcdn.com/w40/${countryData.codigo_iso_2.toLowerCase()}.png`}
+                                            alt={countryData.nombre_es}
+                                            style={{ width: '22px', height: '15px', borderRadius: '2px', objectFit: 'cover' }}
+                                        />
+                                    ) : (
+                                        <Globe size={18} style={{ color: 'var(--text-tertiary)' }} />
+                                    )}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         {countryData ? (
-                                            <>
-                                                <span style={{ fontSize: '22px' }}>{countryData.bandera}</span>
-                                                <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
-                                                    {countryData.nombre_es}
-                                                </span>
-                                            </>
+                                            <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
+                                                {countryData.nombre_es}
+                                            </span>
                                         ) : (
                                             <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
                                                 {user.pais || 'No registrado'}

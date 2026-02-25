@@ -22,8 +22,8 @@ export function WizardStep4Preview({
     giftConfig,
 }: WizardStep4Props) {
     const strategy = STRATEGIES.find((s) => s.type === strategyType)!;
-    const price = costeo.results.suggestedPrice;
-    const profit = costeo.results.netProfitPerSale;
+    const price = costeo.results_json?.suggestedPrice ?? 0;
+    const profit = costeo.results_json?.netProfitPerSale ?? 0;
 
     const formatCurrency = (val: number) =>
         '$' + val.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -51,7 +51,7 @@ export function WizardStep4Preview({
                     <span style={{ fontSize: '28px' }}>{strategy.icon}</span>
                     <div>
                         <p style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                            {costeo.productName}
+                            {costeo.nombre_producto}
                         </p>
                         <span
                             style={{

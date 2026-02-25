@@ -1,0 +1,29 @@
+-- Migration: Folder support and statuses for Email Templates
+-- Description: Adds columns for hierarchical organization and archiving states.
+
+DO $$ 
+BEGIN
+    -- Add is_folder column
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'email_templates' AND column_name = 'is_folder') THEN
+        ALTER TABLE public.email_templates ADD COLUMN is_folder BOOLEAN DEFAULT false;
+    END IF;
+
+    -- Add parent_id column for folders
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'email_templates' AND column_name = 'parent_id') THEN
+        ALTER TABLE public.email_templates ADD COLUMN parent_id UUID REFERENCES public.email_templates(id) ON DELETE CASCADE;
+    END IF;
+
+    -- Add status column (activo, archivado)
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'email_templates' AND column_name = 'status') THEN
+        ALTER TABLE public.email_templates ADD COLUMN status VARCHAR DEFAULT 'activo' CHECK (status IN ('activo', 'archivado'));
+    END IF;
+
+    -- Add updated_by column
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'email_templates' AND column_name = 'updated_by') THEN
+        ALTER TABLE public.email_templates ADD COLUMN updated_by UUID REFERENCES public.users(id);
+    END IF;
+END $$;
+
+-- Index for folder lookups
+CREATE INDEX IF NOT EXISTS idx_email_templates_parent ON public.email_templates(parent_id);
+CREATE INDEX IF NOT EXISTS idx_email_templates_status ON public.email_templates(status);

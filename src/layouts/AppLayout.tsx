@@ -46,7 +46,7 @@ const SIDEBAR_COLLAPSED = 72;
 
 const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard', active: false }, // Próximamente
-    { to: '/simulador', icon: Calculator, label: 'Simulador', active: true },
+    { to: '/mis-costeos', icon: Calculator, label: 'Mis Costeos', active: true },
     { to: '/ofertas', icon: Gift, label: 'Ofertas Irresistibles', active: true },
     { to: '/referidos', icon: Share2, label: 'Sistema de Referidos', active: true },
     { to: '/billetera', icon: Wallet, label: 'Billetera / Wallet', active: true },
@@ -198,17 +198,27 @@ export function AppLayout() {
                     {/* Módulos Activos */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {navItems.filter(i => i.active).map((item) => {
-                            const isRestricted = !tiendaActual && (item.to === '/simulador' || item.to === '/ofertas');
+                            const isRestrictedByStore = !tiendaActual && (item.to === '/mis-costeos' || item.to === '/ofertas');
+                            const isRestrictedBySubscription = user?.estadoSuscripcion !== 'activa' && item.to !== '/configuracion' && user?.rol !== 'admin' && user?.rol !== 'superadmin';
+                            const isRestricted = isRestrictedByStore || isRestrictedBySubscription;
+
+                            let tooltip = undefined;
+                            if (isRestrictedBySubscription) {
+                                tooltip = "Se requiere una suscripción activa para acceder";
+                            } else if (isRestrictedByStore) {
+                                tooltip = "Selecciona o crea una tienda para acceder";
+                            }
 
                             return (
                                 <SidebarNavItem
                                     key={item.to}
                                     {...item}
                                     collapsed={effectivelyCollapsed}
+                                    isDark={isDark}
                                     end={item.to === '/'}
                                     onClick={() => setMobileOpen(false)}
                                     disabled={isRestricted}
-                                    tooltip={isRestricted ? "Selecciona o crea una tienda para acceder" : undefined}
+                                    tooltip={tooltip}
                                 />
                             );
                         })}
@@ -222,7 +232,7 @@ export function AppLayout() {
                             </span>
                         )}
                         {navItems.filter(i => !i.active).map((item) => (
-                            <SidebarNavItem key={item.to} {...item} collapsed={effectivelyCollapsed} disabled onClick={() => setMobileOpen(false)} />
+                            <SidebarNavItem key={item.to} {...item} collapsed={effectivelyCollapsed} isDark={isDark} disabled onClick={() => setMobileOpen(false)} />
                         ))}
                     </div>
 
@@ -232,10 +242,11 @@ export function AppLayout() {
                             <SidebarNavItem
                                 {...adminLink}
                                 collapsed={effectivelyCollapsed}
+                                isDark={isDark}
                                 onClick={() => setMobileOpen(false)}
                                 style={{
-                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                    color: '#EF4444'
+                                    backgroundColor: 'color-mix(in srgb, var(--color-admin-panel-link) 10%, transparent)',
+                                    color: 'var(--color-admin-panel-link)'
                                 }}
                             />
                         </div>
@@ -261,6 +272,7 @@ export function AppLayout() {
                     minWidth: 0,
                     marginLeft: 'var(--sidebar-width, 0px)',
                     transition: 'margin-left 300ms ease',
+                    backgroundColor: 'var(--bg-primary)',
                 }}
                 className="max-lg:!ml-0"
             >
@@ -403,14 +415,18 @@ export function AppLayout() {
                                                     fontSize: '11px',
                                                     fontWeight: 700,
                                                     color: '#fff',
-                                                    background: 'linear-gradient(135deg, #0066FF, #003D99)',
+                                                    background: user?.rol === 'superadmin'
+                                                        ? 'linear-gradient(135deg, #4338CA, #312E81)'
+                                                        : 'linear-gradient(135deg, #0066FF, #003D99)',
                                                     padding: '4px 14px',
                                                     borderRadius: '20px',
                                                     letterSpacing: '0.05em',
                                                     textTransform: 'uppercase',
                                                 }}
                                             >
-                                                {user?.plan?.name || (user?.planId === 'plan_free' ? 'Plan Gratis' : user?.planId === 'plan_pro' ? 'Plan Pro' : user?.planId === 'plan_enterprise' ? 'Plan Enterprise' : 'Plan Básico')}
+                                                {user?.rol && user.rol !== 'cliente'
+                                                    ? (user.rol === 'superadmin' ? 'Superadmin' : user.rol === 'lider' ? 'Líder ⭐' : user.rol.toUpperCase())
+                                                    : (user?.plan?.name || 'Plan Gratis')}
                                             </span>
                                         </div>
 
@@ -424,7 +440,14 @@ export function AppLayout() {
                                             <DropdownItem
                                                 icon={<Wallet size={17} />}
                                                 label="Mi Billetera"
-                                                onClick={() => { setUserMenuOpen(false); navigate('/billetera'); }}
+                                                onClick={() => {
+                                                    if (user?.estadoSuscripcion !== 'activa' && user?.rol !== 'admin' && user?.rol !== 'superadmin') {
+                                                        return;
+                                                    }
+                                                    setUserMenuOpen(false);
+                                                    navigate('/billetera');
+                                                }}
+                                                disabled={user?.estadoSuscripcion !== 'activa' && user?.rol !== 'admin' && user?.rol !== 'superadmin'}
                                             />
                                             <DropdownItem
                                                 icon={<LogOut size={17} />}
@@ -493,22 +516,25 @@ function HeaderButton({
 }
 
 function DropdownItem({
-    icon, label, onClick, danger = false,
+    icon, label, onClick, danger = false, disabled = false,
 }: {
-    icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean;
+    icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean; disabled?: boolean;
 }) {
     return (
         <button
             onClick={onClick}
+            disabled={disabled}
             style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
                 padding: '11px 14px', fontSize: '14px', fontWeight: 500,
                 color: danger ? 'var(--color-error)' : 'var(--text-primary)',
                 background: 'none', border: 'none', borderRadius: '10px',
-                cursor: 'pointer', transition: 'background-color 150ms',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                transition: 'background-color 150ms',
+                opacity: disabled ? 0.4 : 1,
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+            onMouseEnter={(e) => { if (!disabled) e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'; }}
+            onMouseLeave={(e) => { if (!disabled) e.currentTarget.style.backgroundColor = 'transparent'; }}
         >
             {icon}
             {label}
@@ -521,6 +547,7 @@ interface SidebarNavItemProps {
     icon: React.ComponentType<{ size: number; style?: React.CSSProperties }>;
     label: string;
     collapsed: boolean;
+    isDark: boolean;
     end?: boolean;
     onClick?: () => void;
     disabled?: boolean;
@@ -533,6 +560,7 @@ function SidebarNavItem({
     icon: Icon,
     label,
     collapsed,
+    isDark,
     end,
     onClick,
     disabled,

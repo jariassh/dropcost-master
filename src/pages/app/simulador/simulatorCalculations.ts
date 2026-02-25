@@ -15,15 +15,11 @@
 
 import type { SimulatorInputs, SimulatorResults, CostBreakdown, EffectivenessFunnel, VolumeTableRow } from '@/types/simulator';
 
-/** Round to nearest 100 COP */
-export function roundTo100(value: number): number {
-    return Math.round(value / 100) * 100;
-}
-
-/** Banker's rounding (ROUND_HALF_UP) to 2 decimal places. Used for internal precision before final round. */
+/** Banker's rounding (ROUND_HALF_UP) to 2 decimal places. */
 export function roundCurrency(value: number): number {
     return Math.round((value + Number.EPSILON) * 100) / 100;
 }
+
 
 /** Calculate the suggested selling price and all derived metrics. */
 export function calculateSuggestedPrice(inputs: SimulatorInputs, manualPrice: number | null = null): SimulatorResults {
@@ -70,7 +66,7 @@ export function calculateSuggestedPrice(inputs: SimulatorInputs, manualPrice: nu
     let netProfitPerSale: number;
 
     const rawSuggestedPrice = denominator > 0 ? totalFixedCost / denominator : 0;
-    const suggestedPrice = roundTo100(rawSuggestedPrice);
+    const suggestedPrice = roundCurrency(rawSuggestedPrice);
 
     if (manualPrice !== null && manualPrice > 0) {
         finalPrice = manualPrice;
@@ -90,14 +86,14 @@ export function calculateSuggestedPrice(inputs: SimulatorInputs, manualPrice: nu
 
     // ─── Cost breakdown (per effective sale) ───
     const costBreakdown: CostBreakdown = {
-        productCost: Math.round(productCostPerSale),
-        shippingCost: Math.round(freightCostPerSale),
-        collectionCommission: Math.round(commissionPerSale),
-        returnCost: Math.round(returnLossPerSale),
-        otherExpenses: Math.round(otherCostPerSale),
-        cpa: Math.round(cpaCostPerSale),
-        netMargin: Math.round(netProfitPerSale),
-        totalPrice: Math.round(finalPrice),
+        productCost: roundCurrency(productCostPerSale),
+        shippingCost: roundCurrency(freightCostPerSale),
+        collectionCommission: roundCurrency(commissionPerSale),
+        returnCost: roundCurrency(returnLossPerSale),
+        otherExpenses: roundCurrency(otherCostPerSale),
+        cpa: roundCurrency(cpaCostPerSale),
+        netMargin: roundCurrency(netProfitPerSale),
+        totalPrice: roundCurrency(finalPrice),
     };
 
     // ─── Embudo de efectividad (base 100 pedidos) ───
@@ -115,7 +111,7 @@ export function calculateSuggestedPrice(inputs: SimulatorInputs, manualPrice: nu
     return {
         suggestedPrice: finalPrice,
         originalSuggestedPrice: suggestedPrice,
-        netProfitPerSale: Math.round(netProfitPerSale),
+        netProfitPerSale: roundCurrency(netProfitPerSale),
         finalEffectivenessPercent: Math.round(effectivenessRate * 100),
         costBreakdown,
         effectivenessFunnel,
@@ -146,19 +142,19 @@ export function calculateVolumeTable(
         if (qty === 1) {
             rows.push({
                 quantity: 1,
-                totalPrice: roundTo100(suggestedPrice),
-                pricePerUnit: roundTo100(suggestedPrice),
+                totalPrice: roundCurrency(suggestedPrice),
+                pricePerUnit: roundCurrency(suggestedPrice),
                 savingsPerUnit: 0,
-                totalProfit: roundTo100(unit1Profit),
+                totalProfit: roundCurrency(unit1Profit),
             });
         } else {
             const extraUnits = qty - 1;
             // Calculations with raw float first
             const rawTotalPrice = suggestedPrice + additionalUnitPrice * extraUnits;
-            const totalPrice = roundTo100(rawTotalPrice);
+            const totalPrice = roundCurrency(rawTotalPrice);
             
-            const pricePerUnit = roundTo100(totalPrice / qty);
-            const savingsPerUnit = roundTo100(suggestedPrice - pricePerUnit);
+            const pricePerUnit = roundCurrency(totalPrice / qty);
+            const savingsPerUnit = roundCurrency(suggestedPrice - pricePerUnit);
             
             // Profit calculation is tricky when we round the Total Price.
             // Best to reverse calculate profit from the rounded Total Price.
@@ -170,7 +166,7 @@ export function calculateVolumeTable(
             // NewProfit = RoundedTotal - CostBase.
             
             const costBase = rawTotalPrice - (unit1Profit + additionalUnitProfit * extraUnits);
-            const totalProfit = roundTo100(totalPrice - costBase);
+            const totalProfit = roundCurrency(totalPrice - costBase);
 
             rows.push({ quantity: qty, totalPrice, pricePerUnit, savingsPerUnit, totalProfit });
         }

@@ -32,33 +32,46 @@ import {
     MoreVertical,
     FileText,
     Search,
-    Pencil
+    Pencil,
+    Activity,
+    Target,
+    ListChecks,
+    MessageCircle
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useStoreStore } from '@/store/useStoreStore';
 import { Spinner } from '@/components/common/Spinner';
 import { SmartPhoneInput } from '@/components/common/SmartPhoneInput';
-import { useToast, Modal, ConfirmDialog, Button, Badge, SelectPais } from '@/components/common';
+import { useToast, Modal, ConfirmDialog, Button, Badge, SelectPais, Input } from '@/components/common';
 import { CreateStoreModal } from '@/components/layout/CreateStoreModal';
 import type { Tienda } from '@/types/store.types';
 import { cargarPaises, Pais } from '@/services/paisesService';
-import { fetchUserActivityLogs, AuditLog } from '@/services/auditService';
+import { configService, GlobalConfig } from '@/services/configService';
+import { paymentService } from '@/services/paymentService';
+import { differenceInDays, parseISO } from 'date-fns';
 import {
     Clock,
     Zap,
     CreditCard as CreditCardIcon,
     UserCheck,
     Key as KeyIcon,
-    AlertTriangle
+    AlertTriangle,
+    ShieldCheck,
+    Star,
+    ArrowUpCircle,
+    ArrowRight,
+    CreditCard
 } from 'lucide-react';
 
-type TabType = 'perfil' | 'seguridad' | 'notificaciones' | 'actividad' | 'sesiones' | 'tiendas';
+type TabType = 'perfil' | 'membresia' | 'seguridad' | 'notificaciones' | 'sesiones' | 'tiendas';
 
 export function ConfiguracionPage() {
     const {
         user,
         updatePassword,
         updateEmail,
+        requestEmailChange,
+        verifyEmailChange,
         updateProfile,
         request2FA,
         confirm2FA,
@@ -164,9 +177,15 @@ export function ConfiguracionPage() {
     // 2FA Flow
     const [is2FAEnabled, setIs2FAEnabled] = useState(user?.twoFactorEnabled || false);
     const [showActivationConfirm, setShowActivationConfirm] = useState(false);
+    const [showDeactivationConfirm, setShowDeactivationConfirm] = useState(false);
     const [showOTPModal, setShowOTPModal] = useState(false);
     const [otpCode, setOtpCode] = useState('');
     const [isVerifying, setIsVerifying] = useState(false);
+
+    // Email Change Flow
+    const [showEmailOTPModal, setShowEmailOTPModal] = useState(false);
+    const [isRequestingEmailChange, setIsRequestingEmailChange] = useState(false);
+    const [isVerifyingEmailChange, setIsVerifyingEmailChange] = useState(false);
 
     useEffect(() => {
         setIs2FAEnabled(user?.twoFactorEnabled || false);
@@ -188,9 +207,6 @@ export function ConfiguracionPage() {
     });
     const [isSavingNotifs, setIsSavingNotifs] = useState(false);
 
-    // Actividad state
-    const [activityLogs, setActivityLogs] = useState<AuditLog[]>([]);
-    const [isLoadingLogs, setIsLoadingLogs] = useState(false);
 
     // Fetch stores on mount/tab change
     useEffect(() => {
@@ -217,15 +233,31 @@ export function ConfiguracionPage() {
         cargarPaises().then(setAllCountries);
     }, []);
 
+    // Global Config for Support
+    const [globalConfig, setGlobalConfig] = useState<GlobalConfig | null>(null);
+
     useEffect(() => {
-        if (activeTab === 'actividad') {
-            setIsLoadingLogs(true);
-            fetchUserActivityLogs(30).then(logs => {
-                setActivityLogs(logs);
-                setIsLoadingLogs(false);
-            });
+        configService.getConfig().then(setGlobalConfig);
+    }, []);
+
+
+    const [isRenewing, setIsRenewing] = useState(false);
+
+    const handleRenew = async () => {
+        if (!user?.planId) return;
+        setIsRenewing(true);
+        try {
+            // Se asume pago mensual para renovación rápida
+            const initPoint = await paymentService.createCheckoutSession(user.planId, 'monthly');
+            if (initPoint) {
+                window.location.href = initPoint;
+            }
+        } catch (error: any) {
+            toast.error('Error al iniciar pago', error.message || 'No se pudo generar el link de renovación.');
+        } finally {
+            setIsRenewing(false);
         }
-    }, [activeTab]);
+    };
 
     const executeDeleteTienda = async () => {
         if (!deleteTiendaConfirm) return;
@@ -245,10 +277,17 @@ export function ConfiguracionPage() {
         if (!is2FAEnabled) {
             setShowActivationConfirm(true);
         } else {
-            const success = await disable2FA();
-            if (success) {
-                toast.info('Seguridad Actualizada', 'La autenticación de dos factores ha sido desactivada.');
-            }
+            setShowDeactivationConfirm(true);
+        }
+    };
+
+    const executeDisable2FA = async () => {
+        const success = await disable2FA();
+        if (success) {
+            toast.info('Seguridad Actualizada', 'La autenticación de dos factores ha sido desactivada.');
+            setShowDeactivationConfirm(false);
+        } else {
+            toast.error('Error', 'No se pudo desactivar el 2FA. Reintenta luego.');
         }
     };
 
@@ -298,6 +337,8 @@ export function ConfiguracionPage() {
 
 
     const handleUpdateEmail = async () => {
+        // console.log('[ConfiguracionPage] Click en Solicitar Cambio de Email. Nuevo:', emailData.newEmail);
+
         if (!emailData.newEmail || !emailData.newEmail.includes('@')) {
             toast.warning('Email inválido', 'Por favor ingresa un correo electrónico válido.');
             return;
@@ -307,15 +348,37 @@ export function ConfiguracionPage() {
             return;
         }
 
-        setIsUpdatingEmail(true);
-        const success = await updateEmail(emailData.newEmail);
-        setIsUpdatingEmail(false);
+        setIsRequestingEmailChange(true);
+        // console.log('[ConfiguracionPage] Llamando a requestEmailChange desde el store...');
+        const result = await requestEmailChange(emailData.newEmail);
+        setIsRequestingEmailChange(false);
+
+        // console.log('[ConfiguracionPage] Resultado de requestEmailChange:', result);
+
+        if (result.success) {
+            setOtpCode('');
+            setShowEmailOTPModal(true);
+            toast.success('Código enviado', `Hemos enviado un código de verificación a ${emailData.newEmail}`);
+        } else {
+            toast.error('Error', result.error || 'No pudimos procesar la solicitud de cambio de email.');
+        }
+    };
+
+    const handleVerifyEmailChange = async () => {
+        if (otpCode.length < 6) return;
+
+        setIsVerifyingEmailChange(true);
+        const success = await verifyEmailChange(otpCode);
+        setIsVerifyingEmailChange(false);
 
         if (success) {
+            setShowEmailOTPModal(false);
+            setOtpCode('');
             setEmailData({ newEmail: '' });
-            toast.success('Verificación enviada', 'Hemos enviado un link de confirmación a tu nuevo correo. El cambio se aplicará al confirmar.');
+            toast.success('Email actualizado', 'Tu correo ha sido cambiado correctamente.');
         } else {
-            toast.error('Error al actualizar', 'No pudimos procesar la solicitud de cambio de email.');
+            const errorMsg = useAuthStore.getState().error || 'Código incorrecto o expirado';
+            toast.error('Error de verificación', errorMsg);
         }
     };
 
@@ -374,10 +437,10 @@ export function ConfiguracionPage() {
                     label="Sesiones"
                 />
                 <TabButton
-                    active={activeTab === 'actividad'}
-                    onClick={() => setActiveTab('actividad')}
-                    icon={<Clock size={18} />}
-                    label="Actividad"
+                    active={activeTab === 'membresia'}
+                    onClick={() => setActiveTab('membresia')}
+                    icon={<Zap size={18} />}
+                    label="Membresía"
                 />
                 <TabButton
                     active={activeTab === 'tiendas'}
@@ -399,20 +462,16 @@ export function ConfiguracionPage() {
                     <Card>
                         <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 24px' }}>Información Personal</h3>
                         <div style={{ gap: '20px', marginBottom: '20px' }} className="dc-config-inner-grid">
-                            <InputGroup label="Nombres">
-                                <input
-                                    className="dc-input"
-                                    value={profileData.nombres}
-                                    onChange={e => setProfileData({ ...profileData, nombres: e.target.value })}
-                                />
-                            </InputGroup>
-                            <InputGroup label="Apellidos">
-                                <input
-                                    className="dc-input"
-                                    value={profileData.apellidos}
-                                    onChange={e => setProfileData({ ...profileData, apellidos: e.target.value })}
-                                />
-                            </InputGroup>
+                            <Input
+                                label="Nombres"
+                                value={profileData.nombres}
+                                onChange={e => setProfileData({ ...profileData, nombres: e.target.value })}
+                            />
+                            <Input
+                                label="Apellidos"
+                                value={profileData.apellidos}
+                                onChange={e => setProfileData({ ...profileData, apellidos: e.target.value })}
+                            />
                         </div>
 
                         <div style={{ marginBottom: '20px' }}>
@@ -431,25 +490,20 @@ export function ConfiguracionPage() {
                                 value={profileData.pais}
                                 onChange={(iso) => setProfileData({ ...profileData, pais: iso })}
                                 showMoneda={false}
+                                disabled={!!user?.pais}
+                                helperText={user?.pais ? "El país no se puede cambiar después del registro por motivos de facturación." : undefined}
                             />
                         </div>
 
                         <div style={{ marginBottom: '24px' }}>
-                            <InputGroup label="Código de Referido Personal">
-                                <div style={{ position: 'relative' }}>
-                                    <Share2 size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
-                                    <input
-                                        className="dc-input"
-                                        style={{ paddingLeft: '36px' }}
-                                        placeholder={`Ej: ${suggestedSlug}`}
-                                        value={profileData.codigoReferido}
-                                        onChange={e => setProfileData({ ...profileData, codigoReferido: e.target.value.toLowerCase().replace(/\s/g, '') })}
-                                    />
-                                </div>
-                                <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: '4px 0 0 4px' }}>
-                                    Este será tu link: {window.location.origin}/registro?ref={profileData.codigoReferido || suggestedSlug}
-                                </p>
-                            </InputGroup>
+                            <Input
+                                label="Código de Referido Personal"
+                                leftIcon={<Share2 size={16} />}
+                                placeholder={`Ej: ${suggestedSlug}`}
+                                value={profileData.codigoReferido}
+                                onChange={e => setProfileData({ ...profileData, codigoReferido: e.target.value.toLowerCase().replace(/\s/g, '') })}
+                                helperText={`Este será tu link: ${window.location.origin}/registro?ref=${profileData.codigoReferido || suggestedSlug}`}
+                            />
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
@@ -530,6 +584,163 @@ export function ConfiguracionPage() {
                 </div>
             )}
 
+            {/* Contenido de Membresía */}
+            {activeTab === 'membresia' && (
+                <div style={{ animation: 'fadeIn 0.3s' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '32px' }} className="dc-config-grid">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                            {user?.estadoSuscripcion === 'activa' && (
+                                <Card>
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px' }}>
+                                        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                                            <div style={{
+                                                width: '56px', height: '56px', borderRadius: '16px',
+                                                backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                color: 'var(--color-primary)'
+                                            }}>
+                                                <Zap size={28} />
+                                            </div>
+                                            <div>
+                                                <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>
+                                                    {user?.plan?.name?.toLowerCase().includes('suscripción')
+                                                        ? user.plan.name
+                                                        : `Plan ${user?.plan?.name || 'Starter'}`}
+                                                </h3>
+                                                <p style={{ margin: '4px 0 0', fontSize: '14px', color: 'var(--text-tertiary)' }}>
+                                                    Estado: <Badge variant={user?.estadoSuscripcion === 'activa' ? 'success' : 'warning'}>
+                                                        {user?.estadoSuscripcion?.toUpperCase() || 'ACTIVA'}
+                                                    </Badge>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {user?.planId !== 'plan_enterprise' && (
+                                            <Button
+                                                variant="primary"
+                                                onClick={() => navigate('/pricing')}
+                                                style={{ gap: '8px' }}
+                                            >
+                                                <ArrowUpCircle size={18} />
+                                                Mejorar Plan
+                                            </Button>
+                                        )}
+                                    </div>
+
+                                    <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
+                                        <h4 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '16px', color: 'var(--text-primary)' }}> BENEFICIOS DE TU PLAN</h4>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                            <FeatureItem label={`Máximo ${user?.plan?.limits?.stores} tiendas`} active />
+                                            <FeatureItem label={`${user?.plan?.limits?.costeos_limit || 'Ilimitados'} costeos`} active />
+                                            <FeatureItem label={`${user?.plan?.limits?.offers_limit || 'Ilimitadas'} ofertas sugeridas`} active />
+                                            <FeatureItem label="Soporte Prioritario" active={user?.planId !== 'plan_free'} />
+                                            <FeatureItem label="Acceso a Billetera" active={user?.plan?.limits?.access_wallet} />
+                                            <FeatureItem label="Sistema de Referidos" active={user?.plan?.limits?.access_referrals} />
+                                            <FeatureItem label="Duplicado de Costeos" active={user?.plan?.limits?.can_duplicate_costeos} />
+                                            <FeatureItem label="Duplicado de Ofertas" active={!!user?.plan?.limits?.can_duplicate_offers} />
+                                        </div>
+                                    </div>
+                                </Card>
+                            )}
+
+                            {user?.estadoSuscripcion === 'activa' ? (
+                                <Card>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                                        <Clock size={20} color="var(--text-secondary)" />
+                                        <h4 style={{ margin: 0, fontWeight: 700 }}>Vencimiento de Suscripción</h4>
+                                    </div>
+                                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 20px', lineHeight: 1.6 }}>
+                                        Tu suscripción no tiene cobros automáticos. Para mantener tus beneficios activos sin interrupciones, debes realizar el pago manualmente antes del <strong>{user?.fechaVencimiento ? new Date(user.fechaVencimiento).toLocaleDateString() : 'Próximamente'}.</strong> Contamos con un periodo de gracia de 3 días antes de la suspensión automática.
+                                    </p>
+
+                                    {(() => {
+                                        const daysRemaining = user?.fechaVencimiento
+                                            ? differenceInDays(parseISO(user.fechaVencimiento), new Date())
+                                            : 99;
+
+                                        if (daysRemaining <= 3) {
+                                            return (
+                                                <Button
+                                                    variant="primary"
+                                                    fullWidth
+                                                    onClick={handleRenew}
+                                                    isLoading={isRenewing}
+                                                    style={{ gap: '8px', justifyContent: 'center' }}
+                                                >
+                                                    <CreditCardIcon size={18} />
+                                                    Renovar o Pagar Ahora
+                                                </Button>
+                                            );
+                                        }
+                                        return null;
+                                    })()}
+                                </Card>
+                            ) : (
+                                <Card style={{
+                                    border: '1px dashed var(--color-primary)',
+                                    backgroundColor: 'rgba(0, 102, 255, 0.02)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '40px 24px',
+                                    textAlign: 'center'
+                                }}>
+                                    <div style={{
+                                        width: '64px', height: '64px', borderRadius: '50%',
+                                        backgroundColor: 'rgba(0, 102, 255, 0.1)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        color: 'var(--color-primary)', marginBottom: '20px'
+                                    }}>
+                                        <CreditCard size={32} />
+                                    </div>
+                                    <h4 style={{ margin: '0 0 8px', fontWeight: 800, fontSize: '18px', color: 'var(--text-primary)' }}>¡Activa tu Plan Starter hoy!</h4>
+                                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 24px', maxWidth: '300px', lineHeight: 1.5 }}>
+                                        Para comenzar a utilizar todas las herramientas de DropCost Master, necesitas una suscripción activa.
+                                    </p>
+                                    <Button
+                                        variant="primary"
+                                        onClick={() => navigate('/pricing')}
+                                        style={{ gap: '10px', padding: '12px 32px' }}
+                                    >
+                                        Ver Planes Disponibles
+                                        <ArrowRight size={18} />
+                                    </Button>
+                                </Card>
+                            )}
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                            <Card>
+                                <h4 style={{ margin: '0 0 16px', fontWeight: 700, fontSize: '15px' }}>¿Necesitas ayuda?</h4>
+                                <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', lineHeight: 1.6, marginBottom: '20px' }}>
+                                    Si tienes dudas sobre tu facturación o necesitas un plan personalizado para tu cuenta, nuestro equipo está listo para ayudarte por estos medios:
+                                </p>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <Button
+                                        variant="secondary"
+                                        fullWidth
+                                        onClick={() => window.open(`https://wa.me/${globalConfig?.telefono?.replace(/[^0-9]/g, '')}`, '_blank')}
+                                        style={{ gap: '8px', justifyContent: 'center' }}
+                                    >
+                                        <MessageCircle size={18} />
+                                        WhatsApp Soporte
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        fullWidth
+                                        onClick={() => window.open(`mailto:${globalConfig?.email_contacto}`, '_blank')}
+                                        style={{ gap: '8px', justifyContent: 'center', border: '1px solid var(--border-color)' }}
+                                    >
+                                        <Mail size={18} />
+                                        Enviar Correo
+                                    </Button>
+                                </div>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Contenido de Seguridad */}
             {activeTab === 'seguridad' && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px', animation: 'fadeIn 0.3s' }}>
@@ -556,31 +767,25 @@ export function ConfiguracionPage() {
                             </div>
                         </div>
 
-                        <InputGroup label="Nuevo Correo Electrónico">
-                            <div style={{ position: 'relative' }}>
-                                <RefreshCw size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
-                                <input
-                                    type="email"
-                                    className="dc-input"
-                                    style={{ paddingLeft: '36px' }}
-                                    placeholder="nuevo@ejemplo.com"
-                                    value={emailData.newEmail}
-                                    onChange={e => setEmailData({ newEmail: e.target.value })}
-                                />
-                            </div>
-                        </InputGroup>
+                        <Input
+                            label="Nuevo Correo Electrónico"
+                            leftIcon={<RefreshCw size={16} />}
+                            placeholder="nuevo@ejemplo.com"
+                            value={emailData.newEmail}
+                            onChange={e => setEmailData({ newEmail: e.target.value })}
+                        />
 
                         <button
                             className="dc-button-primary"
                             style={{ marginTop: '24px', width: '100%', gap: '8px', justifyContent: 'center' }}
                             onClick={handleUpdateEmail}
-                            disabled={isUpdatingEmail}
+                            disabled={isRequestingEmailChange || !emailData.newEmail}
                         >
-                            {isUpdatingEmail ? <Spinner size="sm" /> : <Save size={16} />}
+                            {isRequestingEmailChange ? <Spinner size="sm" /> : <Save size={16} />}
                             Solicitar Cambio de Email
                         </button>
                         <p style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-tertiary)', textAlign: 'center', fontStyle: 'italic' }}>
-                            * Se enviará un enlace de verificación a la nueva dirección.
+                            * Se enviará un código de verificación a la nueva dirección.
                         </p>
                     </Card>
 
@@ -600,132 +805,128 @@ export function ConfiguracionPage() {
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <InputGroup label="Contraseña Actual">
-                                <input
-                                    type="password"
-                                    className="dc-input"
-                                    placeholder="••••••••"
-                                    autoComplete="current-password"
-                                    value={passwordData.current}
-                                    onChange={e => setPasswordData({ ...passwordData, current: e.target.value })}
-                                />
-                            </InputGroup>
+                            <Input
+                                label="Contraseña Actual"
+                                type="password"
+                                placeholder="••••••••"
+                                autoComplete="current-password"
+                                value={passwordData.current}
+                                onChange={e => setPasswordData({ ...passwordData, current: e.target.value })}
+                                showPasswordToggle
+                            />
 
-                            <InputGroup label="Nueva Contraseña">
-                                <div style={{ position: 'relative' }}>
-                                    <input
-                                        type="password"
-                                        className="dc-input"
-                                        placeholder="Mínimo 8 caracteres"
-                                        autoComplete="new-password"
-                                        value={passwordData.new}
-                                        onChange={e => setPasswordData({ ...passwordData, new: e.target.value })}
-                                        onFocus={() => {
-                                            if (!passwordData.new && !suggestedPassword) {
-                                                generatePassword();
-                                            }
+                            <Input
+                                label="Nueva Contraseña"
+                                type="password"
+                                placeholder="Mínimo 8 caracteres"
+                                autoComplete="new-password"
+                                value={passwordData.new}
+                                onChange={e => setPasswordData({ ...passwordData, new: e.target.value })}
+                                showPasswordToggle
+                                onFocus={() => {
+                                    if (!passwordData.new && !suggestedPassword) {
+                                        generatePassword();
+                                    }
+                                }}
+                                onBlur={() => {
+                                    // Delay para permitir clics en los botones de la sugerencia
+                                    setTimeout(() => setSuggestedPassword(''), 200);
+                                }}
+                            >
+                                {/* Popover de Sugerencia Flotante */}
+                                {suggestedPassword && (
+                                    <div
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        style={{
+                                            position: 'absolute',
+                                            bottom: 'calc(100% - 10px)',
+                                            right: '0',
+                                            width: '280px',
+                                            zIndex: 100,
+                                            padding: '12px',
+                                            backgroundColor: 'var(--card-bg)',
+                                            borderRadius: '12px',
+                                            border: '1.5px solid var(--color-primary-light)',
+                                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                                            animation: 'scaleIn 200ms ease-out',
                                         }}
-                                        onBlur={() => {
-                                            // Delay para permitir clics en los botones de la sugerencia
-                                            setTimeout(() => setSuggestedPassword(''), 200);
-                                        }}
-                                    />
+                                    >
+                                        {/* Triángulo del tooltip */}
+                                        <div style={{
+                                            position: 'absolute',
+                                            bottom: '-6px',
+                                            right: '20px',
+                                            width: '12px',
+                                            height: '12px',
+                                            backgroundColor: 'var(--card-bg)',
+                                            borderRight: '1.5px solid var(--color-primary-light)',
+                                            borderBottom: '1.5px solid var(--color-primary-light)',
+                                            transform: 'rotate(45deg)',
+                                            zIndex: -1
+                                        }} />
 
-                                    {/* Popover de Sugerencia Flotante */}
-                                    {suggestedPassword && (
-                                        <div
-                                            onMouseDown={(e) => e.preventDefault()}
-                                            style={{
-                                                position: 'absolute',
-                                                bottom: 'calc(100% - 10px)',
-                                                right: '0',
-                                                width: '280px',
-                                                zIndex: 100,
-                                                padding: '12px',
-                                                backgroundColor: 'var(--card-bg)',
-                                                borderRadius: '12px',
-                                                border: '1.5px solid var(--color-primary-light)',
-                                                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-                                                animation: 'scaleIn 200ms ease-out',
-                                            }}
-                                        >
-                                            {/* Triángulo del tooltip */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                                             <div style={{
-                                                position: 'absolute',
-                                                bottom: '-6px',
-                                                right: '20px',
-                                                width: '12px',
-                                                height: '12px',
-                                                backgroundColor: 'var(--card-bg)',
-                                                borderRight: '1.5px solid var(--color-primary-light)',
-                                                borderBottom: '1.5px solid var(--color-primary-light)',
-                                                transform: 'rotate(45deg)',
-                                                zIndex: -1
-                                            }} />
-
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                                <div style={{
-                                                    padding: '5px',
-                                                    backgroundColor: 'var(--color-primary-light)',
-                                                    borderRadius: '6px',
-                                                    color: 'var(--color-primary)',
-                                                    display: 'flex'
-                                                }}>
-                                                    <Sparkles size={14} />
-                                                </div>
-                                                <p style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: 700, margin: 0 }}>
-                                                    Contraseña Sugerida
-                                                </p>
+                                                padding: '5px',
+                                                backgroundColor: 'var(--color-primary-light)',
+                                                borderRadius: '6px',
+                                                color: 'var(--color-primary)',
+                                                display: 'flex'
+                                            }}>
+                                                <Sparkles size={14} />
                                             </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                                                <code style={{
-                                                    flex: 1,
-                                                    padding: '8px',
-                                                    backgroundColor: 'var(--bg-primary)',
-                                                    borderRadius: '8px',
-                                                    fontSize: '13px',
-                                                    color: 'var(--color-primary)',
-                                                    fontWeight: 700,
-                                                    textAlign: 'center',
-                                                    border: '1px solid var(--border-color)',
-                                                    letterSpacing: '0.5px'
-                                                }}>
-                                                    {suggestedPassword}
-                                                </code>
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        generatePassword();
-                                                    }}
-                                                    style={{
-                                                        padding: '8px',
-                                                        backgroundColor: 'var(--bg-secondary)',
-                                                        border: '1px solid var(--border-color)',
-                                                        borderRadius: '8px',
-                                                        color: 'var(--text-secondary)',
-                                                        cursor: 'pointer',
-                                                        display: 'flex',
-                                                        transition: 'all 200ms'
-                                                    }}
-                                                >
-                                                    <RefreshCw size={14} />
-                                                </button>
-                                            </div>
-
-                                            <div style={{ display: 'flex', gap: '6px' }}>
-                                                <Button size="sm" fullWidth onClick={useSuggested} style={{ height: '32px', fontSize: '12px' }}>
-                                                    Usar
-                                                </Button>
-                                                <Button size="sm" variant="secondary" fullWidth onClick={() => setSuggestedPassword('')} style={{ height: '32px', fontSize: '12px' }}>
-                                                    Omitir
-                                                </Button>
-                                            </div>
+                                            <p style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: 700, margin: 0 }}>
+                                                Contraseña Sugerida
+                                            </p>
                                         </div>
-                                    )}
-                                </div>
-                            </InputGroup>
+
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                                            <code style={{
+                                                flex: 1,
+                                                padding: '8px',
+                                                backgroundColor: 'var(--bg-primary)',
+                                                borderRadius: '8px',
+                                                fontSize: '13px',
+                                                color: 'var(--color-primary)',
+                                                fontWeight: 700,
+                                                textAlign: 'center',
+                                                border: '1px solid var(--border-color)',
+                                                letterSpacing: '0.5px'
+                                            }}>
+                                                {suggestedPassword}
+                                            </code>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    generatePassword();
+                                                }}
+                                                style={{
+                                                    padding: '8px',
+                                                    backgroundColor: 'var(--bg-secondary)',
+                                                    border: '1px solid var(--border-color)',
+                                                    borderRadius: '8px',
+                                                    color: 'var(--text-secondary)',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    transition: 'all 200ms'
+                                                }}
+                                            >
+                                                <RefreshCw size={14} />
+                                            </button>
+                                        </div>
+
+                                        <div style={{ display: 'flex', gap: '6px' }}>
+                                            <Button size="sm" fullWidth onClick={useSuggested} style={{ height: '32px', fontSize: '12px' }}>
+                                                Usar
+                                            </Button>
+                                            <Button size="sm" variant="secondary" fullWidth onClick={() => setSuggestedPassword('')} style={{ height: '32px', fontSize: '12px' }}>
+                                                Omitir
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </Input>
 
                             {passwordData.new.length > 0 && !suggestedPassword && (
                                 <div style={{ marginTop: '8px', animation: 'fadeIn 200ms ease-out' }}>
@@ -752,16 +953,15 @@ export function ConfiguracionPage() {
                                 </div>
                             )}
 
-                            <InputGroup label="Confirmar Nueva Contraseña">
-                                <input
-                                    type="password"
-                                    className="dc-input"
-                                    placeholder="••••••••"
-                                    autoComplete="new-password"
-                                    value={passwordData.confirm}
-                                    onChange={e => setPasswordData({ ...passwordData, confirm: e.target.value })}
-                                />
-                            </InputGroup>
+                            <Input
+                                label="Confirmar Nueva Contraseña"
+                                type="password"
+                                placeholder="••••••••"
+                                autoComplete="new-password"
+                                value={passwordData.confirm}
+                                onChange={e => setPasswordData({ ...passwordData, confirm: e.target.value })}
+                                showPasswordToggle
+                            />
                         </div>
 
                         <button
@@ -796,7 +996,7 @@ export function ConfiguracionPage() {
                                     <div style={{ maxWidth: '600px' }}>
                                         <h4 style={{ margin: '0 0 4px', fontWeight: 700, fontSize: '16px' }}>Autenticación de Dos Factores (2FA)</h4>
                                         <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)', lineHeight: 1.5 }}>
-                                            Recomendado para máxima seguridad. Cada inicio de sesión requerirá un código enviado a tu email.
+                                            Recomendado para máxima seguridad. Cada inicio de sesión requerirá un código enviado a tu email (válido por 5 minutos).
                                         </p>
                                     </div>
                                 </div>
@@ -826,10 +1026,9 @@ export function ConfiguracionPage() {
                             </div>
                             <h3 style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 12px' }}>Sesión Segura Activa</h3>
                             <p style={{ maxWidth: '480px', margin: '0 auto 24px', fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                                <strong>DropCost Master</strong> utiliza una política de <strong>Sesión Única</strong> para garantizar la máxima seguridad de tu cuenta.
+                                Tu cuenta utiliza <strong>Session Guard</strong>. Por seguridad, si inicias sesión en un nuevo dispositivo, cualquier sesión anterior se cerrará automáticamente.
                                 <br /><br />
-                                Esto significa que al iniciar sesión en un nuevo dispositivo, cualquier sesión anterior se cerrará automáticamente.
-                                Tu cuenta está protegida contra el uso compartido no autorizado.
+                                Esta medida previene el uso no autorizado de tu cuenta. Para una protección total, te recomendamos activar la <strong>Autenticación de Dos Factores (2FA)</strong> en la pestaña de Seguridad.
                             </p>
 
                             <div style={{
@@ -846,156 +1045,213 @@ export function ConfiguracionPage() {
                 </div>
             )}
 
-            {/* Contenido de Mis Tiendas */}
             {activeTab === 'tiendas' && (
                 <div style={{ animation: 'fadeIn 0.3s' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                        <div>
-                            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Gestión de Tiendas</h3>
-                            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                                Administra tus puntos de venta y sus integraciones
-                            </p>
-                        </div>
-                        <button
-                            className="dc-button-primary"
-                            onClick={handleOpenCreateStore}
-                            style={{ gap: '8px' }}
-                        >
-                            <Plus size={16} />
-                            Nueva Tienda
-                        </button>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-                        {tiendas.map((tienda) => (
-                            <Card key={tienda.id}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                        <div style={{
-                                            width: '48px', height: '48px', borderRadius: '10px',
-                                            backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            overflow: 'hidden'
-                                        }}>
-                                            {tienda.logo_url ? (
-                                                <img src={tienda.logo_url} alt={tienda.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            ) : (
-                                                <Building2 size={24} style={{ color: 'var(--color-primary)' }} />
-                                            )}
+                    {user?.estadoSuscripcion === 'activa' ? (
+                        <>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                <div>
+                                    <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Gestión de Tiendas</h3>
+                                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                                        Administra tus puntos de venta y sus integraciones
+                                    </p>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    {/* Indicador de Cuota de Tiendas */}
+                                    <div style={{
+                                        padding: '8px 16px', backgroundColor: 'var(--bg-secondary)',
+                                        borderRadius: '12px', border: '1px solid var(--border-color)',
+                                        display: 'flex', alignItems: 'center', gap: '8px'
+                                    }}>
+                                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                            Cuota: <span style={{ color: tiendas.length >= (user?.plan?.limits?.stores || 0) && (user?.rol !== 'admin' && user?.rol !== 'superadmin') ? 'var(--color-error)' : 'var(--color-primary)' }}>
+                                                {tiendas.length}/{user?.plan?.limits?.stores || 0} Tiendas
+                                            </span>
                                         </div>
-                                        <div>
-                                            <h4 style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>{tienda.nombre}</h4>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                                                <img
-                                                    src={`https://flagcdn.com/w40/${tienda.pais.toLowerCase()}.png`}
-                                                    alt={tienda.pais}
-                                                    style={{ width: '18px', borderRadius: '2px' }}
-                                                />
-                                                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
-                                                    {allCountries.find(p => p.codigo_iso_2.toUpperCase() === tienda.pais.toUpperCase())?.nombre_es || tienda.pais}
-                                                    <span style={{ margin: '0 4px', opacity: 0.5 }}>•</span>
-                                                    <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{tienda.moneda}</span>
-                                                </span>
+                                        <div style={{ width: '60px', height: '6px', backgroundColor: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
+                                            <div style={{
+                                                width: `${Math.min((tiendas.length / (user?.plan?.limits?.stores || 1)) * 100, 100)}%`,
+                                                height: '100%',
+                                                backgroundColor: tiendas.length >= (user?.plan?.limits?.stores || 0) && (user?.rol !== 'admin' && user?.rol !== 'superadmin') ? 'var(--color-error)' : 'var(--color-primary)'
+                                            }} />
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        className="dc-button-primary"
+                                        onClick={handleOpenCreateStore}
+                                        style={{ gap: '8px' }}
+                                    >
+                                        <Plus size={16} />
+                                        Nueva Tienda
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+                                {tiendas.map((tienda) => (
+                                    <Card key={tienda.id}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                                <div style={{
+                                                    width: '48px', height: '48px', borderRadius: '10px',
+                                                    backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    overflow: 'hidden'
+                                                }}>
+                                                    {tienda.logo_url ? (
+                                                        <img src={tienda.logo_url} alt={tienda.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    ) : (
+                                                        <Building2 size={24} style={{ color: 'var(--color-primary)' }} />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <h4 style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>{tienda.nombre}</h4>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                                        <img
+                                                            src={`https://flagcdn.com/w40/${tienda.pais.toLowerCase()}.png`}
+                                                            alt={tienda.pais}
+                                                            style={{ width: '18px', borderRadius: '2px' }}
+                                                        />
+                                                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
+                                                            {allCountries.find(p => p.codigo_iso_2.toUpperCase() === tienda.pais.toUpperCase())?.nombre_es || tienda.pais}
+                                                            <span style={{ margin: '0 4px', opacity: 0.5 }}>•</span>
+                                                            <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{tienda.moneda}</span>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '4px' }}>
+                                                <button
+                                                    className="action-icon-btn"
+                                                    onClick={() => setEditingTienda(tienda)}
+                                                    title="Editar tienda"
+                                                >
+                                                    <Pencil size={14} />
+                                                </button>
+                                                {(user?.rol === 'admin' || user?.rol === 'superadmin' || user?.plan?.limits?.can_delete_stores) && (
+                                                    <button
+                                                        className="action-icon-btn danger"
+                                                        onClick={() => handleConfirmDeleteTienda(tienda.id)}
+                                                        title="Eliminar tienda"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '4px' }}>
-                                        <button
-                                            className="action-icon-btn"
-                                            onClick={() => setEditingTienda(tienda)}
-                                            title="Editar tienda"
-                                        >
-                                            <Pencil size={14} />
-                                        </button>
-                                        {(user?.rol === 'admin' || user?.rol === 'superadmin' || user?.plan?.limits?.can_delete_stores) && (
-                                            <button
-                                                className="action-icon-btn danger"
-                                                onClick={() => handleConfirmDeleteTienda(tienda.id)}
-                                                title="Eliminar tienda"
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <FileText size={14} style={{ color: 'var(--text-tertiary)' }} />
+                                                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Costeos Guardados</span>
+                                                </div>
+                                                <span style={{ fontSize: '14px', fontWeight: 700 }}>
+                                                    {(JSON.parse(localStorage.getItem('dropcost_costeos') || '[]').filter((c: any) => c.storeId === tienda.id)).length}
+                                                </span>
+                                            </div>
+
+                                            <Button
+                                                variant="secondary"
+                                                fullWidth
+                                                size="sm"
+                                                onClick={() => navigate('/simulador')}
+                                                style={{ fontSize: '12px', height: '36px' }}
                                             >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <FileText size={14} style={{ color: 'var(--text-tertiary)' }} />
-                                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Costeos Guardados</span>
+                                                <Settings2 size={14} style={{ marginRight: '6px' }} />
+                                                Gestionar Integraciones
+                                            </Button>
                                         </div>
-                                        <span style={{ fontSize: '14px', fontWeight: 700 }}>
-                                            {(JSON.parse(localStorage.getItem('dropcost_costeos') || '[]').filter((c: any) => c.storeId === tienda.id)).length}
-                                        </span>
+                                    </Card>
+                                ))}
+                            </div>
+
+                            {tiendas.length === 0 && !storesLoading && (
+                                <div style={{
+                                    textAlign: 'center',
+                                    padding: '60px 40px',
+                                    backgroundColor: 'var(--card-bg)',
+                                    borderRadius: '24px',
+                                    border: '1.5px dashed var(--border-color)',
+                                    marginTop: '20px'
+                                }}>
+                                    <div style={{
+                                        width: '80px', height: '80px', borderRadius: '20px',
+                                        backgroundColor: 'rgba(0,102,255,0.05)', color: 'var(--color-primary)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        margin: '0 auto 24px'
+                                    }}>
+                                        <Store size={40} />
                                     </div>
-
-                                    <Button
-                                        variant="secondary"
-                                        fullWidth
-                                        size="sm"
-                                        onClick={() => navigate('/simulador')}
-                                        style={{ fontSize: '12px', height: '36px' }}
+                                    <h4 style={{ margin: '0 0 12px', fontWeight: 800, fontSize: '20px' }}>No tienes tiendas registradas</h4>
+                                    <p style={{ fontSize: '15px', color: 'var(--text-tertiary)', maxWidth: '400px', margin: '0 auto 32px', lineHeight: 1.6 }}>
+                                        Crea tu primera tienda para empezar a costear tus productos y habilitar las integraciones automáticas.
+                                    </p>
+                                    <button
+                                        onClick={handleOpenCreateStore}
+                                        style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '10px',
+                                            padding: '12px 28px',
+                                            fontSize: '15px',
+                                            fontWeight: 700,
+                                            color: '#ffffff',
+                                            background: 'linear-gradient(135deg, #0066FF 0%, #003D99 100%)',
+                                            border: 'none',
+                                            borderRadius: '12px',
+                                            cursor: 'pointer',
+                                            boxShadow: '0 8px 15px -3px rgba(0, 102, 255, 0.3)',
+                                            transition: 'all 200ms ease',
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(-2px)';
+                                            e.currentTarget.style.boxShadow = '0 12px 20px -5px rgba(0, 102, 255, 0.4)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                            e.currentTarget.style.boxShadow = '0 8px 15px -3px rgba(0, 102, 255, 0.3)';
+                                        }}
                                     >
-                                        <Settings2 size={14} style={{ marginRight: '6px' }} />
-                                        Gestionar Integraciones
-                                    </Button>
+                                        <Plus size={18} />
+                                        Crear Primera Tienda
+                                    </button>
                                 </div>
-                            </Card>
-                        ))}
-                    </div>
-
-                    {tiendas.length === 0 && !storesLoading && (
-                        <div style={{
-                            textAlign: 'center',
-                            padding: '60px 40px',
-                            backgroundColor: 'var(--card-bg)',
-                            borderRadius: '24px',
-                            border: '1.5px dashed var(--border-color)',
-                            marginTop: '20px'
+                            )}
+                        </>
+                    ) : (
+                        <Card style={{
+                            border: '1px dashed var(--color-primary)',
+                            backgroundColor: 'rgba(0, 102, 255, 0.02)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '60px 24px',
+                            textAlign: 'center'
                         }}>
                             <div style={{
-                                width: '80px', height: '80px', borderRadius: '20px',
-                                backgroundColor: 'rgba(0,102,255,0.05)', color: 'var(--color-primary)',
+                                width: '64px', height: '64px', borderRadius: '50%',
+                                backgroundColor: 'rgba(0, 102, 255, 0.1)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                margin: '0 auto 24px'
+                                color: 'var(--color-primary)', marginBottom: '20px'
                             }}>
-                                <Store size={40} />
+                                <CreditCard size={32} />
                             </div>
-                            <h4 style={{ margin: '0 0 12px', fontWeight: 800, fontSize: '20px' }}>No tienes tiendas registradas</h4>
-                            <p style={{ fontSize: '15px', color: 'var(--text-tertiary)', maxWidth: '400px', margin: '0 auto 32px', lineHeight: 1.6 }}>
-                                Crea tu primera tienda para empezar a costear tus productos y habilitar las integraciones automáticas.
+                            <h4 style={{ margin: '0 0 8px', fontWeight: 800, fontSize: '20px', color: 'var(--text-primary)' }}>¡Activa tu Plan Starter hoy!</h4>
+                            <p style={{ fontSize: '15px', color: 'var(--text-secondary)', margin: '0 0 24px', maxWidth: '360px', lineHeight: 1.5 }}>
+                                Para comenzar a gestionar tus tiendas y utilizar todas las herramientas de DropCost Master, necesitas una suscripción activa.
                             </p>
-                            <button
-                                onClick={handleOpenCreateStore}
-                                style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '10px',
-                                    padding: '12px 28px',
-                                    fontSize: '15px',
-                                    fontWeight: 700,
-                                    color: '#ffffff',
-                                    background: 'linear-gradient(135deg, #0066FF 0%, #003D99 100%)',
-                                    border: 'none',
-                                    borderRadius: '12px',
-                                    cursor: 'pointer',
-                                    boxShadow: '0 8px 15px -3px rgba(0, 102, 255, 0.3)',
-                                    transition: 'all 200ms ease',
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-2px)';
-                                    e.currentTarget.style.boxShadow = '0 12px 20px -5px rgba(0, 102, 255, 0.4)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = '0 8px 15px -3px rgba(0, 102, 255, 0.3)';
-                                }}
+                            <Button
+                                variant="primary"
+                                onClick={() => navigate('/pricing')}
+                                style={{ gap: '10px', padding: '12px 32px' }}
                             >
-                                <Plus size={18} />
-                                Crear Primera Tienda
-                            </button>
-                        </div>
+                                Ver Planes Disponibles
+                                <ArrowRight size={18} />
+                            </Button>
+                        </Card>
                     )}
                 </div>
             )}
@@ -1121,25 +1377,19 @@ export function ConfiguracionPage() {
                         </div>
                     </div>
 
-                    <InputGroup label="Nombre de la Tienda">
-                        <input
-                            className="dc-input"
-                            value={editingTienda?.nombre || ''}
-                            onChange={(e) => setEditingTienda(prev => prev ? { ...prev, nombre: e.target.value } : null)}
-                        />
-                    </InputGroup>
+                    <Input
+                        label="Nombre de la Tienda"
+                        value={editingTienda?.nombre || ''}
+                        onChange={(e) => setEditingTienda(prev => prev ? { ...prev, nombre: e.target.value } : null)}
+                    />
 
-                    <InputGroup label="URL del Logo (Opcional)">
-                        <input
-                            className="dc-input"
-                            placeholder="https://ejemplo.com/logo.png"
-                            value={editingTienda?.logo_url || ''}
-                            onChange={(e) => setEditingTienda(prev => prev ? { ...prev, logo_url: e.target.value } : null)}
-                        />
-                        <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                            Pega la URL de una imagen para usarla como logo de tu tienda.
-                        </p>
-                    </InputGroup>
+                    <Input
+                        label="URL del Logo (Opcional)"
+                        placeholder="https://ejemplo.com/logo.png"
+                        value={editingTienda?.logo_url || ''}
+                        onChange={(e) => setEditingTienda(prev => prev ? { ...prev, logo_url: e.target.value } : null)}
+                        helperText="Pega la URL de una imagen para usarla como logo de tu tienda."
+                    />
 
                     <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
                         <Button variant="secondary" fullWidth onClick={() => setEditingTienda(null)}>Cancelar</Button>
@@ -1167,6 +1417,17 @@ export function ConfiguracionPage() {
                 variant="info"
                 onConfirm={requestActivation}
                 onCancel={() => setShowActivationConfirm(false)}
+            />
+
+            <ConfirmDialog
+                isOpen={showDeactivationConfirm}
+                title="¿Desactivar 2FA?"
+                description="Al desactivar el 2FA, tu cuenta será menos segura. ¿Estás seguro de que deseas continuar?"
+                confirmLabel="Desactivar Seguridad"
+                cancelLabel="Mantener Protegida"
+                variant="danger"
+                onConfirm={executeDisable2FA}
+                onCancel={() => setShowDeactivationConfirm(false)}
             />
 
             <Modal
@@ -1223,6 +1484,66 @@ export function ConfiguracionPage() {
                             disabled={otpCode.length < 6}
                         >
                             Verificar y Activar
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Modal OTP para Cambio de Email */}
+            <Modal
+                isOpen={showEmailOTPModal}
+                onClose={() => setShowEmailOTPModal(false)}
+                title="Confirmar Nuevo Correo"
+                size="sm"
+            >
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                        width: '64px', height: '64px', borderRadius: '50%',
+                        backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)', color: 'var(--color-primary)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        margin: '0 auto 20px'
+                    }}>
+                        <RefreshCw size={32} />
+                    </div>
+                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
+                        Ingresa el código enviado a <strong>{emailData.newEmail}</strong> para completar el cambio.
+                    </p>
+                    <input
+                        type="text"
+                        placeholder="000000"
+                        maxLength={6}
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                        style={{
+                            width: '100%',
+                            fontSize: '24px',
+                            fontWeight: 700,
+                            letterSpacing: '8px',
+                            textAlign: 'center',
+                            padding: '12px',
+                            borderRadius: '12px',
+                            border: '2px solid var(--border-color)',
+                            backgroundColor: 'var(--bg-secondary)',
+                            color: 'var(--text-primary)',
+                            marginBottom: '24px'
+                        }}
+                    />
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <Button
+                            variant="secondary"
+                            fullWidth
+                            onClick={() => setShowEmailOTPModal(false)}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            variant="primary"
+                            fullWidth
+                            onClick={handleVerifyEmailChange}
+                            isLoading={isVerifyingEmailChange}
+                            disabled={otpCode.length < 6}
+                        >
+                            Confirmar Cambio
                         </Button>
                     </div>
                 </div>
@@ -1293,50 +1614,17 @@ export function ConfiguracionPage() {
     );
 }
 
-// Subcomponentes Internos y Helpers
-function getLogDisplay(accion: string) {
-    switch (accion) {
-        case 'PAYMENT_RECEIVED':
-            return { icon: <CreditCardIcon size={18} />, color: '#10B981', label: 'Pago Recibido' };
-        case 'PLAN_ACTIVATED':
-            return { icon: <Zap size={18} />, color: '#F59E0B', label: 'Suscripción Activada' };
-        case 'COMMISSION_EARNED':
-            return { icon: <Zap size={18} />, color: '#3B82F6', label: 'Comisión Ganada' };
-        case 'LOGIN':
-            return { icon: <UserCheck size={18} />, color: '#6366F1', label: 'Inicio de Sesión' };
-        case 'PASSWORD_CHANGE':
-            return { icon: <KeyIcon size={18} />, color: '#EF4444', label: 'Cambio de Contraseña' };
-        default:
-            return { icon: <Clock size={18} />, color: '#6B7280', label: accion.replace(/_/g, ' ') };
-    }
-}
 
-function formatLogDetails(log: AuditLog) {
-    if (!log.detalles) return '';
-    if (log.accion === 'PLAN_ACTIVATED') return `Plan: ${log.detalles.plan_id?.toUpperCase()}`;
-    if (log.accion === 'PAYMENT_RECEIVED') return `Monto: ${log.detalles.amount} ${log.detalles.currency}`;
-    if (log.accion === 'COMMISSION_EARNED') return `Recibiste +$ ${log.detalles.amount_usd} de referido`;
-    return JSON.stringify(log.detalles).substring(0, 50);
-}
-
-function Card({ children }: { children: React.ReactNode }) {
+function Card({ children, style }: { children: React.ReactNode, style?: React.CSSProperties }) {
     return (
         <div style={{
             backgroundColor: 'var(--card-bg)',
             border: '1px solid var(--card-border)',
             borderRadius: '16px',
             padding: '24px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+            ...style
         }}>
-            {children}
-        </div>
-    );
-}
-
-function InputGroup({ label, children }: { label: string, children: React.ReactNode }) {
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>{label}</label>
             {children}
         </div>
     );
@@ -1375,6 +1663,24 @@ function NotificationItem({ icon, title, description, checked, onChange }: {
                 </div>
             </div>
             <Toggle checked={checked} onChange={onChange} />
+        </div>
+    );
+}
+
+function FeatureItem({ label, active }: { label: string; active?: boolean }) {
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+                width: '20px', height: '20px', borderRadius: '50%',
+                backgroundColor: active ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: active ? '#10B981' : '#6B7280'
+            }}>
+                <CheckCircle2 size={12} />
+            </div>
+            <span style={{ fontSize: '13px', color: active ? 'var(--text-primary)' : 'var(--text-tertiary)', fontWeight: active ? 500 : 400 }}>
+                {label}
+            </span>
         </div>
     );
 }

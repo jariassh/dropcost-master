@@ -33,6 +33,9 @@ export const useAuthStore = create<AuthState>((set) => ({
             
             // Check 2FA
             if (user?.twoFactorEnabled) {
+                // Invalidate old token to prevent bypass on refresh/back
+                localStorage.removeItem(`2fa_verified_${user.id}`);
+
                 // Solicitar código
                 const faResponse = await authService.request2FALogin();
                 
@@ -57,7 +60,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             auditService.recordLog({
                 accion: 'LOGIN',
                 entidad: 'USER',
-                entidad_id: user?.id || null,
+                entidadId: user?.id,
                 detalles: { email: credentials.email }
             });
 
@@ -131,7 +134,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             auditService.recordLog({
                 accion: 'LOGIN',
                 entidad: 'USER',
-                entidad_id: user?.id || null,
+                entidadId: user?.id,
                 detalles: { method: '2FA' }
             });
 
@@ -208,6 +211,49 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
     },
 
+    requestEmailChange: async (newEmail: string) => {
+        // console.log('[authStore] Solicitando cambio de email a:', newEmail);
+        set({ isLoading: true, error: null });
+        try {
+            const response = await authService.requestEmailChange(newEmail);
+            // console.log('[authStore] Respuesta solicitud email change:', response);
+            
+            if (!response.success) {
+                const errorMsg = response.error || 'Error al solicitar cambio de email';
+                set({ isLoading: false, error: errorMsg });
+                return { success: false, error: errorMsg };
+            }
+            set({ isLoading: false });
+            return { success: true };
+        } catch (err) {
+            console.error('[authStore] Error en requestEmailChange:', err);
+            const errorMsg = 'Error al solicitar cambio de email';
+            set({ isLoading: false, error: errorMsg });
+            return { success: false, error: errorMsg };
+        }
+    },
+
+    verifyEmailChange: async (code: string) => {
+        // console.log('[authStore] Verificando código de cambio de email:', code);
+        set({ isLoading: true, error: null });
+        try {
+            const response = await authService.verifyEmailChange(code);
+            // console.log('[authStore] Respuesta verificación email change:', response);
+            
+            if (!response.success) {
+                set({ isLoading: false, error: response.error });
+                return false;
+            }
+            const user = await authService.getCurrentUser();
+            set({ isLoading: false, user });
+            return true;
+        } catch (err) {
+            console.error('[authStore] Error en verifyEmailChange:', err);
+            set({ isLoading: false, error: 'Error al verificar cambio de email' });
+            return false;
+        }
+    },
+
     updateProfile: async (userData: Partial<User>) => {
         set({ isLoading: true, error: null });
         try {
@@ -225,7 +271,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             auditService.recordLog({
                 accion: 'UPDATE_PROFILE',
                 entidad: 'USER',
-                entidad_id: user?.id || null,
+                entidadId: user?.id,
                 detalles: userData
             });
 
@@ -301,7 +347,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             auditService.recordLog({
                 accion: 'LOGOUT',
                 entidad: 'USER',
-                entidad_id: user.id || null,
+                entidadId: user?.id,
                 detalles: {}
             });
         }

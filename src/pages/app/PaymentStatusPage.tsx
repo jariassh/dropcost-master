@@ -24,8 +24,20 @@ export function PaymentStatusPage() {
     const [hasAttemptedVerification, setHasAttemptedVerification] = useState(false);
 
     useEffect(() => {
+        /*
+        console.log("!!! [FRONTEND] INICIO DE PÁGINA DE ESTADO DE PAGO !!!");
+        console.log("Parámetros URL detectados:", {
+            status,
+            paymentId,
+            externalRef,
+            mockStatus,
+            fullURL: window.location.href
+        });
+        */
+
         // MODO MOCK PARA PREVISUALIZACIÓN DE DISEÑO
         if (mockStatus) {
+            // console.log("!!! [FRONTEND] MODO MOCK ACTIVO:", mockStatus);
             if (mockStatus === 'approved') setVerificationResult('success');
             else if (mockStatus === 'verifying') setIsVerifying(true);
             else if (mockStatus === 'error') setVerificationResult('error');
@@ -33,26 +45,61 @@ export function PaymentStatusPage() {
         }
 
         const verifyPayment = async () => {
-            if (hasAttemptedVerification) return;
+            if (hasAttemptedVerification) {
+                // console.log("!!! [FRONTEND] Verificación ya intentada, omitiendo re-ejecución.");
+                return;
+            }
 
             if (status === 'approved' && paymentId) {
+                // console.log("!!! [FRONTEND] PAGO APROBADO DETECTADO. Iniciando verificación manual...");
                 setHasAttemptedVerification(true);
                 setIsVerifying(true);
                 try {
-                    await paymentService.checkPaymentStatus(paymentId);
+                    // console.log(`!!! [FRONTEND] LLAMANDO A checkPaymentStatus PARA ID: ${paymentId}`);
+                    const result = await paymentService.checkPaymentStatus(paymentId);
+                    // console.log("!!! [FRONTEND] RESPUESTA DEL SERVIDOR (RAW):", JSON.stringify(result, null, 2));
+
+                    if (result.error || result.result?.error) {
+                        console.error("!!! [FRONTEND] ERROR EN VERIFICACIÓN DE SERVIDOR:", result.error || result.result?.error);
+                        setVerificationResult('error');
+                        return;
+                    }
+
+                    // console.log("!!! [FRONTEND] VERIFICACIÓN EXITOSA EN BACKEND. Refrescando estado local del usuario...");
                     await initialize();
+
+                    const userAfterInit = useAuthStore.getState().user;
+                    /*
+                    console.log("!!! [FRONTEND] ESTADO DEL USUARIO TRAS INITIALIZE:", {
+                        id: userAfterInit?.id,
+                        planId: userAfterInit?.planId,
+                        planName: userAfterInit?.plan?.name,
+                        estadoSuscripcion: userAfterInit?.estadoSuscripcion,
+                        tokenSesion: localStorage.getItem('dc_session_token') ? 'Existe' : 'No existe'
+                    });
+                    */
+
+                    if (userAfterInit?.planId === 'plan_free') {
+                        console.warn("!!! [FRONTEND] ATENCIÓN: El usuario se refrescó pero SIGUE EN PLAN FREE.");
+                    } else {
+                        // console.log(`!!! [FRONTEND] ÉXITO TOTAL: El usuario ahora está en ${userAfterInit?.planId}`);
+                    }
+
                     setVerificationResult('success');
-                    toast.success('¡Plan Activado!', 'Tu suscripción PRO ya está activa.');
-                } catch (error) {
-                    console.error("Verification failed:", error);
+                    toast.success('¡Plan Activado!', `Tu nueva suscripción ya está lista para usar.`);
+                } catch (error: any) {
+                    console.error("!!! [FRONTEND] EXCEPCIÓN EN PROCESO DE VERIFICACIÓN:", error);
                     setVerificationResult('error');
                 } finally {
                     setIsVerifying(false);
                 }
             } else if (status === 'approved' && !paymentId) {
+                // console.log("!!! [FRONTEND] Pago aprobado pero falta ID. Intentando refrescar estado...");
                 setHasAttemptedVerification(true);
                 await initialize();
                 setVerificationResult('success');
+            } else {
+                // console.log("!!! [FRONTEND] El estado del pago no es 'approved' o faltan datos. Status:", status);
             }
         };
 
@@ -108,7 +155,7 @@ export function PaymentStatusPage() {
                     {renderIcon('loading')}
                     <h3 style={titleStyle}>Verificando tu pago</h3>
                     <p style={descriptionStyle}>
-                        Estamos confirmando la transacción con Mercado Pago para activar tu plan PRO.
+                        Estamos confirmando la transacción con Mercado Pago para activar tu nueva suscripción.
                     </p>
                 </div>
             );
@@ -146,7 +193,7 @@ export function PaymentStatusPage() {
                     </p>
                     <Button
                         variant="primary"
-                        onClick={() => navigate('/simulador')}
+                        onClick={() => navigate('/mis-costeos')}
                         fullWidth
                         style={buttonStyle}
                     >
@@ -161,13 +208,13 @@ export function PaymentStatusPage() {
             return (
                 <div style={containerStyle}>
                     {renderIcon('success')}
-                    <h3 style={titleStyle}>¡Suscripción Activada!</h3>
+                    <h3 style={titleStyle}>¡Suscripción Confirmada!</h3>
                     <p style={descriptionStyle}>
-                        Tu plan ha sido actualizado correctamente. Ya puedes disfrutar de las ventajas PRO.
+                        Tu cuenta ha sido actualizada con éxito. Ya puedes disfrutar de todas las funcionalidades de tu nuevo plan.
                     </p>
                     <Button
                         variant="primary"
-                        onClick={() => navigate('/simulador')}
+                        onClick={() => navigate('/mis-costeos')}
                         fullWidth
                         style={{ ...buttonStyle, backgroundColor: 'var(--color-primary)' }}
                     >
@@ -192,7 +239,7 @@ export function PaymentStatusPage() {
                     </div>
                     <Button
                         variant="secondary"
-                        onClick={() => navigate('/simulador')}
+                        onClick={() => navigate('/mis-costeos')}
                         fullWidth
                         style={buttonStyle}
                     >

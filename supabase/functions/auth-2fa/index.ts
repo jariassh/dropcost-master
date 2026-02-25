@@ -6,6 +6,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Helper: disparar trigger de email (Esperar respuesta para depuración)
+async function dispararTrigger(supabaseUrl: string, serviceKey: string, codigo_evento: string, datos: Record<string, string>) {
+    try {
+        const response = await fetch(`${supabaseUrl}/functions/v1/email-trigger-dispatcher`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json', 
+              'Authorization': `Bearer ${serviceKey}` 
+            },
+            body: JSON.stringify({ codigo_evento, datos }),
+        });
+        
+        if (!response.ok) {
+          const errorBody = await response.text();
+          console.error(`[email-trigger] Dispatcher respondió error (${response.status}):`, errorBody);
+          return { success: false, status: response.status, error: errorBody };
+        }
+        
+        const result = await response.json();
+        return { success: true, ...result };
+    } catch (e) {
+        console.error(`[email-trigger] Error disparando ${codigo_evento}:`, e);
+        return { success: false, error: e.message };
+    }
+}
+
 console.log("Edge Function auth-2fa iniciada")
 
 serve(async (req) => {
@@ -26,13 +52,19 @@ serve(async (req) => {
 
     // Obtener usuario autenticado
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
-    if (userError || !user) throw new Error('No autorizado o sesión expirada')
+    if (userError || !user) {
+      console.error("[auth-2fa] Auth Error:", userError);
+      throw new Error(`No autorizado o sesión expirada${userError ? ': ' + userError.message : ''}`);
+    }
 
     // 2. Inicializar cliente con Service Role para operaciones privilegiadas
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const adminClient = createClient(supabaseUrl, supabaseServiceKey)
 
-    const { action, code } = await req.json()
+    const body = await req.json()
+    console.log(`[auth-2fa] Body recibido:`, JSON.stringify(body))
+    const { action, code } = body
+    console.log(`[auth-2fa] Acción: ${action} | Código: ${code ? '***' : 'N/A'}`)
 
     // ACCIÓN: SOLICITAR CÓDIGO
     if (action === 'request') {
@@ -56,56 +88,24 @@ serve(async (req) => {
       
       console.log("Código insertado en DB, enviando email...");
 
-      // --- ENVÍO DE EMAIL CON RESEND ---
-      const resendKey = Deno.env.get('RESEND_API_KEY')
-      if (resendKey) {
-        try {
-            console.log("Enviando via Resend...");
-            const res = await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${resendKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    from: 'Security <security@dropcost.jariash.com>',
-                    to: [user.email],
-                    subject: `${otp} es tu código de verificación 2FA`,
-                    html: `
-                    <div style="font-family: sans-serif; padding: 20px; color: #333;">
-                        <h2 style="color: #0066FF;">Activa tu Seguridad de Dos Factores</h2>
-                        <p>Hola,</p>
-                        <p>Has solicitado activar el 2FA en DropCost Master. Usa el siguiente código para confirmar tu identidad:</p>
-                        <div style="background: #f4f7ff; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
-                        <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #0066FF;">${otp}</span>
-                        </div>
-                        <p style="font-size: 12px; color: #666;">Este código expirará en 5 minutos. Si no solicitaste esto, ignora este correo.</p>
-                    </div>
-                    `
-                })
-            })
+      console.log("Código insertado en DB, disparando trigger de email...");
+      
+      const { context } = body;
+      const trigger_code = (context === 'activation') ? '2FA_SOLICITUD_ACTIVACION' : 'AUTH_2FA';
 
-            if (!res.ok) {
-                const errorText = await res.text()
-                console.error("Resend API Error:", errorText)
-                // No lanzar error para no bloquear el flujo si solo falla el email (opcional, pero mejor mostrar error)
-                throw new Error(`Error enviando email: ${errorText}`)
-            }
+      // Enviar email usando el disparador centralizado
+      await dispararTrigger(supabaseUrl, supabaseServiceKey, trigger_code, {
+        usuario_id: user.id,
+        usuario_email: user.email ?? '',
+        usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
+        codigo_2fa: otp,
+        // Proporcionamos ambas por si acaso
+        codigo: otp,
+        "2fa_code": otp, 
+        expira_en: '5 minutos'
+      });
 
-            const resData = await res.json()
-            console.log("Resend response:", resData)
-
-        } catch (emailError) {
-             console.error("Fallo envío email:", emailError)
-             // Limpiar código generado si falla el envío para no dejar estados zombie
-             await adminClient.from('auth_codes').delete().eq('code_hash', otp)
-             throw new Error("No se pudo enviar el correo de verificación. Verifica configuración SMTP/Resend.") 
-        }
-      } else {
-        console.log("AVISO: RESEND_API_KEY no configurada. Código generado:", otp)
-        // Opcionalmente lanzar error en producción si se requiere email
-        // throw new Error("Servicio de correo no configurado (RESEND_API_KEY faltante)")
-      }
+      console.log("Trigger 2FA disparado correctamente");
 
       return new Response(JSON.stringify({ success: true, message: 'Código generado y enviado' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -170,6 +170,13 @@ serve(async (req) => {
 
         // 2. Limpiar códigos del usuario
         await adminClient.from('auth_codes').delete().eq('user_id', user.id)
+
+        // EMAIL TRIGGER: 2FA_ACTIVADO
+        dispararTrigger(supabaseUrl, supabaseServiceKey, '2FA_ACTIVADO', {
+            usuario_id: user.id,
+            usuario_email: user.email ?? '',
+            usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
+        });
 
         console.log("[VERIFY] 2FA Activated successfully.");
         return new Response(JSON.stringify({ success: true }), {
@@ -250,9 +257,138 @@ serve(async (req) => {
 
       if (updateError) throw updateError
 
+      // EMAIL TRIGGER: 2FA_DESACTIVADO
+      await dispararTrigger(supabaseUrl, supabaseServiceKey, '2FA_DESACTIVADO', {
+          usuario_id: user.id,
+          usuario_email: user.email ?? '',
+          usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
+          nombres: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
+          fecha_desactivacion: new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      });
+
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
+    }
+
+    // ACCIÓN: SOLICITAR CAMBIO DE EMAIL (OTP al correo nuevo)
+    if (action === 'request_email_change') {
+      const { new_email } = body;
+      if (!new_email) throw new Error('El nuevo correo es requerido');
+      
+      console.log(`Solicitando cambio de email para usuario ${user.id} a: ${new_email}`);
+
+      // 1. Validar que no sea el mismo correo
+      if (user.email === new_email) {
+          throw new Error('El nuevo correo debe ser diferente al actual');
+      }
+
+      // 2. Validar que el correo no esté en uso por otro usuario (opcional pero recomendado)
+      const { data: existingUser } = await adminClient
+          .from('users')
+          .select('id')
+          .eq('email', new_email)
+          .maybeSingle();
+      
+      if (existingUser) {
+          throw new Error('Este correo ya está registrado por otro usuario');
+      }
+
+      const otp = Math.floor(100000 + Math.random() * 900000).toString()
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 min para cambio email
+
+      // Guardar en la tabla auth_codes con metadatos
+      const { error: dbError } = await adminClient
+        .from('auth_codes')
+        .insert({
+          user_id: user.id,
+          code_hash: otp,
+          expires_at: expiresAt,
+          metadata: { action: 'email_change', new_email }
+        })
+
+      if (dbError) throw dbError;
+      
+      // Enviar email al NUEVO correo
+      console.log(`[auth-2fa] Disparando trigger AUTH_EMAIL_CHANGE_CODE hacia: ${new_email}`);
+      const triggerResult = await dispararTrigger(supabaseUrl, supabaseServiceKey, 'AUTH_EMAIL_CHANGE_CODE', {
+        usuario_id: user.id,
+        usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
+        email_nuevo: new_email,
+        email_anterior: user.email ?? '',
+        codigo_2fa: otp,
+        codigo: otp,
+        expira_en: '10 minutos'
+      });
+
+      console.log(`[auth-2fa] Resultado del dispatcher:`, JSON.stringify(triggerResult));
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: `Código generado. Estado del envío: ${triggerResult.success ? 'Enviado' : 'Fallo Dispatcher'}`,
+        debug_dispatcher: triggerResult 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // ACCIÓN: VERIFICAR Y CONFIRMAR CAMBIO DE EMAIL
+    if (action === 'verify_email_change') {
+        const inputCode = String(code).trim();
+        
+        if (!inputCode) throw new Error('Código es requerido');
+  
+        // 1. Buscar el código válido para cambio de email
+        const { data: codeData, error: fetchError } = await adminClient
+            .from('auth_codes')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('code_hash', inputCode)
+            .contains('metadata', { action: 'email_change' })
+            .gt('expires_at', new Date().toISOString())
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+    
+        if (fetchError || !codeData) {
+            return new Response(JSON.stringify({ success: false, error: 'Código inválido o ya expiró' }), {
+                status: 200,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
+        }
+
+        const newEmail = codeData.metadata?.new_email;
+        if (!newEmail) throw new Error('No se encontró el nuevo correo en la solicitud');
+
+        // 2. Ejecutar cambio en AUTH (Admin)
+        const { error: authUpdateError } = await adminClient.auth.admin.updateUserById(user.id, {
+            email: newEmail,
+            email_confirm: true
+        });
+
+        if (authUpdateError) throw authUpdateError;
+
+        // 3. Sincronizar tabla public.users (por si el trigger tarda o falla)
+        await adminClient
+            .from('users')
+            .update({ email: newEmail })
+            .eq('id', user.id);
+    
+        // 4. Limpiar códigos del usuario
+        await adminClient.from('auth_codes').delete().eq('user_id', user.id)
+        
+        // 5. Trigger final de confirmación (Notificación de éxito)
+        dispararTrigger(supabaseUrl, supabaseServiceKey, 'EMAIL_CAMBIADO', {
+            usuario_id: user.id,
+            usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
+            email_nuevo: newEmail,
+            email_anterior: user.email ?? '',
+            fecha_cambio: new Date().toISOString().split('T')[0]
+        });
+
+        return new Response(JSON.stringify({ success: true, message: 'Correo actualizado correctamente' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
     }
 
     throw new Error('Acción no reconocida')

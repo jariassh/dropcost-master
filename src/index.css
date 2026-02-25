@@ -45,7 +45,7 @@
   /* Overlay */
   --overlay-bg: rgba(0, 0, 0, 0.5);
 
-  /* Sidebar */
+  /* Sidebar (Siempre Oscuro) */
   --sidebar-bg: #0F172A;
   --sidebar-text: #94A3B8;
   --sidebar-active: #0066FF;
@@ -76,12 +76,18 @@
   --text-primary: #F1F5F9;
   --text-secondary: #94A3B8;
   --text-tertiary: #64748B;
+  --text-inverse: #FFFFFF;
 
   --border-color: #334155;
   --border-color-hover: #475569;
+  --border-color-focus: #0066FF;
 
   --card-bg: #1E293B;
   --card-border: #334155;
+
+  --color-neutral: #6B7280;
+
+  --sidebar-active: #0066FF;
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
@@ -291,4 +297,117 @@ h4 {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ===== FAQ Accordion Animation ===== */
+.faq-accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faq-accordion-content.open {
+  grid-template-rows: 1fr;
+}
+
+.faq-accordion-inner {
+  overflow: hidden;
+}
+
+/* ===== Pricing Toggle & Badges ===== */
+.pricing-toggle-container {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--bg-secondary);
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 48px;
+  border: 1px solid var(--border-color);
+}
+
+.pricing-toggle-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.pricing-toggle-btn.active {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.save-badge {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  margin-left: 8px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* ===== Pricing Card Styles ===== */
+.pricing-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.pricing-card:hover {
+  transform: translateY(-12px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary);
+}
+
+/* Plan Pro Destaque */
+.pricing-card.plan-pro {
+  border: 2px solid var(--color-primary);
+  box-shadow: 0 12px 40px rgba(0, 102, 255, 0.1);
+  z-index: 2;
+}
+
+[data-theme="dark"] .pricing-card.plan-pro {
+  box-shadow: 0 12px 40px rgba(0, 102, 255, 0.2);
+}
+
+/* Botones dentro de cards */
+.pricing-btn-outline {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.pricing-btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+}
+
+.pricing-btn-inverse {
+  background-color: var(--text-primary);
+  color: var(--bg-primary);
+  border: none;
+}
+
+.btn-subscribe {
+  display: block;
+  padding: 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.pricing-card:hover .btn-subscribe {
+  transform: scale(1.02);
 }

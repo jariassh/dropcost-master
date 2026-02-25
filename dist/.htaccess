@@ -1,0 +1,15 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Redirecciones para SEO Dinámico (Edge Functions)
+  RewriteRule ^robots\.txt$ https://wauqudcethbrebrdacqi.supabase.co/functions/v1/robots [L,R=301]
+  RewriteRule ^sitemap\.xml$ https://wauqudcethbrebrdacqi.supabase.co/functions/v1/sitemap [L,R=301]
+
+  # Configuración para Aplicaciones React (SPA)
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-l
+  RewriteRule . /index.html [L]
+</IfModule>

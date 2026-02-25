@@ -49,7 +49,8 @@ export function StoreSelector({ collapsed }: StoreSelectorProps) {
     return (
         <div style={{ padding: collapsed ? '0 12px' : '0 12px', marginBottom: '16px', position: 'relative' }}>
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => user?.estadoSuscripcion === 'activa' && setIsOpen(!isOpen)}
+                disabled={user?.estadoSuscripcion !== 'activa'}
                 style={{
                     width: '100%',
                     display: 'flex',
@@ -61,11 +62,20 @@ export function StoreSelector({ collapsed }: StoreSelectorProps) {
                     border: '1px solid rgba(255,255,255,0.1)',
                     borderRadius: '12px',
                     color: '#fff',
-                    cursor: 'pointer',
+                    cursor: user?.estadoSuscripcion === 'activa' ? 'pointer' : 'not-allowed',
+                    opacity: user?.estadoSuscripcion === 'activa' ? 1 : 0.5,
                     transition: 'all 200ms ease',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; }}
+                onMouseEnter={(e) => {
+                    if (user?.estadoSuscripcion === 'activa') {
+                        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)';
+                    }
+                }}
+                onMouseLeave={(e) => {
+                    if (user?.estadoSuscripcion === 'activa') {
+                        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                    }
+                }}
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
                     <div style={{
