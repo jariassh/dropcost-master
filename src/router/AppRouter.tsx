@@ -28,13 +28,13 @@ import { AdminEmailTriggersPage } from '@/pages/admin/AdminEmailTriggersPage';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { PricingPage } from '@/pages/PricingPage';
 import { LandingPage } from '@/pages/LandingPage';
-import CookiesPage from '@/pages/CookiesPage';
 import { useAuthStore } from '@/store/authStore';
 import UserAuditLogsPage from '@/pages/UserAuditLogsPage';
 import { SubscriptionGuard } from '@/components/common/SubscriptionGuard';
 import { PaymentStatusPage } from '@/pages/app/PaymentStatusPage';
 import { TerminosPage } from '@/pages/legal/TerminosPage';
 import { PrivacidadPage } from '@/pages/legal/PrivacidadPage';
+import CookiesPage from '@/pages/legal/CookiesPage';
 import { AffiliateTracker } from '@/components/common/AffiliateTracker';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -69,7 +69,6 @@ export function AppRouter() {
                     <Route path="/" element={
                         isAuthenticated ? <Navigate to="/mis-costeos" replace /> : <LandingPage />
                     } />
-                    <Route path="/cookies" element={<CookiesPage />} />
                 </Route>
 
                 {/* Rutas de autenticación */}
@@ -144,6 +143,7 @@ export function AppRouter() {
                 {/* Rutas Públicas (sin layout, accesibles por cualquier persona) */}
                 <Route path="/terminos" element={<TerminosPage />} />
                 <Route path="/privacidad" element={<PrivacidadPage />} />
+                <Route path="/cookies" element={<CookiesPage />} />
 
                 {/* Catch-all */}
                 <Route path="*" element={<Navigate to="/" replace />} />
