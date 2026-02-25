@@ -2,11 +2,12 @@ import { supabase } from '@/lib/supabase';
 import type { Oferta } from '@/types/ofertas';
 
 export const ofertaService = {
-    async getOfertas(tiendaId: string): Promise<Oferta[]> {
+    async getOfertas(tiendaId: string, userId: string): Promise<Oferta[]> {
         const { data, error } = await supabase
             .from('ofertas')
             .select('*')
             .eq('tienda_id', tiendaId)
+            .eq('usuario_id', userId)
             .order('created_at', { ascending: false });
 
         if (error) {

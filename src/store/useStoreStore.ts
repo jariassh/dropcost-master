@@ -17,9 +17,12 @@ export const useStoreStore = create<StoreState>()(
             error: null,
 
             fetchTiendas: async () => {
+                const { user } = useAuthStore.getState();
+                if (!user) return;
+
                 set({ isLoading: true, error: null });
                 try {
-                    const tiendas = await storeService.getTiendas();
+                    const tiendas = await storeService.getTiendas(user.id);
                     set({ tiendas, isLoading: false });
 
                     // Sincronizar tiendaActual
