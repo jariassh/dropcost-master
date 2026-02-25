@@ -311,8 +311,23 @@ export function AdminLayout() {
                                 onClick={() => setUserMenuOpen((v) => !v)}
                                 style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px', background: 'none', border: 'none', cursor: 'pointer' }}
                             >
-                                <div style={{ width: '34px', height: '34px', backgroundColor: 'var(--color-admin-sidebar-active, #EF4444)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '13px', fontWeight: 700 }}>
-                                    {user?.nombres?.[0] || 'A'}
+                                <div style={{
+                                    width: '34px', height: '34px',
+                                    backgroundColor: user?.avatarUrl ? 'transparent' : 'var(--color-admin-sidebar-active, #EF4444)',
+                                    borderRadius: '50%',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    color: '#fff', fontSize: '13px', fontWeight: 700,
+                                    overflow: 'hidden'
+                                }}>
+                                    {user?.avatarUrl ? (
+                                        <img
+                                            src={user.avatarUrl}
+                                            alt={user.nombres}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        />
+                                    ) : (
+                                        <>{user?.nombres?.[0] || 'A'}</>
+                                    )}
                                 </div>
                                 <ChevronDown size={14} color="var(--text-tertiary)" />
                             </button>

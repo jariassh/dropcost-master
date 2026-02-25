@@ -234,16 +234,25 @@ export const UserList: React.FC = () => {
                                                         width: '42px',
                                                         height: '42px',
                                                         borderRadius: '12px',
-                                                        background: 'linear-gradient(135deg, var(--color-primary), #6366f1)',
+                                                        background: user.avatar_url ? 'transparent' : 'linear-gradient(135deg, var(--color-primary), #6366f1)',
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
                                                         color: 'white',
                                                         fontSize: '14px',
                                                         boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-                                                        fontWeight: 600
+                                                        fontWeight: 600,
+                                                        overflow: 'hidden'
                                                     }}>
-                                                        {user.nombres.charAt(0)}{user.apellidos.charAt(0)}
+                                                        {user.avatar_url ? (
+                                                            <img
+                                                                src={user.avatar_url}
+                                                                alt={`${user.nombres} ${user.apellidos}`}
+                                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                            />
+                                                        ) : (
+                                                            <>{user.nombres.charAt(0)}{user.apellidos.charAt(0)}</>
+                                                        )}
                                                     </div>
                                                     <div style={{
                                                         position: 'absolute',

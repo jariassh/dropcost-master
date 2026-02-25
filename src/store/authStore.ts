@@ -372,6 +372,14 @@ export const useAuthStore = create<AuthState>((set) => ({
                 return;
             }
 
+            // Validar session_token para prevenir bucles de redirección por sesiones cruzadas
+            const localToken = localStorage.getItem('dc_session_token');
+            if (localToken && user.sessionToken !== localToken) {
+                // console.warn('[authStore] Discrepancia de token detectada en init. Forzando logout.');
+                await useAuthStore.getState().logout();
+                return;
+            }
+
             let isAuthenticated = true;
             let requiresOTP = false;
 

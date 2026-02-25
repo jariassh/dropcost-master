@@ -52,10 +52,17 @@ export function SimuladorPage() {
     const [manualPrice, setManualPrice] = useState<number | null>(null);
     const [manualVolumePrice, setManualVolumePrice] = useState<number | null>(null);
 
-    // --- Control de Cambios ---
     const [isDirty, setIsDirty] = useState(false);
     const [showUnsavedModal, setShowUnsavedModal] = useState(false);
     const pendingPath = useRef<string | null>(null);
+    const originalStateRef = useRef<{
+        inputs: SimulatorInputs;
+        volumeEnabled: boolean;
+        volumeMargin: number;
+        maxUnits: number;
+        manualPrice: number | null;
+        manualVolumePrice: number | null;
+    } | null>(null);
 
     // Carga inicial
     useEffect(() => {
@@ -89,8 +96,35 @@ export function SimuladorPage() {
                     }
                 } else {
                     // Si está vacío, solo seteamos el nombre del producto
-                    setInputs(prev => ({ ...prev, productName: data.nombre_producto }));
+                    const entryInputs = { ...DEFAULT_INPUTS, productName: data.nombre_producto };
+                    setInputs(entryInputs);
                 }
+
+                // Guardar estado inicial para comparación
+                const initialInputs = data.estado === 'guardado' ? (data.inputs_json || {
+                    ...DEFAULT_INPUTS,
+                    productName: data.nombre_producto,
+                    productCost: data.costo_producto || 0,
+                    shippingCost: data.costo_flete || 0,
+                    desiredMarginPercent: data.margen ?? 0,
+                    averageCpa: data.cpa ?? 0,
+                    otherExpenses: data.gastos_adicionales ?? 0,
+                    returnRatePercent: data.devoluciones ?? 0,
+                    collectionCommissionPercent: data.comision_recaudo_porcentaje ?? 0,
+                    preCancellationPercent: data.cancelacion_pre_envio_porcentaje ?? 0
+                }) : { ...DEFAULT_INPUTS, productName: data.nombre_producto };
+
+                originalStateRef.current = {
+                    inputs: initialInputs,
+                    volumeEnabled: data.volume_strategy?.enabled ?? false,
+                    volumeMargin: data.volume_strategy?.marginPercent ?? 50,
+                    maxUnits: data.volume_strategy?.priceTable?.length
+                        ? data.volume_strategy.priceTable[data.volume_strategy.priceTable.length - 1].quantity
+                        : 5,
+                    manualPrice: data.results_json?.manualPrice ?? null,
+                    manualVolumePrice: data.results_json?.manualVolumePrice ?? null
+                };
+
                 setIsDirty(false); // Reset dirty on load
             } catch (error) {
                 toast.error('No se pudo cargar el costeo');
@@ -102,10 +136,29 @@ export function SimuladorPage() {
         load();
     }, [id, navigate, toast]);
 
-    // Detectar cambios
+    // Detectar cambios comparando con el estado original
     useEffect(() => {
-        if (!isLoading) setIsDirty(true);
-    }, [inputs, volumeStrategy, maxUnits, manualPrice, manualVolumePrice]);
+        if (!isLoading && originalStateRef.current) {
+            const currentInputsStr = JSON.stringify(inputs);
+            const originalInputsStr = JSON.stringify(originalStateRef.current.inputs);
+
+            const hasInputsChanged = currentInputsStr !== originalInputsStr;
+            const hasVolumeEnabledChanged = volumeStrategy.enabled !== originalStateRef.current.volumeEnabled;
+            const hasVolumeMarginChanged = volumeStrategy.marginPercent !== originalStateRef.current.volumeMargin;
+            const hasMaxUnitsChanged = maxUnits !== originalStateRef.current.maxUnits;
+            const hasManualPriceChanged = (manualPrice ?? null) !== (originalStateRef.current.manualPrice ?? null);
+            const hasManualVolumePriceChanged = (manualVolumePrice ?? null) !== (originalStateRef.current.manualVolumePrice ?? null);
+
+            setIsDirty(
+                hasInputsChanged ||
+                hasVolumeEnabledChanged ||
+                hasVolumeMarginChanged ||
+                hasMaxUnitsChanged ||
+                hasManualPriceChanged ||
+                hasManualVolumePriceChanged
+            );
+        }
+    }, [inputs, volumeStrategy.enabled, volumeStrategy.marginPercent, maxUnits, manualPrice, manualVolumePrice, isLoading]);
 
     // Prevenir salida accidental del navegador (Refresh / Close Tab)
     // NOTA: Los navegadores modernos OBLIGAN a usar su alerta nativa aquí por seguridad.
@@ -158,7 +211,11 @@ export function SimuladorPage() {
                 precio_final: results.suggestedPrice,
                 utilidad_neta: results.netProfitPerSale,
                 inputs_json: inputs,
-                results_json: { ...results, manualPrice: manualPrice ?? undefined },
+                results_json: {
+                    ...results,
+                    manualPrice: manualPrice ?? undefined,
+                    manualVolumePrice: manualVolumePrice ?? undefined
+                },
                 volume_strategy: volumeStrategy.enabled ? volumeStrategy : undefined,
                 estado: 'guardado'
             };

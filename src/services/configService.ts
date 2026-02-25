@@ -397,7 +397,7 @@ export const configService = {
     async getEmailTemplates() {
         const { data, error } = await supabase
             .from('email_templates' as any)
-            .select('*, updated_by_user:users(nombres, apellidos)')
+            .select('*, updated_by_user:users(nombres, apellidos, avatar_url)')
             .order('is_folder', { ascending: false }) // Folders first
             .order('name', { ascending: true });
         
@@ -405,7 +405,8 @@ export const configService = {
         
         return (data as any[]).map(item => ({
             ...item,
-            updated_by_name: item.updated_by_user ? `${item.updated_by_user.nombres || ''} ${item.updated_by_user.apellidos || ''}`.trim() : 'SISTEMA'
+            updated_by_name: item.updated_by_user ? `${item.updated_by_user.nombres || ''} ${item.updated_by_user.apellidos || ''}`.trim() : 'SISTEMA',
+            updated_by_avatar: item.updated_by_user?.avatar_url
         }));
     },
 
@@ -419,13 +420,14 @@ export const configService = {
                 updated_by: user?.id
             })
             .eq('id', id)
-            .select('*, updated_by_user:users(nombres, apellidos)')
+            .select('*, updated_by_user:users(nombres, apellidos, avatar_url)')
             .single();
         if (error) throw error;
         const result = data as any;
         return {
             ...result,
-            updated_by_name: result.updated_by_user ? `${result.updated_by_user.nombres || ''} ${result.updated_by_user.apellidos || ''}`.trim() : 'SISTEMA'
+            updated_by_name: result.updated_by_user ? `${result.updated_by_user.nombres || ''} ${result.updated_by_user.apellidos || ''}`.trim() : 'SISTEMA',
+            updated_by_avatar: result.updated_by_user?.avatar_url
         };
     },
 
@@ -440,13 +442,14 @@ export const configService = {
                 updated_at: new Date().toISOString(),
                 updated_by: user?.id
             })
-            .select('*, updated_by_user:users(nombres, apellidos)')
+            .select('*, updated_by_user:users(nombres, apellidos, avatar_url)')
             .single();
         if (error) throw error;
         const result = data as any;
         return {
             ...result,
-            updated_by_name: result.updated_by_user ? `${result.updated_by_user.nombres || ''} ${result.updated_by_user.apellidos || ''}`.trim() : 'SISTEMA'
+            updated_by_name: result.updated_by_user ? `${result.updated_by_user.nombres || ''} ${result.updated_by_user.apellidos || ''}`.trim() : 'SISTEMA',
+            updated_by_avatar: result.updated_by_user?.avatar_url
         };
     },
 

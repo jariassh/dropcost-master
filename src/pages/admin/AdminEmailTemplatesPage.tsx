@@ -2567,17 +2567,26 @@ export function AdminEmailTemplatesPage() {
                                                                 width: '32px',
                                                                 height: '32px',
                                                                 borderRadius: '10px',
-                                                                backgroundColor: 'var(--color-primary-light)',
-                                                                border: '1.5px solid var(--color-primary)',
+                                                                backgroundColor: item.updated_by_avatar ? 'transparent' : 'var(--color-primary-light)',
+                                                                border: item.updated_by_avatar ? 'none' : '1.5px solid var(--color-primary)',
                                                                 display: 'flex',
                                                                 alignItems: 'center',
                                                                 justifyContent: 'center',
                                                                 fontSize: '12px',
                                                                 fontWeight: 600,
                                                                 color: 'var(--color-primary)',
-                                                                boxShadow: '0 2px 4px rgba(0,102,255,0.1)'
+                                                                boxShadow: '0 2px 4px rgba(0,102,255,0.1)',
+                                                                overflow: 'hidden'
                                                             }}>
-                                                                {(item.updated_by_name || 'S').charAt(0).toUpperCase()}
+                                                                {item.updated_by_avatar ? (
+                                                                    <img
+                                                                        src={item.updated_by_avatar}
+                                                                        alt={item.updated_by_name}
+                                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                                    />
+                                                                ) : (
+                                                                    <>{(item.updated_by_name || 'S').charAt(0).toUpperCase()}</>
+                                                                )}
                                                             </div>
                                                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                                 <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>

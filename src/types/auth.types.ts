@@ -7,6 +7,7 @@ export interface User {
     apellidos: string;
     telefono?: string;
     pais?: string;
+    avatarUrl?: string;
     planId?: string;
     plan?: {
         id: string;
@@ -36,6 +37,7 @@ export interface User {
     fechaRegistro: string;
     ultimaActividad?: string;
     codigoReferido?: string;
+    sessionToken?: string;
     wallet_saldo?: number;
     bank_info?: {
         banco_nombre: string;

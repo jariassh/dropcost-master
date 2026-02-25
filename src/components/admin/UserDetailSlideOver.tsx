@@ -206,16 +206,25 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                             width: '72px',
                             height: '72px',
                             borderRadius: '20px',
-                            background: 'linear-gradient(135deg, var(--color-primary), #6366f1)',
+                            background: user.avatar_url ? 'transparent' : 'linear-gradient(135deg, var(--color-primary), #6366f1)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             color: 'white',
                             fontSize: '24px',
                             fontWeight: 700,
-                            boxShadow: 'var(--shadow-lg)'
+                            boxShadow: 'var(--shadow-lg)',
+                            overflow: 'hidden'
                         }}>
-                            {user.nombres.charAt(0)}{user.apellidos.charAt(0)}
+                            {user.avatar_url ? (
+                                <img
+                                    src={user.avatar_url}
+                                    alt={`${user.nombres} ${user.apellidos}`}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                            ) : (
+                                <>{user.nombres.charAt(0)}{user.apellidos.charAt(0)}</>
+                            )}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>

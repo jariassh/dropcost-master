@@ -349,13 +349,22 @@ export function AppLayout() {
                                 <div
                                     style={{
                                         width: '34px', height: '34px',
-                                        backgroundColor: 'var(--color-primary)',
+                                        backgroundColor: user?.avatarUrl ? 'transparent' : 'var(--color-primary)',
                                         borderRadius: '50%',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         color: '#fff', fontSize: '13px', fontWeight: 700,
+                                        overflow: 'hidden'
                                     }}
                                 >
-                                    {user?.nombres?.[0] || 'U'}
+                                    {user?.avatarUrl ? (
+                                        <img
+                                            src={user.avatarUrl}
+                                            alt={user.nombres}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        />
+                                    ) : (
+                                        <>{user?.nombres?.[0] || 'U'}</>
+                                    )}
                                 </div>
                                 <ChevronDown size={14} color="var(--text-tertiary)" />
                             </button>
@@ -393,21 +402,30 @@ export function AppLayout() {
                                             <div
                                                 style={{
                                                     width: '56px', height: '56px',
-                                                    background: 'linear-gradient(135deg, #0066FF, #003D99)',
+                                                    background: user?.avatarUrl ? 'transparent' : 'linear-gradient(135deg, #0066FF, #003D99)',
                                                     borderRadius: '50%',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                     color: '#fff', fontSize: '20px', fontWeight: 700,
                                                     margin: '0 auto 12px',
                                                     boxShadow: '0 4px 12px rgba(0,102,255,0.3)',
+                                                    overflow: 'hidden'
                                                 }}
                                             >
-                                                {user?.nombres?.[0] || 'U'}
+                                                {user?.avatarUrl ? (
+                                                    <img
+                                                        src={user.avatarUrl}
+                                                        alt={user.nombres}
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                    />
+                                                ) : (
+                                                    <>{user?.nombres?.[0] || 'U'}</>
+                                                )}
                                             </div>
                                             <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 2px' }}>
                                                 {user?.nombres || 'Usuario'} {user?.apellidos || ''}
                                             </p>
                                             <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', margin: '0 0 12px' }}>
-                                                {user?.email || 'usuario@ejemplo.com'}
+                                                {user?.email || 'No disponible'}
                                             </p>
                                             <span
                                                 style={{

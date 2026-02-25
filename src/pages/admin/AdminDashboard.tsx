@@ -124,16 +124,25 @@ export const AdminDashboard: React.FC = () => {
                                             width: '36px',
                                             height: '36px',
                                             borderRadius: '8px',
-                                            background: 'linear-gradient(135deg, var(--color-primary), #6366f1)',
+                                            background: user.avatar_url ? 'transparent' : 'linear-gradient(135deg, var(--color-primary), #6366f1)',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             color: '#fff',
                                             fontSize: '13px',
                                             fontWeight: 600,
-                                            flexShrink: 0
+                                            flexShrink: 0,
+                                            overflow: 'hidden'
                                         }}>
-                                            {user.nombres?.[0] || 'U'}
+                                            {user.avatar_url ? (
+                                                <img
+                                                    src={user.avatar_url}
+                                                    alt={`${user.nombres} ${user.apellidos}`}
+                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                />
+                                            ) : (
+                                                <>{user.nombres?.[0] || 'U'}</>
+                                            )}
                                         </div>
                                         <div style={{ minWidth: 0 }}>
                                             <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

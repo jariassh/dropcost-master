@@ -56,7 +56,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
             // Obtener datos de usuarios
             const { data: usersData, error: usersError } = await supabase
                 .from('users')
-                .select('id, email, nombres, apellidos, pais')
+                .select('id, email, nombres, apellidos, pais, avatar_url')
                 .in('id', userIds);
 
             if (usersError) throw usersError;
@@ -351,15 +351,24 @@ export const AdminWithdrawalsPage: React.FC = () => {
                                                         width: '40px',
                                                         height: '40px',
                                                         borderRadius: '12px',
-                                                        background: 'linear-gradient(135deg, var(--color-primary), #6366f1)',
+                                                        background: (w as any).users?.avatar_url ? 'transparent' : 'linear-gradient(135deg, var(--color-primary), #6366f1)',
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
                                                         color: '#fff',
                                                         fontSize: '14px',
-                                                        fontWeight: 600
+                                                        fontWeight: 600,
+                                                        overflow: 'hidden'
                                                     }}>
-                                                        {((w as any).users?.nombres?.charAt(0) || '') + ((w as any).users?.apellidos?.charAt(0) || 'U')}
+                                                        {(w as any).users?.avatar_url ? (
+                                                            <img
+                                                                src={(w as any).users.avatar_url}
+                                                                alt={`${(w as any).users?.nombres} ${(w as any).users?.apellidos}`}
+                                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                            />
+                                                        ) : (
+                                                            <>{((w as any).users?.nombres?.charAt(0) || '') + ((w as any).users?.apellidos?.charAt(0) || 'U')}</>
+                                                        )}
                                                     </div>
                                                     <div>
                                                         <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>
@@ -693,11 +702,20 @@ const WithdrawalDetailModal: React.FC<{
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{
                             width: '44px', height: '44px', borderRadius: '12px',
-                            background: 'linear-gradient(135deg, var(--color-primary), #6366f1)',
+                            background: (w as any).users?.avatar_url ? 'transparent' : 'linear-gradient(135deg, var(--color-primary), #6366f1)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: '#fff', fontSize: '16px', fontWeight: 700
+                            color: '#fff', fontSize: '16px', fontWeight: 700,
+                            overflow: 'hidden'
                         }}>
-                            {((w as any).users?.nombres?.charAt(0) || '') + ((w as any).users?.apellidos?.charAt(0) || 'U')}
+                            {(w as any).users?.avatar_url ? (
+                                <img
+                                    src={(w as any).users.avatar_url}
+                                    alt={`${(w as any).users?.nombres} ${(w as any).users?.apellidos}`}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                            ) : (
+                                <>{((w as any).users?.nombres?.charAt(0) || '') + ((w as any).users?.apellidos?.charAt(0) || 'U')}</>
+                            )}
                         </div>
                         <div>
                             <h2 style={{ fontSize: '17px', fontWeight: 700, margin: 0 }}>
