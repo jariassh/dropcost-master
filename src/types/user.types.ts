@@ -22,6 +22,8 @@ export interface User {
     ultima_actividad?: string;
     avatar_url?: string;
     plan_id?: string; // ID del plan suscrito
+    fecha_vencimiento_plan?: string;
+    dias_restantes?: number;
 }
 
 export interface UserFilters {

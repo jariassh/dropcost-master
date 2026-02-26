@@ -29,6 +29,7 @@ export interface User {
     };
     estadoSuscripcion?: 'activa' | 'cancelada' | 'suspendida' | 'trial' | 'inactiva' | 'pendiente';
     fechaVencimiento?: string;
+    diasRestantes?: number;
     plan_precio_pagado?: number;
     plan_periodo?: 'monthly' | 'semiannual';
     emailVerificado: boolean;

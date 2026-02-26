@@ -19,14 +19,19 @@ import {
     Smartphone,
     Globe,
     RefreshCw,
-    X
+    X,
+    Edit2,
+    Save,
+    RotateCcw
 } from 'lucide-react';
+import { SmartPhoneInput } from '../common/SmartPhoneInput';
 import { Button } from '../common/Button';
 import { AssignPlanModal } from './AssignPlanModal';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 import { obtenerPaisPorCodigo, Pais } from '../../services/paisesService';
 import { userService } from '../../services/userService';
-import { resendVerificationEmail } from '../../services/authService';
+import { storeService } from '../../services/storeService';
+import { resendVerificationEmail, requestPasswordReset } from '../../services/authService';
 import { useToast } from '../common/Toast';
 
 import { Plan } from '../../types/plans.types';
@@ -46,6 +51,13 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
     const [countryData, setCountryData] = useState<Pais | null>(null);
     const [loadingAction, setLoadingAction] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState<Partial<User>>({});
+    const [saving, setSaving] = useState(false);
+    const [totalStores, setTotalStores] = useState<number | null>(null);
+    const [totalLogins, setTotalLogins] = useState<number | null>(null);
+    const [totalCosteos, setTotalCosteos] = useState<number | null>(null);
+    const [loadingReset, setLoadingReset] = useState(false);
     const toast = useToast();
 
     const fetchActivity = async () => {
@@ -55,8 +67,18 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
             // Fetch last 10 logs for this user
             const response = await auditService.getLogs({ usuario_id: user.id }, 1, 10);
             setActivity(response.data);
+
+            // Fetch real stats
+            const tiendas = await storeService.getTiendas(user.id);
+            setTotalStores(tiendas.length);
+
+            // Fetch real login count from audit logs
+            const loginLogs = await auditService.getLogs({ usuario_id: user.id, accion: 'LOGIN' }, 1, 1);
+            setTotalLogins(loginLogs.count);
+
+            setTotalCosteos(0);
         } catch (error) {
-            console.error('Error fetching user activity:', error);
+            console.error('Error fetching user activity/stats:', error);
         } finally {
             setLoadingActivity(false);
         }
@@ -65,11 +87,14 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
     useEffect(() => {
         if (isOpen && user) {
             fetchActivity();
+            setEditForm({ ...user });
             if (user.pais) {
                 obtenerPaisPorCodigo(user.pais).then(setCountryData);
             } else {
                 setCountryData(null);
             }
+        } else {
+            setIsEditing(false);
         }
     }, [isOpen, user?.id, user?.pais]);
 
@@ -138,6 +163,43 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
         setIsConfirmOpen(true);
     };
 
+    const handlePasswordReset = async () => {
+        if (!user?.email) return;
+        setLoadingReset(true);
+        try {
+            // Use requestPasswordReset from authService which triggers branded MJML email
+            const result = await requestPasswordReset({ email: user.email });
+            if (result.success) {
+                toast.success('Email enviado', 'Se han enviado las instrucciones de recuperación (Plantilla Branded).');
+            } else {
+                toast.error('Error', result.error || 'No se pudo enviar el correo.');
+            }
+        } catch (error) {
+            toast.error('Error', 'Error de conexión.');
+        } finally {
+            setLoadingReset(false);
+        }
+    };
+
+    const handleSaveChanges = async () => {
+        if (!user) return;
+        setSaving(true);
+        try {
+            const success = await userService.updateUser(user.id, editForm);
+            if (success) {
+                toast.success('Usuario actualizado', 'Los cambios se han guardado correctamente.');
+                setIsEditing(false);
+                onUserUpdate?.();
+            } else {
+                toast.error('Error', 'No se pudieron guardar los cambios.');
+            }
+        } catch (error) {
+            toast.error('Error', 'Error de conexión al guardar cambios.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const executeToggleSuspension = async () => {
         if (!user) return;
         const isCurrentlySuspended = user.estado_suscripcion === 'suspendida';
@@ -161,6 +223,35 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
     };
 
     if (!user) return null;
+
+    // Calculate usage cycle dynamically
+    const calculateUsage = () => {
+        if (!user) return 0;
+        if (user.plan_id === 'plan_free' || !user.plan_id) return 0;
+
+        // Logical usage: based on remaining days. 
+        // We calculate it locally to ensure it's fresh after an update.
+        let remaining = user.dias_restantes;
+        if (user.fecha_vencimiento_plan) {
+            const now = new Date();
+            const expiry = new Date(user.fecha_vencimiento_plan);
+            remaining = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        }
+
+        const currentRemaining = remaining ?? 0;
+
+        // If remaining is more than 30 days (extended or annual plan), 
+        // usage cycle (monthly) is effectively 0% for the current period.
+        if (currentRemaining > 30) return 0;
+        if (currentRemaining <= 0) return 100;
+
+        const total = 30; // Standard monthly cycle
+        const usage = Math.max(0, Math.min(100, Math.round(((total - currentRemaining) / total) * 100)));
+        return usage;
+    };
+
+    const usage = calculateUsage();
+    const expiryDate = user.fecha_vencimiento_plan ? new Date(user.fecha_vencimiento_plan).toLocaleDateString('es-ES', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
 
     return (
         <SlideOver
@@ -206,7 +297,7 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                             width: '72px',
                             height: '72px',
                             borderRadius: '20px',
-                            background: user.avatar_url ? 'transparent' : 'linear-gradient(135deg, var(--color-primary), #6366f1)',
+                            background: user?.avatar_url ? 'transparent' : 'linear-gradient(135deg, var(--color-primary), #6366f1)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -216,22 +307,54 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                             boxShadow: 'var(--shadow-lg)',
                             overflow: 'hidden'
                         }}>
-                            {user.avatar_url ? (
+                            {user?.avatar_url ? (
                                 <img
                                     src={user.avatar_url}
                                     alt={`${user.nombres} ${user.apellidos}`}
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
                             ) : (
-                                <>{user.nombres.charAt(0)}{user.apellidos.charAt(0)}</>
+                                <>{user?.nombres.charAt(0)}{user?.apellidos.charAt(0)}</>
                             )}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                            <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-                                {user.nombres} {user.apellidos}
-                            </h3>
+                            {isEditing ? (
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                                    <input
+                                        value={editForm.nombres}
+                                        onChange={(e) => setEditForm({ ...editForm, nombres: e.target.value })}
+                                        placeholder="Nombres"
+                                        style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '14px' }}
+                                    />
+                                    <input
+                                        value={editForm.apellidos}
+                                        onChange={(e) => setEditForm({ ...editForm, apellidos: e.target.value })}
+                                        placeholder="Apellidos"
+                                        style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '14px' }}
+                                    />
+                                </div>
+                            ) : (
+                                <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                                    {user.nombres} {user.apellidos}
+                                </h3>
+                            )}
                             <p style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 500, margin: '4px 0 8px 0' }}>{user.email}</p>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    {user.email_verificado && (
+                                        <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            onClick={handlePasswordReset}
+                                            disabled={loadingReset}
+                                            style={{ height: '32px', padding: '0 12px', borderRadius: '8px' }}
+                                        >
+                                            {loadingReset ? '...' : <><Key size={14} style={{ marginRight: '6px' }} /> Recuperación Branded</>}
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <span style={{
                                     padding: '2px 8px',
                                     backgroundColor: 'var(--bg-secondary)',
@@ -244,6 +367,23 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                                 }}>
                                     ID USUARIO: #{user.id.substring(0, 8)}
                                 </span>
+
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    {isEditing ? (
+                                        <>
+                                            <Button size="sm" variant="secondary" onClick={() => setIsEditing(false)} style={{ height: '32px', padding: '0 12px', borderRadius: '8px' }}>
+                                                <X size={14} style={{ marginRight: '6px' }} /> Cancelar
+                                            </Button>
+                                            <Button size="sm" onClick={handleSaveChanges} disabled={saving} style={{ height: '32px', padding: '0 12px', borderRadius: '8px' }}>
+                                                {saving ? '...' : <><Save size={14} style={{ marginRight: '6px' }} /> Guardar</>}
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <Button size="sm" variant="secondary" onClick={() => setIsEditing(true)} style={{ height: '32px', padding: '0 12px', borderRadius: '8px' }}>
+                                            <Edit2 size={14} style={{ marginRight: '6px' }} /> Editar
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -260,11 +400,15 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                             </div>
                             <div style={{ padding: '16px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '16px' }}>
                                 <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Total Tiendas</p>
-                                <p style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>0</p>
+                                <p style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                    {totalStores !== null ? totalStores : '...'}
+                                </p>
                             </div>
                             <div style={{ padding: '16px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '16px' }}>
                                 <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Logins</p>
-                                <p style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>24</p>
+                                <p style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                    {totalLogins !== null ? totalLogins : '...'}
+                                </p>
                             </div>
                             <div style={{ padding: '16px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '16px' }}>
                                 <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Registrado</p>
@@ -300,12 +444,23 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                     <div style={{ height: '8px', width: '100%', backgroundColor: 'var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
-                                        <div style={{ height: '100%', width: '15%', backgroundColor: 'var(--color-primary)' }} />
+                                        <div style={{ height: '100%', width: `${usage}%`, backgroundColor: 'var(--color-primary)', transition: 'width 0.5s ease-out' }} />
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
-                                        <span>Uso del ciclo: 15%</span>
-                                        <span>Renueva: Feb 28, 2026</span>
+                                        <span>Uso del ciclo: {usage}%</span>
+                                        <span>Expira: {expiryDate}</span>
                                     </div>
+                                    {isEditing && (
+                                        <div style={{ marginTop: '12px' }}>
+                                            <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Fecha Vencimiento</p>
+                                            <input
+                                                type="date"
+                                                value={editForm.fecha_vencimiento_plan ? new Date(editForm.fecha_vencimiento_plan).toISOString().split('T')[0] : ''}
+                                                onChange={(e) => setEditForm({ ...editForm, fecha_vencimiento_plan: e.target.value })}
+                                                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '14px' }}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -315,36 +470,59 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                             <h4 style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Información de Contacto</h4>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-                                    <Mail size={18} style={{ color: 'var(--text-tertiary)' }} />
-                                    <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 500 }}>{user.email}</span>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-                                    <Smartphone size={18} style={{ color: 'var(--text-tertiary)' }} />
-                                    <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 500 }}>{user.telefono || 'No registrado'}</span>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-                                    {countryData ? (
-                                        <img
-                                            src={`https://flagcdn.com/w40/${countryData.codigo_iso_2.toLowerCase()}.png`}
-                                            alt={countryData.nombre_es}
-                                            style={{ width: '22px', height: '15px', borderRadius: '2px', objectFit: 'cover' }}
-                                        />
-                                    ) : (
-                                        <Globe size={18} style={{ color: 'var(--text-tertiary)' }} />
-                                    )}
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        {countryData ? (
-                                            <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
-                                                {countryData.nombre_es}
-                                            </span>
-                                        ) : (
-                                            <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
-                                                {user.pais || 'No registrado'}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
+                                {isEditing ? (
+                                    <>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
+                                            <div style={{ flex: 1, minWidth: '200px' }}>
+                                                <input
+                                                    value={editForm.email}
+                                                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                                                    placeholder="Correo Electrónico"
+                                                    style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', fontSize: '14px' }}
+                                                />
+                                            </div>
+                                            <div style={{ flex: 1, minWidth: '200px' }}>
+                                                <SmartPhoneInput
+                                                    value={editForm.telefono || ''}
+                                                    onChange={(val, iso) => setEditForm({ ...editForm, telefono: val, pais: iso })}
+                                                />
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                                            <Mail size={18} style={{ color: 'var(--text-tertiary)' }} />
+                                            <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 500 }}>{user.email}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                                            <Smartphone size={18} style={{ color: 'var(--text-tertiary)' }} />
+                                            <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 500 }}>{user.telefono || 'No registrado'}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                                            {countryData ? (
+                                                <img
+                                                    src={`https://flagcdn.com/w40/${countryData.codigo_iso_2.toLowerCase()}.png`}
+                                                    alt={countryData.nombre_es}
+                                                    style={{ width: '22px', height: '15px', borderRadius: '2px', objectFit: 'cover' }}
+                                                />
+                                            ) : (
+                                                <Globe size={18} style={{ color: 'var(--text-tertiary)' }} />
+                                            )}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                {countryData ? (
+                                                    <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
+                                                        {countryData.nombre_es}
+                                                    </span>
+                                                ) : (
+                                                    <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
+                                                        {user.pais || 'No registrado'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -352,10 +530,23 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Rol del Sistema</p>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', textTransform: 'capitalize' }}>
-                                    <Shield size={14} style={{ color: 'var(--color-primary)' }} />
-                                    {user.rol}
-                                </div>
+                                {isEditing ? (
+                                    <select
+                                        value={editForm.rol}
+                                        onChange={(e) => setEditForm({ ...editForm, rol: e.target.value as any })}
+                                        style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', fontSize: '14px', fontWeight: 600 }}
+                                    >
+                                        <option value="cliente">Cliente</option>
+                                        <option value="lider">Líder</option>
+                                        <option value="admin">Administrador</option>
+                                        <option value="superadmin">Super Admin</option>
+                                    </select>
+                                ) : (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+                                        <Shield size={14} style={{ color: 'var(--color-primary)' }} />
+                                        {user.rol}
+                                    </div>
+                                )}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Verificación</p>
@@ -460,23 +651,28 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                     flexDirection: 'column',
                     gap: '12px'
                 }}>
-                    <button style={{
-                        width: '100%',
-                        padding: '12px',
-                        backgroundColor: 'var(--bg-primary)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        color: 'var(--text-primary)',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px',
-                        transition: 'all 0.2s ease'
-                    }}>
-                        <Key size={16} /> Restablecer Contraseña
+                    <button
+                        onClick={handlePasswordReset}
+                        disabled={loadingAction}
+                        style={{
+                            width: '100%',
+                            padding: '12px',
+                            backgroundColor: 'var(--bg-primary)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '12px',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: 'var(--text-primary)',
+                            cursor: loadingAction ? 'default' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            transition: 'all 0.2s ease',
+                            opacity: loadingAction ? 0.7 : 1
+                        }}
+                    >
+                        <Key size={16} /> {loadingAction ? 'Enviando...' : 'Restablecer Contraseña'}
                     </button>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                         <Button

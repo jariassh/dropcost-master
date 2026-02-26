@@ -117,5 +117,38 @@ export const userService = {
         }
 
         return data as User[];
+    },
+
+    /**
+     * Actualiza los datos de un usuario por su ID
+     */
+    async updateUser(id: string, data: Partial<User>): Promise<boolean> {
+        const { error } = await supabase
+            .from('users')
+            .update(data)
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error updating user:', error);
+            return false;
+        }
+
+        return true;
+    },
+
+    /**
+     * Envía un correo de restablecimiento de contraseña
+     */
+    async sendPasswordResetEmail(email: string): Promise<boolean> {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/reset-password`,
+        });
+
+        if (error) {
+            console.error('Error sending password reset email:', error);
+            return false;
+        }
+
+        return true;
     }
 };
