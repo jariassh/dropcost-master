@@ -134,10 +134,12 @@
 - **Estado:** 90% Completado (Retiros funcionales, falta pasarela automática MP/Stripe).
 - **Commits:** ~20
 
-### FASE 5: Dashboard Operacional (PRÓXIMO)
-- **Estado:** 🟡 5% (Setup de entorno y rama iniciado).
-- **Documentación:** Sí (especificaciones completas).
+### FASE 5: Dashboard Operacional (PLANIFICACIÓN COMPLETADA)
+- **Estado:** 🟡 15% (Diagnóstico y Plan Maestro finalizados).
+- **Documentación:** Sí (Plan Maestro en `/docs/PLAN_IMPLEMENTACION_PM.md`).
 - **Bloqueadores:** Estabilización de entorno Staging y vinculación de CLI.
+- **Próximos pasos:** Implementación de `dashboardService.ts` y Edge Functions base.
+- **Última actualización:** 26-02-2026 14:45
 
 ---
 
