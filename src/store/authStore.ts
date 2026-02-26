@@ -7,6 +7,41 @@ import { create } from 'zustand';
 import type { AuthState, LoginCredentials, RegisterData, VerifyEmailData, TwoFactorData, PasswordResetRequest, User } from '@/types/auth.types';
 import * as authService from '@/services/authService';
 import { auditService } from '@/services/auditService';
+import { supabase } from '@/lib/supabase';
+
+// Single-session polling interval handle
+let _sessionPollInterval: ReturnType<typeof setInterval> | null = null;
+
+/** Inicia polling cada 60s para detectar logins desde otro dispositivo */
+function startSessionPolling(userId: string) {
+    stopSessionPolling();
+    _sessionPollInterval = setInterval(async () => {
+        const localToken = localStorage.getItem('dc_session_token');
+        if (!localToken) return; // No hay token local, no aplica
+
+        const { data } = await supabase
+            .from('users')
+            .select('session_token')
+            .eq('id', userId)
+            .maybeSingle();
+
+        const dbToken = (data as any)?.session_token;
+        if (dbToken && dbToken !== localToken) {
+            // Otro dispositivo inició sesión → cerrar esta sesión
+            localStorage.removeItem('dc_session_token');
+            await supabase.auth.signOut();
+            useAuthStore.getState().logout();
+        }
+    }, 60_000); // cada 60 segundos
+}
+
+/** Cancela el polling de sesión */
+function stopSessionPolling() {
+    if (_sessionPollInterval) {
+        clearInterval(_sessionPollInterval);
+        _sessionPollInterval = null;
+    }
+}
 
 // MODO DESARROLLO: Cambiar a true para deshabilitar login obligatorio
 const DEV_MODE = false;
@@ -55,6 +90,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             }
 
             set({ isLoading: false, user, isAuthenticated: true });
+            if (user) startSessionPolling(user.id);
             
             // Log Auditoría: Login Exitoso
             auditService.recordLog({
@@ -337,10 +373,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     logout: async () => {
         await authService.logoutUser();
         // Limpiar persistencia de 2FA al hacer logout explícito
+        stopSessionPolling();
         const user = useAuthStore.getState().user;
         if (user) {
             localStorage.removeItem(`2fa_verified_${user.id}`);
         }
+        localStorage.removeItem('dc_session_token');
 
         // Log Auditoría: Logout
         if (user) {
@@ -397,6 +435,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             }
 
             set({ user, isAuthenticated, requiresOTP, isInitializing: false, isLoading: false });
+            if (isAuthenticated && user) startSessionPolling(user.id);
         } catch (err) {
             console.error('Initialization error:', err);
             set({ isInitializing: false, isLoading: false });
