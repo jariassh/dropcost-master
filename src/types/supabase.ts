@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -14,132 +14,9 @@ export type Database = {
   }
   public: {
     Tables: {
-      acortador_enlaces: {
-        Row: {
-          active: boolean | null
-          created_at: string
-          id: string
-          slug: string
-          titulo: string | null
-          url_original: string
-          usuario_id: string | null
-          visitas_totales: number | null
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string
-          id?: string
-          slug: string
-          titulo?: string | null
-          url_original: string
-          usuario_id?: string | null
-          visitas_totales?: number | null
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string
-          id?: string
-          slug?: string
-          titulo?: string | null
-          url_original?: string
-          usuario_id?: string | null
-          visitas_totales?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "acortador_enlaces_usuario_id_fkey"
-            columns: ["usuario_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      analisis_trafico: {
-        Row: {
-          dispositivo: string | null
-          eventos_conversion: Json | null
-          fecha_evento: string
-          id: string
-          link_id: string | null
-          pais_visita: string | null
-          referentes: string | null
-          tienda_id: string | null
-        }
-        Insert: {
-          dispositivo?: string | null
-          eventos_conversion?: Json | null
-          fecha_evento?: string
-          id?: string
-          link_id?: string | null
-          pais_visita?: string | null
-          referentes?: string | null
-          tienda_id?: string | null
-        }
-        Update: {
-          dispositivo?: string | null
-          eventos_conversion?: Json | null
-          fecha_evento?: string
-          id?: string
-          link_id?: string | null
-          pais_visita?: string | null
-          referentes?: string | null
-          tienda_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "analisis_trafico_link_id_fkey"
-            columns: ["link_id"]
-            isOneToOne: false
-            referencedRelation: "acortador_enlaces"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "analisis_trafico_tienda_id_fkey"
-            columns: ["tienda_id"]
-            isOneToOne: false
-            referencedRelation: "tiendas"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      audit_logs: {
-        Row: {
-          accion: string
-          created_at: string
-          detalles: Json | null
-          id: string
-          ip_address: string | null
-          usuario_id: string | null
-        }
-        Insert: {
-          accion: string
-          created_at?: string
-          detalles?: Json | null
-          id?: string
-          ip_address?: string | null
-          usuario_id?: string | null
-        }
-        Update: {
-          accion?: string
-          created_at?: string
-          detalles?: Json | null
-          id?: string
-          ip_address?: string | null
-          usuario_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "audit_logs_usuario_id_fkey"
-            columns: ["usuario_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       costeos: {
         Row: {
+          campaign_id_meta: string | null
           cancelacion_pre_envio_porcentaje: number | null
           comision_recaudo_porcentaje: number | null
           costo_producto: number
@@ -153,6 +30,7 @@ export type Database = {
           nombre_producto: string
           otros_gastos: number | null
           precio_sugerido: number
+          product_id_shopify: string | null
           roas_objetivo: number | null
           sku: string | null
           tasa_devolucion_porcentaje: number | null
@@ -162,6 +40,7 @@ export type Database = {
           viabilidad_color: string | null
         }
         Insert: {
+          campaign_id_meta?: string | null
           cancelacion_pre_envio_porcentaje?: number | null
           comision_recaudo_porcentaje?: number | null
           costo_producto?: number
@@ -175,6 +54,7 @@ export type Database = {
           nombre_producto: string
           otros_gastos?: number | null
           precio_sugerido: number
+          product_id_shopify?: string | null
           roas_objetivo?: number | null
           sku?: string | null
           tasa_devolucion_porcentaje?: number | null
@@ -184,6 +64,7 @@ export type Database = {
           viabilidad_color?: string | null
         }
         Update: {
+          campaign_id_meta?: string | null
           cancelacion_pre_envio_porcentaje?: number | null
           comision_recaudo_porcentaje?: number | null
           costo_producto?: number
@@ -197,6 +78,7 @@ export type Database = {
           nombre_producto?: string
           otros_gastos?: number | null
           precio_sugerido?: number
+          product_id_shopify?: string | null
           roas_objetivo?: number | null
           sku?: string | null
           tasa_devolucion_porcentaje?: number | null
@@ -215,6 +97,219 @@ export type Database = {
           },
         ]
       }
+      dashboard_metrics: {
+        Row: {
+          cpa_promedio: number | null
+          fecha: string
+          gasto_publicidad: number | null
+          id: string
+          ingresos_totales: number | null
+          last_calculation: string | null
+          margen_real: number | null
+          roas_real: number | null
+          tasa_cancelacion_pre_envio: number | null
+          tasa_entrega_neta: number | null
+          tienda_id: string
+          ventas_count: number | null
+        }
+        Insert: {
+          cpa_promedio?: number | null
+          fecha: string
+          gasto_publicidad?: number | null
+          id?: string
+          ingresos_totales?: number | null
+          last_calculation?: string | null
+          margen_real?: number | null
+          roas_real?: number | null
+          tasa_cancelacion_pre_envio?: number | null
+          tasa_entrega_neta?: number | null
+          tienda_id: string
+          ventas_count?: number | null
+        }
+        Update: {
+          cpa_promedio?: number | null
+          fecha?: string
+          gasto_publicidad?: number | null
+          id?: string
+          ingresos_totales?: number | null
+          last_calculation?: string | null
+          margen_real?: number | null
+          roas_real?: number | null
+          tasa_cancelacion_pre_envio?: number | null
+          tasa_entrega_neta?: number | null
+          tienda_id?: string
+          ventas_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_metrics_tienda_id_fkey"
+            columns: ["tienda_id"]
+            isOneToOne: false
+            referencedRelation: "tiendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_meta_ads: {
+        Row: {
+          clics: number | null
+          conversiones: number | null
+          cpa_real: number | null
+          estado_campana: string | null
+          fecha_creacion_campana: string | null
+          fecha_sincronizacion: string
+          gasto_real: number | null
+          id: string
+          id_campana_meta: string
+          id_cuenta_publicidad: string | null
+          impresiones: number | null
+          moneda: string | null
+          nombre_campana: string | null
+          nombre_cuenta: string | null
+          presupuesto_diario: number | null
+          usuario_id: string
+          valor_acciones: number | null
+        }
+        Insert: {
+          clics?: number | null
+          conversiones?: number | null
+          cpa_real?: number | null
+          estado_campana?: string | null
+          fecha_creacion_campana?: string | null
+          fecha_sincronizacion?: string
+          gasto_real?: number | null
+          id?: string
+          id_campana_meta: string
+          id_cuenta_publicidad?: string | null
+          impresiones?: number | null
+          moneda?: string | null
+          nombre_campana?: string | null
+          nombre_cuenta?: string | null
+          presupuesto_diario?: number | null
+          usuario_id: string
+          valor_acciones?: number | null
+        }
+        Update: {
+          clics?: number | null
+          conversiones?: number | null
+          cpa_real?: number | null
+          estado_campana?: string | null
+          fecha_creacion_campana?: string | null
+          fecha_sincronizacion?: string
+          gasto_real?: number | null
+          id?: string
+          id_campana_meta?: string
+          id_cuenta_publicidad?: string | null
+          impresiones?: number | null
+          moneda?: string | null
+          nombre_campana?: string | null
+          nombre_cuenta?: string | null
+          presupuesto_diario?: number | null
+          usuario_id?: string
+          valor_acciones?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_meta_ads_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_shopify_orders: {
+        Row: {
+          cancel_reason: string | null
+          cancelled_at: string | null
+          created_at: string
+          currency: string | null
+          financial_status: string | null
+          fulfillment_status: string | null
+          id: string
+          order_number: string | null
+          shopify_created_at: string | null
+          shopify_order_id: number
+          shopify_updated_at: string | null
+          subtotal_price: number | null
+          tienda_id: string
+          total_price: number | null
+          total_tax: number | null
+        }
+        Insert: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string | null
+          financial_status?: string | null
+          fulfillment_status?: string | null
+          id?: string
+          order_number?: string | null
+          shopify_created_at?: string | null
+          shopify_order_id: number
+          shopify_updated_at?: string | null
+          subtotal_price?: number | null
+          tienda_id: string
+          total_price?: number | null
+          total_tax?: number | null
+        }
+        Update: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string | null
+          financial_status?: string | null
+          fulfillment_status?: string | null
+          id?: string
+          order_number?: string | null
+          shopify_created_at?: string | null
+          shopify_order_id?: number
+          shopify_updated_at?: string | null
+          subtotal_price?: number | null
+          tienda_id?: string
+          total_price?: number | null
+          total_tax?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_shopify_orders_tienda_id_fkey"
+            columns: ["tienda_id"]
+            isOneToOne: false
+            referencedRelation: "tiendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_templates: {
+        Row: {
+          content_html: string | null
+          content_mjml: string | null
+          created_at: string
+          id: string
+          nombre: string
+          slug: string
+          subject: string
+        }
+        Insert: {
+          content_html?: string | null
+          content_mjml?: string | null
+          created_at?: string
+          id?: string
+          nombre: string
+          slug: string
+          subject: string
+        }
+        Update: {
+          content_html?: string | null
+          content_mjml?: string | null
+          created_at?: string
+          id?: string
+          nombre?: string
+          slug?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       integraciones: {
         Row: {
           config_sync: Json | null
@@ -222,9 +317,10 @@ export type Database = {
           credenciales_encriptadas: string | null
           estado: string
           id: string
-          tienda_id: string
+          tienda_id: string | null
           tipo: string
           ultima_sincronizacion: string | null
+          usuario_id: string | null
         }
         Insert: {
           config_sync?: Json | null
@@ -232,9 +328,10 @@ export type Database = {
           credenciales_encriptadas?: string | null
           estado?: string
           id?: string
-          tienda_id: string
+          tienda_id?: string | null
           tipo: string
           ultima_sincronizacion?: string | null
+          usuario_id?: string | null
         }
         Update: {
           config_sync?: Json | null
@@ -242,9 +339,10 @@ export type Database = {
           credenciales_encriptadas?: string | null
           estado?: string
           id?: string
-          tienda_id?: string
+          tienda_id?: string | null
           tipo?: string
           ultima_sincronizacion?: string | null
+          usuario_id?: string | null
         }
         Relationships: [
           {
@@ -254,71 +352,47 @@ export type Database = {
             referencedRelation: "tiendas"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      ofertas: {
-        Row: {
-          id: string
-          usuario_id: string
-          tienda_id: string
-          costeo_id: string | null
-          nombre_producto: string
-          tipo_estrategia: string
-          configuracion_json: Json
-          ganancia_estimada: number | null
-          margen_estimado_porcentaje: number | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          usuario_id: string
-          tienda_id: string
-          costeo_id?: string | null
-          nombre_producto: string
-          tipo_estrategia: string
-          configuracion_json?: Json
-          ganancia_estimada?: number | null
-          margen_estimado_porcentaje?: number | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          usuario_id?: string
-          tienda_id?: string
-          costeo_id?: string | null
-          nombre_producto?: string
-          tipo_estrategia?: string
-          configuracion_json?: Json
-          ganancia_estimada?: number | null
-          margen_estimado_porcentaje?: number | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
           {
-            foreignKeyName: "ofertas_usuario_id_fkey"
+            foreignKeyName: "integraciones_usuario_id_fkey"
             columns: ["usuario_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "ofertas_tienda_id_fkey"
-            columns: ["tienda_id"]
-            isOneToOne: false
-            referencedRelation: "tiendas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ofertas_costeo_id_fkey"
-            columns: ["costeo_id"]
-            isOneToOne: false
-            referencedRelation: "costeos"
-            referencedColumns: ["id"]
-          }
         ]
+      }
+      plans: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          limits: Json
+          name: string
+          price_monthly: number
+          price_semiannual: number | null
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          limits?: Json
+          name: string
+          price_monthly: number
+          price_semiannual?: number | null
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          limits?: Json
+          name?: string
+          price_monthly?: number
+          price_semiannual?: number | null
+          slug?: string
+        }
+        Relationships: []
       }
       referidos_lideres: {
         Row: {
@@ -330,9 +404,9 @@ export type Database = {
           id: string
           nombre: string
           porcentaje_comision: number
+          total_clicks: number | null
           total_comisiones_generadas: number | null
           total_usuarios_referidos: number | null
-          total_clicks: number | null
           user_id: string | null
         }
         Insert: {
@@ -343,10 +417,10 @@ export type Database = {
           estado?: string
           id?: string
           nombre: string
-          porcentaje_comision: number
+          porcentaje_comision?: number
+          total_clicks?: number | null
           total_comisiones_generadas?: number | null
           total_usuarios_referidos?: number | null
-          total_clicks?: number | null
           user_id?: string | null
         }
         Update: {
@@ -358,9 +432,9 @@ export type Database = {
           id?: string
           nombre?: string
           porcentaje_comision?: number
+          total_clicks?: number | null
           total_comisiones_generadas?: number | null
           total_usuarios_referidos?: number | null
-          total_clicks?: number | null
           user_id?: string | null
         }
         Relationships: [
@@ -407,131 +481,6 @@ export type Database = {
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      plans: {
-        Row: {
-          id: string
-          slug: string
-          name: string
-          description: string | null
-          price_monthly: number
-          price_yearly: number | null
-          currency: string
-          features: Json | null
-          limits: Json | null
-          is_active: boolean
-          is_public: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          slug: string
-          name: string
-          description?: string | null
-          price_monthly: number
-          price_yearly?: number | null
-          currency?: string
-          features?: Json | null
-          limits?: Json | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          slug?: string
-          name?: string
-          description?: string | null
-          price_monthly?: number
-          price_yearly?: number | null
-          currency?: string
-          features?: Json | null
-          limits?: Json | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      sistema_referidos_config: {
-        Row: {
-          id: string
-          comision_nivel_1: number
-          comision_nivel_2: number
-          referidos_minimo_lider: number
-          meses_vigencia_comision: number
-          fecha_actualizacion: string
-          actualizado_por: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          comision_nivel_1?: number
-          comision_nivel_2?: number
-          referidos_minimo_lider?: number
-          meses_vigencia_comision?: number
-          fecha_actualizacion?: string
-          actualizado_por?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          comision_nivel_1?: number
-          comision_nivel_2?: number
-          referidos_minimo_lider?: number
-          meses_vigencia_comision?: number
-          fecha_actualizacion?: string
-          actualizado_por?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sistema_referidos_config_actualizado_por_fkey"
-            columns: ["actualizado_por"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      sistema_referidos_cambios: {
-        Row: {
-          id: string
-          tipo_cambio: string
-          valor_anterior: number | null
-          valor_nuevo: number | null
-          usuario_admin: string
-          fecha_cambio: string
-          descripcion: string | null
-        }
-        Insert: {
-          id?: string
-          tipo_cambio: string
-          valor_anterior?: number | null
-          valor_nuevo?: number | null
-          usuario_admin: string
-          fecha_cambio?: string
-          descripcion?: string | null
-        }
-        Update: {
-          id?: string
-          tipo_cambio?: string
-          valor_anterior?: number | null
-          valor_nuevo?: number | null
-          usuario_admin?: string
-          fecha_cambio?: string
-          descripcion?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sistema_referidos_cambios_usuario_admin_fkey"
-            columns: ["usuario_admin"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
         ]
       }
       tiendas: {
@@ -583,58 +532,71 @@ export type Database = {
           "2fa_habilitado": boolean | null
           apellidos: string | null
           avatar_url: string | null
+          bank_info: Json | null
           codigo_referido_personal: string | null
           created_at: string
+          dias_restantes: number | null
           email: string
           email_verificado: boolean | null
           estado_suscripcion: string | null
-          fecha_registro: string
+          fecha_vencimiento_plan: string | null
           id: string
           nombres: string | null
           pais: string | null
           plan_id: string | null
+          plan_periodo: string | null
+          plan_precio_pagado: number | null
           rol: string | null
+          session_token: string | null
           telefono: string | null
-          ultima_actividad: string | null
           updated_at: string
           wallet_saldo: number | null
-          session_token: string | null
         }
         Insert: {
           "2fa_habilitado"?: boolean | null
           apellidos?: string | null
+          avatar_url?: string | null
+          bank_info?: Json | null
           codigo_referido_personal?: string | null
           created_at?: string
+          dias_restantes?: number | null
           email: string
           email_verificado?: boolean | null
           estado_suscripcion?: string | null
-          fecha_registro?: string
+          fecha_vencimiento_plan?: string | null
           id: string
           nombres?: string | null
           pais?: string | null
           plan_id?: string | null
+          plan_periodo?: string | null
+          plan_precio_pagado?: number | null
           rol?: string | null
+          session_token?: string | null
           telefono?: string | null
-          ultima_actividad?: string | null
           updated_at?: string
           wallet_saldo?: number | null
         }
         Update: {
           "2fa_habilitado"?: boolean | null
           apellidos?: string | null
+          avatar_url?: string | null
+          bank_info?: Json | null
           codigo_referido_personal?: string | null
           created_at?: string
+          dias_restantes?: number | null
           email?: string
           email_verificado?: boolean | null
           estado_suscripcion?: string | null
-          fecha_registro?: string
+          fecha_vencimiento_plan?: string | null
           id?: string
           nombres?: string | null
           pais?: string | null
           plan_id?: string | null
+          plan_periodo?: string | null
+          plan_precio_pagado?: number | null
           rol?: string | null
+          session_token?: string | null
           telefono?: string | null
-          ultima_actividad?: string | null
           updated_at?: string
           wallet_saldo?: number | null
         }
@@ -645,21 +607,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_referrer_info: {
-        Args: {
-          ref_code: string
-        }
+      calculate_kpis: {
+        Args: { p_end_date: string; p_start_date: string; p_tienda_id: string }
         Returns: {
-          nombres: string
-          apellidos: string
+          cpa_promedio: number
+          fecha: string
+          gasto_publicidad: number
+          ingresos_totales: number
+          margen_real: number
+          roas_real: number
+          ventas_count: number
         }[]
       }
-      increment_referral_clicks: {
-        Args: {
-          ref_code: string
-        }
-        Returns: undefined
-      }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
