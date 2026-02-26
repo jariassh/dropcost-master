@@ -45,7 +45,7 @@ const SIDEBAR_OPEN = 240;
 const SIDEBAR_COLLAPSED = 72;
 
 const navItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Dashboard', active: false }, // Próximamente
+    { to: '/', icon: LayoutDashboard, label: 'Dashboard', active: true },
     { to: '/mis-costeos', icon: Calculator, label: 'Mis Costeos', active: true },
     { to: '/ofertas', icon: Gift, label: 'Ofertas Irresistibles', active: true },
     { to: '/referidos', icon: Share2, label: 'Sistema de Referidos', active: true },
