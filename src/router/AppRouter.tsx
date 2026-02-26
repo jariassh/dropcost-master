@@ -51,7 +51,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
     if (isAuthenticated) {
-        return <Navigate to="/mis-costeos" replace />;
+        return <Navigate to="/dashboard" replace />;
     }
 
     return <>{children}</>;
@@ -67,7 +67,7 @@ export function AppRouter() {
                 {/* Landing Page Route */}
                 <Route element={<LandingLayout />}>
                     <Route path="/" element={
-                        isAuthenticated ? <Navigate to="/mis-costeos" replace /> : <LandingPage />
+                        isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />
                     } />
                 </Route>
 
@@ -145,8 +145,7 @@ export function AppRouter() {
                 <Route path="/privacidad" element={<PrivacidadPage />} />
                 <Route path="/cookies" element={<CookiesPage />} />
 
-                {/* Catch-all */}
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/"} replace />} />
             </Routes>
         </>
     );
