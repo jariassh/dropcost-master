@@ -129,10 +129,34 @@ export async function getCurrentUser(): Promise<User | null> {
         .from('users')
         .select('*')
         .eq('id', user.id)
-        .maybeSingle();
+        .maybeSingle<any>();
 
     if (profileError) {
-        console.error("Error fetching user profile (Retry without join):", profileError);
+        console.error("[authService] Error leyendo perfil public.users:", {
+            code: profileError.code,
+            message: profileError.message,
+            details: profileError.details,
+            hint: profileError.hint,
+        });
+        // Si la BD falla (ej. RLS 403), construimos el usuario solo desde JWT metadata
+        const meta = user.user_metadata || {};
+        return {
+            id: user.id,
+            email: user.email!,
+            nombres: (meta.nombres as string) || user.email!.split('@')[0],
+            apellidos: (meta.apellidos as string) || '',
+            telefono: meta.telefono as string | undefined,
+            pais: meta.pais as string | undefined,
+            avatarUrl: meta.avatar_url as string | undefined,
+            rol: ((meta.rol as string) || 'cliente') as any,
+            estadoSuscripcion: 'pendiente' as any,
+            emailVerificado: !!user.email_confirmed_at,
+            twoFactorEnabled: false,
+            fechaRegistro: user.created_at,
+            codigoReferido: undefined,
+            planId: 'plan_free',
+            plan: { id: 'plan_free', slug: 'plan_free', name: 'Plan Gratis', limits: { stores: 1 } },
+        };
     }
 
     // 2. Si tenemos perfil y plan_id, buscamos los detalles del plan por separado
@@ -191,7 +215,8 @@ export async function getCurrentUser(): Promise<User | null> {
         fechaRegistro: user.created_at,
         codigoReferido: profile?.codigo_referido_personal || undefined,
         planId: profile?.plan_id || 'plan_free',
-        fechaVencimiento: (profile as any)?.plan_expires_at,
+        fechaVencimiento: profile?.fecha_vencimiento_plan || profile?.plan_expires_at,
+        diasRestantes: profile?.dias_restantes,
         sessionToken: profile?.session_token || undefined,
         plan_precio_pagado: (profile as any)?.plan_precio_pagado || 0,
         plan_periodo: (profile as any)?.plan_periodo,
