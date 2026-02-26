@@ -3,7 +3,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/common';
-import { BarChart3, RefreshCw, Filter, TrendingUp } from 'lucide-react';
+import { BarChart3, RefreshCw, Filter, TrendingUp, Store, Zap, ShoppingCart } from 'lucide-react';
 import { DashboardKPIs } from '@/components/dashboard/DashboardKPIs';
 import { getDashboardMetrics } from '@/services/dashboardService';
 import { DashboardMetrics } from '@/types/dashboard';
@@ -134,10 +134,14 @@ export function DashboardPage() {
             </div>
 
             {!tiendaActual?.id ? (
-                <div style={{ padding: '60px', textAlign: 'center', backgroundColor: 'var(--bg-secondary)', borderRadius: '16px' }}>
-                    <Store size={48} color="var(--text-tertiary)" style={{ marginBottom: '16px' }} />
-                    <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>Selecciona una Tienda</h3>
-                    <p style={{ color: 'var(--text-secondary)' }}>Por favor elige una tienda del menú lateral para ver el dashboard.</p>
+                <div style={{ padding: '80px 40px', textAlign: 'center', backgroundColor: 'var(--bg-secondary)', borderRadius: '24px', border: '1px dashed var(--border-color)', maxWidth: '600px', margin: '40px auto' }}>
+                    <div style={{ width: '80px', height: '80px', borderRadius: '40px', backgroundColor: 'var(--color-primary)15', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                        <Store size={40} color="var(--color-primary)" />
+                    </div>
+                    <h3 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '12px' }}>Selecciona tu Tienda</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: 1.6, marginBottom: '24px' }}>
+                        Para ver el rendimiento operacional, los KPIs avanzados y las alertas de campañas, primero debes elegir una tienda del menú lateral.
+                    </p>
                 </div>
             ) : (
                 <>
@@ -204,9 +208,10 @@ export function DashboardPage() {
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-                                        <TrendingUp size={32} color="var(--text-tertiary)" style={{ marginBottom: '16px' }} />
-                                        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: 0 }}>No hay datos suficientes para mostrar.</p>
+                                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', alignItems: 'center', justifyContent: 'center', opacity: 0.6 }}>
+                                        <Zap size={32} color="var(--color-primary)" style={{ marginBottom: '16px' }} />
+                                        <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px' }}>Aún no hay suficiente historial</p>
+                                        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>Conecta tus integraciones para comenzar a ver gráficas.</p>
                                     </div>
                                 )}
                             </div>
@@ -254,7 +259,11 @@ export function DashboardPage() {
                                         </div>
                                     ))
                                 ) : (
-                                    <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px', marginTop: '40px' }}>Sin órdenes recientes</p>
+                                    <div style={{ padding: '40px 0', textAlign: 'center', opacity: 0.7 }}>
+                                        <ShoppingCart size={32} color="var(--text-tertiary)" style={{ margin: '0 auto 12px' }} />
+                                        <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px' }}>Sin órdenes recientes</p>
+                                        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>Tus órdenes de Shopify aparecerán aquí.</p>
+                                    </div>
                                 )}
                             </div>
                         </Card>

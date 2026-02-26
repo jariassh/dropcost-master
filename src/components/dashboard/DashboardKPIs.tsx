@@ -58,54 +58,72 @@ export const DashboardKPIs: React.FC<Props> = ({ metrics, isLoading }) => {
                 marginBottom: '24px'
             }}
         >
-            {cards.map((card) => (
-                <Card key={card.title} hoverable>
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between'
-                        }}
-                    >
-                        <div>
-                            <p
-                                style={{
-                                    fontSize: '13px',
-                                    fontWeight: 500,
-                                    color: 'var(--text-secondary)',
-                                    marginBottom: '8px'
-                                }}
-                            >
-                                {card.title}
-                            </p>
-                            <h3
-                                style={{
-                                    fontSize: '24px',
-                                    fontWeight: 800,
-                                    color: 'var(--text-primary)',
-                                    margin: 0,
-                                    letterSpacing: '-0.02em'
-                                }}
-                            >
-                                {card.value}
-                            </h3>
-                        </div>
+            {cards.map((card, index) => (
+                <div
+                    key={card.title}
+                    style={{
+                        animation: 'slideUp 0.5s ease-out forwards',
+                        opacity: 0,
+                        transform: 'translateY(10px)',
+                        animationDelay: `${index * 0.1}s`
+                    }}
+                >
+                    <style>
+                        {`
+                            @keyframes slideUp {
+                                from { opacity: 0; transform: translateY(15px); }
+                                to { opacity: 1; transform: translateY(0); }
+                            }
+                        `}
+                    </style>
+                    <Card hoverable style={{ height: '100%', transition: 'transform 200ms ease, box-shadow 200ms ease' }} className="hover:-translate-y-1 hover:shadow-lg">
                         <div
                             style={{
-                                width: '48px',
-                                height: '48px',
-                                borderRadius: '12px',
-                                backgroundColor: card.bg,
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                flexShrink: 0
+                                justifyContent: 'space-between'
                             }}
                         >
-                            <card.icon size={24} style={{ color: card.color }} />
+                            <div>
+                                <p
+                                    style={{
+                                        fontSize: '13px',
+                                        fontWeight: 500,
+                                        color: 'var(--text-secondary)',
+                                        marginBottom: '8px'
+                                    }}
+                                >
+                                    {card.title}
+                                </p>
+                                <h3
+                                    style={{
+                                        fontSize: '24px',
+                                        fontWeight: 800,
+                                        color: 'var(--text-primary)',
+                                        margin: 0,
+                                        letterSpacing: '-0.02em'
+                                    }}
+                                >
+                                    {card.value}
+                                </h3>
+                            </div>
+                            <div
+                                style={{
+                                    width: '48px',
+                                    height: '48px',
+                                    borderRadius: '12px',
+                                    backgroundColor: card.bg,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    flexShrink: 0
+                                }}
+                            >
+                                <card.icon size={24} style={{ color: card.color }} />
+                            </div>
                         </div>
-                    </div>
-                </Card>
+                    </Card>
+                </div>
             ))}
         </div>
     );
