@@ -65,6 +65,7 @@ interface EmailItem {
     status: 'activo' | 'archivado';
     trigger_event?: string;
     updated_by_name?: string;
+    updated_by_avatar?: string;
 }
 
 const categorizedVariables = {

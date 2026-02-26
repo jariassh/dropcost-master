@@ -54,6 +54,32 @@ export const storageService = {
     },
 
     /**
+     * Sube un archivo al bucket 'branding'.
+     * Ruta: [path]
+     */
+    async uploadBrandingFile(file: File, filePath: string): Promise<string> {
+        try {
+            const { error: uploadError } = await supabase.storage
+                .from('branding')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: true
+                });
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage
+                .from('branding')
+                .getPublicUrl(filePath);
+
+            return data.publicUrl;
+        } catch (error: any) {
+            console.error('[storageService] Error subiendo archivo de branding:', error);
+            throw error;
+        }
+    },
+
+    /**
      * Elimina un archivo del storage
      */
     async deleteFile(bucket: string, path: string): Promise<boolean> {
