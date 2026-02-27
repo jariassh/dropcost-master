@@ -57,7 +57,7 @@ export const userService = {
         const totalPages = Math.ceil(totalCount / pageSize);
 
         return {
-            data: data as User[],
+            data: data as unknown as User[],
             count: totalCount,
             page,
             pageSize,
@@ -80,7 +80,7 @@ export const userService = {
             return null;
         }
 
-        return data as User;
+        return data as unknown as User;
     },
 
     /**
@@ -116,7 +116,7 @@ export const userService = {
             return [];
         }
 
-        return data as User[];
+        return data as unknown as User[];
     },
 
     /**

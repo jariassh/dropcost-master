@@ -412,6 +412,7 @@ export const configService = {
 
     async updateEmailTemplate(id: string, updates: any) {
         const { data: { user } } = await supabase.auth.getUser();
+        
         const { data, error } = await supabase
             .from('email_templates' as any)
             .update({
@@ -422,7 +423,9 @@ export const configService = {
             .eq('id', id)
             .select('*, updated_by_user:users(nombres, apellidos, avatar_url)')
             .single();
+
         if (error) throw error;
+        
         const result = data as any;
         return {
             ...result,
@@ -433,6 +436,7 @@ export const configService = {
 
     async createEmailTemplate(template: any) {
         const { data: { user } } = await supabase.auth.getUser();
+        
         const { data, error } = await supabase
             .from('email_templates' as any)
             .insert({
@@ -444,7 +448,9 @@ export const configService = {
             })
             .select('*, updated_by_user:users(nombres, apellidos, avatar_url)')
             .single();
+
         if (error) throw error;
+        
         const result = data as any;
         return {
             ...result,
