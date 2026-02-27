@@ -961,7 +961,24 @@ export function ConfiguracionPage() {
                                                 </div>
                                                 <div>
                                                     <h4 style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>{tienda.nombre}</h4>
-                                                    <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{tienda.moneda}</span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                                        {(() => {
+                                                            const pais = allCountries.find(p => p.codigo_iso_2 === tienda.pais);
+                                                            if (pais) {
+                                                                return (
+                                                                    <img
+                                                                        src={`https://flagcdn.com/w20/${pais.codigo_iso_2.toLowerCase()}.png`}
+                                                                        width="16"
+                                                                        height="12"
+                                                                        style={{ borderRadius: '2px', objectFit: 'cover' }}
+                                                                        alt={pais.nombre_es}
+                                                                    />
+                                                                );
+                                                            }
+                                                            return null;
+                                                        })()}
+                                                        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 600 }}>{tienda.moneda}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', gap: '4px' }}>
