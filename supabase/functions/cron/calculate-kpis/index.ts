@@ -15,7 +15,20 @@ serve(async (req) => {
         priorDate.setDate(priorDate.getDate() - 7);
         const startDate = priorDate.toISOString().split('T')[0];
 
-        // Fetch all active tiendas
+        // 1. Trigger Meta Ads Sync
+        try {
+            console.log("Triggering Meta Ads Sync...");
+            const syncRes = await fetch(`${supabaseUrl}/functions/v1/sync-meta-campaigns`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${supabaseServiceKey}` }
+            });
+            const syncData = await syncRes.json();
+            console.log("Meta Sync Result:", JSON.stringify(syncData));
+        } catch (e) {
+            console.error("Failed to trigger Meta Sync, proceeding with KPI calculation:", e);
+        }
+
+        // 2. Fetch all active tiendas
         const { data: tiendas, error: tiendasError } = await supabase
             .from('tiendas')
             .select('id, configuracion')

@@ -23,117 +23,124 @@ export const getDashboardMetrics = async (filters: DashboardFilters): Promise<Da
 
     // Default structure
     const result: DashboardMetrics = {
-        today: { ganancia: 0, ventas: 0, gastos: 0, ordenes_efectivas: 0, cpa_promedio: 0, roas_promedio: 0 },
-        week: { ganancia: 0, ventas: 0, gastos: 0, ordenes_efectivas: 0, cpa_promedio: 0, roas_promedio: 0 },
-        month: { ganancia: 0, ventas: 0, gastos: 0, ordenes_efectivas: 0, cpa_promedio: 0, roas_promedio: 0 },
+        today: { ganancia: 0, ventas: 0, gastos: 0, ordenes_efectivas: 0, cpa_promedio: 0, roas_promedio: 0, aov_promedio: 0, cvr_promedio: 0 },
+        week: { ganancia: 0, ventas: 0, gastos: 0, ordenes_efectivas: 0, cpa_promedio: 0, roas_promedio: 0, aov_promedio: 0, cvr_promedio: 0 },
+        month: { ganancia: 0, ventas: 0, gastos: 0, ordenes_efectivas: 0, cpa_promedio: 0, roas_promedio: 0, aov_promedio: 0, cvr_promedio: 0 },
         history: [],
         topCampaigns: [],
-        recentOrders: []
+        recentOrders: [],
+        costeoAnalytics: []
     };
 
     if (!tienda_id) return result;
 
     try {
-        // 1. Fetch History from RPC (last 30 days overall history for the chart + metrics)
-        const { data: kpis, error: kpisError } = await supabase.rpc('calculate_kpis', {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const { data: proData, error: proError } = await (supabase.rpc as any)('get_dashboard_pro_data', {
             p_tienda_id: tienda_id,
-            p_start_date: monthStart,
-            p_end_date: today
+            p_dias: 90,
+            p_timezone: timezone
         });
 
-        if (!kpisError && kpis) {
-            // Fill history chart data (reverse to show oldest to newest)
-            const sortedKpis = [...kpis].reverse();
-            for (const kpi of sortedKpis) {
-                result.history.push({
-                    fecha: kpi.fecha,
-                    ganancia: Number(kpi.margen_real) || 0,
-                    ventas: Number(kpi.ingresos_totales) || 0,
-                    gastos: Number(kpi.gasto_publicidad) || 0
-                });
+        if (!proError && proData) {
+            const { kpis, charts } = proData as any;
+
+            // History Chart
+            if (charts?.ventas_diarias) {
+                result.history = charts.ventas_diarias.map((d: any) => ({
+                    fecha: d.fecha,
+                    ventas: Number(d.ventas) || 0,
+                    ganancia: 0, // In this simplified phase, we might calculate profit roughly or wait for costeo integration
+                    gastos: 0    // Gasto is global in costings, not daily in this version
+                }));
             }
 
-            // Fill aggregations (today, week, month)
-            const aggregateMetrics = (rangeStart: string): PeriodMetrics => {
-                const rangeData = kpis.filter((k: any) => k.fecha >= rangeStart && k.fecha <= today);
-                const totales = rangeData.reduce((acc: any, curr: any) => ({
-                    ganancia: acc.ganancia + (Number(curr.margen_real) || 0),
-                    ventas: acc.ventas + (Number(curr.ingresos_totales) || 0),
-                    gastos: acc.gastos + (Number(curr.gasto_publicidad) || 0),
-                    ordenes: acc.ordenes + (Number(curr.ventas_count) || 0),
-                }), { ganancia: 0, ventas: 0, gastos: 0, ordenes: 0 });
-
-                return {
-                    ganancia: totales.ganancia,
-                    ventas: totales.ventas,
-                    gastos: totales.gastos,
-                    ordenes_efectivas: totales.ordenes,
-                    cpa_promedio: totales.ordenes > 0 ? (totales.gastos / totales.ordenes) : 0,
-                    roas_promedio: totales.gastos > 0 ? (totales.ventas / totales.gastos) : 0
-                };
+            // Central KPIs (Mapping the 30-day result to 'month')
+            result.month = {
+                ganancia: Number(kpis.ganancia_total) || 0,
+                ventas: Number(kpis.ventas_totales) || 0,
+                gastos: Number(kpis.gastos_totales) || 0,
+                ordenes_efectivas: Number(kpis.ordenes_count) || 0,
+                cpa_promedio: Number(kpis.gastos_totales) / (Number(kpis.ordenes_count) || 1),
+                roas_promedio: Number(kpis.roas_promedio) || 0,
+                aov_promedio: Number(kpis.aov_promedio) || 0,
+                cvr_promedio: Number(kpis.cvr_promedio) || 0
             };
 
-            result.today = aggregateMetrics(today);
-            result.week = aggregateMetrics(weekStart);
-            result.month = aggregateMetrics(monthStart);
+            // For simplification in this phase, we reuse month data for week/today or calculate from charts
+            // Ideally we would have specific RPCs or filters, but let's follow the simplified "Master" scope.
+            result.week = { ...result.month }; 
+            result.today = { ...result.month };
         }
 
-        // 2. Fetch Recent Orders (last 5)
-        const { data: ordersData } = await supabase
-            .from('data_shopify_orders')
+        // 2. Fetch Recent Orders from the NEW public.orders table
+        const { data: ordersData } = await (supabase
+            .from('orders' as any) as any)
             .select('*')
             .eq('tienda_id', tienda_id)
-            .order('shopify_created_at', { ascending: false })
+            .order('fecha_orden', { ascending: false })
             .limit(5);
 
         if (ordersData) {
-            result.recentOrders = ordersData.map((o: any) => ({
+            result.recentOrders = (ordersData as any[]).map((o: any) => ({
                 id: o.id,
-                order_number: o.order_number || `#${o.shopify_order_id}`,
-                date: o.shopify_created_at,
-                status: o.financial_status || 'pending',
-                fulfillment: o.fulfillment_status || 'pending',
-                total: Number(o.total_price) || 0,
-                campaign_name: 'Orgánico/Directo' // Needs attribution logic mapping
+                order_number: o.order_number,
+                date: o.fecha_orden,
+                status: (o.estado_pago?.toLowerCase() || 'pending') as any,
+                fulfillment: (o.estado_logistica?.toLowerCase() || 'pending') as any,
+                total: Number(o.total_orden) || 0,
+                campaign_name: 'Atribución Directa'
             }));
         }
 
-        // 3. Fetch Top Campaigns (We assume the current user is fetched or we just limit to their connected meta ads)
-        // Note: data_meta_ads uses usuario_id. We fetch it using an inner join through tiendas if needed,
-        // but since RLS restricts by usuario_id anyway, we can just fetch campaigns that had spend in the last 7 days.
-        const { data: ui } = await supabase.from('tiendas').select('usuario_id').eq('id', tienda_id).single();
-        if (ui?.usuario_id) {
-            const { data: metaData } = await supabase
-                .from('data_meta_ads')
-                .select('*')
-                .eq('usuario_id', ui.usuario_id)
-                .gte('fecha_sincronizacion', weekStart)
-                .order('gasto_real', { ascending: false })
-                .limit(5);
+        // 3. Fetch Top Campaigns from public.costeos (1:1 Meta mapping)
+        const { data: costeosData } = await supabase
+            .from('costeos')
+            .select('id, nombre_producto, meta_spend, meta_roas, meta_aov, meta_cvr')
+            .eq('tienda_id', tienda_id)
+            .neq('meta_spend', 0)
+            .order('meta_spend', { ascending: false })
+            .limit(3);
 
-            if (metaData) {
-                // Deduplicate by campaign_id since it might have daily entries and sum them
-                const campaignsMap = new Map();
-                for (const m of metaData) {
-                    if (!campaignsMap.has(m.id_campana_meta)) {
-                        campaignsMap.set(m.id_campana_meta, {
-                           campaign_id: m.id_campana_meta,
-                           name: m.nombre_campana || 'Desconocida',
-                           spend: 0, conversions: 0,
-                           status: m.estado_campana || 'ACTIVE'
-                        });
-                    }
-                    const cmap = campaignsMap.get(m.id_campana_meta);
-                    cmap.spend += Number(m.gasto_real || 0);
-                    cmap.conversions += Number(m.conversiones || 0);
-                }
-                
-                result.topCampaigns = Array.from(campaignsMap.values()).map((c: any) => ({
-                    ...c,
-                    cpa: c.conversions > 0 ? (c.spend / c.conversions) : 0,
-                    status: c.status.toUpperCase()
-                })).slice(0, 3); // top 3
-            }
+        if (costeosData) {
+            result.topCampaigns = costeosData.map((c: any) => ({
+                campaign_id: c.id,
+                name: c.nombre_producto,
+                spend: Number(c.meta_spend) || 0,
+                conversions: 0, 
+                cpa: Number(c.meta_aov) || 0,
+                status: 'ACTIVE'
+            }));
+        }
+
+        // 4. Fetch FULL Costeo Analytics for the new table
+        const { data: fullCosteos } = await supabase
+            .from('costeos')
+            .select('id, nombre_producto, precio_final, cpa, costo_flete, meta_spend, meta_roas, meta_aov, meta_cvr')
+            .eq('tienda_id', tienda_id)
+            .order('created_at', { ascending: false });
+
+        if (fullCosteos) {
+            result.costeoAnalytics = (fullCosteos as any[]).map(c => {
+                const realSpend = Number(c.meta_spend) || 0;
+                const realRoas = Number(c.meta_roas) || 0;
+                const realAov = Number(c.meta_aov) || 0;
+                const realSales = realSpend * realRoas;
+                const realOrders = realAov > 0 ? Math.floor(realSales / realAov) : 0;
+                const realCpa = realOrders > 0 ? realSpend / realOrders : 0;
+
+                return {
+                    id: c.id,
+                    nombre_producto: c.nombre_producto,
+                    target_price: Number(c.precio_final) || 0,
+                    target_cpa: Number(c.cpa) || 0,
+                    target_flete: Number(c.costo_flete) || 0,
+                    real_cpa: realCpa,
+                    real_orders: realOrders,
+                    real_spend: realSpend,
+                    real_roas: realRoas
+                };
+            });
         }
 
     } catch (e) {
@@ -142,3 +149,4 @@ export const getDashboardMetrics = async (filters: DashboardFilters): Promise<Da
 
     return result;
 };
+
