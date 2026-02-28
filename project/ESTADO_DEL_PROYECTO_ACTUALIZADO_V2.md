@@ -45,7 +45,7 @@
 - [✅] **Historial de Comisiones:** Totalmente sincronizado con el balance mostrado.
 
 ### C. Simulador de Costeo
-- [✅] **Motor Financiero:** Cálculo exacto de márgenes y ROAS.
+- [✅] **Motor Financiero:** Cálculo exacto de márgenes y rentabilidad.
 - [✅] **Filtros por Fecha:** Corregidos para considerar el inicio/fin del día en la hora local del usuario.
 
 ### D. Integraciones

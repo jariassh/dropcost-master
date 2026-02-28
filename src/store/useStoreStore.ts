@@ -107,6 +107,18 @@ export const useStoreStore = create<StoreState>()(
                     return false;
                 }
             },
+
+            saveShopifyIntegration: async (tiendaId: string, data: { access_token?: string, shop_url?: string, status: 'conectado' | 'desconectado' | 'error' }) => {
+                set({ isLoading: true, error: null });
+                try {
+                    await storeService.upsertShopifyIntegration(tiendaId, data);
+                    set({ isLoading: false });
+                    return true;
+                } catch (error: any) {
+                    set({ error: error.message, isLoading: false });
+                    return false;
+                }
+            }
         }),
         {
             name: 'dropcost-store-storage',

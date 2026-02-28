@@ -80,6 +80,44 @@ serve(async (req: Request) => {
         let assignedCosteoId = null;
         let totalQuantity = 0;
 
+        // --- Extracción de UTMs y Atribución ---
+        const utms: Record<string, string | null> = {
+            utm_source: null,
+            utm_medium: null,
+            utm_campaign: null,
+            utm_content: null,
+            utm_term: null,
+            fbclid: null
+        };
+
+        // A. Intentar desde note_attributes (Común en apps como Releasit/CartLoop)
+        if (payload.note_attributes && Array.isArray(payload.note_attributes)) {
+            payload.note_attributes.forEach((attr: any) => {
+                const name = String(attr.name).toLowerCase();
+                if (name.includes('utm_source') || name === 'utm source') utms.utm_source = attr.value;
+                if (name.includes('utm_medium') || name === 'utm medium') utms.utm_medium = attr.value;
+                if (name.includes('utm_campaign') || name === 'utm campaign') utms.utm_campaign = attr.value;
+                if (name.includes('utm_content') || name === 'utm content') utms.utm_content = attr.value;
+                if (name.includes('utm_term') || name === 'utm term') utms.utm_term = attr.value;
+                if (name.includes('fbclid')) utms.fbclid = attr.value;
+            });
+        }
+
+        // B. Intentar desde landing_site (URL de entrada de Shopify)
+        if (!utms.utm_source && payload.landing_site) {
+            try {
+                const landingUrl = new URL(payload.landing_site, 'https://example.com');
+                utms.utm_source = landingUrl.searchParams.get('utm_source');
+                utms.utm_medium = landingUrl.searchParams.get('utm_medium');
+                utms.utm_campaign = landingUrl.searchParams.get('utm_campaign');
+                utms.utm_content = landingUrl.searchParams.get('utm_content');
+                utms.utm_term = landingUrl.searchParams.get('utm_term');
+                utms.fbclid = landingUrl.searchParams.get('fbclid');
+            } catch (e) {
+                console.warn('Error parseando landing_site:', e);
+            }
+        }
+
         // Shopify envía los productos de la orden en el array `line_items`
         if (payload.line_items && payload.line_items.length > 0) {
             // Calcular la sumatoria de las unidades (cantidad real de ítems vendidos en este pedido)
@@ -93,14 +131,30 @@ serve(async (req: Request) => {
             // Buscamos si existe un costeo asociado al producto y a la tienda
             const { data: costeoData } = await supabase
                 .from('costeos')
-                .select('id')
+                .select('id, meta_campaign_id')
                 .eq('tienda_id', storeId)
-                .eq('shopify_product_id', firstProductId)
+                .eq('product_id_shopify', firstProductId)
                 .limit(1)
                 .maybeSingle();
 
             if (costeoData) {
                 assignedCosteoId = costeoData.id;
+            }
+        }
+
+        // Atribución de segunda oportunidad: Si no hay match por producto, buscar por utm_source (Campaign ID)
+        if (!assignedCosteoId && utms.utm_source) {
+            const { data: campaignMatch } = await supabase
+                .from('costeos')
+                .select('id')
+                .eq('tienda_id', storeId)
+                .eq('meta_campaign_id', utms.utm_source)
+                .limit(1)
+                .maybeSingle();
+            
+            if (campaignMatch) {
+                assignedCosteoId = campaignMatch.id;
+                console.log(`[webhook-shopify] Match found via utm_source: ${utms.utm_source}`);
             }
         }
 
@@ -113,14 +167,33 @@ serve(async (req: Request) => {
             order_number: orderNumber,
             fecha_orden: payload.created_at,
             estado_pago: payload.financial_status,
-            estado_logistica: payload.fulfillment_status || 'pending', // default if null
+            estado_logistica: payload.fulfillment_status || 'pending',
             cliente_nombre: customerName,
             cliente_telefono: customerPhone,
             cliente_ciudad: customerCity,
             cliente_departamento: customerProvince,
+            cliente_direccion: customerAddress.address1 || customerAddress.address2 || null,
+            cliente_email: payload.customer?.email || payload.email || null,
             total_orden: Number(payload.total_price),
-            cantidad_items: totalQuantity > 0 ? totalQuantity : 1, // Fallback a 1
-            origen: 'shopify'
+            cantidad_items: totalQuantity > 0 ? totalQuantity : 1,
+            origen: 'shopify',
+            notas: payload.note || null,
+            customer_details: {
+                first_name: payload.customer?.first_name,
+                last_name: payload.customer?.last_name,
+                email: payload.customer?.email || payload.email,
+                phone: customerPhone,
+                address: customerAddress,
+                note_attributes: payload.note_attributes,
+                tags: payload.tags
+            },
+            // UTMs
+            utm_source: utms.utm_source,
+            utm_medium: utms.utm_medium,
+            utm_campaign: utms.utm_campaign,
+            utm_content: utms.utm_content,
+            utm_term: utms.utm_term,
+            fbclid: utms.fbclid
         };
 
         // 6. Inserción o Upsert seguro
@@ -136,12 +209,16 @@ serve(async (req: Request) => {
             throw insertError;
         }
 
+        // 7. Registro de éxito
+        console.log(`[webhook-shopify] Order ${orderNumber} processed. Costeo Match: ${!!assignedCosteoId}`);
+
         return new Response(JSON.stringify({ success: true, message: 'Order created/updated successfully' }), {
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
 
     } catch (error: any) {
+        console.error('[webhook-shopify] Error:', error.message);
         return new Response(JSON.stringify({ error: 'Internal server error', details: error.message }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
