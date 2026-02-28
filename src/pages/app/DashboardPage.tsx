@@ -102,19 +102,7 @@ export function DashboardPage() {
                 }}
             >
                 <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                        <span style={{
-                            padding: '4px 10px',
-                            backgroundColor: 'var(--color-primary)15',
-                            color: 'var(--color-primary)',
-                            borderRadius: '30px',
-                            fontSize: '10px',
-                            fontWeight: 800,
-                            letterSpacing: '0.05em'
-                        }}>
-                            PRO FEATURES ACTIVE
-                        </span>
-                    </div>
+
                     <h1
                         style={{
                             fontSize: '28px',
