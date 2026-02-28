@@ -22,6 +22,7 @@ import { useAuthStore } from '@/store/authStore';
 import { WithdrawalModal } from '@/components/referidos/WithdrawalModal';
 import { supabase } from '@/lib/supabase';
 import { PremiumFeatureGuard } from '@/components/common/PremiumFeatureGuard';
+import { formatDisplayDate } from '@/utils/dateUtils';
 
 export const WalletPage: React.FC = () => {
     const { user, initialize } = useAuthStore();
@@ -243,7 +244,7 @@ export const WalletPage: React.FC = () => {
                                                         </td>
                                                         <td style={tableCellStyle}>
                                                             <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                                                                {new Date(move.created_at).toLocaleDateString()}
+                                                                {formatDisplayDate(move.created_at)}
                                                             </span>
                                                         </td>
                                                         <td style={{ ...tableCellStyle, textAlign: 'right' }}>
@@ -319,7 +320,7 @@ export const WalletPage: React.FC = () => {
                                                         </td>
                                                         <td style={{ ...tableCellStyle, textAlign: 'right' }}>
                                                             <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                                                                {new Date(req.fecha_solicitud).toLocaleDateString()}
+                                                                {formatDisplayDate(req.fecha_solicitud)}
                                                             </span>
                                                         </td>
                                                     </tr>

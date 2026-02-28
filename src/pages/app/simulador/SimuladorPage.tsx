@@ -84,7 +84,8 @@ export function SimuladorPage() {
                         otherExpenses: data.gastos_adicionales ?? 0,
                         returnRatePercent: data.devoluciones ?? 0,
                         collectionCommissionPercent: data.comision_recaudo_porcentaje ?? 0,
-                        preCancellationPercent: data.cancelacion_pre_envio_porcentaje ?? 0
+                        preCancellationPercent: data.cancelacion_pre_envio_porcentaje ?? 0,
+                        product_id_shopify: data.product_id_shopify || ''
                     });
                     if (data.volume_strategy) {
                         setVolumeStrategy(data.volume_strategy);
@@ -111,7 +112,8 @@ export function SimuladorPage() {
                     otherExpenses: data.gastos_adicionales ?? 0,
                     returnRatePercent: data.devoluciones ?? 0,
                     collectionCommissionPercent: data.comision_recaudo_porcentaje ?? 0,
-                    preCancellationPercent: data.cancelacion_pre_envio_porcentaje ?? 0
+                    preCancellationPercent: data.cancelacion_pre_envio_porcentaje ?? 0,
+                    product_id_shopify: data.product_id_shopify || ''
                 }) : { ...DEFAULT_INPUTS, productName: data.nombre_producto };
 
                 originalStateRef.current = {
@@ -195,6 +197,8 @@ export function SimuladorPage() {
         setManualVolumePrice(null);
     }, [maxUnits]);
 
+
+
     const handleSave = async () => {
         if (!id || !results) return;
         setIsSaving(true);
@@ -208,6 +212,8 @@ export function SimuladorPage() {
                 devoluciones: inputs.returnRatePercent,
                 comision_recaudo_porcentaje: inputs.collectionCommissionPercent,
                 cancelacion_pre_envio_porcentaje: inputs.preCancellationPercent,
+                meta_campaign_id: inputs.meta_campaign_id,
+                product_id_shopify: inputs.product_id_shopify,
                 precio_final: results.suggestedPrice,
                 utilidad_neta: results.netProfitPerSale,
                 inputs_json: inputs,
@@ -223,7 +229,7 @@ export function SimuladorPage() {
             await costeoService.saveCosteo(id, updates);
             toast.success('Costeo guardado con éxito');
             setIsDirty(false);
-            navigate('/simulador');
+            navigate('/mis-costeos');
         } catch (error) {
             toast.error('Error al guardar el costeo');
         } finally {

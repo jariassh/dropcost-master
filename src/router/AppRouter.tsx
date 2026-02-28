@@ -32,6 +32,8 @@ import { useAuthStore } from '@/store/authStore';
 import UserAuditLogsPage from '@/pages/UserAuditLogsPage';
 import { SubscriptionGuard } from '@/components/common/SubscriptionGuard';
 import { PaymentStatusPage } from '@/pages/app/PaymentStatusPage';
+import { StoreManagementPage } from '@/pages/app/StoreManagementPage';
+import { SincronizarPage } from '@/pages/app/SincronizarPage';
 import { TerminosPage } from '@/pages/legal/TerminosPage';
 import { PrivacidadPage } from '@/pages/legal/PrivacidadPage';
 import CookiesPage from '@/pages/legal/CookiesPage';
@@ -111,10 +113,12 @@ export function AppRouter() {
                     <Route path="/dashboard" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
                     <Route path="/ofertas" element={<SubscriptionGuard><OfertasPage /></SubscriptionGuard>} />
                     <Route path="/analisis-regional" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
+                    <Route path="/sincronizar" element={<SubscriptionGuard><SincronizarPage /></SubscriptionGuard>} />
 
                     <Route path="/configuracion" element={<ConfiguracionPage />} />
                     <Route path="/referidos" element={<SubscriptionGuard><ReferidosPage /></SubscriptionGuard>} />
                     <Route path="/billetera" element={<SubscriptionGuard><WalletPage /></SubscriptionGuard>} />
+                    <Route path="/configuracion/tiendas/:id" element={<SubscriptionGuard><StoreManagementPage /></SubscriptionGuard>} />
                     <Route path="/historial" element={<UserAuditLogsPage />} />
                     <Route path="/payment/status" element={<PaymentStatusPage />} />
                 </Route>
