@@ -1,7 +1,7 @@
 # ESTADO DEL PROYECTO: DropCost Master
-**Fecha de auditoría:** 27 de febrero de 2026
+**Fecha de auditoría:** 28 de febrero de 2026
 **Auditor:** Antigravity (Senior Product Manager)
-**Estado General:** Core robusto (Auth, Simulador, Referidos) adaptado a Multi-TimeZone. Dashboard Fase 1 al 40% (RPCs y Webhooks listos).
+**Estado General:** Core robusto (Auth, Simulador, Referidos). Dashboard Operacional v1.1 al 85% (Fase 1 completada: UI Premium, Cálculos Precisos, Sincronización Dropi/Excel y Shopify activa).
 
 ---
 
@@ -10,8 +10,8 @@
 - **Rama principal:** `develop`
 - **Rama Actual:** `feat/ciclo-marzo-dashboard`
 - **Fecha de inicio:** 2026-02-11
-- **Commits totales:** 188 (Tras limpieza PM)
-- **Última actualización:** 2027-02-27 (Implementación de Timezone y Fixes de Referidos)
+- **Commits totales:** 201 (Tras hitos de Dashboard y Shopify Sync)
+- **Última actualización:** 2026-02-28 (Dashboard Pro v1.1 y Backfill Shopify)
 
 ---
 
@@ -20,45 +20,42 @@
 - **React:** 19.2.0
 - **Vite:** 7.3.1
 - **TypeScript:** 5.9.3
-- **Tailwind CSS:** 4.1.18 (Mantenido para layouts, Vanilla para componentes premium)
+- **Tailwind CSS:** 4.1.18 (Layouts) / Vanilla CSS (Componentes Premium)
+- **Gráficos:** Recharts (AreaChart, BarChart con gradientes premium)
 - **Estado:** Zustand / TanStack Query
-- **Utilidades:** `dateUtils.ts` (Detección automática de Timezone)
 
 ### Backend/BD
 - **Supabase:** PostgreSQL + Auth + Edge Functions
-- **Edge Functions:** `mercadopago`, `webhook-shopify`, `email-trigger-dispatcher`, `sync-meta-campaigns` (alpha).
-- **Timezone Support:** RPCs actualizadas en BD para soportar el parámetro `p_timezone`.
+- **Edge Functions:** `webhook-shopify`, `sync-shopify-backfill` (Backfill histórico), `shopify-exchange-token`.
+- **Fórmulas Financieras:** Implementadas en RPC `get_dashboard_pro_data` con separación de Gasto Logístico vs Gasto Meta.
 
 ---
 
 ## 3. CARACTERÍSTICAS IMPLEMENTADAS ✅
 
-### A. Soporte Global de Tiempo (NUEVO)
-- [✅] **Timezone Detection:** Detección automática de zona horaria mediante `Intl.DateTimeFormat`.
-- [✅] **UTC to Local Conversion:** Todas las tablas y modales muestran la hora local del usuario.
-- [✅] **Header Clock:** Reloj en tiempo real integrado en la interfaz.
-- [✅] **Admin Audit:** Tooltips que muestran el tiempo UTC exacto para auditoría administrativa.
+### A. Dashboard Operacional Pro (v1.1)
+- [✅] **KPIs Dinámicos:** Ganancia Neta, Ventas, Gastos Totales, ROAS Real (0.00x), CPA Promedio ($0.00) y % Conversión.
+- [✅] **Gráficos de Tendencia (Premium):** 
+    - Ventas vs Gastos (AreaChart con degradados, filtrado por 7/15/30/60 días).
+    - ROAS por Semana (BarChart con gradientes).
+- [✅] **Costeo Analytics:** Tabla comparativa Real vs Proyectado con enlace automático a IDs de campaña de Meta.
+- [✅] **Conteo de Órdenes Real:** Agregación precisa de órdenes de Shopify vinculadas a cada costeo mediante `costeo_id`.
 
-### B. Sistema de Referidos v3.2
-- [✅] **Cálculo de Ganancias (Fix):** Corregida discrepancia en el total acumulado; ahora se calcula dinámicamente sobre las transacciones (15% real).
-- [✅] **Moneda Local:** Soporte para visualización en pesos (COP, MXN, etc.) según el país del perfil.
-- [✅] **Historial de Comisiones:** Totalmente sincronizado con el balance mostrado.
+### B. Integraciones y Sincronización
+- [✅] **Sincronización Dropi (Excel):** Mapeo de campos veraces para estados de logística y costos.
+- [✅] **Shopify Backfill:** Sistema para importar órdenes históricas y vincularlas a costeos existentes.
+- [✅] **Real-time Updates:** Los estados de las órdenes se actualizan según el último reporte de logística.
 
-### C. Simulador de Costeo
-- [✅] **Motor Financiero:** Cálculo exacto de márgenes y rentabilidad.
-- [✅] **Filtros por Fecha:** Corregidos para considerar el inicio/fin del día en la hora local del usuario.
-
-### D. Integraciones
-- [✅] **Shopify Webhook:** Estructura inicial para recibir órdenes en tiempo real.
-- [🟡] **Meta Ads Sync:** Estructura de sincronización de campañas en fase de pruebas.
+### C. Soporte Global de Tiempo
+- [✅] **Timezone Support:** Todos los reportes del dashboard respetan la zona horaria local del usuario.
 
 ---
 
 ## 4. PRÓXIMOS PASOS
-1. **Fase 1 Dashboard:** Conectar los gráficos del Dashboard Pro con los RPCs de zona horaria.
-2. **Shopify Data Mapping:** Vincular SKUs de Shopify con los costeos internos.
-3. **Wallet Improvements:** Optimizar el flujo de retiro con confirmaciones bancarias.
+1. **Conexión API Meta Ads:** Sustituir los valores base (0.00) por datos reales de inversión mediante la API de Meta.
+2. **Escalado de Shopify Webhooks:** Asegurar la consistencia de datos en picos de tráfico.
+3. **Refinamiento UX:** Ajustes finales de micro-interacciones en los reportes de analytics.
 
 ---
 **Generado por:** Antigravity PM
-**Confiabilidad:** Alta (Consistente con los últimos 6 commits de limpieza)
+**Confiabilidad:** Alta (Consistente con los últimos cambios en la rama `feat/ciclo-marzo-dashboard`)
