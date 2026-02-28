@@ -493,7 +493,9 @@ export type Database = {
           moneda: string | null
           nombre: string
           pais: string
+          shopify_domain: string | null
           usuario_id: string
+          webhook_short_id: string | null
         }
         Insert: {
           active?: boolean | null
@@ -504,7 +506,9 @@ export type Database = {
           moneda?: string | null
           nombre: string
           pais: string
+          shopify_domain?: string | null
           usuario_id: string
+          webhook_short_id?: string | null
         }
         Update: {
           active?: boolean | null
@@ -515,7 +519,9 @@ export type Database = {
           moneda?: string | null
           nombre?: string
           pais?: string
+          shopify_domain?: string | null
           usuario_id?: string
+          webhook_short_id?: string | null
         }
         Relationships: [
           {
