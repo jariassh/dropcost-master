@@ -52,4 +52,20 @@ Panel principal para escritorio que muestra métricas financieras, gráficos de 
 - [dashboard_kpis_light.html](file:///c:/Users/user/Desktop/Dropshipping/Dev/DropCost%20Master/project/ux_ui_designer/CODIGO_EXPORTADO/dashboard_kpis_light.html)
 - [dashboard_kpis_dark.html](file:///c:/Users/user/Desktop/Dropshipping/Dev/DropCost%20Master/project/ux_ui_designer/CODIGO_EXPORTADO/dashboard_kpis_dark.html)
 
+---
 
+## Screen: Dashboard Pro (Avanzado)
+**Ubicación Stitch:** DropCost Master WebApp > Dashboard Pro
+
+**Nuevos Componentes Operacionales:**
+- **Segunda Fila de KPIs:**
+  - **ROAS:** Badge dinámico (Verde > 3.0, Naranja 2.0-3.0, Rojo < 2.0).
+  - **AOV (Ticket Promedio):** Formato moneda.
+  - **CVR (Tasa de Conversión):** Formato porcentaje con indicador de tendencia (flecha arriba/abajo).
+- **Gráficos Avanzados:**
+  - **Ventas vs Gastos:** Gráfico de columnas agrupadas con tooltips detallados.
+  - **ROAS Trend:** Gráfico de líneas suavizadas (Spline) con puntos de control semanales.
+
+**Variantes:**
+- Light mode ✅ (ID: 5bb7dbf2ae1f42589f7a8242feb5182a)
+- Dark mode ✅ (ID: b772fa9cfa23411aa402488652920efe)
