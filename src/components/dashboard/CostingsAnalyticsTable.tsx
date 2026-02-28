@@ -13,10 +13,8 @@ export const CostingsAnalyticsTable: React.FC<Props> = ({ data, isLoading }) => 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
-    // Filtrar solo costeos vinculados (con ID de campaña)
-    const linkedData = useMemo(() => {
-        return data.filter(item => item.meta_campaign_id && item.meta_campaign_id.trim() !== '');
-    }, [data]);
+    // Mostrar todos los costeos, tengan o no ID de campaña
+    const linkedData = data;
 
     const filteredData = useMemo(() => {
         return linkedData.filter(item => {
@@ -108,8 +106,8 @@ export const CostingsAnalyticsTable: React.FC<Props> = ({ data, isLoading }) => 
                         <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
                             <th style={headerStyle}>Producto / Campaña</th>
                             <th style={headerStyle}>Precio Venta</th>
-                            <th style={headerStyle}>CPA Meta (vs Costeo)</th>
-                            <th style={headerStyle}>Flete Costeado</th>
+                            <th style={headerStyle}>Gasto Meta</th>
+                            <th style={headerStyle}>CPA Real (vs Obj)</th>
                             <th style={headerStyle}>Órdenes</th>
                             <th style={headerStyle}>ROAS Real</th>
                             <th style={headerStyle}>Estado</th>
@@ -134,6 +132,9 @@ export const CostingsAnalyticsTable: React.FC<Props> = ({ data, isLoading }) => 
                                         <span style={{ fontWeight: 700 }}>${item.target_price.toLocaleString()}</span>
                                     </td>
                                     <td style={cellStyle}>
+                                        <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>${item.real_spend.toLocaleString()}</span>
+                                    </td>
+                                    <td style={cellStyle}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <span style={{ fontWeight: 700 }}>${item.real_cpa.toFixed(2)}</span>
                                             <MetricIndicator
@@ -143,9 +144,6 @@ export const CostingsAnalyticsTable: React.FC<Props> = ({ data, isLoading }) => 
                                             />
                                             <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>Obj: ${item.target_cpa}</span>
                                         </div>
-                                    </td>
-                                    <td style={cellStyle}>
-                                        <span>${item.target_flete.toLocaleString()}</span>
                                     </td>
                                     <td style={cellStyle}>
                                         <span style={{ fontWeight: 600 }}>{item.real_orders}</span>

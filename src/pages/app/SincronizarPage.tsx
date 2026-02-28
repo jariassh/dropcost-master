@@ -1,21 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { UploadCloud, FileSpreadsheet, Info, CheckCircle2, AlertCircle, ChevronRight, ChevronLeft, Table as TableIcon, Check, Settings2, ShieldCheck, Database } from 'lucide-react';
+import { UploadCloud, FileSpreadsheet, Info, CheckCircle2, AlertCircle, ChevronRight, ChevronLeft, Table as TableIcon, Check, Settings2, ShieldCheck, Database, AlertTriangle } from 'lucide-react';
 import { Button, Badge, Card, Input, Tooltip, Select } from '@/components/common';
 import { StepIndicator } from '@/components/common/StepIndicator';
+import { syncService, type SyncResult } from '@/services/syncService';
+import { useStoreStore } from '@/store/useStoreStore';
 import * as XLSX from 'xlsx';
 
 // Campos en nuestra BD vs lo que el usuario mapea
+// IMPORTANTE: las keys deben coincidir EXACTAMENTE con los nombres de columna en public.orders
 const MAPPABLE_FIELDS = [
     { key: 'shopify_order_id', label: 'ID DE ORDEN DE TIENDA', mandatory: true, tooltip: 'El identificador único de Shopify que permite vincular el registro de Dropi con la venta original.' },
     { key: 'estado_logistica', label: 'ESTATUS', mandatory: true, tooltip: 'El estado actual del paquete (Entregado, Devuelto, En Camino, etc.)' },
     { key: 'guia_transporte', label: 'NÚMERO GUIA', mandatory: false, tooltip: 'El número de rastreo del paquete (Número Guía).' },
     { key: 'transportadora', label: 'TRANSPORTADORA', mandatory: false, tooltip: 'Nombre de la empresa que realiza la entrega.' },
     { key: 'fecha_dropi', label: 'FECHA', mandatory: false, tooltip: 'Fecha principal del registro en Dropi.' },
-    { key: 'nombre_cliente', label: 'NOMBRE CLIENTE', mandatory: false, tooltip: 'Nombre completo del destinatario.' },
-    { key: 'telefono_cliente', label: 'TELÉFONO', mandatory: false, tooltip: 'Número de contacto del cliente.' },
-    { key: 'email_cliente', label: 'EMAIL', mandatory: false, tooltip: 'Correo electrónico del cliente.' },
-    { key: 'departamento_destino', label: 'DEPARTAMENTO DESTINO', mandatory: false, tooltip: 'Departamento donde se entrega el pedido.' },
-    { key: 'ciudad_destino', label: 'CIUDAD DESTINO', mandatory: false, tooltip: 'Ciudad donde se entrega el pedido.' },
+    { key: 'cliente_nombre', label: 'NOMBRE CLIENTE', mandatory: false, tooltip: 'Nombre completo del destinatario.' },
+    { key: 'cliente_telefono', label: 'TELÉFONO', mandatory: false, tooltip: 'Número de contacto del cliente.' },
+    { key: 'cliente_email', label: 'EMAIL', mandatory: false, tooltip: 'Correo electrónico del cliente.' },
+    { key: 'cliente_direccion', label: 'DIRECCIÓN DESTINO', mandatory: false, tooltip: 'Dirección física corregida del cliente.' },
+    { key: 'cliente_departamento', label: 'DEPARTAMENTO DESTINO', mandatory: false, tooltip: 'Departamento donde se entrega el pedido.' },
+    { key: 'cliente_ciudad', label: 'CIUDAD DESTINO', mandatory: false, tooltip: 'Ciudad donde se entrega el pedido.' },
     { key: 'valor_compra', label: 'VALOR DE COMPRA EN PRODUCTOS', mandatory: false, tooltip: 'Valor de la compra en productos.' },
     { key: 'precio_flete', label: 'PRECIO FLETE', mandatory: false, tooltip: 'Costo del envío reportado.' },
     { key: 'costo_devolucion', label: 'COSTO DEVOLUCION FLETE', mandatory: false, tooltip: 'Costo incurrido en caso de devolución.' },
@@ -24,6 +28,7 @@ const MAPPABLE_FIELDS = [
     { key: 'fecha_novedad', label: 'FECHA DE NOVEDAD', mandatory: false, tooltip: 'Fecha en la que se reportó la novedad.' },
     { key: 'categorias', label: 'CATEGORÍAS', mandatory: false, tooltip: 'Categorías asociadas al pedido.' },
 ];
+
 
 export function SincronizarPage() {
     const [step, setStep] = useState(1);
@@ -37,7 +42,10 @@ export function SincronizarPage() {
     const [mapping, setMapping] = useState<Record<string, string>>({});
     const [skipEmpty, setSkipEmpty] = useState(true);
     const [totalRows, setTotalRows] = useState(0);
+    const [allRows, setAllRows] = useState<any[][]>([]);
+    const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
 
+    const { tiendaActual } = useStoreStore();
     const inputRef = useRef<HTMLInputElement>(null);
 
     const steps = ['Subir', 'Asignar', 'Verificar'];
@@ -57,7 +65,8 @@ export function SincronizarPage() {
                 if (json.length > 0) {
                     const fileHeaders = json[0].filter(h => h).map(h => String(h).trim());
                     setHeaders(fileHeaders);
-                    setPreviewData(json.slice(1, 4)); // Siguientes 3 filas
+                    setPreviewData(json.slice(1, 4)); // Siguientes 3 filas para previsualización
+                    setAllRows(json.slice(1)); // Todas las filas de datos
                     setTotalRows(Math.max(0, json.length - 1));
 
                     const initialMapping: Record<string, string> = {};
@@ -81,6 +90,10 @@ export function SincronizarPage() {
                         }
                         else if (field.key === 'estado_logistica') {
                             const fuzzy = fileHeaders.find(h => h.toLowerCase().includes('estatus') || h.toLowerCase().includes('estado'));
+                            if (fuzzy) initialMapping[field.key] = fuzzy;
+                        }
+                        else if (field.key === 'cliente_direccion') {
+                            const fuzzy = fileHeaders.find(h => h.toLowerCase().includes('direccion') || h.toLowerCase().includes('address'));
                             if (fuzzy) initialMapping[field.key] = fuzzy;
                         }
                     });
@@ -109,15 +122,42 @@ export function SincronizarPage() {
         return MAPPABLE_FIELDS.filter(f => f.mandatory).every(f => mapping[f.key]);
     };
 
-    const handleProcessImport = () => {
+    const handleProcessImport = async () => {
+        if (!tiendaActual) {
+            alert('Error: No hay una tienda seleccionada.');
+            return;
+        }
+
         setIsParsing(true);
-        setTimeout(() => {
-            alert('Sincronización completada con éxito. Se han actualizado los estados logísticos.');
+        setSyncResult(null);
+
+        try {
+            // Convertir filas del Excel a objetos usando los headers como keys
+            const rowObjects = allRows.map(row => {
+                const obj: Record<string, any> = {};
+                headers.forEach((header, index) => {
+                    obj[header] = row[index] !== undefined ? row[index] : null;
+                });
+                return obj;
+            }).filter(obj => {
+                // Filtrar filas completamente vacías
+                return Object.values(obj).some(v => v !== null && v !== undefined && v !== '');
+            });
+
+            const result = await syncService.syncDropiOrders(
+                tiendaActual.id,
+                rowObjects,
+                mapping,
+                skipEmpty
+            );
+
+            setSyncResult(result);
+            setStep(4); // Ir a pantalla de resultados
+        } catch (error: any) {
+            alert(`Error en la sincronización: ${error.message}`);
+        } finally {
             setIsParsing(false);
-            setStep(1);
-            setSelectedFile(null);
-            setMapping({});
-        }, 2000);
+        }
     };
 
     return (
@@ -370,6 +410,71 @@ export function SincronizarPage() {
                                     </Button>
                                 </div>
                             </div>
+                        </Card>
+                    </div>
+                )}
+
+                {/* ─── STEP 4: RESULTADOS ─── */}
+                {step === 4 && syncResult && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+                            <Card style={{ padding: '24px', textAlign: 'center' }}>
+                                <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Filas Procesadas</p>
+                                <p style={{ margin: '8px 0 0', fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)' }}>{syncResult.total_rows}</p>
+                            </Card>
+                            <Card style={{ padding: '24px', textAlign: 'center' }}>
+                                <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Coincidencias</p>
+                                <p style={{ margin: '8px 0 0', fontSize: '28px', fontWeight: 800, color: 'var(--color-success)' }}>{syncResult.matched}</p>
+                            </Card>
+                            <Card style={{ padding: '24px', textAlign: 'center' }}>
+                                <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Actualizadas</p>
+                                <p style={{ margin: '8px 0 0', fontSize: '28px', fontWeight: 800, color: 'var(--color-primary)' }}>{syncResult.updated}</p>
+                            </Card>
+                            <Card style={{ padding: '24px', textAlign: 'center' }}>
+                                <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Sin Match</p>
+                                <p style={{ margin: '8px 0 0', fontSize: '28px', fontWeight: 800, color: 'var(--color-warning)' }}>{syncResult.skipped}</p>
+                            </Card>
+                        </div>
+
+                        {syncResult.errors.length > 0 && (
+                            <Card style={{ padding: '24px', border: '1px solid var(--color-warning)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                                    <AlertTriangle size={18} color="var(--color-warning)" />
+                                    <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700 }}>Errores ({syncResult.errors.length})</h4>
+                                </div>
+                                <div style={{ maxHeight: '150px', overflow: 'auto', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                    {syncResult.errors.slice(0, 20).map((err, i) => (
+                                        <p key={i} style={{ margin: '4px 0' }}>• {err}</p>
+                                    ))}
+                                    {syncResult.errors.length > 20 && (
+                                        <p style={{ margin: '8px 0 0', fontStyle: 'italic' }}>...y {syncResult.errors.length - 20} errores más</p>
+                                    )}
+                                </div>
+                            </Card>
+                        )}
+
+                        <Card style={{ padding: '32px', textAlign: 'center' }}>
+                            <CheckCircle2 size={48} color="var(--color-success)" style={{ margin: '0 auto 16px' }} />
+                            <h3 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>Sincronización completada</h3>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '24px' }}>
+                                Se actualizaron {syncResult.updated} órdenes con los datos de Dropi.
+                                {syncResult.skipped > 0 && ` ${syncResult.skipped} filas no encontraron match.`}
+                            </p>
+                            <Button
+                                variant="primary"
+                                onClick={() => {
+                                    setStep(1);
+                                    setSelectedFile(null);
+                                    setMapping({});
+                                    setSyncResult(null);
+                                    setAllRows([]);
+                                    setHeaders([]);
+                                    setPreviewData([]);
+                                    setTotalRows(0);
+                                }}
+                            >
+                                Nueva sincronización
+                            </Button>
                         </Card>
                     </div>
                 )}

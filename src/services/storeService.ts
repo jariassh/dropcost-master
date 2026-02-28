@@ -4,6 +4,7 @@
 import { supabase } from '@/lib/supabase';
 import type { Tienda, TiendaInsert, TiendaUpdate } from '@/types/store.types';
 import { auditService } from './auditService';
+import { encryptionUtils } from '@/utils/encryptionUtils';
 
 export const storeService = {
     /**
@@ -88,7 +89,7 @@ export const storeService = {
         // 1. Obtener datos antes de borrar para el log
         const { data: tienda } = await supabase
             .from('tiendas')
-            .select('nombre, pais') // Solo pedimos nombre y país para log
+            .select('nombre, pais')
             .eq('id', id)
             .single();
 
@@ -102,16 +103,56 @@ export const storeService = {
             throw new Error('No se pudo eliminar la tienda');
         }
 
-        // Log Auditoría: Tienda eliminada con nombre preservado
+        // Log Auditoría
         auditService.recordLog({
             accion: 'DELETE_STORE',
             entidad: 'STORE',
             entidadId: id,
             detalles: { 
                 id, 
-                nombre: tienda?.nombre || 'Tienda eliminada (Nombre desconocido)',
+                nombre: tienda?.nombre || 'Tienda eliminada',
                 pais: tienda?.pais 
             }
         });
+    },
+
+    /**
+     * Guarda o actualiza la integración de Shopify para una tienda.
+     */
+    async upsertShopifyIntegration(tiendaId: string, data: { access_token?: string, shop_url?: string, status: 'conectado' | 'desconectado' | 'error' }) {
+        const { data: existing } = await supabase
+            .from('integraciones')
+            .select('id')
+            .eq('tienda_id', tiendaId)
+            .eq('tipo', 'shopify')
+            .maybeSingle();
+
+        // Encriptar token si existe
+        const encryptedToken = data.access_token ? encryptionUtils.encrypt(data.access_token) : null;
+
+        const integrationData = {
+            tienda_id: tiendaId,
+            tipo: 'shopify',
+            estado: data.status,
+            credenciales_encriptadas: encryptedToken,
+            config_sync: {
+                shop_url: data.shop_url,
+                backfill_status: 'pending'
+            },
+            ultima_sincronizacion: null
+        };
+
+        if (existing) {
+            const { error } = await supabase
+                .from('integraciones')
+                .update(integrationData)
+                .eq('id', existing.id);
+            if (error) throw error;
+        } else {
+            const { error } = await supabase
+                .from('integraciones')
+                .insert(integrationData);
+            if (error) throw error;
+        }
     }
 };

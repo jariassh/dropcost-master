@@ -22,7 +22,8 @@ export const DashboardKPIs: React.FC<Props> = ({ metrics, isLoading }) => {
         cpa_promedio: 0,
         aov_promedio: 0,
         ordenes_efectivas: 0,
-        cvr_promedio: 0
+        cvr_promedio: 0,
+        gastos_meta: 0
     };
 
     const mainKPIs = [
@@ -41,7 +42,7 @@ export const DashboardKPIs: React.FC<Props> = ({ metrics, isLoading }) => {
             bg: 'var(--color-primary)12'
         },
         {
-            title: 'Gastos Meta Ads',
+            title: 'Gastos Totales',
             value: `$${displayMetrics.gastos.toLocaleString()}`,
             icon: TrendingDown,
             color: 'var(--color-error)',
@@ -59,7 +60,7 @@ export const DashboardKPIs: React.FC<Props> = ({ metrics, isLoading }) => {
 
     const secondaryKPIs = [
         {
-            title: 'CPA Real',
+            title: 'CPA Promedio',
             value: `$${displayMetrics.cpa_promedio.toFixed(2)}`,
             icon: TrendingDown,
             color: 'var(--color-primary)',
@@ -80,7 +81,7 @@ export const DashboardKPIs: React.FC<Props> = ({ metrics, isLoading }) => {
             bg: 'var(--color-warning)12'
         },
         {
-            title: '% Compras vs Tráfico',
+            title: '% Conversion',
             value: displayMetrics.cvr_promedio > 0 ? `${displayMetrics.cvr_promedio.toFixed(2)}%` : 'Inactivo',
             icon: Zap,
             color: displayMetrics.cvr_promedio > 0 ? 'var(--color-success)' : 'var(--text-tertiary)',

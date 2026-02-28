@@ -35,13 +35,15 @@ export interface PeriodMetrics {
     roas_promedio: number;
     aov_promedio: number;
     cvr_promedio: number;
+    gastos_meta?: number;
 }
 
 export interface ChartDataPoint {
     fecha: string;
     ganancia: number;
     ventas: number;
-    gastos: number;
+    gasto_logistica: number;
+    gasto_meta: number;
 }
 
 export interface CampaignData {
@@ -57,10 +59,18 @@ export interface DashboardOrder {
     id: string;
     order_number: string;
     date: string;
-    status: 'paid' | 'pending' | 'refunded' | 'cancelled';
-    fulfillment: 'fulfilled' | 'pending' | 'cancelled';
+    status: string;
+    fulfillment: string;
     total: number;
     campaign_name?: string;
+    notas?: string;
+    customer_details?: any;
+    cliente_nombre?: string;
+    cliente_telefono?: string;
+    cliente_ciudad?: string;
+    cliente_departamento?: string;
+    cliente_direccion?: string;
+    cliente_email?: string;
 }
 
 export interface DashboardFilters {

@@ -2,8 +2,14 @@
   RewriteEngine On
 
   # Redirecciones para SEO Dinámico (Edge Functions)
-  RewriteRule ^robots\.txt$ https://wauqudcethbrebrdacqi.supabase.co/functions/v1/robots [L,R=301]
-  RewriteRule ^sitemap\.xml$ https://wauqudcethbrebrdacqi.supabase.co/functions/v1/sitemap [L,R=301]
+  # TODO: Cambiar projectId al de producción al hacer deploy
+  RewriteRule ^robots\.txt$ https://bhtnphjrovsmzkdzakpc.supabase.co/functions/v1/robots [L,R=301]
+  RewriteRule ^sitemap\.xml$ https://bhtnphjrovsmzkdzakpc.supabase.co/functions/v1/sitemap [L,R=301]
+
+  # Acortador de Webhooks Shopify (Redirección 307 para preservar POST y body)
+  # Detecta peticiones POST a rutas /webhook/ + exactamente 7 caracteres alfanuméricos
+  RewriteCond %{REQUEST_METHOD} POST
+  RewriteRule ^webhook/([a-zA-Z0-9]{7})$ https://bhtnphjrovsmzkdzakpc.supabase.co/functions/v1/webhook-redirect/$1 [L,R=307]
 
   # Configuración para Aplicaciones React (SPA)
   RewriteBase /

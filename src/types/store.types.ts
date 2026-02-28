@@ -19,4 +19,5 @@ export interface StoreState {
     crearTienda: (tienda: TiendaInsert) => Promise<boolean>;
     actualizarTienda: (id: string, Cambios: TiendaUpdate) => Promise<boolean>;
     eliminarTienda: (id: string) => Promise<boolean>;
+    saveShopifyIntegration: (tiendaId: string, data: { access_token?: string, shop_url?: string, status: 'conectado' | 'desconectado' | 'error' }) => Promise<boolean>;
 }

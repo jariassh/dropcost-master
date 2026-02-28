@@ -1,14 +1,15 @@
 /**
  * Página Dashboard — Visualización de métricas operacionales.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Card, Tooltip as DSTooltip } from '@/components/common';
 import { BarChart3, RefreshCw, Filter, TrendingUp, Store, Zap, ShoppingCart, ShoppingBag, Info } from 'lucide-react';
 import { DashboardKPIs } from '@/components/dashboard/DashboardKPIs';
 import { CostingsAnalyticsTable } from '@/components/dashboard/CostingsAnalyticsTable';
+import { OrderDetailsModal } from '@/components/dashboard/OrderDetailsModal';
 import { getDashboardMetrics } from '@/services/dashboardService';
 import { useNotificationStore } from '@/store/notificationStore';
-import { DashboardMetrics } from '@/types/dashboard';
+import { DashboardMetrics, DashboardOrder } from '@/types/dashboard';
 import { useStoreStore } from '@/store/useStoreStore';
 import {
     ResponsiveContainer,
@@ -26,6 +27,8 @@ export function DashboardPage() {
     const [timeRange, setTimeRange] = useState<'today' | 'week' | 'month'>('today');
     const [historyDays, setHistoryDays] = useState(30);
     const [roasPeriod, setRoasPeriod] = useState<'thisMonth' | 'lastMonth' | 'last3Months'>('thisMonth');
+    const [selectedOrder, setSelectedOrder] = useState<DashboardOrder | null>(null);
+    const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const { addNotification, notifications } = useNotificationStore();
 
     const fetchMetrics = async () => {
@@ -74,6 +77,18 @@ export function DashboardPage() {
             });
         }
     }, [metrics?.topCampaigns]);
+
+    const handleOrderClick = (order: DashboardOrder) => {
+        setSelectedOrder(order);
+        setIsOrderModalOpen(true);
+    };
+
+    const filteredHistory = useMemo(() => {
+        if (!metrics?.history) return [];
+        return [...metrics.history]
+            .sort((a, b) => a.fecha.localeCompare(b.fecha))
+            .slice(-historyDays);
+    }, [metrics?.history, historyDays]);
 
     return (
         <div style={{ animation: 'fadeIn 300ms ease-out', paddingBottom: '40px' }}>
@@ -222,31 +237,53 @@ export function DashboardPage() {
                         >
                             <div style={{ height: '350px', width: '100%', padding: '10px 0' }}>
                                 {metrics && metrics.history.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart
-                                            data={[...metrics.history].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-historyDays)}
-                                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                                        >
+                                    <ResponsiveContainer width="100%" height={320}>
+                                        <AreaChart data={filteredHistory} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                                            <defs>
+                                                <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
+                                                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                                                </linearGradient>
+                                                <linearGradient id="colorGastos" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
+                                                    <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
                                             <XAxis
                                                 dataKey="fecha"
                                                 axisLine={false}
                                                 tickLine={false}
-                                                tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+                                                tick={{ fill: 'var(--text-tertiary)', fontSize: 10 }}
                                                 tickFormatter={(str) => {
                                                     const parts = str.split('-');
-                                                    return parts.length === 3 ? `${parts[2]}/${parts[1]}` : str;
+                                                    return `${parts[2]}/${parts[1]}`;
                                                 }}
                                             />
-                                            <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} />
+                                            <YAxis hide />
                                             <Tooltip
-                                                cursor={{ fill: 'var(--bg-secondary)', opacity: 0.4 }}
                                                 contentStyle={{ backgroundColor: 'var(--bg-primary)', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)' }}
                                             />
                                             <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
-                                            <Bar name="Ventas ($)" dataKey="ventas" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={historyDays > 30 ? 10 : 20} />
-                                            <Bar name="Gastos ($)" dataKey="gastos" fill="#f97316" radius={[4, 4, 0, 0]} barSize={historyDays > 30 ? 10 : 20} />
-                                        </BarChart>
+                                            <Area
+                                                type="monotone"
+                                                name="Ventas ($)"
+                                                dataKey="ventas"
+                                                stroke="#2563eb"
+                                                strokeWidth={3}
+                                                fillOpacity={1}
+                                                fill="url(#colorVentas)"
+                                            />
+                                            <Area
+                                                type="monotone"
+                                                name="Gastos ($)"
+                                                dataKey={(d) => (d.gasto_logistica || 0) + (d.gasto_meta || 0)}
+                                                stroke="#f97316"
+                                                strokeWidth={3}
+                                                fillOpacity={1}
+                                                fill="url(#colorGastos)"
+                                            />
+                                        </AreaChart>
                                     </ResponsiveContainer>
                                 ) : (
                                     <NoDataView />
@@ -299,16 +336,22 @@ export function DashboardPage() {
                                                 for (let i = 0; i < filtered.length; i += 7) {
                                                     const weekSlice = filtered.slice(i, i + 7);
                                                     const totalVentas = weekSlice.reduce((sum, d) => sum + d.ventas, 0);
-                                                    const totalGastos = weekSlice.reduce((sum, d) => sum + d.gastos, 0);
+                                                    const totalGastoMeta = weekSlice.reduce((sum, d) => sum + (d.gasto_meta || 0), 0);
                                                     weeklyData.push({
                                                         name: `Semana ${Math.floor(i / 7) + 1}`,
-                                                        roas: totalGastos > 0 ? Number((totalVentas / totalGastos).toFixed(2)) : 0
+                                                        roas: totalGastoMeta > 0 ? Number((totalVentas / totalGastoMeta).toFixed(2)) : 0
                                                     });
                                                 }
                                                 return weeklyData;
                                             })()}
                                             margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                                         >
+                                            <defs>
+                                                <linearGradient id="colorRoas" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.5} />
+                                                </linearGradient>
+                                            </defs>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
                                             <XAxis
                                                 dataKey="name"
@@ -319,15 +362,9 @@ export function DashboardPage() {
                                             <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} />
                                             <Tooltip
                                                 cursor={{ fill: 'var(--bg-secondary)', opacity: 0.4 }}
-                                                contentStyle={{ backgroundColor: 'var(--bg-primary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}
+                                                contentStyle={{ backgroundColor: 'var(--bg-primary)', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)' }}
                                             />
-                                            <Bar
-                                                name="ROAS (Promedio)"
-                                                dataKey="roas"
-                                                fill="var(--color-success)"
-                                                radius={[4, 4, 0, 0]}
-                                                barSize={60}
-                                            />
+                                            <Bar name="ROAS Real" dataKey="roas" fill="url(#colorRoas)" radius={[4, 4, 0, 0]} barSize={40} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 ) : (
@@ -352,14 +389,18 @@ export function DashboardPage() {
                                     metrics.recentOrders.map((order, idx) => (
                                         <div
                                             key={order.id}
+                                            onClick={() => handleOrderClick(order)}
+                                            className="order-row-hover"
                                             style={{
                                                 display: 'flex',
                                                 justifyContent: 'space-between',
                                                 alignItems: 'center',
-                                                padding: '16px 0',
+                                                padding: '16px 12px',
+                                                margin: '0 -12px',
                                                 borderBottom: idx === metrics.recentOrders.length - 1 ? 'none' : '1px solid var(--border-color)',
-                                                transition: 'background-color 200ms ease',
-                                                cursor: 'default'
+                                                transition: 'all 200ms ease',
+                                                cursor: 'pointer',
+                                                borderRadius: '8px'
                                             }}
                                         >
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -392,8 +433,8 @@ export function DashboardPage() {
                                                         fontSize: '10px',
                                                         fontWeight: 800,
                                                         textTransform: 'uppercase',
-                                                        color: order.status === 'paid' ? 'var(--color-success)' : order.status === 'cancelled' ? 'var(--color-error)' : 'var(--color-warning)',
-                                                        backgroundColor: order.status === 'paid' ? 'var(--color-success)15' : order.status === 'cancelled' ? 'var(--color-error)15' : 'var(--color-warning)15',
+                                                        color: order.fulfillment === 'entregado' ? 'var(--color-success)' : order.status === 'paid' ? 'var(--color-success)' : order.status === 'cancelled' ? 'var(--color-error)' : 'var(--color-warning)',
+                                                        backgroundColor: order.fulfillment === 'entregado' ? 'var(--color-success)15' : order.status === 'paid' ? 'var(--color-success)15' : order.status === 'cancelled' ? 'var(--color-error)15' : 'var(--color-warning)15',
                                                         padding: '2px 8px',
                                                         borderRadius: '6px'
                                                     }}
@@ -453,7 +494,7 @@ export function DashboardPage() {
 
                     {/* Nueva Tabla: Analítica de Costeos Cruzada */}
                     {metrics && (
-                        <div style={{ marginTop: '0' }}>
+                        <div style={{ marginTop: '0', marginBottom: '40px' }}>
                             <CostingsAnalyticsTable
                                 data={metrics.costeoAnalytics}
                                 isLoading={isLoading}
@@ -463,7 +504,17 @@ export function DashboardPage() {
                 </>
             )}
 
+            <OrderDetailsModal
+                isOpen={isOrderModalOpen}
+                onClose={() => setIsOrderModalOpen(false)}
+                order={selectedOrder}
+            />
+
             <style>{`
+                .order-row-hover:hover {
+                    background-color: var(--bg-secondary);
+                    transform: translateX(4px);
+                }
                 @media (max-width: 768px) {
                     div[style*="grid-template-columns: repeat(auto-fit, minmax(450px, 1fr))"] {
                         grid-template-columns: 1fr !important;

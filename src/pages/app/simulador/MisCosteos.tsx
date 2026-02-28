@@ -17,7 +17,7 @@ import {
     Package,
     ArrowRight,
     Store, // Re-added as it's used later
-    Check, X, Info, Eye // Re-added as they are used later
+    Check, X, Info, Eye, Link2 // Re-added as they are used later
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useStoreStore } from '@/store/useStoreStore';
@@ -26,6 +26,7 @@ import { useToast, Card, Button, Input, Modal, Badge, Spinner, ConfirmDialog, Em
 import { formatDisplayDate } from '@/utils/dateUtils';
 import type { SavedCosteo } from '@/types/simulator';
 import { CreateStoreModal } from '@/components/layout/CreateStoreModal'; // Re-added as it's used later
+import { IntegrationLinkModal } from '@/components/configuracion/IntegrationLinkModal';
 
 export function MisCosteos() {
     const navigate = useNavigate();
@@ -214,6 +215,9 @@ export function MisCosteos() {
     const [costeoToDuplicate, setCosteoToDuplicate] = useState<SavedCosteo | null>(null);
     const [nuevoNombreCopia, setNuevoNombreCopia] = useState('');
     const [isDuplicating, setIsDuplicating] = useState(false);
+
+    const [showLinkModal, setShowLinkModal] = useState(false);
+    const [costeoToLink, setCosteoToLink] = useState<SavedCosteo | null>(null);
 
     const handleVerCosteo = (id: string) => navigate(`/mis-costeos/${id}`);
 
@@ -516,12 +520,8 @@ export function MisCosteos() {
                                             { label: 'Precio Final' },
                                             { label: 'Utilidad' },
                                             {
-                                                label: 'ID Meta',
-                                                tooltip: "Activa la columna 'Identificador de la campaña' en Meta Ads Business Manager."
-                                            },
-                                            {
-                                                label: 'ID Shopify',
-                                                tooltip: "Lo encuentras al final de la URL del producto en Shopify (ej: 8618138108057)."
+                                                label: 'Integraciones',
+                                                tooltip: "Conecta este costeo con Shopify y la Campaña de Meta"
                                             },
                                             { label: 'Estado' },
                                             { label: 'Fecha' },
@@ -558,18 +558,29 @@ export function MisCosteos() {
                                                 </span>
                                             </td>
                                             <td style={{ padding: '8px 16px' }}>
-                                                <InlineEdit
-                                                    value={c.meta_campaign_id || ''}
-                                                    placeholder="Campaña..."
-                                                    onSave={(val) => handleUpdateField(c.id, 'meta_campaign_id', val)}
-                                                />
-                                            </td>
-                                            <td style={{ padding: '8px 16px' }}>
-                                                <InlineEdit
-                                                    value={c.product_id_shopify || ''}
-                                                    placeholder="Shopify ID..."
-                                                    onSave={(val) => handleUpdateField(c.id, 'product_id_shopify', val)}
-                                                />
+                                                <button
+                                                    onClick={() => { setCosteoToLink(c); setShowLinkModal(true); }}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', gap: '6px',
+                                                        padding: '6px 12px', border: '1px solid var(--border-color)',
+                                                        borderRadius: '6px', backgroundColor: (c.product_id_shopify || c.meta_campaign_id) ? 'rgba(56, 189, 248, 0.1)' : 'var(--bg-primary)',
+                                                        color: (c.product_id_shopify || c.meta_campaign_id) ? 'var(--color-primary)' : 'var(--text-secondary)',
+                                                        fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        if (!c.product_id_shopify && !c.meta_campaign_id) {
+                                                            e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                                                        }
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        if (!c.product_id_shopify && !c.meta_campaign_id) {
+                                                            e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+                                                        }
+                                                    }}
+                                                >
+                                                    <Link2 size={14} />
+                                                    {c.product_id_shopify || c.meta_campaign_id ? 'Vincular (Editar)' : 'Vincular'}
+                                                </button>
                                             </td>
                                             <td style={{ padding: '16px 24px' }}>
                                                 <span style={{
@@ -732,6 +743,15 @@ export function MisCosteos() {
                     </div>
                 </div>
             </Modal>
+
+            {/* Modal para Vincular Integraciones Shopify/Meta */}
+            <IntegrationLinkModal
+                isOpen={showLinkModal}
+                onClose={() => setShowLinkModal(false)}
+                costeo={costeoToLink}
+                tiendaId={tiendaActual?.id}
+                onSaveSuccess={fetchCosteos}
+            />
         </div>
     );
 }
