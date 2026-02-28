@@ -2,20 +2,31 @@
  * Página Dashboard — Visualización de métricas operacionales.
  */
 import React, { useEffect, useState } from 'react';
-import { Card } from '@/components/common';
-import { BarChart3, RefreshCw, Filter, TrendingUp, Store, Zap, ShoppingCart } from 'lucide-react';
+import { Card, Tooltip as DSTooltip } from '@/components/common';
+import { BarChart3, RefreshCw, Filter, TrendingUp, Store, Zap, ShoppingCart, ShoppingBag, Info } from 'lucide-react';
 import { DashboardKPIs } from '@/components/dashboard/DashboardKPIs';
+import { CostingsAnalyticsTable } from '@/components/dashboard/CostingsAnalyticsTable';
 import { getDashboardMetrics } from '@/services/dashboardService';
+import { useNotificationStore } from '@/store/notificationStore';
 import { DashboardMetrics } from '@/types/dashboard';
 import { useStoreStore } from '@/store/useStoreStore';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { PremiumFeatureGuard } from '@/components/common/PremiumFeatureGuard';
+import {
+    ResponsiveContainer,
+    AreaChart, Area,
+    BarChart, Bar,
+    LineChart, Line,
+    XAxis, YAxis,
+    CartesianGrid, Tooltip, Legend
+} from 'recharts';
 
 export function DashboardPage() {
     const { tiendaActual } = useStoreStore();
     const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [timeRange, setTimeRange] = useState<'today' | 'week' | 'month'>('today');
+    const [historyDays, setHistoryDays] = useState(30);
+    const [roasPeriod, setRoasPeriod] = useState<'thisMonth' | 'lastMonth' | 'last3Months'>('thisMonth');
+    const { addNotification, notifications } = useNotificationStore();
 
     const fetchMetrics = async () => {
         if (!tiendaActual?.id) {
@@ -36,11 +47,33 @@ export function DashboardPage() {
 
     useEffect(() => {
         fetchMetrics();
-    }, [tiendaActual?.id, timeRange]); // We might not need to refetch on timeRange change if history handles all, but keeping it reactive makes sense if we fetch specific ranges
+    }, [tiendaActual?.id, timeRange]);
 
     const handleRefresh = async () => {
         await fetchMetrics();
     };
+
+    // Sync Campaign Alerts to Global Notifications
+    useEffect(() => {
+        if (metrics?.topCampaigns) {
+            const highCpaCampaigns = metrics.topCampaigns.filter(c => c.cpa > 15);
+
+            highCpaCampaigns.forEach(campaign => {
+                const exists = notifications.some(n =>
+                    n.title.includes(campaign.name) && n.type === 'warning'
+                );
+
+                if (!exists) {
+                    addNotification({
+                        userId: 'user',
+                        title: `CPA Alto detectado: ${campaign.name}`,
+                        message: `La campaña "${campaign.name}" tiene un CPA de $${campaign.cpa.toFixed(2)}, lo cual supera el límite establecido.`,
+                        type: 'warning'
+                    });
+                }
+            });
+        }
+    }, [metrics?.topCampaigns]);
 
     return (
         <div style={{ animation: 'fadeIn 300ms ease-out', paddingBottom: '40px' }}>
@@ -54,18 +87,19 @@ export function DashboardPage() {
                 }}
             >
                 <div>
-                    <p
-                        style={{
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            letterSpacing: '0.1em',
-                            textTransform: 'uppercase',
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                        <span style={{
+                            padding: '4px 10px',
+                            backgroundColor: 'var(--color-primary)15',
                             color: 'var(--color-primary)',
-                            marginBottom: '6px',
-                        }}
-                    >
-                        Dashboard Operacional
-                    </p>
+                            borderRadius: '30px',
+                            fontSize: '10px',
+                            fontWeight: 800,
+                            letterSpacing: '0.05em'
+                        }}>
+                            PRO FEATURES ACTIVE
+                        </span>
+                    </div>
                     <h1
                         style={{
                             fontSize: '28px',
@@ -146,14 +180,163 @@ export function DashboardPage() {
             ) : (
                 <>
                     {/* Sección KPIs */}
-                    {metrics && (
-                        <DashboardKPIs
-                            metrics={metrics[timeRange]}
-                            isLoading={isLoading}
-                        />
-                    )}
+                    <DashboardKPIs
+                        metrics={metrics ? metrics[timeRange] : null}
+                        isLoading={isLoading}
+                    />
 
-                    {/* Grid Principal de Gráficos y Análisis */}
+                    {/* Grid de Gráficos Duales */}
+                    <div
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
+                            gap: '24px',
+                            marginBottom: '32px'
+                        }}
+                    >
+                        {/* Gráfico 1: Ventas vs Gastos */}
+                        <Card
+                            title={`Ventas vs Gastos (${historyDays} días)`}
+                            icon={<TrendingUp size={16} />}
+                            headerAction={
+                                <select
+                                    value={historyDays}
+                                    onChange={(e) => setHistoryDays(Number(e.target.value))}
+                                    style={{
+                                        padding: '4px 8px',
+                                        fontSize: '12px',
+                                        borderRadius: '6px',
+                                        border: '1px solid var(--border-color)',
+                                        backgroundColor: 'var(--bg-secondary)',
+                                        color: 'var(--text-primary)',
+                                        cursor: 'pointer',
+                                        outline: 'none'
+                                    }}
+                                >
+                                    <option value={7}>7 días</option>
+                                    <option value={15}>15 días</option>
+                                    <option value={30}>30 días</option>
+                                    <option value={60}>60 días</option>
+                                </select>
+                            }
+                        >
+                            <div style={{ height: '350px', width: '100%', padding: '10px 0' }}>
+                                {metrics && metrics.history.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
+                                            data={[...metrics.history].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-historyDays)}
+                                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
+                                            <XAxis
+                                                dataKey="fecha"
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+                                                tickFormatter={(str) => {
+                                                    const parts = str.split('-');
+                                                    return parts.length === 3 ? `${parts[2]}/${parts[1]}` : str;
+                                                }}
+                                            />
+                                            <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} />
+                                            <Tooltip
+                                                cursor={{ fill: 'var(--bg-secondary)', opacity: 0.4 }}
+                                                contentStyle={{ backgroundColor: 'var(--bg-primary)', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)' }}
+                                            />
+                                            <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
+                                            <Bar name="Ventas ($)" dataKey="ventas" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={historyDays > 30 ? 10 : 20} />
+                                            <Bar name="Gastos ($)" dataKey="gastos" fill="#f97316" radius={[4, 4, 0, 0]} barSize={historyDays > 30 ? 10 : 20} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <NoDataView />
+                                )}
+                            </div>
+                        </Card>
+
+                        {/* Gráfico 2: ROAS por Semana */}
+                        <Card
+                            title="ROAS por Semana"
+                            icon={<BarChart3 size={16} />}
+                            headerAction={
+                                <select
+                                    value={roasPeriod}
+                                    onChange={(e) => setRoasPeriod(e.target.value as any)}
+                                    style={{
+                                        padding: '4px 8px',
+                                        fontSize: '12px',
+                                        borderRadius: '6px',
+                                        border: '1px solid var(--border-color)',
+                                        backgroundColor: 'var(--bg-secondary)',
+                                        color: 'var(--text-primary)',
+                                        cursor: 'pointer',
+                                        outline: 'none'
+                                    }}
+                                >
+                                    <option value="thisMonth">Este mes</option>
+                                    <option value="lastMonth">Mes pasado</option>
+                                    <option value="last3Months">Últimos 3 meses</option>
+                                </select>
+                            }
+                        >
+                            <div style={{ height: '350px', width: '100%', padding: '10px 0' }}>
+                                {metrics && metrics.history.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
+                                            data={(() => {
+                                                const sorted = [...metrics.history].sort((a, b) => a.fecha.localeCompare(b.fecha));
+                                                let filtered = sorted;
+
+                                                if (roasPeriod === 'thisMonth') {
+                                                    filtered = sorted.slice(-30);
+                                                } else if (roasPeriod === 'lastMonth') {
+                                                    filtered = sorted.slice(-60, -30);
+                                                } else if (roasPeriod === 'last3Months') {
+                                                    filtered = sorted.slice(-90);
+                                                }
+
+                                                const weeklyData: any[] = [];
+                                                for (let i = 0; i < filtered.length; i += 7) {
+                                                    const weekSlice = filtered.slice(i, i + 7);
+                                                    const totalVentas = weekSlice.reduce((sum, d) => sum + d.ventas, 0);
+                                                    const totalGastos = weekSlice.reduce((sum, d) => sum + d.gastos, 0);
+                                                    weeklyData.push({
+                                                        name: `Semana ${Math.floor(i / 7) + 1}`,
+                                                        roas: totalGastos > 0 ? Number((totalVentas / totalGastos).toFixed(2)) : 0
+                                                    });
+                                                }
+                                                return weeklyData;
+                                            })()}
+                                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
+                                            <XAxis
+                                                dataKey="name"
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+                                            />
+                                            <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} />
+                                            <Tooltip
+                                                cursor={{ fill: 'var(--bg-secondary)', opacity: 0.4 }}
+                                                contentStyle={{ backgroundColor: 'var(--bg-primary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}
+                                            />
+                                            <Bar
+                                                name="ROAS (Promedio)"
+                                                dataKey="roas"
+                                                fill="var(--color-success)"
+                                                radius={[4, 4, 0, 0]}
+                                                barSize={60}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <NoDataView />
+                                )}
+                            </div>
+                        </Card>
+                    </div>
+
                     <div
                         style={{
                             display: 'grid',
@@ -162,64 +345,9 @@ export function DashboardPage() {
                             marginBottom: '32px'
                         }}
                     >
-                        {/* Gráfico Histórico - Recharts implementado */}
-                        <Card title="Rendimiento Histórico">
-                            <div style={{ height: '300px', width: '100%', padding: '10px 0' }}>
-                                {metrics && metrics.history.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart
-                                            data={metrics.history}
-                                            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                                        >
-                                            <defs>
-                                                <linearGradient id="colorGanancia" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3} />
-                                                    <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
-                                                </linearGradient>
-                                                <linearGradient id="colorGastos" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="var(--color-error)" stopOpacity={0.3} />
-                                                    <stop offset="95%" stopColor="var(--color-error)" stopOpacity={0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
-                                            <XAxis
-                                                dataKey="fecha"
-                                                axisLine={false}
-                                                tickLine={false}
-                                                tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
-                                                tickFormatter={(str) => {
-                                                    const parts = str.split('-');
-                                                    return parts.length === 3 ? `${parts[2]}/${parts[1]}` : str;
-                                                }}
-                                            />
-                                            <YAxis
-                                                axisLine={false}
-                                                tickLine={false}
-                                                tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
-                                                tickFormatter={(val) => `$${val}`}
-                                            />
-                                            <Tooltip
-                                                contentStyle={{ backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}
-                                                itemStyle={{ fontWeight: 600 }}
-                                            />
-                                            <Legend verticalAlign="top" height={36} />
-                                            <Area type="monotone" name="Ganancia Neta" dataKey="ganancia" stroke="var(--color-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorGanancia)" />
-                                            <Area type="monotone" name="Gasto Publicidad" dataKey="gastos" stroke="var(--color-error)" strokeWidth={2} fillOpacity={1} fill="url(#colorGastos)" />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', alignItems: 'center', justifyContent: 'center', opacity: 0.6 }}>
-                                        <Zap size={32} color="var(--color-primary)" style={{ marginBottom: '16px' }} />
-                                        <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px' }}>Aún no hay suficiente historial</p>
-                                        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>Conecta tus integraciones para comenzar a ver gráficas.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </Card>
-
                         {/* Tabla de Órdenes Recientes */}
-                        <Card title="Últimas Órdenes Shopify">
-                            <div style={{ padding: '8px 0', maxHeight: '300px', overflowY: 'auto' }}>
+                        <Card title="Últimas Órdenes Shopify" icon={<ShoppingCart size={16} />}>
+                            <div style={{ padding: '8px 0', maxHeight: '400px', overflowY: 'auto' }}>
                                 {metrics?.recentOrders && metrics.recentOrders.length > 0 ? (
                                     metrics.recentOrders.map((order, idx) => (
                                         <div
@@ -228,101 +356,130 @@ export function DashboardPage() {
                                                 display: 'flex',
                                                 justifyContent: 'space-between',
                                                 alignItems: 'center',
-                                                padding: '12px 0',
-                                                borderBottom: idx === metrics.recentOrders.length - 1 ? 'none' : '1px solid var(--border-color)'
+                                                padding: '16px 0',
+                                                borderBottom: idx === metrics.recentOrders.length - 1 ? 'none' : '1px solid var(--border-color)',
+                                                transition: 'background-color 200ms ease',
+                                                cursor: 'default'
                                             }}
                                         >
-                                            <div>
-                                                <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
-                                                    {order.order_number}
-                                                </p>
-                                                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
-                                                    {order.campaign_name || 'Sin campaña'}
-                                                </p>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div style={{
+                                                    width: '36px',
+                                                    height: '36px',
+                                                    borderRadius: '8px',
+                                                    backgroundColor: 'var(--bg-secondary)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }}>
+                                                    <ShoppingBag size={18} color="var(--text-tertiary)" />
+                                                </div>
+                                                <div>
+                                                    <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                                                        {order.order_number}
+                                                    </p>
+                                                    <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0 }}>
+                                                        {new Date(order.date).toLocaleDateString()} • {order.campaign_name || 'Directo'}
+                                                    </p>
+                                                </div>
                                             </div>
                                             <div style={{ textAlign: 'right' }}>
                                                 <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                                                     ${order.total.toFixed(2)}
                                                 </p>
-                                                <p
+                                                <span
                                                     style={{
-                                                        fontSize: '11px',
-                                                        fontWeight: 700,
+                                                        fontSize: '10px',
+                                                        fontWeight: 800,
                                                         textTransform: 'uppercase',
                                                         color: order.status === 'paid' ? 'var(--color-success)' : order.status === 'cancelled' ? 'var(--color-error)' : 'var(--color-warning)',
-                                                        margin: 0
+                                                        backgroundColor: order.status === 'paid' ? 'var(--color-success)15' : order.status === 'cancelled' ? 'var(--color-error)15' : 'var(--color-warning)15',
+                                                        padding: '2px 8px',
+                                                        borderRadius: '6px'
                                                     }}
                                                 >
                                                     {order.status}
-                                                </p>
+                                                </span>
                                             </div>
                                         </div>
                                     ))
                                 ) : (
-                                    <div style={{ padding: '40px 0', textAlign: 'center', opacity: 0.7 }}>
-                                        <ShoppingCart size={32} color="var(--text-tertiary)" style={{ margin: '0 auto 12px' }} />
-                                        <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px' }}>Sin órdenes recientes</p>
-                                        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>Tus órdenes de Shopify aparecerán aquí.</p>
+                                    <NoDataView />
+                                )}
+                            </div>
+                        </Card>
+
+                        {/* Top Campañas por Rendimiento */}
+                        <Card
+                            title="Top Campañas (Meta Ads)"
+                            icon={<Zap size={16} />}
+                            headerAction={
+                                <DSTooltip
+                                    content="Las 3 campañas que más presupuesto están consumiendo actualmente, basado en el gasto real detectado en Meta Ads."
+                                    position="left"
+                                >
+                                    <div style={{ color: 'var(--text-tertiary)', cursor: 'help', display: 'flex' }}>
+                                        <Info size={16} />
+                                    </div>
+                                </DSTooltip>
+                            }
+                        >
+                            <div style={{ padding: '8px 0', maxHeight: '400px', overflowY: 'auto' }}>
+                                {metrics?.topCampaigns && metrics.topCampaigns.length > 0 ? (
+                                    metrics.topCampaigns.map((campaign, i) => (
+                                        <div key={i} style={{ marginBottom: '20px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{campaign.name}</span>
+                                                <span style={{ fontSize: '12px', color: 'var(--color-success)', fontWeight: 700 }}>${campaign.spend.toLocaleString()} Gasto</span>
+                                            </div>
+                                            <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', overflow: 'hidden' }}>
+                                                <div style={{
+                                                    width: `${Math.min((campaign.spend / 5000) * 100, 100)}%`,
+                                                    height: '100%',
+                                                    backgroundColor: 'var(--color-primary)',
+                                                    borderRadius: '4px'
+                                                }} />
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                                        <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>No hay campañas vinculadas aún.</p>
                                     </div>
                                 )}
                             </div>
                         </Card>
                     </div>
 
-                    {/* Sección Alertas CPA */}
-                    <PremiumFeatureGuard featureKey="advanced_analytics" title="Análisis Avanzado" description="Las alertas de CPA y el análisis de campañas son exclusivos de nuestro plan Pro.">
-                        <div style={{ marginTop: '32px' }}>
-                            <p
-                                style={{
-                                    fontSize: '11px',
-                                    fontWeight: 700,
-                                    letterSpacing: '0.08em',
-                                    textTransform: 'uppercase',
-                                    color: 'var(--text-tertiary)',
-                                    marginBottom: '14px',
-                                }}
-                            >
-                                Alertas de Campañas
-                            </p>
-                            <div
-                                style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                                    gap: '16px'
-                                }}
-                            >
-                                {metrics?.topCampaigns && metrics.topCampaigns.filter(c => c.cpa > 15).map(campaign => (
-                                    <Card key={campaign.campaign_id} style={{ borderLeft: '4px solid var(--color-error)' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <div>
-                                                <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px' }}>
-                                                    CPA Alto: {campaign.name}
-                                                </h4>
-                                                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
-                                                    CPA Actual: <span style={{ color: 'var(--color-error)', fontWeight: 600 }}>${campaign.cpa.toFixed(2)}</span>
-                                                </p>
-                                            </div>
-                                            <div style={{ textAlign: 'center', padding: '10px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px' }}>
-                                                <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', margin: 0, textTransform: 'uppercase' }}>
-                                                    Conversiones
-                                                </p>
-                                                <p style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                                                    {campaign.conversions}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </Card>
-                                ))}
-                                {(!metrics?.topCampaigns || metrics.topCampaigns.filter(c => c.cpa > 15).length === 0) && (
-                                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                                        No hay alertas de CPA alto en este período o no tienes Meta Ads conectado.
-                                    </p>
-                                )}
-                            </div>
+                    {/* Nueva Tabla: Analítica de Costeos Cruzada */}
+                    {metrics && (
+                        <div style={{ marginTop: '0' }}>
+                            <CostingsAnalyticsTable
+                                data={metrics.costeoAnalytics}
+                                isLoading={isLoading}
+                            />
                         </div>
-                    </PremiumFeatureGuard>
+                    )}
                 </>
             )}
+
+            <style>{`
+                @media (max-width: 768px) {
+                    div[style*="grid-template-columns: repeat(auto-fit, minmax(450px, 1fr))"] {
+                        grid-template-columns: 1fr !important;
+                    }
+                }
+            `}</style>
+        </div>
+    );
+};
+
+function NoDataView() {
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', alignItems: 'center', justifyContent: 'center', opacity: 0.6 }}>
+            <Zap size={32} color="var(--color-primary)" style={{ marginBottom: '16px' }} />
+            <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px' }}>Datos insuficientes</p>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>Sincroniza tus ventas para ver el análisis.</p>
         </div>
     );
 }

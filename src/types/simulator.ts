@@ -23,6 +23,10 @@ export interface SimulatorInputs {
     averageCpa: number;
     /** Pre-shipment cancellation percentage (0-100) */
     preCancellationPercent: number;
+    /** Meta Ads Campaign ID for manual syncing */
+    meta_campaign_id?: string;
+    /** Shopify Product ID for syncing orders */
+    product_id_shopify?: string;
 }
 
 /** Calculated results from the simulator */
@@ -101,6 +105,7 @@ export interface SavedCosteo {
     
     nombre_producto: string;
     meta_campaign_id?: string;
+    product_id_shopify?: string;
     
     // Parámetros de entrada (opcionales para estado 'vacio')
     costo_producto?: number;

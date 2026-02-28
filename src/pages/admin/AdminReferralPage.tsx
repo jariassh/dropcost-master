@@ -18,6 +18,8 @@ import { fetchExchangeRates, getDisplayCurrency } from '@/utils/currencyUtils';
 import { formatCurrency } from '@/lib/format';
 import { obtenerPaisPorCodigo } from '@/services/paisesService';
 import { useAuthStore } from '@/store/authStore';
+import { formatDisplayDate, getDateTimeAuditInfo } from '@/utils/dateUtils';
+import { Tooltip } from '@/components/common/Tooltip';
 
 export function AdminReferralPage() {
     const [config, setConfig] = useState<ReferralConfig | null>(null);
@@ -106,12 +108,12 @@ export function AdminReferralPage() {
                 monto_minimo_retiro_usd: parseFloat(formData.monto_minimo_retiro_usd) || 10.00
             };
 
-            const { error } = await supabase
-                .from('sistema_referidos_config')
+            const { error } = await (supabase
+                .from('sistema_referidos_config' as any)
                 .insert([{
                     ...numericData,
                     actualizado_por: user?.id
-                }]);
+                }]) as any);
 
             if (error) throw error;
 
@@ -353,7 +355,13 @@ export function AdminReferralPage() {
                                     <span style={{ fontSize: '14px', fontWeight: 700 }}>Versión Actual</span>
                                 </div>
                                 <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <span>Actualizado: {new Date(config.fecha_actualizacion).toLocaleString()}</span>
+                                    <span>Actualizado:
+                                        <Tooltip content={`UTC: ${getDateTimeAuditInfo(config.fecha_actualizacion).utc}`}>
+                                            <span style={{ cursor: 'help', borderBottom: '1px dotted var(--text-tertiary)', marginLeft: '4px' }}>
+                                                {formatDisplayDate(config.fecha_actualizacion, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+                                            </span>
+                                        </Tooltip>
+                                    </span>
                                     <span>Por: {config.actualizado_por || 'Sistema'}</span>
                                 </div>
                             </div>
@@ -441,7 +449,11 @@ export function AdminReferralPage() {
                                                     </div>
                                                 </td>
                                                 <td style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                                                    {new Date(r.fechaRegistro).toLocaleString()}
+                                                    <Tooltip content={`UTC: ${getDateTimeAuditInfo(r.fechaRegistro).utc}`}>
+                                                        <span style={{ cursor: 'help', borderBottom: '1px dotted var(--text-tertiary)' }}>
+                                                            {formatDisplayDate(r.fechaRegistro)}
+                                                        </span>
+                                                    </Tooltip>
                                                 </td>
                                             </tr>
                                         ))

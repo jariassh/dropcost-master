@@ -115,19 +115,21 @@ export const Tooltip: React.FC<TooltipProps> = ({
                                 position === 'right' ? 'translateY(-50%)' :
                                     position === 'bottom' ? 'translate(-50%, 0)' :
                                         'translate(-100%, -50%)',
-                        backgroundColor: '#1F2937',
-                        color: '#FFFFFF',
-                        padding: '8px 12px',
-                        borderRadius: '8px',
+                        backgroundColor: 'var(--bg-secondary)', // Cambiado a variable de la app
+                        color: 'var(--text-primary)',
+                        padding: '8px 16px',
+                        borderRadius: '12px',
                         fontSize: '12px',
                         fontWeight: 600,
-                        lineHeight: '1.4',
-                        maxWidth: '220px',
+                        lineHeight: '1.5',
+                        width: 'max-content',
+                        minWidth: '200px',
+                        maxWidth: '320px',
                         whiteSpace: 'normal',
-                        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5), 0 4px 10px rgba(0, 0, 0, 0.3)', // Elevación fuerte
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        boxShadow: 'var(--shadow-lg)',
+                        border: '1px solid var(--border-color)',
                         pointerEvents: 'none',
-                        textAlign: 'center',
+                        textAlign: 'left',
                         animation: 'fadeIn 150ms ease-out',
                     }}
                 >
@@ -143,22 +145,22 @@ export const Tooltip: React.FC<TooltipProps> = ({
                             ...(position === 'top' && {
                                 bottom: '-5px', left: '50%', marginLeft: '-5px',
                                 borderWidth: '5px 5px 0 5px',
-                                borderColor: '#1F2937 transparent transparent transparent',
+                                borderColor: 'var(--bg-secondary) transparent transparent transparent',
                             }),
                             ...(position === 'right' && {
                                 left: '-5px', top: '50%', marginTop: '-5px',
                                 borderWidth: '5px 5px 5px 0',
-                                borderColor: 'transparent #1F2937 transparent transparent',
+                                borderColor: 'transparent var(--bg-secondary) transparent transparent',
                             }),
                             ...(position === 'bottom' && {
                                 top: '-5px', left: '50%', marginLeft: '-5px',
                                 borderWidth: '0 5px 5px 5px',
-                                borderColor: 'transparent transparent #1F2937 transparent',
+                                borderColor: 'transparent transparent var(--bg-secondary) transparent',
                             }),
                             ...(position === 'left' && {
                                 right: '-5px', top: '50%', marginTop: '-5px',
                                 borderWidth: '5px 0 5px 5px',
-                                borderColor: 'transparent transparent transparent #1F2937',
+                                borderColor: 'transparent transparent transparent var(--bg-secondary)',
                             }),
                         }}
                     />

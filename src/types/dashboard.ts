@@ -10,6 +10,20 @@ export interface DashboardMetrics {
     history: ChartDataPoint[];
     topCampaigns: CampaignData[];
     recentOrders: DashboardOrder[];
+    costeoAnalytics: CosteoAnalytics[];
+}
+
+export interface CosteoAnalytics {
+    id: string;
+    nombre_producto: string;
+    meta_campaign_id?: string;
+    target_price: number;
+    target_cpa: number;
+    target_flete: number;
+    real_cpa: number;
+    real_orders: number;
+    real_spend: number;
+    real_roas: number;
 }
 
 export interface PeriodMetrics {
@@ -19,6 +33,8 @@ export interface PeriodMetrics {
     ordenes_efectivas: number;
     cpa_promedio: number;
     roas_promedio: number;
+    aov_promedio: number;
+    cvr_promedio: number;
 }
 
 export interface ChartDataPoint {

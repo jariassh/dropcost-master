@@ -9,6 +9,8 @@ import { UserStatusBadge } from '@/components/admin/UserStatusBadge';
 import { plansService } from '@/services/plansService';
 import { Plan } from '@/types/plans.types';
 import { cargarPaises, Pais } from '@/services/paisesService';
+import { formatDisplayDate, getDateTimeAuditInfo } from '@/utils/dateUtils';
+import { Tooltip } from '@/components/common/Tooltip';
 
 export const AdminDashboard: React.FC = () => {
     const [stats, setStats] = useState<AdminStats | null>(null);
@@ -149,7 +151,12 @@ export const AdminDashboard: React.FC = () => {
                                                 {user.nombres} {user.apellidos}
                                             </p>
                                             <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: '2px 0 0 0', whiteSpace: 'nowrap' }}>
-                                                {plans.find(p => p.slug === user.plan_id || p.id === user.plan_id)?.name || 'Plan Gratis'} • {new Date(user.fecha_registro).toLocaleDateString()}
+                                                {plans.find(p => p.slug === user.plan_id || p.id === user.plan_id)?.name || 'Plan Gratis'} •
+                                                <Tooltip content={`UTC: ${getDateTimeAuditInfo(user.fecha_registro).utc}`}>
+                                                    <span style={{ cursor: 'help', borderBottom: '1px dotted var(--text-tertiary)' }}>
+                                                        {formatDisplayDate(user.fecha_registro)}
+                                                    </span>
+                                                </Tooltip>
                                                 {user.pais && (
                                                     <>
                                                         <span style={{ margin: '0 4px', opacity: 0.5 }}>•</span>

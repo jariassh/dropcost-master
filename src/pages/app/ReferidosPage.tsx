@@ -36,6 +36,7 @@ import { fetchExchangeRates, getDisplayCurrency } from '@/utils/currencyUtils';
 import { formatCurrency } from '@/lib/format';
 import { obtenerPaisPorCodigo } from '@/services/paisesService';
 import { PremiumFeatureGuard } from '@/components/common/PremiumFeatureGuard';
+import { formatDisplayDate } from '@/utils/dateUtils';
 
 export function ReferidosPage() {
     const { user } = useAuthStore();
@@ -360,7 +361,7 @@ export function ReferidosPage() {
                                             </td>
                                             <td style={{ padding: '16px 24px' }}>{activeTab === 'nivel1' ? getPlanBadge(r) : <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}><ArrowRight size={14} color="var(--color-primary)" /> {r.referenteDe || 'N/A'}</div>}</td>
                                             <td style={{ padding: '16px 24px' }}>{getVerificationBadge(r)}</td>
-                                            <td style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)' }}>{new Date(r.createdAt).toLocaleDateString()}</td>
+                                            <td style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)' }}>{formatDisplayDate(r.createdAt)}</td>
                                             <td style={{ padding: '16px 24px' }}>
                                                 <button onClick={() => handleOpenDetails(r)} style={{ background: 'rgba(0, 102, 255, 0.05)', border: 'none', color: 'var(--color-primary)', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 700 }}>
                                                     {activeTab === 'nivel1' ? 'Detalles' : 'Referente'}
@@ -448,7 +449,7 @@ function CommissionHistoryModal({ isOpen, onClose, history, isLoading, convertVa
                                 {history.map((item: any) => (
                                     <tr key={item.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                                         <td style={{ padding: '12px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                                            {new Date(item.date).toLocaleDateString()}
+                                            {formatDisplayDate(item.date)}
                                         </td>
                                         <td style={{ padding: '12px', fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>
                                             {item.description}
@@ -547,7 +548,7 @@ function DetailsModal({ isOpen, onClose, user, details, isLoading, commissionRat
                         <div style={{ textAlign: 'center' }}><div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Impacto en Red</div><div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-success)' }}>{convertValue((details?.commissionsEarned || 0) * (commissionRate / 100))}</div><div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>Ganas el {commissionRate}%</div></div>
                     </div>
                 )}
-                <div style={{ marginTop: '24px', fontSize: '12px', color: 'var(--text-tertiary)', textAlign: 'center', lineHeight: 1.5 }}>Este usuario se registró el {user?.createdAt && new Date(user.createdAt).toLocaleDateString()}.{details && details.referralsCount > 0 && <span style={{ display: 'block', marginTop: '8px', color: 'var(--color-primary)', fontWeight: 600 }}>🚀 ¡Este usuario está ayudando a crecer tu red!</span>}</div>
+                <div style={{ marginTop: '24px', fontSize: '12px', color: 'var(--text-tertiary)', textAlign: 'center', lineHeight: 1.5 }}>Este usuario se registró el {user?.createdAt && formatDisplayDate(user.createdAt)}.{details && details.referralsCount > 0 && <span style={{ display: 'block', marginTop: '8px', color: 'var(--color-primary)', fontWeight: 600 }}>🚀 ¡Este usuario está ayudando a crecer tu red!</span>}</div>
                 <button onClick={onClose} style={{ width: '100%', padding: '14px', borderRadius: '12px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '14px', fontWeight: 700, cursor: 'pointer', marginTop: '24px', border: '1px solid var(--border-color)' }}>Cerrar</button>
             </div>
         </div>

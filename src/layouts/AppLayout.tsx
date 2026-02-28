@@ -31,6 +31,8 @@ import {
     GraduationCap,
     History as HistoryIcon,
     X,
+    UploadCloud,
+    Clock,
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
@@ -50,6 +52,7 @@ const navItems = [
     { to: '/ofertas', icon: Gift, label: 'Ofertas Irresistibles', active: true },
     { to: '/referidos', icon: Share2, label: 'Sistema de Referidos', active: true },
     { to: '/billetera', icon: Wallet, label: 'Billetera / Wallet', active: true },
+    { to: '/sincronizar', icon: UploadCloud, label: 'Sincronizar Envíos', active: true },
     { to: '/configuracion', icon: Settings, label: 'Configuración', active: true },
     { to: '/analisis-regional', icon: Map, label: 'Análisis Regional', active: false },
     { to: '/acortador', icon: Link2, label: 'Acortador URL', active: false },
@@ -303,6 +306,11 @@ export function AppLayout() {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {/* Indicador de Hora del Sistema */}
+                        <div className="max-md:hidden" style={{ marginRight: '8px' }}>
+                            <ClockDisplay />
+                        </div>
+
                         {/* Toggle tema */}
                         <HeaderButton onClick={toggleTheme} label={isDark ? 'Modo claro' : 'Modo oscuro'}>
                             {isDark ? <Sun size={18} /> : <Moon size={18} />}
@@ -653,5 +661,53 @@ function SidebarNavItem({
             <Icon size={18} style={{ flexShrink: 0 }} />
             {!collapsed && label}
         </NavLink>
+    );
+}
+function ClockDisplay() {
+    const [time, setTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setTime(new Date()), 30000); // 30s para precisión
+        return () => clearInterval(timer);
+    }, []);
+
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // Traducir o formatear zona para que se vea más limpia
+    const readableZone = zone.split('/').pop()?.replace(/_/g, ' ') || zone;
+
+    return (
+        <Tooltip content={`Zona Horaria: ${zone}`} position="bottom">
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '6px 14px',
+                    backgroundColor: 'var(--bg-secondary)',
+                    borderRadius: '10px',
+                    color: 'var(--text-secondary)',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    border: '1px solid var(--border-color)',
+                    transition: 'all 200ms ease'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--color-primary)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--border-color)';
+                    e.currentTarget.style.color = 'var(--text-secondary)';
+                }}
+            >
+                <Clock size={16} style={{ color: 'var(--color-primary)' }} />
+                <span>
+                    {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                    <span style={{ fontSize: '11px', opacity: 0.7, marginLeft: '6px', fontWeight: 500 }}>
+                        {readableZone}
+                    </span>
+                </span>
+            </div>
+        </Tooltip>
     );
 }

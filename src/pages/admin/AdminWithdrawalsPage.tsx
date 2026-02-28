@@ -25,6 +25,8 @@ import { useAuthStore } from '@/store/authStore';
 import { fetchExchangeRates, convertPrice, getDisplayCurrency } from '@/utils/currencyUtils';
 import { obtenerPaisPorCodigo } from '@/services/paisesService';
 import { dispararTriggerEmail } from '@/utils/emailTrigger';
+import { formatDisplayDate, getDateTimeAuditInfo } from '@/utils/dateUtils';
+import { Tooltip } from '@/components/common/Tooltip';
 
 export const AdminWithdrawalsPage: React.FC = () => {
     const { user } = useAuthStore();
@@ -761,8 +763,20 @@ const WithdrawalDetailModal: React.FC<{
                     {/* Fechas */}
                     <div>
                         <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px' }}>Fechas</p>
-                        {row('Fecha solicitud', w.fecha_solicitud ? new Date(w.fecha_solicitud).toLocaleString('es-CO') : '—')}
-                        {(w as any).fecha_pago && row('Fecha pago', new Date((w as any).fecha_pago).toLocaleString('es-CO'))}
+                        {row('Fecha solicitud', w.fecha_solicitud ? (
+                            <Tooltip content={`UTC: ${getDateTimeAuditInfo(w.fecha_solicitud).utc}`}>
+                                <span style={{ cursor: 'help', borderBottom: '1px dotted var(--text-tertiary)' }}>
+                                    {formatDisplayDate(w.fecha_solicitud, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+                                </span>
+                            </Tooltip>
+                        ) : '—')}
+                        {(w as any).fecha_pago && row('Fecha pago', (
+                            <Tooltip content={`UTC: ${getDateTimeAuditInfo((w as any).fecha_pago).utc}`}>
+                                <span style={{ cursor: 'help', borderBottom: '1px dotted var(--text-tertiary)' }}>
+                                    {formatDisplayDate((w as any).fecha_pago, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+                                </span>
+                            </Tooltip>
+                        ))}
                     </div>
 
                     {/* Nota admin */}

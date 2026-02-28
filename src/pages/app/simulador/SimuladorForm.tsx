@@ -43,6 +43,7 @@ interface SimuladorFormProps {
     productCost: number;
     currency?: string;
     country?: string;
+    tiendaId?: string
 }
 
 export function SimuladorForm({
