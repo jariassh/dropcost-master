@@ -103,9 +103,31 @@ export const costeoService = {
     },
 
     /**
+     * Actualiza campos específicos sin forzar el estado.
+     */
+    async updateCosteo(id: string, updates: Partial<SavedCosteo>): Promise<SavedCosteo> {
+        const { data, error } = await supabase
+            .from('costeos')
+            .update({
+                ...updates,
+                updated_at: new Date().toISOString()
+            } as any)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error updating costeo:', error);
+            throw new Error('No se pudo actualizar el costeo');
+        }
+
+        return data as any;
+    },
+
+    /**
      * Duplica un costeo existente (consume cuota).
      */
-    async duplicateCosteo(costeo: SavedCosteo): Promise<SavedCosteo> {
+    async duplicateCosteo(costeo: SavedCosteo, nuevoNombre?: string): Promise<SavedCosteo> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Usuario no autenticado');
 
@@ -115,7 +137,7 @@ export const costeoService = {
             .from('costeos')
             .insert({
                 ...toClone,
-                nombre_producto: `${costeo.nombre_producto} (copia)`,
+                nombre_producto: nuevoNombre || `${costeo.nombre_producto} (copia)`,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             } as any)
@@ -153,22 +175,18 @@ export const costeoService = {
     },
 
     /**
-     * Obtiene el uso de la cuota para una tienda/usuario.
+     * Obtiene los presets del simulador (CPA promedio, tasa cancelación) desde métricas reales.
      */
-    async getStoreQuota(tiendaId: string): Promise<{ used: number; limit: number }> {
-        const { count, error } = await supabase
-            .from('costeos')
-            .select('*', { count: 'exact', head: true })
-            .eq('tienda_id', tiendaId);
+    async getSimulatorPresets(tiendaId: string): Promise<{ average_cpa: number; cancellation_rate: number }> {
+        const { data, error } = await supabase.rpc('get_simulator_presets', {
+            p_tienda_id: tiendaId
+        });
 
         if (error) {
-            console.error('Error getting quota:', error);
-            throw new Error('No se pudo calcular la cuota');
+            console.error('Error calling get_simulator_presets:', error);
+            throw new Error('No se pudieron obtener las métricas reales del simulador');
         }
 
-        // El límite debería venir del plan del usuario. 
-        // Por ahora simularemos que recuperamos el plan del authStore o de una tabla de configuración.
-        // Pero para el servicio, retornamos el conteo.
-        return { used: count || 0, limit: 100 }; // Placeholder limit
+        return data as any;
     }
 };

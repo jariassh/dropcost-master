@@ -47,11 +47,12 @@ export async function getReferralStats(): Promise<ReferralStats> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { totalClicks: 0, totalReferred: 0, totalEarned: 0, referralCode: '', minReferredForLeader: 50, commissionLevel1: 15, commissionLevel2: 5, meses_vigencia_comision: 12 };
 
-    // 1. Obtener datos del usuario y configuración
-    const [userDataRes, leaderStatsRes, configRes] = await Promise.all([
-        supabase.from('users').select('codigo_referido_personal, wallet_saldo').eq('id', user.id).single(),
+    // 1. Obtener datos del usuario, configuración y transacciones de bonos
+    const [userDataRes, leaderStatsRes, configRes, bonusRes] = await Promise.all([
+        supabase.from('users').select('codigo_referido_personal').eq('id', user.id).single(),
         supabase.from('referidos_lideres').select('total_clicks, total_usuarios_referidos').eq('user_id', user.id).maybeSingle(),
-        supabase.from('sistema_referidos_config').select('*').order('fecha_actualizacion', { ascending: false }).limit(1).maybeSingle()
+        supabase.from('sistema_referidos_config' as any).select('*').order('fecha_actualizacion', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('wallet_transactions' as any).select('amount').eq('user_id', user.id).eq('type', 'referral_bonus')
     ]);
 
     if (configRes.error && configRes.error.code !== 'PGRST116') {
@@ -63,12 +64,16 @@ export async function getReferralStats(): Promise<ReferralStats> {
 
     const userData = userDataRes.data;
     const leaderStats = leaderStatsRes.data;
-    const config = configRes.data;
+    const config = configRes.data as any;
+    
+    // Sumamos todas las comisiones históricas para obtener el "Total Earned"
+    // Esto es más preciso que usar wallet_saldo que es el balance actual (y puede estar desfasado)
+    const totalEarned = ((bonusRes.data as any[]) || []).reduce((acc: number, t: any) => acc + Number(t.amount || 0), 0);
 
     return {
         totalClicks: leaderStats?.total_clicks || 0,
         totalReferred: leaderStats?.total_usuarios_referidos || 0,
-        totalEarned: userData?.wallet_saldo || 0,
+        totalEarned: totalEarned,
         referralCode: userData?.codigo_referido_personal || '',
         minReferredForLeader: config?.referidos_minimo_lider || 50,
         commissionLevel1: config?.comision_nivel_1 || 15,
@@ -82,7 +87,7 @@ export async function getReferralStats(): Promise<ReferralStats> {
  */
 export async function getReferralConfig(): Promise<ReferralConfig | null> {
     const { data, error } = await supabase
-        .from('sistema_referidos_config')
+        .from('sistema_referidos_config' as any)
         .select('*')
         .order('fecha_actualizacion', { ascending: false })
         .limit(1)
@@ -92,7 +97,7 @@ export async function getReferralConfig(): Promise<ReferralConfig | null> {
         console.error('Error fetching referral config:', error);
         return null;
     }
-    return data;
+    return data as any;
 }
 
 /**
@@ -101,7 +106,7 @@ export async function getReferralConfig(): Promise<ReferralConfig | null> {
 export async function incrementReferralClicks(code: string): Promise<void> {
     if (!code) return;
     try {
-        await supabase.rpc('increment_referral_clicks', { ref_code: code });
+        await (supabase.rpc as any)('increment_referral_clicks', { ref_code: code });
     } catch (error) {
         console.error('Error incrementing clicks:', error);
     }
@@ -324,13 +329,12 @@ export async function getReferrerNameByCode(code: string): Promise<string | null
     if (!code) return null;
     
     try {
-        const { data, error } = await supabase
-            .rpc('get_referrer_info', { ref_code: code });
+        const { data, error } = await (supabase.rpc as any)('get_referrer_info', { ref_code: code });
 
         if (error || !data || (Array.isArray(data) && data.length === 0)) return null;
         
         // La rpc devuelve un array de objetos
-        const info = Array.isArray(data) ? data[0] : data;
+        const info = (Array.isArray(data) ? data[0] : data) as any;
         if (!info || (!info.nombres && !info.apellidos)) return null;
         
         return `${info.nombres || ''} ${info.apellidos || ''}`.trim();
@@ -346,7 +350,7 @@ export async function getReferrerNameByCode(code: string): Promise<string | null
 export async function getAdminReferralStats(): Promise<any> {
     try {
         const [configRes, usersRes, leaderStatsRes, withdrawalsRes] = await Promise.all([
-            supabase.from('sistema_referidos_config').select('*').order('fecha_actualizacion', { ascending: false }).limit(1).maybeSingle(),
+            supabase.from('sistema_referidos_config' as any).select('*').order('fecha_actualizacion', { ascending: false }).limit(1).maybeSingle(),
             supabase.from('referidos_usuarios').select('id', { count: 'exact', head: true }),
             supabase.from('referidos_lideres').select('total_comisiones_generadas'),
             supabase.from('wallet_transactions' as any).select('amount').eq('type', 'withdrawal')
