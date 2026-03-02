@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, Trash2, Save, Check, Edit2, GripVertical } from 'lucide-react';
+import { X, Plus, Trash2, Save, Check, Edit2, GripVertical, CircleMinus } from 'lucide-react';
 import { Button } from '../common/Button';
 import { CurrencyInput } from '../common/CurrencyInput';
 import { Plan, PlanInput, PlanLimits } from '@/types/plans.types';
 
 const CONTROLLED_FEATURES: { key: keyof PlanLimits; label: string; text: string; type: 'boolean' }[] = [
+    { key: 'dashboard_enabled', label: 'Dashboard Operativo', text: 'Dashboard de Operaciones', type: 'boolean' },
+    { key: 'dropi_sync_enabled', label: 'Sincronizador Dropi', text: 'Sincronizador de Pedidos Dropi', type: 'boolean' },
+    { key: 'meta_ads_enabled', label: 'Integración Meta Ads', text: 'Integración con Meta Ads', type: 'boolean' },
     { key: 'access_wallet', label: 'Acceso a Billetera', text: 'Acceso a Billetera y Retiros', type: 'boolean' },
     { key: 'access_referrals', label: 'Sistema de Referidos', text: 'Sistema de Referidos', type: 'boolean' },
     { key: 'can_duplicate_costeos', label: 'Duplicar Costeos', text: 'Duplicar Costeos', type: 'boolean' },
@@ -21,7 +24,9 @@ const CONTROLLED_PATTERNS = [
     /^\d+ Costeos$/,
     /^Costeos Ilimitados$/,
     /^\d+ Ofertas$/,
-    /^Ofertas Ilimitadas$/
+    /^Ofertas Ilimitadas$/,
+    /^\d+ cuentas publicitarias por tienda$/,
+    /^⛔ vincular cuentas publicitarias$/
 ];
 
 const isControlledFeature = (text: string) => {
@@ -200,7 +205,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
         }));
     };
 
-    const handleNumericLimitChange = (key: 'stores' | 'costeos_limit' | 'offers_limit', value: number) => {
+    const handleNumericLimitChange = (key: 'stores' | 'costeos_limit' | 'offers_limit' | 'meta_accounts_per_store' | 'total_meta_accounts', value: number) => {
         const newLimits = { ...formData.limits, [key]: value };
         let newFeatures = [...formData.features];
 
@@ -209,7 +214,8 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
         // Format helpers
         const getStoreText = (v: number) => v >= INFINITY_THRESHOLD ? 'Tiendas Ilimitadas' : `Hasta ${v} ${v === 1 ? 'Tienda' : 'Tiendas'}`;
         const getCosteosText = (v: number) => v >= INFINITY_THRESHOLD ? 'Costeos Ilimitados' : `${v} Costeos`;
-        const getOffersText = (v: number) => v >= INFINITY_THRESHOLD ? 'Ofertas Ilimitadas' : `${v} Ofertas`;
+        const getOffersText = (v: number) => v >= INFINITY_THRESHOLD ? 'Ofertas Ilimitadas' : (v <= 0 ? '⛔ Crear ofertas' : `${v} Ofertas`);
+        const getMetaText = (v: number) => v <= 0 ? '⛔ vincular cuentas publicitarias' : `${v} cuentas publicitarias por tienda`;
 
         let newText = '';
         let pattern: RegExp | null = null;
@@ -224,18 +230,21 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
             pattern = /^\d+ Costeos$/;
             altPattern = /^Costeos Ilimitados$/;
         } else if (key === 'offers_limit') {
-            newText = value >= INFINITY_THRESHOLD ? 'Ofertas Ilimitadas' : (value <= 0 ? '⛔ Crear ofertas' : `${value} Ofertas`);
+            newText = getOffersText(value);
             pattern = /^\d+ Ofertas$/;
             altPattern = /^Ofertas Ilimitadas$/;
+        } else if (key === 'meta_accounts_per_store') {
+            newText = getMetaText(value);
+            pattern = /^\d+ cuentas publicitarias por tienda$/;
+            altPattern = /^⛔ vincular cuentas publicitarias$/;
         }
 
         // Remove old text matching pattern
         if (pattern) {
             newFeatures = newFeatures.filter(f => !pattern!.test(f) && (!altPattern || !altPattern.test(f)));
+            // Add new text at the beginning of numeric segment (usually after tiendas)
+            newFeatures.unshift(newText);
         }
-
-        // Add new text at the beginning
-        newFeatures.unshift(newText);
 
         setFormData(prev => ({
             ...prev,
@@ -401,7 +410,8 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                     </div>
                                     {formData.limits.stores >= INFINITY_THRESHOLD ? (
                                         <div style={{
-                                            padding: '10px', backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)',
+                                            height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)',
                                             borderRadius: '8px', fontSize: '14px', color: 'var(--text-tertiary)', textAlign: 'center'
                                         }}>Ilimitadas</div>
                                     ) : (
@@ -410,7 +420,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                             onChange={(val) => handleNumericLimitChange('stores', val)}
                                             allowDecimals={false}
                                             prefix=""
-                                            style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', width: '100%' }}
+                                            style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', width: '100%', height: '42px' }}
                                         />
                                     )}
                                 </div>
@@ -428,7 +438,8 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                     </div>
                                     {(formData.limits.costeos_limit || 0) >= INFINITY_THRESHOLD ? (
                                         <div style={{
-                                            padding: '10px', backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)',
+                                            height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)',
                                             borderRadius: '8px', fontSize: '14px', color: 'var(--text-tertiary)', textAlign: 'center'
                                         }}>Ilimitados</div>
                                     ) : (
@@ -437,7 +448,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                             onChange={(val) => handleNumericLimitChange('costeos_limit', val)}
                                             allowDecimals={false}
                                             prefix=""
-                                            style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', width: '100%' }}
+                                            style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', width: '100%', height: '42px' }}
                                         />
                                     )}
                                 </div>
@@ -455,7 +466,8 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                     </div>
                                     {(formData.limits.offers_limit || 0) >= INFINITY_THRESHOLD ? (
                                         <div style={{
-                                            padding: '10px', backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)',
+                                            height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)',
                                             borderRadius: '8px', fontSize: '14px', color: 'var(--text-tertiary)', textAlign: 'center'
                                         }}>Ilimitadas</div>
                                     ) : (
@@ -464,7 +476,49 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                             onChange={(val) => handleNumericLimitChange('offers_limit', val)}
                                             allowDecimals={false}
                                             prefix=""
-                                            style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', width: '100%' }}
+                                            style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', width: '100%', height: '42px' }}
+                                        />
+                                    )}
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+                                {/* Meta Accounts per Store */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Cuentas Meta por Tienda</label>
+                                    <CurrencyInput
+                                        value={formData.limits.meta_accounts_per_store || 0}
+                                        onChange={(val) => handleNumericLimitChange('meta_accounts_per_store', val)}
+                                        allowDecimals={false}
+                                        prefix=""
+                                        style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', width: '100%', height: '42px' }}
+                                    />
+                                </div>
+                                {/* Total Meta Accounts */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Total Cuentas Meta</label>
+                                        <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', userSelect: 'none' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={(formData.limits.total_meta_accounts || 0) >= INFINITY_THRESHOLD}
+                                                onChange={(e) => handleNumericLimitChange('total_meta_accounts', e.target.checked ? INFINITY_THRESHOLD : 5)}
+                                            /> ∞
+                                        </label>
+                                    </div>
+                                    {(formData.limits.total_meta_accounts || 0) >= INFINITY_THRESHOLD ? (
+                                        <div style={{
+                                            height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)',
+                                            borderRadius: '8px', fontSize: '14px', color: 'var(--text-tertiary)', textAlign: 'center'
+                                        }}>Ilimitadas</div>
+                                    ) : (
+                                        <CurrencyInput
+                                            value={formData.limits.total_meta_accounts || 0}
+                                            onChange={(val) => handleNumericLimitChange('total_meta_accounts', val)}
+                                            allowDecimals={false}
+                                            prefix=""
+                                            style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', width: '100%', height: '42px' }}
                                         />
                                     )}
                                 </div>
@@ -566,8 +620,17 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                                                     <div style={{ color: 'var(--text-tertiary)', cursor: 'grab', display: 'flex', alignItems: 'center' }}>
                                                         <GripVertical size={16} />
                                                     </div>
-                                                    <Check size={14} color="var(--color-primary)" style={{ flexShrink: 0 }} />
-                                                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{feature}</span>
+                                                    {feature.startsWith('⛔') ? (
+                                                        <CircleMinus size={14} style={{ color: '#EF4444', flexShrink: 0 }} />
+                                                    ) : (
+                                                        <Check size={14} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                                                    )}
+                                                    <span style={{
+                                                        fontSize: '13px',
+                                                        color: feature.startsWith('⛔') ? 'var(--text-tertiary)' : 'var(--text-secondary)'
+                                                    }}>
+                                                        {feature.startsWith('⛔') ? feature.replace('⛔', '').trim() : feature}
+                                                    </span>
                                                 </div>
 
                                                 <div style={{ display: 'flex', gap: '4px', opacity: 0.7 }}>

@@ -12,14 +12,21 @@
 | Dashboard Administrativo (Dark) | Panel principal de escritorio (Dark) | 26-02-2026 | ✅ | ✅ | [dashboard_kpis_dark.html](file:///c:/Users/user/Desktop/Dropshipping/Dev/DropCost%20Master/project/ux_ui_designer/CODIGO_EXPORTADO/dashboard_kpis_dark.html) |
 | Dashboard Pro (Light) | KPIs Avanzados + Gráficos (Light) | 27-02-2026 | ✅ | ✅ | [dashboard_pro_light.html](file:///c:/Users/user/Desktop/Dropshipping/Dev/DropCost%20Master/project/ux_ui_designer/CODIGO_EXPORTADO/dashboard_pro_light.html) |
 | Dashboard Pro (Dark) | KPIs Avanzados + Gráficos (Dark) | 27-02-2026 | ✅ | ✅ | [dashboard_pro_dark.html](file:///c:/Users/user/Desktop/Dropshipping/Dev/DropCost%20Master/project/ux_ui_designer/CODIGO_EXPORTADO/dashboard_pro_dark.html) |
+| Integración Meta Ads - Desconectado | Tarjeta inicial con botón de conexión | 28-02-2026 | ✅ | ✅ | [meta_card_disconnected.html](file:///c:/Users/user/Desktop/Dropshipping/Dev/DropCost%20Master/project/ux_ui_designer/CODIGO_EXPORTADO/meta_card_disconnected.html) |
+| Integración Meta Ads - Selección | Dropdowns de BM y Ad Account | 28-02-2026 | ✅ | ✅ | [meta_card_selection.html](file:///c:/Users/user/Desktop/Dropshipping/Dev/DropCost%20Master/project/ux_ui_designer/CODIGO_EXPORTADO/meta_card_selection.html) |
+| Integración Meta Ads - Conectado | Estado final con cuenta vinculada | 28-02-2026 | ✅ | ✅ | [meta_card_connected.html](file:///c:/Users/user/Desktop/Dropshipping/Dev/DropCost%20Master/project/ux_ui_designer/CODIGO_EXPORTADO/meta_card_connected.html) |
 
 ## Variantes generadas
 - Dashboard Administrativo - Desktop Light (ID: 2e02b7c39ab04a6f8c80541d4c01f38b)
 - Dashboard Administrativo - Desktop Dark (ID: 1d3a80adc52647128aac78c7847e4b87)
 - Dashboard Pro - Light (ID: 5bb7dbf2ae1f42589f7a8242feb5182a)
 - Dashboard Pro - Dark (ID: b772fa9cfa23411aa402488652920efe)
+- Integración Meta Ads - Desconectado (ID: 718281c82b0840eaa8e9d4eb34c7740a)
+- Integración Meta Ads - Selección (ID: b5d01067e16648d69296fc6408236509)
+- Integración Meta Ads - Conectado (ID: aa7fe0da561848ccb00bad26e16fc6c6)
 
 ## Próximas acciones
 - [x] Crear screen: Dashboard Pro KPIs & Charts (Ready)
+- [x] Diseñar flujo integración Meta Ads (Ready)
 - [ ] Crear screen: Panel de Alertas CPA
 - [ ] Crear screen: Tabla de Órdenes Interactiva

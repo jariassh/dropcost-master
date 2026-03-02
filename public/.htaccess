@@ -19,3 +19,17 @@
   RewriteCond %{REQUEST_FILENAME} !-l
   RewriteRule . /index.html [L]
 </IfModule>
+
+# Prevención agresiva de Caché para HTML (Para SPA)
+<IfModule mod_headers.c>
+    <FilesMatch "\.(html|htm|json|xml)$">
+        Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+
+    # Cacheado infinito para estáticos compilados de Vite (porque tienen hash único)
+    <FilesMatch "\.(js|css|jpg|jpeg|png|gif|svg|ico|woff|woff2|ttf|eot)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>

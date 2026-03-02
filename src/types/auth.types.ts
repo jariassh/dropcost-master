@@ -123,6 +123,7 @@ export interface AuthState {
     confirm2FA: (code: string) => Promise<boolean>;
     disable2FA: () => Promise<boolean>;
     logout: () => Promise<void>;
+    refreshUser: () => Promise<void>;
     initialize: () => Promise<void>;
     clearError: () => void;
 }

@@ -61,6 +61,8 @@ import { configService, GlobalConfig } from '@/services/configService';
 import { paymentService } from '@/services/paymentService';
 import { differenceInDays, parseISO } from 'date-fns';
 import { storageService } from '@/services/storageService';
+import { MetaAdsIntegrationCard } from '@/components/configuracion/MetaAdsIntegrationCard';
+import { subscriptionService } from '@/services/subscriptionService';
 
 type TabType = 'perfil' | 'membresia' | 'seguridad' | 'notificaciones' | 'sesiones' | 'tiendas' | 'integraciones';
 
@@ -74,8 +76,13 @@ export function ConfiguracionPage() {
         updateProfile,
         request2FA,
         confirm2FA,
-        disable2FA
+        disable2FA,
+        refreshUser
     } = useAuthStore();
+
+    useEffect(() => {
+        refreshUser();
+    }, [refreshUser]);
     const navigate = useNavigate();
     const {
         tiendas,
@@ -475,16 +482,16 @@ export function ConfiguracionPage() {
                     <div className="config-nav-group">
                         <h4 className="config-nav-header">Negocio</h4>
                         <TabButton
+                            active={activeTab === 'integraciones'}
+                            onClick={() => setActiveTab('integraciones')}
+                            icon={<Facebook size={18} />}
+                            label="Integraciones Meta"
+                        />
+                        <TabButton
                             active={activeTab === 'tiendas'}
                             onClick={() => setActiveTab('tiendas')}
                             icon={<Store size={18} />}
                             label="Mis Tiendas"
-                        />
-                        <TabButton
-                            active={activeTab === 'integraciones'}
-                            onClick={() => setActiveTab('integraciones')}
-                            icon={<Share2 size={18} />}
-                            label="Integraciones Meta"
                         />
                     </div>
                 </aside>
@@ -711,6 +718,13 @@ export function ConfiguracionPage() {
                                                 <FeatureItem label="Sistema de Referidos" active={user?.plan?.limits?.access_referrals} />
                                                 <FeatureItem label="Duplicado de Costeos" active={user?.plan?.limits?.can_duplicate_costeos} />
                                                 <FeatureItem label="Duplicado de Ofertas" active={!!user?.plan?.limits?.can_duplicate_offers} />
+                                                <FeatureItem label="Dashboard Operacional" active={subscriptionService.isDashboardEnabled()} />
+                                                <FeatureItem label="Sincronizador Dropi" active={subscriptionService.isDropiSyncEnabled()} />
+                                                <FeatureItem label={subscriptionService.canConnectMetaAds()
+                                                    ? `${user?.plan?.limits?.meta_accounts_per_store || 0} cuentas Meta por tienda`
+                                                    : "Vinculación cuentas Meta"}
+                                                    active={subscriptionService.canConnectMetaAds()}
+                                                />
                                             </div>
                                         </div>
 
@@ -1004,10 +1018,10 @@ export function ConfiguracionPage() {
                                                 </p>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <button className="dc-button-primary" onClick={handleOpenCreateStore} style={{ gap: '8px' }}>
+                                                <Button variant="primary" onClick={handleOpenCreateStore} style={{ gap: '8px' }}>
                                                     <Plus size={16} />
                                                     Nueva Tienda
-                                                </button>
+                                                </Button>
                                             </div>
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
@@ -1104,49 +1118,7 @@ export function ConfiguracionPage() {
 
                     {
                         activeTab === 'integraciones' && (
-                            <div style={{ maxWidth: '800px', animation: 'fadeIn 0.3s' }}>
-                                <Card>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-                                        <div style={{
-                                            width: '48px', height: '48px', borderRadius: '12px',
-                                            backgroundColor: 'rgba(24, 119, 242, 0.1)', color: '#1877F2',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                        }}>
-                                            <Facebook size={24} />
-                                        </div>
-                                        <div>
-                                            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Meta Ads (Facebook)</h3>
-                                            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>Conecta tu cuenta publicitaria para ver el CPA real</p>
-                                        </div>
-                                    </div>
-
-                                    <div style={{
-                                        backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
-                                        borderRadius: '16px', padding: '24px', textAlign: 'center'
-                                    }}>
-                                        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: 1.6 }}>
-                                            Al conectar tu perfil de Meta, DropCost Master podrá importar automáticamente el rendimiento de tus campañas. Esta conexión es necesaria para que las tiendas vinculadas puedan mostrar métricas avanzadas.
-                                        </p>
-                                        <Button
-                                            variant="primary"
-                                            style={{ backgroundColor: '#1877F2', border: 'none', gap: '10px', padding: '12px 24px' }}
-                                            onClick={() => toast.info('Facebook Login pronto disponible')}
-                                        >
-                                            <Facebook size={18} />
-                                            Conectar Perfil de Meta
-                                        </Button>
-                                    </div>
-
-                                    <div style={{ marginTop: '24px', padding: '16px', borderRadius: '12px', backgroundColor: 'rgba(var(--color-primary-rgb), 0.05)', border: '1px solid rgba(var(--color-primary-rgb), 0.1)' }}>
-                                        <div style={{ display: 'flex', gap: '12px' }}>
-                                            <Info size={16} color="var(--color-primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
-                                            <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                                                <strong>Nota:</strong> Esta integración es a nivel de perfil de usuario. Una vez conectada, podrás asignar cuentas publicitarias específicas a cada una de tus tiendas.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </Card>
-                            </div>
+                            <MetaAdsIntegrationCard />
                         )
                     }
 

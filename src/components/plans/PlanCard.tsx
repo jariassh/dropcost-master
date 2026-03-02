@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, CheckCircle2, MinusCircle } from 'lucide-react';
+import { Check, CheckCircle2, CircleMinus } from 'lucide-react';
 import { Button } from '../common/Button';
 import { Plan } from '@/types/plans.types';
 import { formatCurrency } from '@/lib/format';
@@ -144,7 +144,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                                 flexShrink: 0
                             }}>
                                 {isManualNegative ? (
-                                    <MinusCircle size={18} style={{ color: '#EF4444' }} />
+                                    <CircleMinus size={18} style={{ color: '#EF4444' }} />
                                 ) : (
                                     <Check size={18} style={{ color: 'var(--color-primary)' }} />
                                 )}

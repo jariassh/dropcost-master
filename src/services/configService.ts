@@ -89,6 +89,9 @@ export interface GlobalConfig {
     
     actualizado_por?: string;
     fecha_actualizacion?: string;
+
+    // Integraciones
+    meta_app_id?: string;
 }
 
 export interface ConfigHistory {
@@ -261,7 +264,12 @@ export const configService = {
             // SEO
             'codigo_head', 'codigo_footer',
             'permitir_indexacion', 'permitir_seguimiento',
-            'email_domain'
+            'email_domain',
+            // Redes sociales e información
+            'pais_operacion', 'instagram_url', 'linkedin_url', 'twitter_url', 'youtube_url',
+            'terminos_condiciones_url', 'politica_privacidad_url',
+            // Integraciones
+            'meta_app_id'
         ];
 
         fields.forEach(f => {

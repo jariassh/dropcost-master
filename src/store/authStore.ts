@@ -399,6 +399,18 @@ export const useAuthStore = create<AuthState>((set) => ({
         });
     },
 
+    refreshUser: async () => {
+        // No loading state to avoid UI flicker, just background update
+        try {
+            const user = await authService.getCurrentUser();
+            if (user) {
+                set({ user, isAuthenticated: true });
+            }
+        } catch (err) {
+            console.error('Error refreshing user state:', err);
+        }
+    },
+
     clearError: () => set({ error: null }),
 
     initialize: async () => {

@@ -57,6 +57,9 @@ chore(pm): validar especificaciones
 - ✅ Reporta estado + próximos pasos
 - ✅ Hallazgos críticos SOLO (no detalles normales)
 - ✅ Cuando fase/hito completa
+- **USO EMOJIS/ CELEBRACIONES:** PROHIBIDO totalmente, llenar el chat de emojis en sentidos de celebración por fix o soluciones que los agentes aplican al codigo. Los agentes no deben hacer este tipo de celebraciones y mandar mas de 3 emojis si aun no le he confirmado la funcionalidad correcta del fix aplicado. 
+
+Siempre para celebrar solo enviar maximo 3-4 emojis. nunca responder en el chat con mas cantidad de emojis que la permitida. 
 
 **Entre agentes:**
 - Designer ↔ Frontend (validar fidelidad)

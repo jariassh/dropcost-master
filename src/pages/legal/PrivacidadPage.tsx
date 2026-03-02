@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Shield } from 'lucide-react';
 
 export function PrivacidadPage() {
-    const lastUpdate = '23 de febrero de 2026';
+    const lastUpdate = '28 de febrero de 2026';
 
     return (
         <div style={{
@@ -160,10 +160,15 @@ export function PrivacidadPage() {
                         <li><strong>Limitar</strong> el procesamiento de sus datos en ciertos casos.</li>
                         <li><strong>Retirar</strong> su consentimiento en cualquier momento.</li>
                     </ul>
-                    <p>
-                        Para ejercer estos derechos, contáctenos a través del correo de soporte
-                        o desde la sección de Configuración de su cuenta.
-                    </p>
+                    <div style={{ marginTop: '20px', padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                        <p style={{ fontWeight: 700, marginBottom: '8px', color: 'var(--text-primary)' }}>Para solicitar la eliminación de sus datos:</p>
+                        <ol style={{ margin: 0, paddingLeft: '20px' }}>
+                            <li>Envíe un email a <strong>privacidad@dropcost.jariash.com</strong> con el asunto "Solicitud de Eliminación de Datos".</li>
+                            <li>Incluya su nombre completo y el correo electrónico asociado a su cuenta.</li>
+                            <li>Procesaremos su solicitud en un plazo máximo de 30 días hábiles.</li>
+                            <li>Recibirá una confirmación por correo electrónico una vez los datos hayan sido eliminados.</li>
+                        </ol>
+                    </div>
                 </Section>
 
                 <Section title="8. Protección de Menores">
@@ -193,7 +198,7 @@ export function PrivacidadPage() {
                 <Section title="11. Contacto">
                     <p>
                         Para consultas sobre privacidad o para ejercer sus derechos sobre sus datos,
-                        contáctenos a través del correo electrónico de soporte disponible en la Plataforma.
+                        contáctenos directamente al correo electrónico: <strong>privacidad@dropcost.jariash.com</strong>
                     </p>
                 </Section>
 
