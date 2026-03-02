@@ -25,7 +25,7 @@ export function DashboardPage() {
     const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [timeRange, setTimeRange] = useState<'today' | 'week' | 'month'>('today');
-    const [historyDays, setHistoryDays] = useState(30);
+    const [historyDays, setHistoryDays] = useState(7);
     const [roasPeriod, setRoasPeriod] = useState<'thisMonth' | 'lastMonth' | 'last3Months'>('thisMonth');
     const [selectedOrder, setSelectedOrder] = useState<DashboardOrder | null>(null);
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);

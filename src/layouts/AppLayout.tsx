@@ -42,6 +42,7 @@ import { useStoreStore } from '@/store/useStoreStore';
 import { useSessionEnforcer } from '@/hooks/useSessionEnforcer';
 import { useGlobalConfig } from '@/hooks/useGlobalConfig';
 import { configService } from '@/services/configService';
+import { subscriptionService } from '@/services/subscriptionService';
 
 const SIDEBAR_OPEN = 240;
 const SIDEBAR_COLLAPSED = 72;
@@ -202,12 +203,19 @@ export function AppLayout() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {navItems.filter(i => i.active).map((item) => {
                             const isRestrictedByStore = !tiendaActual && (item.to === '/mis-costeos' || item.to === '/ofertas');
+                            const isRestrictedByFeature =
+                                (item.to === '/dashboard' && !subscriptionService.isDashboardEnabled()) ||
+                                (item.to === '/sincronizar' && !subscriptionService.isDropiSyncEnabled());
+
                             const isRestrictedBySubscription = user?.estadoSuscripcion !== 'activa' && item.to !== '/configuracion' && user?.rol !== 'admin' && user?.rol !== 'superadmin';
-                            const isRestricted = isRestrictedByStore || isRestrictedBySubscription;
+
+                            const isRestricted = isRestrictedByStore || isRestrictedBySubscription || (isRestrictedByFeature && user?.rol !== 'admin' && user?.rol !== 'superadmin');
 
                             let tooltip = undefined;
                             if (isRestrictedBySubscription) {
                                 tooltip = "Se requiere una suscripción activa para acceder";
+                            } else if (isRestrictedByFeature && user?.rol !== 'admin' && user?.rol !== 'superadmin') {
+                                tooltip = "Este plan no incluye esta funcionalidad";
                             } else if (isRestrictedByStore) {
                                 tooltip = "Selecciona o crea una tienda para acceder";
                             }

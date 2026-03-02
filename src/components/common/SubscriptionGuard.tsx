@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { subscriptionService } from '@/services/subscriptionService';
 
 interface SubscriptionGuardProps {
     children: React.ReactNode;
@@ -42,6 +43,15 @@ export const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({ children }
         return <Navigate to="/pricing" replace />;
     }
 
-    // 5. Todo en orden, mostrar contenido protegido
+    // 5. Verificación de Features Específicas
+    if (location.pathname === '/dashboard' && !subscriptionService.isDashboardEnabled()) {
+        return <Navigate to="/pricing" replace />;
+    }
+
+    if (location.pathname === '/sincronizar' && !subscriptionService.isDropiSyncEnabled()) {
+        return <Navigate to="/pricing" replace />;
+    }
+
+    // 6. Todo en orden, mostrar contenido protegido
     return <>{children}</>;
 };

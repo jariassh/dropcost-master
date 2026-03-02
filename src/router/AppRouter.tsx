@@ -38,6 +38,7 @@ import { TerminosPage } from '@/pages/legal/TerminosPage';
 import { PrivacidadPage } from '@/pages/legal/PrivacidadPage';
 import CookiesPage from '@/pages/legal/CookiesPage';
 import { AffiliateTracker } from '@/components/common/AffiliateTracker';
+import { MetaCallbackPage } from '@/pages/auth/MetaCallbackPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -148,6 +149,7 @@ export function AppRouter() {
                 <Route path="/terminos" element={<TerminosPage />} />
                 <Route path="/privacidad" element={<PrivacidadPage />} />
                 <Route path="/cookies" element={<CookiesPage />} />
+                <Route path="/api/auth/meta/callback" element={<MetaCallbackPage />} />
 
                 <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/"} replace />} />
             </Routes>

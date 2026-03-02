@@ -7,6 +7,7 @@ import { PlanFormModal } from '@/components/admin/PlanFormModal';
 import { plansService } from '@/services/plansService';
 import { Plan, PlanInput } from '@/types/plans.types';
 import { formatCurrency, formatNumber } from '@/lib/format';
+import { useAuthStore } from '@/store/authStore';
 
 export const AdminPlansPage: React.FC = () => {
     const [plans, setPlans] = useState<Plan[]>([]);
@@ -59,6 +60,11 @@ export const AdminPlansPage: React.FC = () => {
         try {
             if (editingPlan) {
                 await plansService.updatePlan(editingPlan.id, planData);
+                // Refresh current user in store if they are on this plan
+                const currentUser = useAuthStore.getState().user;
+                if (currentUser?.plan?.slug === planData.slug) {
+                    await useAuthStore.getState().refreshUser();
+                }
             } else {
                 await plansService.createPlan(planData);
             }

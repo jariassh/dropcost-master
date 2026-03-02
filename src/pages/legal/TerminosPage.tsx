@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
 
 export function TerminosPage() {
-    const lastUpdate = '23 de febrero de 2026';
+    const lastUpdate = '28 de febrero de 2026';
 
     return (
         <div style={{
@@ -200,8 +200,7 @@ export function TerminosPage() {
 
                 <Section title="13. Contacto">
                     <p>
-                        Si tiene preguntas sobre estos Términos, contáctenos a través del correo
-                        electrónico de soporte disponible en la Plataforma.
+                        Si tiene preguntas sobre estos Términos, contáctenos directamente al correo electrónico: <strong>legal@dropcost.jariash.com</strong>
                     </p>
                 </Section>
 

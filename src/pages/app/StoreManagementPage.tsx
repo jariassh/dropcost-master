@@ -14,12 +14,17 @@ import {
     ShoppingBag,
     Truck,
     Info,
-    Camera
+    Camera,
+    Facebook,
+    ShieldAlert
 } from 'lucide-react';
 import { useStoreStore } from '@/store/useStoreStore';
 import { useToast, Button, Input, Spinner, Badge } from '@/components/common';
 import type { Tienda } from '@/types/store.types';
 import { ShopifyConfigModal } from '@/components/configuracion/ShopifyConfigModal';
+import { MetaAdsConfigModal } from '@/components/configuracion/MetaAdsConfigModal';
+import { supabase } from '@/lib/supabase';
+import { subscriptionService } from '@/services/subscriptionService';
 
 export function StoreManagementPage() {
     const { id } = useParams<{ id: string }>();
@@ -32,6 +37,10 @@ export function StoreManagementPage() {
     const [logoUrl, setLogoUrl] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [isShopifyOpen, setIsShopifyOpen] = useState(false);
+    const [isMetaOpen, setIsMetaOpen] = useState(false);
+    const [hasMetaAccounts, setHasMetaAccounts] = useState(false);
+    const [isMetaProfileConnected, setIsMetaProfileConnected] = useState(false);
+    const [isLoadingIntegrations, setIsLoadingIntegrations] = useState(true);
 
     useEffect(() => {
         const found = tiendas.find(t => t.id === id);
@@ -39,6 +48,35 @@ export function StoreManagementPage() {
             setTienda(found);
             setNombre(found.nombre);
             setLogoUrl(found.logo_url || '');
+
+            // Check integration statuses
+            const checkIntegrations = async () => {
+                setIsLoadingIntegrations(true);
+                try {
+                    // 1. Check if user has Meta profile connected (General)
+                    const { data: interaction } = await supabase
+                        .from('integraciones')
+                        .select('estado')
+                        .eq('usuario_id', found.usuario_id)
+                        .eq('tipo', 'meta_ads')
+                        .maybeSingle();
+
+                    setIsMetaProfileConnected(interaction?.estado === 'conectado');
+
+                    // 2. Check if there are linked meta accounts for THIS store
+                    const { count } = await (supabase
+                        .from('tiendas_meta_ads' as any)
+                        .select('*', { count: 'exact', head: true })
+                        .eq('tienda_id', found.id) as any);
+
+                    setHasMetaAccounts(!!count && count > 0);
+                } catch (err) {
+                    console.error('Error checking integrations:', err);
+                } finally {
+                    setIsLoadingIntegrations(false);
+                }
+            };
+            checkIntegrations();
         } else if (tiendas.length > 0) {
             navigate('/configuracion');
         }
@@ -68,7 +106,7 @@ export function StoreManagementPage() {
     }
 
     return (
-        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px', animation: 'fadeIn 300ms ease-out' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', animation: 'fadeIn 300ms ease-out' }}>
             <button
                 onClick={() => navigate('/configuracion')}
                 style={{
@@ -142,7 +180,7 @@ export function StoreManagementPage() {
                     {/* Integraciones */}
                     <section>
                         <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px' }}>Integraciones Disponibles</h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }} className="integrations-grid">
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }} className="integrations-grid">
                             <IntegrationCard
                                 title="Shopify"
                                 description="Sincroniza tus pedidos y costos de productos automáticamente."
@@ -150,6 +188,23 @@ export function StoreManagementPage() {
                                 connected={!!tienda.shopify_domain}
                                 color="#95BF47"
                                 onClick={() => setIsShopifyOpen(true)}
+                            />
+                            <IntegrationCard
+                                title="Meta Ads"
+                                description={!subscriptionService.canConnectMetaAds()
+                                    ? "Este plan no incluye vinculación de cuentas Meta."
+                                    : (isMetaProfileConnected
+                                        ? "Vincula cuentas publicitarias para sincronizar el gasto real."
+                                        : "Primero debes conectar tu perfil de Meta en Configuración."
+                                    )
+                                }
+                                icon={<Facebook size={24} />}
+                                connected={hasMetaAccounts}
+                                color="#1877F2"
+                                onClick={() => setIsMetaOpen(true)}
+                                disabled={!isMetaProfileConnected || !subscriptionService.canConnectMetaAds()}
+                                isLoading={isLoadingIntegrations}
+                                restrictionIcon={!subscriptionService.canConnectMetaAds()}
                             />
                             <IntegrationCard
                                 title="Dropi"
@@ -193,26 +248,44 @@ export function StoreManagementPage() {
             </div>
 
             <style>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                @media (max-width: 800px) {
-                    .management-grid { grid-template-columns: 1fr !important; }
-                    .integrations-grid { grid-template-columns: 1fr !important; }
-                }
-            `}</style>
+                    @keyframes fadeIn {
+                        from { opacity: 0; transform: translateY(10px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                    @media (max-width: 800px) {
+                        .management-grid { grid-template-columns: 1fr !important; }
+                        .integrations-grid { grid-template-columns: 1fr !important; }
+                    }
+                `}</style>
 
             <ShopifyConfigModal isOpen={isShopifyOpen} onClose={() => setIsShopifyOpen(false)} />
+            <MetaAdsConfigModal
+                isOpen={isMetaOpen}
+                onClose={() => {
+                    setIsMetaOpen(false);
+                    // Refresh status
+                    const checkMeta = async () => {
+                        const { count } = await (supabase
+                            .from('tiendas_meta_ads' as any)
+                            .select('*', { count: 'exact', head: true })
+                            .eq('tienda_id', tienda.id) as any);
+                        setHasMetaAccounts(!!count && count > 0);
+                    };
+                    checkMeta();
+                }}
+                tiendaId={tienda.id}
+                tiendaNombre={tienda.nombre}
+            />
         </div>
     );
 }
 
-function IntegrationCard({ title, description, icon, connected, color, onClick, comingSoon }: any) {
+function IntegrationCard({ title, description, icon, connected, color, onClick, comingSoon, disabled, isLoading, restrictionIcon }: any) {
     return (
         <div style={{
             backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)',
-            borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px'
+            borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px',
+            opacity: disabled ? 0.7 : 1
         }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{
@@ -232,12 +305,19 @@ function IntegrationCard({ title, description, icon, connected, color, onClick, 
             </div>
             <Button
                 variant={connected ? 'secondary' : 'primary'}
-                style={{ marginTop: 'auto', gap: '8px', justifyContent: 'center' }}
-                onClick={onClick || (() => alert(`Integración con ${title} próximamente`))}
-                disabled={comingSoon}
+                style={{
+                    marginTop: 'auto', gap: '8px', justifyContent: 'center',
+                    backgroundColor: disabled && !connected ? 'var(--bg-tertiary)' : undefined,
+                    border: disabled && !connected ? '1px solid var(--border-color)' : undefined,
+                    color: disabled && !connected ? 'var(--text-tertiary)' : undefined
+                }}
+                onClick={onClick}
+                disabled={comingSoon || disabled}
+                isLoading={isLoading}
             >
                 {connected ? 'Configurar' : (comingSoon ? 'Muy Pronto' : 'Conectar Cuenta')}
-                {!connected && !comingSoon && <ExternalLink size={14} />}
+                {!connected && !comingSoon && !disabled && <ExternalLink size={14} />}
+                {!connected && !comingSoon && disabled && (restrictionIcon ? <ShieldAlert size={14} /> : <XCircle size={14} />)}
             </Button>
         </div>
     );
