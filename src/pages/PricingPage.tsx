@@ -11,15 +11,17 @@ import { obtenerPaisPorCodigo } from '@/services/paisesService';
 import { fetchExchangeRates, getDisplayCurrency } from '@/utils/currencyUtils';
 import { formatCurrency } from '@/lib/format';
 import { useToast } from '@/components/common';
+import { useGlobalConfig } from '@/hooks/useGlobalConfig';
 
 export const PricingPage: React.FC = () => {
     const { user } = useAuthStore();
+    const { config: globalConfig } = useGlobalConfig();
     const toast = useToast();
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
     const [targetCurrency, setTargetCurrency] = useState('COP');
     const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
-    const [globalConfig, setGlobalConfig] = useState<GlobalConfig | null>(null);
+    // const [globalConfig, setGlobalConfig] = useState<GlobalConfig | null>(null); // YA NO ES NECESARIO
 
     // Billing State
     const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'semiannual'>('monthly');
@@ -48,9 +50,7 @@ export const PricingPage: React.FC = () => {
                 const rates = await fetchExchangeRates('USD');
                 setExchangeRates(rates);
 
-                // 4. Fetch Global Config
-                const config = await configService.getConfig();
-                setGlobalConfig(config);
+                // 4. Fetch Global Config - YA SE ENCARGA EL HOOK useGlobalConfig
             } catch (error) {
                 console.error('Error initializing pricing page:', error);
             } finally {

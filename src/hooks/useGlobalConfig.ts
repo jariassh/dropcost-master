@@ -1,13 +1,13 @@
 import { useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { configService, GlobalConfig } from '@/services/configService';
 import { useTheme } from './useTheme';
 
 export function useGlobalConfig() {
     const { theme } = useTheme();
 
-    const applyConfig = useCallback(async (customConfig?: GlobalConfig) => {
+    const applyConfig = useCallback(async (config: GlobalConfig) => {
         try {
-            const config = customConfig || await configService.getConfig();
             if (!config) return;
 
             // 1. Aplicar Colores (Variables CSS)
@@ -99,68 +99,57 @@ export function useGlobalConfig() {
             const robotsVal = `${config.permitir_indexacion ? 'index' : 'noindex'}, ${config.permitir_seguimiento ? 'follow' : 'nofollow'}`;
             metaRobots.setAttribute('content', robotsVal);
 
-            // Favicon (Actualización táctica para forzar al navegador)
+            // Favicon
             if (config.favicon_url) {
                 const head = document.head || document.getElementsByTagName('head')[0];
-                
-                // 1. Eliminar cualquier favicon existente (incluyendo el nuestro de index.html)
                 const existingLinks = document.querySelectorAll("link[rel*='icon']");
                 existingLinks.forEach(el => el.remove());
 
-                // 2. Crear uno nuevo con un query param de tiempo para romper caché
                 const newLink = document.createElement('link');
                 newLink.id = 'dynamic-favicon';
                 newLink.rel = 'icon';
                 newLink.type = config.favicon_url.toLowerCase().endsWith('.svg') ? 'image/svg+xml' : 'image/x-icon';
-                
-                // Añadir cache-buster
                 const separator = config.favicon_url.includes('?') ? '&' : '?';
                 newLink.href = `${config.favicon_url}${separator}t=${Date.now()}`;
-                
                 head.appendChild(newLink);
             }
 
             // 3. Inyectar Scripts de Tracking (HEAD)
-            // ... (rest of injection logic stays same)
-            // Note: to keep replacement simple and avoid context mess, I'll resume from the original injection code
-
-            // 3. Inyectar Scripts de Tracking (HEAD)
             if (config.codigo_head) {
-                const headContainerId = 'dc-tracking-head';
-                let headContainer = document.getElementById(headContainerId);
-                if (headContainer) headContainer.remove();
-                
-                headContainer = document.createElement('div');
-                headContainer.id = headContainerId;
-                headContainer.innerHTML = config.codigo_head;
-                
-                // Ejecutar scripts manualmente si es necesario (dangerouslySetInnerHTML no siempre los ejecuta)
-                const scripts = headContainer.querySelectorAll('script');
-                scripts.forEach(oldScript => {
-                    const newScript = document.createElement('script');
-                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                    document.head.appendChild(newScript);
-                });
+              const headContainerId = 'dc-tracking-head';
+              let headContainer = document.getElementById(headContainerId);
+              if (headContainer) headContainer.remove();
+              
+              headContainer = document.createElement('div');
+              headContainer.id = headContainerId;
+              headContainer.innerHTML = config.codigo_head;
+              
+              const scripts = headContainer.querySelectorAll('script');
+              scripts.forEach(oldScript => {
+                  const newScript = document.createElement('script');
+                  Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                  newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                  document.head.appendChild(newScript);
+              });
             }
 
             // 4. Inyectar Scripts de Tracking (FOOTER)
             if (config.codigo_footer) {
-                const footerContainerId = 'dc-tracking-footer';
-                let footerContainer = document.getElementById(footerContainerId);
-                if (footerContainer) footerContainer.remove();
-                
-                footerContainer = document.createElement('div');
-                footerContainer.id = footerContainerId;
-                footerContainer.innerHTML = config.codigo_footer;
-                
-                const scripts = footerContainer.querySelectorAll('script');
-                scripts.forEach(oldScript => {
-                    const newScript = document.createElement('script');
-                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                    document.body.appendChild(newScript);
-                });
+              const footerContainerId = 'dc-tracking-footer';
+              let footerContainer = document.getElementById(footerContainerId);
+              if (footerContainer) footerContainer.remove();
+              
+              footerContainer = document.createElement('div');
+              footerContainer.id = footerContainerId;
+              footerContainer.innerHTML = config.codigo_footer;
+              
+              const scripts = footerContainer.querySelectorAll('script');
+              scripts.forEach(oldScript => {
+                  const newScript = document.createElement('script');
+                  Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                  newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                  document.body.appendChild(newScript);
+              });
             }
 
         } catch (error) {
@@ -168,9 +157,18 @@ export function useGlobalConfig() {
         }
     }, [theme]);
 
-    useEffect(() => {
-        applyConfig();
-    }, [applyConfig, theme]);
+    // React Query para obtener la configuración (caché de 30 min)
+    const { data: config, isLoading } = useQuery({
+        queryKey: ['globalConfig'],
+        queryFn: () => configService.getConfig(),
+        staleTime: 1000 * 60 * 30, 
+    });
 
-    return { applyConfig };
+    useEffect(() => {
+        if (config) {
+            applyConfig(config);
+        }
+    }, [config, applyConfig, theme]);
+
+    return { config, isLoading, applyConfig };
 }

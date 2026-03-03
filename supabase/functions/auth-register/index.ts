@@ -43,12 +43,44 @@ serve(async (req) => {
 
     const verificationLink = linkError ? '' : linkData.properties.action_link
 
-    // 3. Enviar Bienvenida Directamente
-    console.log(`[auth-register] Enviando Bienvenida directa para: ${userId}`);
-    let welcomeRes = null;
-    let welcomeErr = null;
-    try {
-      const resp = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/email-trigger-dispatcher`, {
+    // 3. Paralelizar envío de correos (Bienvenida y Referido)
+    console.log(`[auth-register] Disparando correos en paralelo para: ${userId}`);
+    
+    const emailPromises = [];
+
+    // Promesa de Bienvenida
+    const welcomePromise = fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/email-trigger-dispatcher`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        'apikey': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      },
+      body: JSON.stringify({
+        codigo_evento: 'USUARIO_REGISTRADO',
+        targetId: userId,
+        datos: {
+          usuario_id: userId,
+          usuario_nombre: `${nombres} ${apellidos}`.trim(),
+          nombres: `${nombres} ${apellidos}`.trim(),
+          usuario_email: email,
+          email: email,
+          fecha_registro: new Date().toISOString().split('T')[0],
+          codigo_referido: referred_by || '',
+          verification_link: verificationLink,
+          reset_link: verificationLink,
+          link: verificationLink,
+          horas_validez: '24'
+        }
+      })
+    }).then(res => res.json()).catch(e => ({ error: e.message }));
+
+    emailPromises.push(welcomePromise);
+
+    // Promesa de Referido (si aplica)
+    let referralPromise = Promise.resolve('none');
+    if (referred_by) {
+      referralPromise = fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/email-trigger-dispatcher`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -56,65 +88,32 @@ serve(async (req) => {
           'apikey': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
         },
         body: JSON.stringify({
-          codigo_evento: 'USUARIO_REGISTRADO',
-          targetId: userId,
+          codigo_evento: 'REFERIDO_REGISTRADO',
+          refersToUserId: userId,
           datos: {
             usuario_id: userId,
-            usuario_nombre: `${nombres} ${apellidos}`.trim(),
-            nombres: `${nombres} ${apellidos}`.trim(),
-            usuario_email: email,
-            email: email,
+            referido_nombre: `${nombres} ${apellidos}`.trim(),
+            referido_email: email,
+            codigo_referido: referred_by,
             fecha_registro: new Date().toISOString().split('T')[0],
-            codigo_referido: referred_by || '',
-            verification_link: verificationLink,
-            reset_link: verificationLink, // Por si acaso
-            link: verificationLink,
-            horas_validez: '24'
           }
         })
-      });
-      welcomeRes = await resp.json();
-    } catch (e: any) {
-      welcomeErr = { message: e.message };
+      }).then(res => res.json()).catch(e => ({ error: e.message }));
+      emailPromises.push(referralPromise);
     }
 
-    // 3. Enviar Referido Directamente
-    let refRes = null;
-    let refErr = null;
-    if (referred_by) {
-      try {
-        const resp = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/email-trigger-dispatcher`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-            'apikey': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-          },
-          body: JSON.stringify({
-            codigo_evento: 'REFERIDO_REGISTRADO',
-            refersToUserId: userId,
-            datos: {
-              usuario_id: userId,
-              referido_nombre: `${nombres} ${apellidos}`.trim(),
-              referido_email: email,
-              codigo_referido: referred_by,
-              fecha_registro: new Date().toISOString().split('T')[0],
-            }
-          })
-        });
-        refRes = await resp.json();
-      } catch (e: any) {
-        refErr = { message: e.message };
-      }
-    }
+    const [welcomeResult, referralResult] = await Promise.all([
+      welcomePromise,
+      referralPromise
+    ]);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         userId,
         debug: {
-          welcome: welcomeErr ? { error: welcomeErr.message } : welcomeRes,
-          referral: referred_by ? (refErr ? { error: refErr.message } : refRes) : 'none'
+          welcome: welcomeResult,
+          referral: referralResult
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }

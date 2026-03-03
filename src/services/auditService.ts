@@ -14,13 +14,12 @@ export const recordLog = async (params: {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase.from('audit_logs').insert({
-      usuario_id: user.id,
-      accion: params.accion,
-      entidad: params.entidad,
-      entidad_id: params.entidadId,
-      detalles: params.detalles || {},
-      user_agent: navigator.userAgent
+    // @ts-ignore - Nuevo RPC añadido a la BD pero no sincronizado en los tipos locales aún
+    const { error } = await supabase.rpc('record_user_activity', {
+      p_accion: params.accion,
+      p_entidad: params.entidad,
+      p_entidad_id: params.entidadId,
+      p_detalles: params.detalles || {}
     });
 
     if (error) {

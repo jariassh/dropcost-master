@@ -9,6 +9,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { configService, GlobalConfig } from '@/services/configService';
 import { CookieBanner } from '@/components/common/CookieBanner';
 import { CookiePreferencesModal } from '@/components/common/CookiePreferencesModal';
+import { useGeoCountry } from '@/hooks/useGeoCountry';
 
 /**
  * LandingLayout: Layout para la página de ventas.
@@ -42,29 +43,8 @@ export function LandingLayout() {
         fetchConfig();
     }, []);
 
-    // Geolocalización por IP
-    const [userCountry, setUserCountry] = useState<any>(null);
-
-    useEffect(() => {
-        const detectCountry = async () => {
-            try {
-                const response = await fetch('https://ipapi.co/json/');
-                const data = await response.json();
-                if (data.country_code) {
-                    const { obtenerPaisPorCodigo } = await import('@/services/paisesService');
-                    const pais = await obtenerPaisPorCodigo(data.country_code);
-                    if (pais) {
-                        setUserCountry(pais);
-                        // Emitir evento para que otros componentes (como LandingPage) se enteren
-                        window.dispatchEvent(new CustomEvent('countryDetected', { detail: pais }));
-                    }
-                }
-            } catch (error) {
-                console.error('Error detecting country:', error);
-            }
-        };
-        detectCountry();
-    }, []);
+    // Geolocalización por IP (hook centralizado)
+    const userCountry = useGeoCountry();
 
     // RGB Background fallback
     const headerBg = theme === 'dark' ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.8)';

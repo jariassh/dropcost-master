@@ -20,6 +20,9 @@ export const useStoreStore = create<StoreState>()(
                 const { user } = useAuthStore.getState();
                 if (!user) return;
 
+                // Evitar fetch si ya estamos cargando o si ya tenemos tiendas (caché básico)
+                if (get().isLoading) return;
+                
                 set({ isLoading: true, error: null });
                 try {
                     const tiendas = await storeService.getTiendas(user.id);
@@ -29,10 +32,8 @@ export const useStoreStore = create<StoreState>()(
                     const currentTienda = get().tiendaActual;
                     
                     if (tiendas.length === 0) {
-                        // Si no hay tiendas, nada debe estar seleccionado
                         set({ tiendaActual: null });
                     } else if (!currentTienda || !tiendas.find(t => t.id === currentTienda.id)) {
-                        // Si no hay seleccionada o la que estaba ya no existe, elegir la primera
                         set({ tiendaActual: tiendas[0] });
                     }
                 } catch (error: any) {

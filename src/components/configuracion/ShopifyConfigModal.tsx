@@ -229,6 +229,28 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
                         Conecta tus pedidos de Shopify en tiempo real para optimizar tus cálculos de costos y ganancias automáticamente.
                     </p>
 
+                    {/* API Scopes Section */}
+                    <div style={{
+                        padding: '14px',
+                        backgroundColor: 'var(--bg-secondary)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '12px'
+                    }}>
+                        <p style={{ margin: '0 0 8px 0', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            Permisos (API Scopes) requeridos:
+                        </p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                            {['read_orders', 'read_products', 'read_inventory'].map(scope => (
+                                <Badge key={scope} variant="pill-secondary" style={{ fontSize: '10px', textTransform: 'lowercase', fontFamily: 'monospace' }}>
+                                    {scope}
+                                </Badge>
+                            ))}
+                        </div>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '10.5px', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>
+                            * Configura estos permisos en tu App Personalizada de Shopify.
+                        </p>
+                    </div>
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div>
                             <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>
@@ -360,11 +382,15 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
                                     </div>
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <a href="https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens/client-credentials-grant"
-                                            target="_blank" rel="noreferrer"
-                                            style={{ fontSize: '12px', color: 'var(--color-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                            <ExternalLink size={12} /> Doc Shopify
-                                        </a>
+                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                            <a href="https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens/client-credentials-grant"
+                                                target="_blank" rel="noreferrer"
+                                                style={{ fontSize: '12px', color: 'var(--color-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <ExternalLink size={12} /> Doc Shopify
+                                            </a>
+                                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>•</span>
+                                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Scopes: <strong style={{ color: 'var(--text-secondary)' }}>read_orders, products...</strong></span>
+                                        </div>
                                         <Button
                                             variant="secondary"
                                             onClick={handleGenerateAutoToken}

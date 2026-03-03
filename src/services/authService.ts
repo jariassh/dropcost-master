@@ -343,16 +343,21 @@ export async function updateEmail(newEmail: string): Promise<AuthResponse> {
 }
 
 /**
- * Reenvía el email de verificación a un usuario.
+ * Reenvía el email de verificación a un usuario (admin action).
+ * Usa edge function con service_role para generar un nuevo link de verificación
+ * y despachar el email personalizado.
  */
 export async function resendVerificationEmail(email: string): Promise<AuthResponse> {
-    const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
+    const { data, error } = await supabase.functions.invoke('auth-resend-verification', {
+        body: { email }
     });
 
     if (error) {
         return { success: false, error: translateError(error.message) };
+    }
+
+    if (data && !data.success) {
+        return { success: false, error: data.error || 'Error al reenviar verificación' };
     }
 
     return { success: true };

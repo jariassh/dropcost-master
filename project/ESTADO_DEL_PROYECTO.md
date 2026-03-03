@@ -1,6 +1,6 @@
 # ESTADO DEL PROYECTO: DropCost Master
-**Fecha de actualización:** 2 de marzo de 2026
-**Estado:** Fase 1 Integración Meta Ads - COMPLETADO ✅
+**Fecha de actualización:** 3 de marzo de 2026
+**Estado:** Optimización Core y Gestión de Plantillas - EN CURSO 🔄
 
 ---
 
@@ -8,28 +8,21 @@
 DropCost Master es una plataforma integral diseñada para la optimización financiera de negocios de Dropshipping en LATAM. Soporta multitenancy, simulaciones financieras avanzadas e integraciones con Shopify y Meta Ads.
 
 ## 2. Últimas Actualizaciones (PM Focus)
+- **Refactorización de Plantillas de Email:** Se centralizó el estado de las plantillas usando hooks de React Query, eliminando redundancia y mejorando la velocidad de carga.
+- **Corrección en Registro de Referidos:** Se solucionó un bug crítico donde los usuarios confirmados seguían apareciendo como "No Verificados".
+- **Optimización de Build:** Implementación de Code-Splitting para mejorar el tiempo de carga inicial de la aplicación.
 - **Integración Meta Ads v1.0:** Conexión completa con la API de Meta, intercambio de tokens seguro y almacenamiento persistente.
-- **UI de Configuración Premium:** Rediseño completo de las pantallas de vinculación con animaciones, estados de carga elegantes y soporte para dark mode.
-- **Asignación de Cuentas:** Sistema de filtrado instantáneo por Business Manager y vinculación de cuentas por tienda con validación de límites de suscripción.
-- **Edge Functions Optimizadas:** Filtrado en cliente para mayor velocidad y corrección de bugs de CORS en las funciones de Supabase.
 
 ## 3. Funcionalidades Implementadas ✅
 
-### ✅ Integración Meta Ads
-- Portafolio de Business Managers cargado dinámicamente.
-- Carga masiva de cuentas publicitarias con cacheo de sesión.
-- Vinculación persistente en `tiendas_meta_ads`.
+### ✅ Gestión de Email & Templates
+- Nuevo sistema de previsualización en vivo (PC/Tablet/Mobile).
+- Sincronización automática con la configuración global de marca.
+- Gestión de carpetas y triggers de eventos automatizados.
 
-### ✅ Soporte Global de Tiempo
-- Detección automática en Frontend.
-- Agregaciones por día corregidas en Backend (RPCs).
-
-### ✅ Sistema de Costeo
-- Motor de cálculo dinámico con alertas de viabilidad.
-- Soporte multimoneda con redondeo bancario.
-
-### ✅ Gestión de Referidos v3.2
-- Red de Líderes Nivel 1 y 2.
+### ✅ Gestión de Referidos v3.3
+- Sincronización en tiempo real del estado de verificación desde Auth -> Public Table.
+- Red de Líderes Nivel 1 y 2 con visualización de red heredada corregida.
 - Wallet integrada con soporte para moneda local (COP, MXN, PEN, etc.).
 
 ### ✅ Seguridad (Ironclad)

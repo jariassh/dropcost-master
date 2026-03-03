@@ -4,6 +4,7 @@ interface BadgeProps {
     variant?: BadgeVariant;
     children: React.ReactNode;
     className?: string;
+    style?: React.CSSProperties;
 }
 
 const getVariantColors = (v: BadgeVariant) => {
@@ -29,7 +30,7 @@ const getVariantColors = (v: BadgeVariant) => {
     }
 };
 
-export function Badge({ variant = 'info', children, className = '' }: BadgeProps) {
+export function Badge({ variant = 'info', children, className = '', style = {} }: BadgeProps) {
     const colors = getVariantColors(variant);
 
     return (
@@ -47,7 +48,8 @@ export function Badge({ variant = 'info', children, className = '' }: BadgeProps
                 color: colors.text,
                 border: 'none',
                 lineHeight: 1.4,
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                ...style
             }}
             className={className}
         >

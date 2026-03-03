@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Search, ChevronDown, Check } from 'lucide-react';
 import { cargarPaises, Pais } from '@/services/paisesService';
+import { useGeoCountry } from '@/hooks/useGeoCountry';
 
 interface CountrySelectProps {
     value?: string; // ISO-2
@@ -23,10 +24,18 @@ export function CountrySelect({
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
+    const geoCountry = useGeoCountry();
 
     useEffect(() => {
-        cargarPaises().then(setPaises);
-    }, []);
+        cargarPaises().then(data => {
+            setPaises(data);
+            // Si no hay valor seleccionado, pre-seleccionar por IP
+            if (!value && geoCountry) {
+                const detected = data.find(p => p.codigo_iso_2 === geoCountry.codigo_iso_2);
+                if (detected) onChange(detected.codigo_iso_2);
+            }
+        });
+    }, [geoCountry]);
 
     const selectedPais = useMemo(() =>
         paises.find(p => p.codigo_iso_2.toUpperCase() === value?.toUpperCase()),

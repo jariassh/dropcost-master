@@ -6,6 +6,17 @@ import { useAuthStore } from '@/store/authStore';
 
 import { BrowserRouter } from 'react-router-dom';
 import { Spinner } from '@/components/common/Spinner';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutos de caché por defecto
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 export default function App() {
   const initialize = useAuthStore((state) => state.initialize);
@@ -28,9 +39,11 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
-      <AppRouter />
-      <ToastContainer />
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AppRouter />
+        <ToastContainer />
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
