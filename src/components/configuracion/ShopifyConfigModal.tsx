@@ -20,6 +20,10 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
     const [siteUrl, setSiteUrl] = useState('https://dropcost.jariash.com'); // Fallback
     const [isSaving, setIsSaving] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [copiedScopes, setCopiedScopes] = useState(false);
+
+    const SHOPIFY_SCOPES = ['read_orders', 'write_orders', 'read_all_orders', 'read_products', 'read_inventory'];
+    const scopesString = SHOPIFY_SCOPES.join(',');
 
     // Estados para Asistente Generador de Token
     const [showAutoToken, setShowAutoToken] = useState(false);
@@ -63,10 +67,13 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
 
                 if (config?.credenciales_encriptadas) {
                     const decrypted = encryptionUtils.decrypt(config.credenciales_encriptadas);
-                    setAccessToken(decrypted);
+                    setAccessToken(decrypted || '');
+                } else {
+                    setAccessToken('');
                 }
             } catch (e) {
                 console.warn('Error cargando integración Shopify:', e);
+                setAccessToken('');
             }
         };
 
@@ -182,6 +189,17 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
         }
     };
 
+    const handleCopyScopes = async () => {
+        try {
+            await navigator.clipboard.writeText(scopesString);
+            setCopiedScopes(true);
+            toast.success('Copiado', 'Scopes copiados al portapapeles.');
+            setTimeout(() => setCopiedScopes(false), 2000);
+        } catch (error) {
+            toast.error('Error', 'No se pudieron copiar los scopes.');
+        }
+    };
+
     return (
         <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -236,11 +254,25 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
                         border: '1px solid var(--border-color)',
                         borderRadius: '12px'
                     }}>
-                        <p style={{ margin: '0 0 8px 0', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            Permisos (API Scopes) requeridos:
-                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                Permisos (API Scopes) requeridos:
+                            </p>
+                            <button
+                                onClick={handleCopyScopes}
+                                style={{
+                                    background: 'none', border: 'none', color: 'var(--color-primary)',
+                                    display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 600,
+                                    cursor: 'pointer', padding: '4px 8px', borderRadius: '4px',
+                                    backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)'
+                                }}
+                            >
+                                {copiedScopes ? <CheckCircle2 size={12} /> : <Copy size={12} />}
+                                {copiedScopes ? 'Copiados' : 'Copiar formato App'}
+                            </button>
+                        </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                            {['read_orders', 'read_products', 'read_inventory'].map(scope => (
+                            {SHOPIFY_SCOPES.map(scope => (
                                 <Badge key={scope} variant="pill-secondary" style={{ fontSize: '10px', textTransform: 'lowercase', fontFamily: 'monospace' }}>
                                     {scope}
                                 </Badge>
@@ -297,6 +329,7 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
                                     onChange={(e) => setAccessToken(e.target.value)}
                                     placeholder="shpat_xxxxxxxxxxxxxxxx"
                                     spellCheck="false"
+                                    autoComplete="new-password"
                                     style={{
                                         width: '100%', padding: '10px 40px 10px 36px',
                                         backgroundColor: 'var(--bg-primary)',
@@ -357,6 +390,7 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
                                             onChange={(e) => setClientId(e.target.value)}
                                             placeholder="Client ID Oauth"
                                             disabled={isGeneratingToken}
+                                            autoComplete="new-password"
                                             style={{
                                                 flex: 1, padding: '8px 12px',
                                                 backgroundColor: 'var(--bg-primary)',
@@ -371,6 +405,7 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
                                             onChange={(e) => setClientSecret(e.target.value)}
                                             placeholder="Client Secret Oauth"
                                             disabled={isGeneratingToken}
+                                            autoComplete="new-password"
                                             style={{
                                                 flex: 1, padding: '8px 12px',
                                                 backgroundColor: 'var(--bg-primary)',
@@ -389,7 +424,7 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
                                                 <ExternalLink size={12} /> Doc Shopify
                                             </a>
                                             <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>•</span>
-                                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Scopes: <strong style={{ color: 'var(--text-secondary)' }}>read_orders, products...</strong></span>
+                                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Scopes: <strong style={{ color: 'var(--text-secondary)' }}>read_orders, write_orders, read_all_orders, products...</strong></span>
                                         </div>
                                         <Button
                                             variant="secondary"
