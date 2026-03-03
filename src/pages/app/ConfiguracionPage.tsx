@@ -1010,14 +1010,35 @@ export function ConfiguracionPage() {
                             <div style={{ animation: 'fadeIn 0.3s' }}>
                                 {user?.estadoSuscripcion === 'activa' ? (
                                     <>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                                             <div>
                                                 <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Gestión de Tiendas</h3>
                                                 <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>
                                                     Administra tus puntos de venta y sus integraciones
                                                 </p>
                                             </div>
+
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                {/* Indicador de Cuota */}
+                                                <div style={{
+                                                    padding: '8px 16px', backgroundColor: 'var(--bg-secondary)',
+                                                    borderRadius: '12px', border: '1px solid var(--border-color)',
+                                                    display: 'flex', alignItems: 'center', gap: '8px'
+                                                }}>
+                                                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                                        Cuota: <span style={{ color: (tiendas.length >= (user?.plan?.limits?.stores ?? 1)) ? 'var(--color-error)' : 'var(--color-primary)' }}>
+                                                            {tiendas.length}/{user?.plan?.limits?.stores === -1 ? '∞' : (user?.plan?.limits?.stores ?? 1)} Tiendas
+                                                        </span>
+                                                    </div>
+                                                    <div style={{ width: '60px', height: '6px', backgroundColor: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
+                                                        <div style={{
+                                                            width: `${user?.plan?.limits?.stores === -1 ? 0 : Math.min((tiendas.length / (user?.plan?.limits?.stores ?? 1)) * 100, 100)}%`,
+                                                            height: '100%',
+                                                            backgroundColor: (tiendas.length >= (user?.plan?.limits?.stores ?? 1)) ? 'var(--color-error)' : 'var(--color-primary)'
+                                                        }} />
+                                                    </div>
+                                                </div>
+
                                                 <Button variant="primary" onClick={handleOpenCreateStore} style={{ gap: '8px' }}>
                                                     <Plus size={16} />
                                                     Nueva Tienda

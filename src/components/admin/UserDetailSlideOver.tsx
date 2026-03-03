@@ -20,6 +20,8 @@ import {
     Globe,
     RefreshCw,
     X,
+    MailCheck,
+    Loader2,
     Edit2,
     Save,
     RotateCcw
@@ -50,7 +52,9 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
     const [countryData, setCountryData] = useState<Pais | null>(null);
     const [loadingAction, setLoadingAction] = useState(false);
+    const [loadingVerification, setLoadingVerification] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [isConfirmVerificationOpen, setIsConfirmVerificationOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState<Partial<User>>({});
     const [saving, setSaving] = useState(false);
@@ -143,18 +147,24 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
 
     const handleResendVerification = async () => {
         if (!user || user.email_verificado) return;
-        setLoadingAction(true);
+        setIsConfirmVerificationOpen(true);
+    };
+
+    const executeResendVerification = async () => {
+        if (!user) return;
+        setLoadingVerification(true);
+        setIsConfirmVerificationOpen(false);
         try {
             const response = await resendVerificationEmail(user.email);
             if (response.success) {
-                toast.success('Éxito', 'Email de verificación reenviado con éxito');
+                toast.success('Enviado', `Email de verificación reenviado a ${user.email}`);
             } else {
                 toast.error('Error', response.error || 'Error al reenviar el email');
             }
         } catch (error) {
             toast.error('Error', 'Error al conectar con el servidor');
         } finally {
-            setLoadingAction(false);
+            setLoadingVerification(false);
         }
     };
 
@@ -651,29 +661,60 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                     flexDirection: 'column',
                     gap: '12px'
                 }}>
-                    <button
-                        onClick={handlePasswordReset}
-                        disabled={loadingAction}
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            backgroundColor: 'var(--bg-primary)',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: '12px',
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            color: 'var(--text-primary)',
-                            cursor: loadingAction ? 'default' : 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px',
-                            transition: 'all 0.2s ease',
-                            opacity: loadingAction ? 0.7 : 1
-                        }}
-                    >
-                        <Key size={16} /> {loadingAction ? 'Enviando...' : 'Restablecer Contraseña'}
-                    </button>
+                    <div style={{ display: 'grid', gridTemplateColumns: !user.email_verificado ? '1fr 1fr' : '1fr', gap: '12px' }}>
+                        <button
+                            onClick={handlePasswordReset}
+                            disabled={loadingAction}
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                backgroundColor: 'var(--bg-primary)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '12px',
+                                fontSize: '13px',
+                                fontWeight: 600,
+                                color: 'var(--text-primary)',
+                                cursor: loadingAction ? 'default' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                transition: 'all 0.2s ease',
+                                opacity: loadingAction ? 0.7 : 1
+                            }}
+                        >
+                            <Key size={16} /> {loadingAction ? 'Enviando...' : 'Restablecer Contraseña'}
+                        </button>
+                        {!user.email_verificado && (
+                            <button
+                                onClick={handleResendVerification}
+                                disabled={loadingVerification}
+                                style={{
+                                    width: '100%',
+                                    padding: '12px',
+                                    backgroundColor: 'var(--bg-primary)',
+                                    border: '1px solid var(--color-warning)',
+                                    borderRadius: '12px',
+                                    fontSize: '13px',
+                                    fontWeight: 600,
+                                    color: 'var(--color-warning)',
+                                    cursor: loadingVerification ? 'default' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '8px',
+                                    transition: 'all 0.2s ease',
+                                    opacity: loadingVerification ? 0.7 : 1
+                                }}
+                            >
+                                {loadingVerification ? (
+                                    <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Enviando...</>
+                                ) : (
+                                    <><MailCheck size={16} /> Verificar Email</>
+                                )}
+                            </button>
+                        )}
+                    </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                         <Button
                             style={{ borderRadius: '12px', height: '44px' }}
@@ -732,6 +773,17 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                     onConfirm={executeToggleSuspension}
                     onCancel={() => setIsConfirmOpen(false)}
                     isLoading={loadingAction}
+                />
+
+                <ConfirmDialog
+                    isOpen={isConfirmVerificationOpen}
+                    title="Reenviar Verificación de Email"
+                    description={`Se enviará un nuevo correo de verificación a ${user.email}. El usuario deberá hacer clic en el enlace para confirmar su email.`}
+                    confirmLabel="Enviar Verificación"
+                    variant="info"
+                    onConfirm={executeResendVerification}
+                    onCancel={() => setIsConfirmVerificationOpen(false)}
+                    isLoading={loadingVerification}
                 />
             </div>
         </SlideOver>

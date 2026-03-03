@@ -25,7 +25,7 @@ interface CreateStoreModalProps {
 }
 
 export function CreateStoreModal({ isOpen, onClose }: CreateStoreModalProps) {
-    const { crearTienda, isLoading, error: storeError } = useStoreStore();
+    const { tiendas, crearTienda, isLoading, error: storeError } = useStoreStore();
     const { user } = useAuthStore();
     const [allCountries, setAllCountries] = useState<Pais[]>([]);
 
@@ -136,6 +136,45 @@ export function CreateStoreModal({ isOpen, onClose }: CreateStoreModalProps) {
 
                 <div style={{
                     marginTop: '16px',
+                    padding: '16px',
+                    backgroundColor: 'var(--bg-secondary)',
+                    borderRadius: '12px',
+                    border: '1px solid var(--border-color)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Store size={16} color="var(--color-primary)" />
+                            Cuota de Tiendas
+                        </span>
+                        <span style={{
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            color: (tiendas.length >= (user?.plan?.limits?.stores ?? 1)) ? 'var(--color-error)' : 'var(--color-primary)'
+                        }}>
+                            {tiendas.length} / {user?.plan?.limits?.stores === -1 ? '∞' : (user?.plan?.limits?.stores ?? 1)}
+                        </span>
+                    </div>
+                    <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{
+                            width: `${user?.plan?.limits?.stores === -1 ? 0 : Math.min((tiendas.length / (user?.plan?.limits?.stores ?? 1)) * 100, 100)}%`,
+                            height: '100%',
+                            backgroundColor: (tiendas.length >= (user?.plan?.limits?.stores ?? 1)) ? 'var(--color-error)' : 'var(--color-primary)',
+                            transition: 'width 0.3s ease'
+                        }} />
+                    </div>
+                    {(tiendas.length >= (user?.plan?.limits?.stores ?? 1)) && (
+                        <p style={{ margin: 0, fontSize: '12px', color: 'var(--color-error)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <AlertCircle size={14} />
+                            Has alcanzado el límite de tiendas de tu plan.
+                        </p>
+                    )}
+                </div>
+
+                <div style={{
+                    marginTop: '8px',
                     paddingTop: '16px',
                     borderTop: '1px solid var(--border-color)',
                     display: 'flex',

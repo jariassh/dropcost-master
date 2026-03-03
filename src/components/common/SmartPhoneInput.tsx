@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Search, ChevronDown, Phone } from 'lucide-react';
 import { cargarPaises, Pais } from '@/services/paisesService';
+import { useGeoCountry, getPhonePlaceholder } from '@/hooks/useGeoCountry';
 
 interface SmartPhoneInputProps {
     value: string;
@@ -18,16 +19,15 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
     const containerRef = useRef<HTMLDivElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
+    // Detección de país por IP
+    const geoCountry = useGeoCountry();
+
     // Load countries on mount
     useEffect(() => {
         cargarPaises().then(data => {
             setAllPaises(data);
 
-            // Set default (Colombia)
-            const co = data.find(p => p.codigo_iso_2 === 'CO') || data[0];
-            setSelectedCountry(co);
-
-            // If initial value exists (+57...), try to set country
+            // Si hay valor inicial (+57...), intentar detectar el país
             if (value && value.startsWith('+')) {
                 for (let i = 4; i >= 1; i--) {
                     const prefix = '+' + value.substring(1, 1 + i);
@@ -35,12 +35,18 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                     if (country) {
                         setSelectedCountry(country);
                         setPhoneNumber(value.substring(1 + i));
-                        break;
+                        return;
                     }
                 }
             }
+
+            // Si no hay valor inicial, usar país detectado por IP o fallback a CO
+            const defaultCountry = geoCountry
+                ? data.find(p => p.codigo_iso_2 === geoCountry.codigo_iso_2)
+                : data.find(p => p.codigo_iso_2 === 'CO');
+            setSelectedCountry(defaultCountry || data[0]);
         });
-    }, []);
+    }, [geoCountry]);
 
     const filteredCountries = useMemo(() => {
         const s = search.toLowerCase();
@@ -182,7 +188,7 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                         type="tel"
                         value={phoneNumber}
                         onChange={handlePhoneChange}
-                        placeholder="300 123 4567"
+                        placeholder={getPhonePlaceholder(selectedCountry)}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
                         style={{

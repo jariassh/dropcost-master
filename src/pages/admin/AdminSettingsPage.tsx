@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+﻿import { useQueryClient } from '@tanstack/react-query';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -38,17 +39,26 @@ import { useTheme } from '@/hooks/useTheme';
 import { useGlobalConfig } from '@/hooks/useGlobalConfig';
 
 export function AdminSettingsPage() {
+    const { config: remoteConfig, isLoading: isConfigLoading, applyConfig } = useGlobalConfig();
     const [config, setConfig] = useState<GlobalConfig | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [activeTab, setActiveTab] = useState('seo');
     const toast = useToast();
     const { isDark } = useTheme();
-    const { applyConfig } = useGlobalConfig();
+    const queryClient = useQueryClient();
 
+    // Sincronizar estado local con remoto al cargar o resetear
     useEffect(() => {
-        loadConfig();
-    }, []);
+        if (remoteConfig && !config) {
+            const sanitized = {
+                ...remoteConfig,
+                logo_variante_url: remoteConfig.logo_variante_url || '',
+                logo_footer_url: remoteConfig.logo_footer_url || '',
+                site_url: remoteConfig.site_url || '',
+            };
+            setConfig(sanitized);
+        }
+    }, [remoteConfig, config]);
 
     // Efecto Premium: Aplicar cambios de SEO/Branding en tiempo real (Vista Previa)
     useEffect(() => {
@@ -57,40 +67,16 @@ export function AdminSettingsPage() {
         }
     }, [config, applyConfig]);
 
-    async function loadConfig() {
-        try {
-            setIsLoading(true);
-            const data = await configService.getConfig();
-            // console.log('>>> CONFIG LOADED FROM DB:', data);
-
-            // Aseguramos que las llaves nuevas existan para que React las rastree
-            const sanitized = {
-                ...data,
-                logo_variante_url: data.logo_variante_url || '',
-                logo_footer_url: data.logo_footer_url || '',
-                site_url: data.site_url || '',
-
-            };
-
-            setConfig(sanitized);
-        } catch (error) {
-            toast.error('Error', 'No se pudo cargar la configuración global.');
-        } finally {
-            setIsLoading(false);
-        }
-    }
-
     async function handleSave() {
         if (!config) return;
         try {
             setIsSaving(true);
-            // Creamos una copia local para asegurar que enviamos lo que el usuario ve
             const payload = { ...config };
-            // console.log('>>> ENVIANDO A GUARDAR:', payload);
-
             const updated = await configService.updateConfig(payload);
 
-            // Si llegamos aquí, la DB aceptó el cambio
+            // Invalidar el caché para que toda la app vea los cambios
+            queryClient.invalidateQueries({ queryKey: ['globalConfig'] });
+
             setConfig(updated);
             await applyConfig(updated);
             toast.success('¡Guardado!', 'La configuración global se ha actualizado correctamente.');
@@ -107,8 +93,11 @@ export function AdminSettingsPage() {
         try {
             setIsSaving(true);
             await configService.resetToDefaults();
-            await loadConfig();
-            await applyConfig(); // Volver a los defaults en la pestaña
+
+            // Forzar recarga invalidando el caché
+            queryClient.invalidateQueries({ queryKey: ['globalConfig'] });
+            setConfig(null); // Esto forzará la rincronización con remoteConfig una vez recargado
+
             toast.success('Restaurado', 'Se han restablecido los valores por defecto.');
         } catch (error) {
             toast.error('Error', 'No se pudieron restaurar los valores.');
@@ -117,7 +106,7 @@ export function AdminSettingsPage() {
         }
     }
 
-    if (isLoading) return <div className="flex justify-center p-24"><Spinner size="lg" /></div>;
+    if (isConfigLoading && !config) return <div className="flex justify-center p-24"><Spinner size="lg" /></div>;
 
     const tabs = [
         { id: 'seo', label: 'SEO & Metadatos', icon: Search },

@@ -41,6 +41,8 @@ import {
     AlignLeft
 } from 'lucide-react';
 import { configService, GlobalConfig } from '@/services/configService';
+import { useGlobalConfig } from '@/hooks/useGlobalConfig';
+import { useEmailTemplates } from '@/hooks/useEmailTemplates';
 import { userService } from '@/services/userService';
 import { supabase } from '@/lib/supabase';
 // @ts-ignore
@@ -1138,14 +1140,38 @@ const TestUserSelector = ({ onSelect, selectedUser }: any) => {
 };
 
 export function AdminEmailTemplatesPage() {
+    const {
+        templates: remoteTemplates,
+        isLoading: isTemplatesLoading,
+        updateTemplate,
+        createTemplate,
+        deleteTemplate,
+        refetch
+    } = useEmailTemplates();
+    const { config: globalConfig } = useGlobalConfig();
+
+    const deviceWidths = {
+        pc: '100%',
+        tablet: '768px',
+        mobile: '375px'
+    };
+
     const [templates, setTemplates] = useState<EmailItem[]>([]);
     const [selectedTemplate, setSelectedTemplate] = useState<EmailItem | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isTemplatesSyncing, setIsTemplatesSyncing] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [previewDevice, setPreviewDevice] = useState<'mobile' | 'tablet' | 'pc'>('pc');
     const [showVariablesSubject, setShowVariablesSubject] = useState(false);
     const [showVariablesBody, setShowVariablesBody] = useState(false);
     const [showMJMLComponents, setShowMJMLComponents] = useState(false);
+
+    // Sincronizar estado local de plantillas para búsqueda/filtros
+    useEffect(() => {
+        if (remoteTemplates) {
+            setTemplates(remoteTemplates as any);
+            setIsTemplatesSyncing(false);
+        }
+    }, [remoteTemplates]);
 
     // UI State
     const [viewMode, setViewMode] = useState<'recent' | 'list'>('list');
@@ -1159,7 +1185,6 @@ export function AdminEmailTemplatesPage() {
     const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
     const [newItem, setNewItem] = useState({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
     const [isCreating, setIsCreating] = useState(false);
-    const [globalConfig, setGlobalConfig] = useState<GlobalConfig | null>(null);
     const [availableTriggers, setAvailableTriggers] = useState<{ id: string; nombre_trigger: string; codigo_evento: string; categoria: string }[]>([]);
 
     useEffect(() => {
@@ -1483,19 +1508,8 @@ export function AdminEmailTemplatesPage() {
     }
 
     useEffect(() => {
-        loadTemplates();
-        loadGlobalConfig();
         loadAvailableTriggers();
     }, []);
-
-    async function loadGlobalConfig() {
-        try {
-            const config = await configService.getConfig();
-            setGlobalConfig(config as any);
-        } catch (error) {
-            console.error('Error loading config:', error);
-        }
-    }
 
     async function loadAvailableTriggers() {
         try {
@@ -1511,24 +1525,6 @@ export function AdminEmailTemplatesPage() {
         }
     }
 
-    const deviceWidths = {
-        mobile: '375px',
-        tablet: '768px',
-        pc: '1000px'
-    };
-
-    async function loadTemplates() {
-        try {
-            setIsLoading(true);
-            const data = await configService.getEmailTemplates() as any;
-            setTemplates(data);
-        } catch (error) {
-            toast.error('Error', 'No se pudieron cargar las plantillas de email.');
-        } finally {
-            setIsLoading(false);
-        }
-    }
-
     async function handleSave() {
         if (!selectedTemplate) return;
         try {
@@ -1538,13 +1534,10 @@ export function AdminEmailTemplatesPage() {
             let finalHtml = selectedTemplate.html_content;
             if (selectedTemplate.mjml_content) {
                 try {
-                    // Guardamos el MJML compilado con variables de color intactas ({{color_primary}}, etc.).
-                    // El dispatcher las reemplaza en el momento del envío con los colores del branding actual.
                     const result = mjml2html(selectedTemplate.mjml_content, { validationLevel: 'skip' });
                     finalHtml = result.html;
                 } catch (mjError) {
                     console.error('MJML Compilation Error:', mjError);
-                    // No detenemos el guardado, pero usamos el HTML previo si falla catastróficamente
                 }
             }
 
@@ -1557,12 +1550,9 @@ export function AdminEmailTemplatesPage() {
                 sender_name: selectedTemplate.sender_name ?? null
             };
 
-            await configService.updateEmailTemplate(selectedTemplate.id, updatedData);
+            await updateTemplate({ id: selectedTemplate.id, updates: updatedData });
 
-            // CRITICAL: Preserve trigger_event — updatedData doesn't include it,
-            // so we must explicitly keep it from the existing selectedTemplate
             const updatedTemplate = { ...selectedTemplate, ...updatedData, trigger_event: selectedTemplate.trigger_event } as EmailItem;
-            setTemplates(prev => prev.map(t => t.id === selectedTemplate.id ? updatedTemplate : t));
             setSelectedTemplate(updatedTemplate);
             toast.success('¡Guardado!', 'La plantilla se ha actualizado correctamente.');
         } catch (error) {
@@ -1576,7 +1566,7 @@ export function AdminEmailTemplatesPage() {
         if (!newItem.slug) return toast.error('Error', 'El slug es obligatorio.');
         try {
             setIsCreating(true);
-            const data = await configService.createEmailTemplate({
+            const data = await createTemplate({
                 ...newItem,
                 html_content: '<html><body> Nueva Plantilla </body></html>',
                 variables: [],
@@ -1623,10 +1613,10 @@ export function AdminEmailTemplatesPage() {
     }
 
     async function handleCreateFolder() {
-        if (!newItem.slug) return toast.error('Error', 'El nombre es obligatorio.');
+        if (!newItem.slug) return toast.error('Error', 'El slug es obligatorio.');
         try {
             setIsCreating(true);
-            const data = await configService.createEmailTemplate({
+            await createTemplate({
                 name: newItem.name,
                 slug: newItem.slug,
                 description: newItem.description,
@@ -1635,8 +1625,7 @@ export function AdminEmailTemplatesPage() {
                 variables: [],
                 is_folder: true,
                 parent_id: navigationPath.length > 0 ? navigationPath[navigationPath.length - 1] : null
-            }) as any;
-            setTemplates([...templates, data]);
+            });
             setIsFolderModalOpen(false);
             setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
             toast.success('¡Creado!', 'La carpeta se ha creado correctamente.');
@@ -1649,16 +1638,16 @@ export function AdminEmailTemplatesPage() {
 
     async function handleClone(item: EmailItem) {
         try {
-            const data = await configService.createEmailTemplate({
+            await createTemplate({
                 slug: `${item.slug}_copy`,
                 description: `Copia de ${item.description}`,
                 subject: item.subject,
                 html_content: item.html_content,
+                mjml_content: item.mjml_content,
                 variables: item.variables,
                 is_folder: false,
                 parent_id: item.parent_id
-            }) as any;
-            setTemplates([...templates, data]);
+            });
             toast.success('¡Clonado!', 'La plantilla se ha clonado correctamente.');
         } catch (error) {
             toast.error('Error', 'No se pudo clonar la plantilla.');
@@ -1668,8 +1657,7 @@ export function AdminEmailTemplatesPage() {
     async function handleArchive(item: EmailItem) {
         try {
             const newStatus = item.status === 'activo' ? 'archivado' : 'activo';
-            await configService.updateEmailTemplate(item.id, { status: newStatus });
-            setTemplates(templates.map(t => t.id === item.id ? { ...t, status: newStatus } : t));
+            await updateTemplate({ id: item.id, updates: { status: newStatus } });
             toast.success(newStatus === 'archivado' ? 'Archivado' : 'Activado', `Plantilla ${newStatus === 'archivado' ? 'archivada' : 'activada'} correctamente.`);
         } catch (error) {
             toast.error('Error', 'No se pudo actualizar el estado.');
@@ -1686,8 +1674,7 @@ export function AdminEmailTemplatesPage() {
         if (!itemToManage) return;
         try {
             setIsCreating(true);
-            await configService.deleteEmailTemplate(itemToManage.id);
-            setTemplates(templates.filter(t => t.id !== itemToManage.id));
+            await deleteTemplate(itemToManage.id);
             toast.success('Borrado', `${itemToManage.is_folder ? 'Carpeta' : 'Plantilla'} eliminada correctamente.`);
             setIsConfirmDeleteOpen(false);
             setItemToManage(null);
@@ -1699,32 +1686,20 @@ export function AdminEmailTemplatesPage() {
     }
 
     async function handleRenameSubmit() {
-        if (!itemToManage || !newItem.slug) return;
+        if (!itemToManage) return;
         try {
             setIsCreating(true);
 
-            // Update the template itself with basic info first
-            await configService.updateEmailTemplate(itemToManage.id, {
-                name: newItem.name,
-                slug: newItem.slug,
-                description: newItem.description,
-                trigger_event: newItem.trigger_event
-            });
-
-            // Enforce Unique Trigger Association & Update DB
-            if (newItem.trigger_event) {
+            // Gestionar trigger event (exclusividad)
+            if (newItem.trigger_event && newItem.trigger_event !== itemToManage.trigger_event) {
                 const trigger = availableTriggers.find(t => t.codigo_evento === newItem.trigger_event);
                 if (trigger) {
-                    // 1. Remove ANY existing association for this trigger (Enforce Single Template per Trigger)
                     await (supabase as any).from('email_plantillas_triggers').delete().eq('trigger_id', trigger.id);
-
-                    // 2. Visually clear 'trigger_event' from any other email template in DB
                     await (supabase as any).from('email_templates')
                         .update({ trigger_event: null })
                         .eq('trigger_event', newItem.trigger_event)
                         .neq('id', itemToManage.id);
 
-                    // 3. Create NEW association for this template
                     await (supabase as any).from('email_plantillas_triggers').insert({
                         plantilla_id: itemToManage.id,
                         trigger_id: trigger.id,
@@ -1733,23 +1708,15 @@ export function AdminEmailTemplatesPage() {
                 }
             }
 
-            setTemplates(prev => prev.map(t => {
-                // Update current template
-                if (t.id === itemToManage.id) {
-                    return {
-                        ...t,
-                        name: newItem.name,
-                        slug: newItem.slug,
-                        description: newItem.description,
-                        trigger_event: newItem.trigger_event
-                    };
-                }
-                // Clear trigger from old holder if exists (local state sync)
-                if (newItem.trigger_event && t.trigger_event === newItem.trigger_event) {
-                    return { ...t, trigger_event: '' }; // Remove trigger visual
-                }
-                return t;
-            }));
+            const updates = {
+                name: newItem.name,
+                slug: newItem.slug,
+                description: newItem.description,
+                trigger_event: newItem.trigger_event
+            };
+
+            await updateTemplate({ id: itemToManage.id, updates });
+
             setIsRenameModalOpen(false);
             setItemToManage(null);
             setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
@@ -1765,8 +1732,7 @@ export function AdminEmailTemplatesPage() {
         if (!itemToManage) return;
         try {
             setIsCreating(true);
-            await configService.updateEmailTemplate(itemToManage.id, { parent_id: targetParentId });
-            setTemplates(templates.map(t => t.id === itemToManage.id ? { ...t, parent_id: targetParentId } : t));
+            await updateTemplate({ id: itemToManage.id, updates: { parent_id: targetParentId } });
             setIsMoveModalOpen(false);
             setItemToManage(null);
             toast.success('Movido', 'Elemento movido correctamente.');
@@ -2212,9 +2178,13 @@ export function AdminEmailTemplatesPage() {
         }
     };
 
-    if (isLoading) return <div className="flex justify-center p-24"><Spinner size="lg" /></div>;
+    if (isTemplatesLoading && isTemplatesSyncing) return <div className="flex justify-center p-24"><Spinner size="lg" /></div>;
 
     const currentFolderId = navigationPath.length > 0 ? navigationPath[navigationPath.length - 1] : null;
+
+    if (isTemplatesLoading && isTemplatesSyncing) {
+        return <div className="flex justify-center p-24"><Spinner size="lg" /></div>;
+    }
 
     // Filtrar items
     const filteredItems = templates.filter(item => {
@@ -3001,7 +2971,7 @@ export function AdminEmailTemplatesPage() {
                                             domain={globalConfig?.site_url ? globalConfig.site_url.replace(/^https?:\/\//, '').replace(/\/$/, '') : 'dropcost.com'}
                                             templates={templates}
                                             globalConfig={globalConfig}
-                                            onRefresh={loadTemplates}
+                                            onRefresh={refetch}
                                             onSelect={(name: string, prefix: string) => {
                                                 if (selectedTemplate) {
                                                     const updated = {

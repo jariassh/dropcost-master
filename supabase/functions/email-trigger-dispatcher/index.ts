@@ -160,7 +160,7 @@ Deno.serve(async (req: Request) => {
             associations = [{ email_templates: testTemplate }];
         } else {
             // --- Modo Normal: Buscar Trigger y Plantillas ---
-            console.log(`[Dispatcher] Buscando trigger para: ${codigo_evento}`);
+            console.log(`[Dispatcher] Buscando trigger para: "${codigo_evento}"`);
             const { data: trigger, error: triggerError } = await supabase
                 .from('email_triggers')
                 .select('id, nombre_trigger, codigo_evento, activo')
@@ -168,15 +168,27 @@ Deno.serve(async (req: Request) => {
                 .eq('activo', true)
                 .maybeSingle();
 
-            if (triggerError || !trigger) {
-                console.error(`[Dispatcher] ERROR: Trigger no encontrado o inactivo: ${codigo_evento}`);
+            if (triggerError) {
+                console.error(`[Dispatcher] ERROR SQL buscando trigger:`, triggerError);
                 return new Response(
-                    JSON.stringify({ error: `Trigger no encontrado: ${codigo_evento}` }),
+                    JSON.stringify({ error: `Error buscando trigger: ${triggerError.message}` }),
+                    { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                );
+            }
+
+            if (!trigger) {
+                console.error(`[Dispatcher] ERROR: Trigger no encontrado o inactivo: "${codigo_evento}"`);
+                // Consultar si existe aunque sea inactivo para dar mejor error
+                const { data: inactiveTrigger } = await supabase.from('email_triggers').select('id, activo').eq('codigo_evento', codigo_evento).maybeSingle();
+                const msg = inactiveTrigger ? `Trigger "${codigo_evento}" está INACTIVO` : `Trigger "${codigo_evento}" NO EXISTE en la base de datos`;
+                
+                return new Response(
+                    JSON.stringify({ error: msg }),
                     { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
                 );
             }
             triggerId = trigger.id;
-            console.log(`[Dispatcher] Trigger encontrado: ${trigger.nombre_trigger}. Buscando plantillas...`);
+            console.log(`[Dispatcher] Trigger encontrado (ID: ${triggerId}): ${trigger.nombre_trigger}. Buscando plantillas...`);
 
             const { data: dbAssoc, error: assocError } = await supabase
                 .from('email_plantillas_triggers')
