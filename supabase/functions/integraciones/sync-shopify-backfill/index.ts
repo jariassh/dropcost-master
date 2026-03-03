@@ -112,6 +112,7 @@ function extractFbclid(url: string | null | undefined): string | null {
 
 // Extrae datos de atribución del customer journey
 function extractAttribution(journey: any): {
+  utm_id: string | null;
   fbclid: string | null;
   source: string | null;
   medium: string | null;
@@ -119,6 +120,7 @@ function extractAttribution(journey: any): {
   attribution_type: string;
 } {
   const result = {
+    utm_id: null as string | null,
     fbclid: null as string | null,
     source: null as string | null,
     medium: null as string | null,
@@ -140,6 +142,20 @@ function extractAttribution(journey: any): {
     extractFbclid(firstReferrer) ||
     extractFbclid(lastReferrer);
 
+  // Extraer utm_id de landing page URL
+  const extractUtmId = (url: string | null | undefined) => {
+    if (!url) return null;
+    try {
+      const parsed = new URL(url);
+      return parsed.searchParams.get("utm_id");
+    } catch {
+      const match = url.match(/utm_id=([^&]+)/);
+      return match ? match[1] : null;
+    }
+  };
+
+  result.utm_id = extractUtmId(firstLanding) || extractUtmId(lastLanding);
+
   // Extraer UTMs (priorizar última visita)
   const utmParams =
     journey.lastVisit?.utmParameters || journey.firstVisit?.utmParameters;
@@ -152,7 +168,7 @@ function extractAttribution(journey: any): {
   // Determinar tipo de atribución
   if (result.fbclid) {
     result.attribution_type = "exact_fbclid";
-  } else if (result.source || result.campaign) {
+  } else if (result.utm_id || result.source || result.campaign) {
     result.attribution_type = "utm_match";
   }
 
@@ -357,6 +373,23 @@ serve(async (req) => {
             }
           }
 
+          // SI no hay match por producto, intentar por utm_id o campaign
+          if (!assignedCosteoId && (attribution.utm_id || attribution.campaign)) {
+            const trackingId = attribution.utm_id || attribution.campaign;
+            // Buscar costeo por meta_campaign_id
+            const { data: campaignMatch } = await supabaseAdmin
+              .from('costeos')
+              .select('id')
+              .eq('tienda_id', tienda_id)
+              .eq('meta_campaign_id', trackingId)
+              .limit(1)
+              .maybeSingle();
+            
+            if (campaignMatch) {
+              assignedCosteoId = campaignMatch.id;
+            }
+          }
+
           // Datos del cliente
           const shippingAddr = node.shippingAddress || {};
           const customerName =
@@ -388,6 +421,11 @@ serve(async (req) => {
             ),
             cantidad_items: totalQuantity > 0 ? totalQuantity : 1,
             origen: "shopify",
+            utm_id: attribution.utm_id,
+            utm_source: attribution.source,
+            utm_medium: attribution.medium,
+            utm_campaign: attribution.campaign,
+            fbclid: attribution.fbclid
           };
 
           // Upsert: evitar duplicados
