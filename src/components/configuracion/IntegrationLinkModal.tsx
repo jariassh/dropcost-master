@@ -30,7 +30,7 @@ export const IntegrationLinkModal: React.FC<IntegrationLinkModalProps> = ({ isOp
 
     if (!isOpen || !costeo) return null;
 
-    const utmParamString = `utm_source={{campaign.id}}&utm_medium={{adset.id}}&utm_content={{ad.id}}`;
+    const utmParamString = `utm_id={{campaign.id}}`;
 
     const handleCopy = async () => {
         try {
