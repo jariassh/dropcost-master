@@ -82,6 +82,7 @@ serve(async (req: Request) => {
 
         // --- Extracción de UTMs y Atribución ---
         const utms: Record<string, string | null> = {
+            utm_id: null,
             utm_source: null,
             utm_medium: null,
             utm_campaign: null,
@@ -94,6 +95,7 @@ serve(async (req: Request) => {
         if (payload.note_attributes && Array.isArray(payload.note_attributes)) {
             payload.note_attributes.forEach((attr: any) => {
                 const name = String(attr.name).toLowerCase();
+                if (name.includes('utm_id')) utms.utm_id = attr.value;
                 if (name.includes('utm_source') || name === 'utm source') utms.utm_source = attr.value;
                 if (name.includes('utm_medium') || name === 'utm medium') utms.utm_medium = attr.value;
                 if (name.includes('utm_campaign') || name === 'utm campaign') utms.utm_campaign = attr.value;
@@ -103,10 +105,10 @@ serve(async (req: Request) => {
             });
         }
 
-        // B. Intentar desde landing_site (URL de entrada de Shopify)
-        if (!utms.utm_source && payload.landing_site) {
+        if (!utms.utm_id && payload.landing_site) {
             try {
                 const landingUrl = new URL(payload.landing_site, 'https://example.com');
+                utms.utm_id = landingUrl.searchParams.get('utm_id');
                 utms.utm_source = landingUrl.searchParams.get('utm_source');
                 utms.utm_medium = landingUrl.searchParams.get('utm_medium');
                 utms.utm_campaign = landingUrl.searchParams.get('utm_campaign');
@@ -142,19 +144,20 @@ serve(async (req: Request) => {
             }
         }
 
-        // Atribución de segunda oportunidad: Si no hay match por producto, buscar por utm_source (Campaign ID)
-        if (!assignedCosteoId && utms.utm_source) {
+        // Atribución de segunda oportunidad: Si no hay match por producto, buscar por utm_id o utm_source (Campaign ID)
+        if (!assignedCosteoId && (utms.utm_id || utms.utm_source)) {
+            const trackingId = utms.utm_id || utms.utm_source;
             const { data: campaignMatch } = await supabase
                 .from('costeos')
                 .select('id')
                 .eq('tienda_id', storeId)
-                .eq('meta_campaign_id', utms.utm_source)
+                .eq('meta_campaign_id', trackingId)
                 .limit(1)
                 .maybeSingle();
             
             if (campaignMatch) {
                 assignedCosteoId = campaignMatch.id;
-                console.log(`[webhook-shopify] Match found via utm_source: ${utms.utm_source}`);
+                console.log(`[webhook-shopify] Match found via tracking parameter: ${trackingId}`);
             }
         }
 
@@ -188,6 +191,7 @@ serve(async (req: Request) => {
                 tags: payload.tags
             },
             // UTMs
+            utm_id: utms.utm_id,
             utm_source: utms.utm_source,
             utm_medium: utms.utm_medium,
             utm_campaign: utms.utm_campaign,
