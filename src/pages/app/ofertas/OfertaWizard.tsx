@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Modal, StepIndicator, useToast, Spinner } from '@/components/common';
 import { WizardStep1Strategy } from './WizardStep1Strategy';
 import { WizardStep2Costeo } from './WizardStep2Costeo';
@@ -36,6 +36,19 @@ export function OfertaWizard({ isOpen, onClose }: OfertaWizardProps) {
     const { user } = useAuthStore();
     const tiendaActual = useStoreStore((state) => state.tiendaActual);
     const [isActivating, setIsActivating] = useState(false);
+
+    // Reset wizard when opened
+    useEffect(() => {
+        if (isOpen) {
+            setStep(1);
+            setStrategyType(null);
+            setSelectedCosteo(null);
+            setDiscountConfig(DEFAULT_DISCOUNT);
+            setBundleConfig(DEFAULT_BUNDLE);
+            setGiftConfig(DEFAULT_GIFT);
+            setIsActivating(false);
+        }
+    }, [isOpen]);
 
     const canGoNext = useCallback((): boolean => {
         if (step === 1) return strategyType !== null;
@@ -154,17 +167,18 @@ export function OfertaWizard({ isOpen, onClose }: OfertaWizardProps) {
 
                 <div
                     style={{
-                        padding: '24px',
+                        padding: '20px 24px',
                         borderRadius: '16px',
                         backgroundColor: 'var(--bg-secondary)',
                         border: '1px solid var(--border-color)',
-                        marginTop: '24px',
-                        minHeight: '380px',
+                        marginTop: '20px',
                         display: 'flex',
-                        flexDirection: 'column'
+                        flexDirection: 'column',
+                        maxHeight: 'calc(80vh - 180px)', // Evita que se desborde del viewport
+                        overflow: 'hidden' // El scroll estará en el hijo flexible
                     }}
                 >
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
                         {step === 1 && (
                             <WizardStep1Strategy selected={strategyType} onChange={setStrategyType} />
                         )}

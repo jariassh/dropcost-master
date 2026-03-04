@@ -35,6 +35,7 @@ const StoreManagementPage = lazy(() => import('@/pages/app/StoreManagementPage')
 const SincronizarPage = lazy(() => import('@/pages/app/SincronizarPage').then(m => ({ default: m.SincronizarPage })));
 const PaymentStatusPage = lazy(() => import('@/pages/app/PaymentStatusPage').then(m => ({ default: m.PaymentStatusPage })));
 const UserAuditLogsPage = lazy(() => import('@/pages/UserAuditLogsPage'));
+const LaunchpadPage = lazy(() => import('@/pages/app/LaunchpadPage').then(m => ({ default: m.LaunchpadPage })));
 
 // Lazy load de páginas Administrativas
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
@@ -128,6 +129,9 @@ export function AppRouter() {
                     >
                         {/* Rutas de Planes (Públicas dentro de la App) */}
                         <Route path="/pricing" element={<PricingPage />} />
+
+                        {/* Launchpad (Onboarding) */}
+                        <Route path="/launchpad" element={<LaunchpadPage />} />
 
                         {/* Rutas con Paywall (Requieren suscripción activa) */}
                         <Route path="/mis-costeos" element={<SubscriptionGuard><MisCosteos /></SubscriptionGuard>} />

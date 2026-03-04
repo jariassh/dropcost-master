@@ -220,6 +220,7 @@ export async function getCurrentUser(): Promise<User | null> {
         sessionToken: profile?.session_token || undefined,
         plan_precio_pagado: (profile as any)?.plan_precio_pagado || 0,
         plan_periodo: (profile as any)?.plan_periodo,
+        preferencias: profile?.preferencias || { mostrar_launchpad: true },
         plan: {
             id: profile?.plan_id || 'plan_free',
             slug: profile?.plan_id || 'plan_free',
@@ -439,6 +440,7 @@ export async function updateUserProfile(userData: Partial<User>): Promise<AuthRe
     if (userData.pais !== undefined) updates.pais = userData.pais;
     if (userData.avatarUrl !== undefined) updates.avatar_url = userData.avatarUrl;
     if (userData.codigoReferido !== undefined) updates.codigo_referido_personal = userData.codigoReferido;
+    if (userData.preferencias !== undefined) updates.preferencias = userData.preferencias;
 
     if (Object.keys(updates).length > 0) {
         const { error: profileError } = await supabase
