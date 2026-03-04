@@ -14,20 +14,25 @@ interface MetaIntegration {
     ultima_sincronizacion?: string;
 }
 
-export function MetaAdsIntegrationCard() {
+interface MetaAdsIntegrationCardProps {
+    onSelectIntegration?: (id: string) => void;
+    selectedId?: string | null;
+}
+
+export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: MetaAdsIntegrationCardProps) {
     const { user } = useAuthStore();
-    const { tiendas } = useStoreStore();
     const toast = useToast();
 
-    const [integration, setIntegration] = useState<MetaIntegration | null>(null);
+    const [integrations, setIntegrations] = useState<MetaIntegration[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isConnecting, setIsConnecting] = useState(false);
-    const [siteUrl, setSiteUrl] = useState('');
     const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+    const [integrationToDisconnect, setIntegrationToDisconnect] = useState<string | null>(null);
+    const [showNewProfileWarning, setShowNewProfileWarning] = useState(false);
 
     const canConnect = subscriptionService.canConnectMetaAds();
 
-    const fetchIntegration = useCallback(async () => {
+    const fetchIntegrations = useCallback(async () => {
         if (!user) return;
         setIsLoading(true);
         try {
@@ -35,38 +40,33 @@ export function MetaAdsIntegrationCard() {
                 .from('integraciones')
                 .select('*')
                 .eq('usuario_id', user.id)
-                .eq('tipo', 'meta_ads')
-                .maybeSingle();
+                .eq('tipo', 'meta_ads');
 
-            if (data) {
-                setIntegration(data as any);
+            if (data && data.length > 0) {
+                setIntegrations(data as any);
+                // Auto-seleccionar el primero si no hay uno seleccionado
+                if (!selectedId && onSelectIntegration) {
+                    onSelectIntegration(data[0].id);
+                }
             } else {
-                setIntegration({ id: '', estado: 'desconectado' });
+                setIntegrations([]);
+                if (onSelectIntegration) onSelectIntegration('');
             }
         } catch (err) {
-            // Error silencioso en fetch
+            console.error("Error fetching integrations:", err);
         } finally {
             setIsLoading(false);
         }
-    }, [user]);
+    }, [user, selectedId, onSelectIntegration]);
 
     useEffect(() => {
-        const fetchConfig = async () => {
-            const config = await configService.getConfig();
-            if (config?.site_url) {
-                setSiteUrl(config.site_url);
-            } else {
-                setSiteUrl(window.location.origin);
-            }
-        };
-
-        fetchIntegration();
-        fetchConfig();
-    }, [user, fetchIntegration]);
+        fetchIntegrations();
+    }, [user, fetchIntegrations]);
 
     const handleConnect = async () => {
+        setShowNewProfileWarning(false);
         if (!canConnect) {
-            toast.error('Plan no compatible', 'Tu plan actual no permite la conexión con Meta Ads. Actualiza tu plan para acceder a esta función.');
+            toast.error('Plan no compatible', 'Tu plan actual no permite la conexión con Meta Ads.');
             return;
         }
 
@@ -81,62 +81,49 @@ export function MetaAdsIntegrationCard() {
                 return;
             }
 
-            // Usamos la URL absoluta fija para asegurar coincidencia exacta con Meta y el callback
             const redirectUri = "https://mistyrose-jay-921979.hostingersite.com/api/auth/meta/callback";
-            console.log("[MetaIntegration] Redirect URI configurado:", redirectUri);
-            const scopes = [
-                'ads_read',
-                'ads_management',
-                'business_management',
-                'public_profile'
-            ].join(',');
-
+            const scopes = ['ads_read', 'ads_management', 'business_management', 'public_profile'].join(',');
             const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&response_type=code&display=page`;
 
-            console.log("[MetaIntegration] Redirigiendo a Meta OAuth (Misma pestaña)...");
-
-            // REDIRECCIÓN DE PÁGINA COMPLETA (Misma ventana)
             window.location.href = authUrl;
-
         } catch (err) {
-            console.error("[MetaIntegration] Error al iniciar flujo OAuth:", err);
             toast.error('Error', 'No se pudo iniciar la conexión con Meta.');
             setIsConnecting(false);
         }
     };
 
     const handleDisconnect = async () => {
-        if (!user?.id) return;
+        if (!integrationToDisconnect) return;
         setIsLoading(true);
         try {
             const { error } = await supabase
                 .from('integraciones')
                 .delete()
-                .eq('usuario_id', user.id)
-                .eq('tipo', 'meta_ads');
+                .eq('id', integrationToDisconnect);
 
             if (error) throw error;
 
-            setIntegration({ id: '', estado: 'desconectado' });
-            toast.success('Meta Ads desconectado', 'Se ha eliminado la integración correctamente.');
+            toast.success('Perfil desconectado', 'Se ha eliminado la integración correctamente.');
+            fetchIntegrations();
         } catch (err) {
             toast.error('Error', 'No se pudo desconectar la integración.');
         } finally {
             setIsLoading(false);
             setShowDisconnectConfirm(false);
+            setIntegrationToDisconnect(null);
         }
     };
 
-    if (isLoading) {
+    if (isLoading && integrations.length === 0) {
         return (
             <Card style={{ padding: '40px', textAlign: 'center' }}>
                 <Spinner />
-                <p style={{ marginTop: '16px', color: 'var(--text-tertiary)' }}>Cargando integración...</p>
+                <p style={{ marginTop: '16px', color: 'var(--text-tertiary)' }}>Cargando integraciones...</p>
             </Card>
         );
     }
 
-    const isConnected = integration?.estado === 'conectado';
+    const isConnected = integrations.length > 0;
 
     return (
         <div style={{ animation: 'fadeIn 0.3s' }}>
@@ -153,54 +140,85 @@ export function MetaAdsIntegrationCard() {
                         <div>
                             <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Meta Ads (Facebook)</h3>
                             <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                                {isConnected ? 'Perfil conectado correctamente' : 'Conecta tu cuenta publicitaria para ver el CPA real'}
+                                {isConnected ? 'Gestiona tus perfiles conectados' : 'Conecta tu cuenta publicitaria para ver el CPA real'}
                             </p>
                         </div>
                     </div>
                     {isConnected && (
-                        <Badge variant="success">CONECTADO</Badge>
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => setShowNewProfileWarning(true)}
+                                style={{ gap: '8px' }}
+                            >
+                                <RefreshCw size={14} />
+                                Agregar nuevo perfil
+                            </Button>
+                            <Badge variant="success">CONECTADO</Badge>
+                        </div>
                     )}
                 </div>
 
                 {isConnected ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <div style={{
-                            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                            gap: '16px', padding: '20px', backgroundColor: 'var(--bg-secondary)',
-                            borderRadius: '16px', border: '1px solid var(--border-color)'
-                        }}>
-                            <div>
-                                <p style={{ margin: '0 0 4px', fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Perfil Vinculado</p>
-                                <p style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    {integration.meta_user_name}
-                                    <CheckCircle2 size={14} color="#10B981" />
-                                </p>
-                            </div>
-                            <div>
-                                <p style={{ margin: '0 0 4px', fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Última Sincronización</p>
-                                <p style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                                    {integration.ultima_sincronizacion
-                                        ? new Date(integration.ultima_sincronizacion).toLocaleString()
-                                        : 'Pendiente'}
-                                </p>
-                            </div>
-                        </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', margin: '0 0 -8px', textTransform: 'uppercase' }}>Perfiles Conectados</p>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
-                            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <AlertCircle size={14} color="var(--color-primary)" />
-                                Selecciona y vincula tus cuentas publicitarias en la tabla de <strong>Cuentas de Meta Ads</strong>.
-                            </p>
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <Button variant="secondary" onClick={handleConnect} style={{ gap: '8px' }} size="sm">
-                                    <RefreshCw size={14} />
-                                    Actualizar Conexión
-                                </Button>
-                                <Button variant="ghost" onClick={() => setShowDisconnectConfirm(true)} style={{ gap: '8px', color: 'var(--color-error)' }} size="sm">
-                                    <Trash2 size={14} />
-                                    Desconectar
-                                </Button>
+                        {integrations.map((item) => (
+                            <div
+                                key={item.id}
+                                onClick={() => onSelectIntegration?.(item.id)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    padding: '16px 20px', borderRadius: '16px',
+                                    backgroundColor: selectedId === item.id ? 'rgba(var(--color-primary-rgb), 0.05)' : 'var(--bg-secondary)',
+                                    border: `1px solid ${selectedId === item.id ? 'var(--color-primary)' : 'var(--border-color)'}`,
+                                    cursor: 'pointer', transition: 'all 0.2s'
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <input
+                                        type="radio"
+                                        checked={selectedId === item.id}
+                                        onChange={() => { }} // Manage by onClick of row
+                                        style={{ accentColor: 'var(--color-primary)', width: '18px', height: '18px' }}
+                                    />
+                                    <div>
+                                        <p style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            {item.meta_user_name}
+                                            <CheckCircle2 size={14} color="#10B981" />
+                                        </p>
+                                        <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--text-tertiary)' }}>
+                                            Sincronizado: {item.ultima_sincronizacion ? new Date(item.ultima_sincronizacion).toLocaleString() : 'Pendiente'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIntegrationToDisconnect(item.id);
+                                            setShowDisconnectConfirm(true);
+                                        }}
+                                        style={{ color: 'var(--color-error)', padding: '8px' }}
+                                    >
+                                        <Trash2 size={16} />
+                                    </Button>
+                                    {selectedId === item.id && (
+                                        <Badge variant="pill-purple" style={{ fontSize: '10px' }}>ACTIVO</Badge>
+                                    )}
+                                </div>
                             </div>
+                        ))}
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px', borderRadius: '12px', backgroundColor: 'rgba(var(--color-primary-rgb), 0.05)', marginTop: '8px' }}>
+                            <Info size={14} color="var(--color-primary)" />
+                            <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                Selecciona un perfil para gestionar sus cuentas publicitarias en la tabla de abajo.
+                            </p>
                         </div>
                     </div>
                 ) : (
@@ -225,7 +243,7 @@ export function MetaAdsIntegrationCard() {
                         <div style={{ marginBottom: '24px' }}>
                             <p style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 600, marginBottom: '8px' }}>Optimiza tu CPA al máximo</p>
                             <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: '500px', margin: '0 auto' }}>
-                                Al conectar tu perfil de Meta, DropCost Master podrá importar automáticamente el rendimiento de tus campañas. Esta conexión es necesaria para ver métricas reales en el Dashboard.
+                                Al conectar tu perfil de Meta, DropCost Master podrá importar automáticamente el rendimiento de tus campañas.
                             </p>
                         </div>
 
@@ -236,42 +254,51 @@ export function MetaAdsIntegrationCard() {
                                 border: 'none', gap: '10px', padding: '14px 32px', fontSize: '15px', fontWeight: 700,
                                 opacity: canConnect ? 1 : 0.6, cursor: canConnect ? 'pointer' : 'not-allowed'
                             }}
-                            onClick={handleConnect}
+                            onClick={() => setShowNewProfileWarning(true)}
                             isLoading={isConnecting}
                             disabled={!canConnect}
                         >
                             <Facebook size={20} />
                             Conectar Perfil de Meta
                         </Button>
-
-                        <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'center', gap: '40px' }}>
-                            <BenefitItem icon={<Target size={18} />} label="Conversiones Reales" />
-                            <BenefitItem icon={<Activity size={18} />} label="Gasto Sincronizado" />
-                            <BenefitItem icon={<Layers size={18} />} label="Múltiples Cuentas" />
-                        </div>
-                    </div>
-                )}
-
-                {!isConnected && (
-                    <div style={{ marginTop: '24px', padding: '16px', borderRadius: '12px', backgroundColor: 'rgba(var(--color-primary-rgb), 0.05)', border: '1px solid rgba(var(--color-primary-rgb), 0.1)' }}>
-                        <div style={{ display: 'flex', gap: '12px' }}>
-                            <Info size={16} color="var(--color-primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
-                            <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                                <strong>Nota Importante:</strong> Esta integración es a nivel de perfil de usuario. Una vez conectada, podrás asignar cuentas publicitarias específicas a cada una de tus tiendas desde la sección "Mis Tiendas".
-                            </p>
-                        </div>
                     </div>
                 )}
             </Card>
 
             <ConfirmDialog
                 isOpen={showDisconnectConfirm}
-                title="¿Desconectar Meta Ads?"
-                description="Se eliminará el acceso a tus cuentas publicitarias y dejarán de sincronizarse los gastos en tus tiendas."
+                title="¿Desconectar Perfil?"
+                description="Se eliminará el acceso a las cuentas publicitarias de este perfil."
                 variant="danger"
                 confirmLabel="Sí, desconectar"
                 onConfirm={handleDisconnect}
-                onCancel={() => setShowDisconnectConfirm(false)}
+                onCancel={() => {
+                    setShowDisconnectConfirm(false);
+                    setIntegrationToDisconnect(null);
+                }}
+            />
+
+            {/* Modal de Advertencia para Nuevo Perfil */}
+            <ConfirmDialog
+                isOpen={showNewProfileWarning}
+                title="⚠️ Atención: Nuevo Perfil de Meta"
+                description={
+                    <div style={{ textAlign: 'left', fontSize: '14px', lineHeight: '1.6' }}>
+                        <p>Para vincular un <strong>nuevo perfil de Facebook distinto</strong> al actual, por favor sigue estos pasos:</p>
+                        <ol style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <li>Abre <strong>DropCost Master</strong> en una ventana de incógnito o en un <strong>navegador diferente</strong>.</li>
+                            <li>Asegúrate de tener la <strong>sesión iniciada en el nuevo perfil de Facebook</strong> que deseas vincular en ese mismo navegador.</li>
+                            <li>Haz clic en conectar desde esa ventana.</li>
+                        </ol>
+                        <p style={{ marginTop: '12px', color: 'var(--color-warning)', fontWeight: 600 }}>
+                            Si usas el mismo navegador, Facebook intentará reconectar el perfil actual automáticamente.
+                        </p>
+                    </div>
+                }
+                variant="info"
+                confirmLabel="Entendido, Continuar"
+                onConfirm={handleConnect}
+                onCancel={() => setShowNewProfileWarning(false)}
             />
         </div>
     );

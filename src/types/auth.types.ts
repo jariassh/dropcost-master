@@ -35,10 +35,12 @@ export interface User {
     emailVerificado: boolean;
     twoFactorEnabled: boolean;
     rol?: 'cliente' | 'lider' | 'admin' | 'superadmin';
-    fechaRegistro: string;
-    ultimaActividad?: string;
+    fechaRegistro?: string;
     codigoReferido?: string;
     sessionToken?: string;
+    preferencias?: {
+        mostrar_launchpad: boolean;
+    };
     wallet_saldo?: number;
     bank_info?: {
         banco_nombre: string;

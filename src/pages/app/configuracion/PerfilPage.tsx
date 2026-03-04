@@ -10,9 +10,12 @@ import { differenceInDays, parseISO } from 'date-fns';
 import { paymentService } from '@/services/paymentService';
 import { configService, GlobalConfig } from '@/services/configService';
 import { subscriptionService } from '@/services/subscriptionService';
+import { useLaunchpadStore } from '@/store/useLaunchpadStore';
+import { Rocket } from 'lucide-react';
 
 export function PerfilPage() {
     const { user, updateProfile } = useAuthStore();
+    const { isComplete, progress } = useLaunchpadStore();
     const navigate = useNavigate();
     const toast = useToast();
 
@@ -313,6 +316,68 @@ export function PerfilPage() {
                 </div>
             </div>
 
+            {/* Launchpad Preferences */}
+            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', marginTop: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                    <div>
+                        <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Rocket size={20} color="var(--color-primary)" />
+                            Launchpad (Onboarding)
+                        </h3>
+                        <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-tertiary)' }}>Controla si deseas ver el Launchpad como página de inicio o saltar directamente al Dashboard.</p>
+                    </div>
+                </div>
+
+                <div style={{ maxWidth: '600px' }}>
+                    <NotificationItem
+                        icon={<Rocket size={20} />}
+                        title="Ver Launchpad al iniciar sesión"
+                        description={isComplete
+                            ? "Activa o desactiva la redirección automática al Launchpad."
+                            : "Este ajuste se habilitará automáticamente al completar el 100% de la configuración."
+                        }
+                        checked={user?.preferencias?.mostrar_launchpad ?? true}
+                        onChange={async () => {
+                            if (!isComplete) {
+                                toast.error('Configuración Incompleta', 'Debes llegar al 100% del Launchpad para poder desactivarlo.');
+                                return;
+                            }
+
+                            const current = user?.preferencias?.mostrar_launchpad ?? true;
+                            const newVal = !current;
+
+                            // 1. Optimistic update (Zustand)
+                            useAuthStore.setState((state) => ({
+                                user: state.user ? {
+                                    ...state.user,
+                                    preferencias: { ...state.user.preferencias, mostrar_launchpad: newVal }
+                                } : null
+                            }));
+
+                            // 2. Background sync
+                            const success = await updateProfile({
+                                preferencias: {
+                                    ...user?.preferencias,
+                                    mostrar_launchpad: newVal
+                                }
+                            });
+
+                            if (!success) {
+                                // Rollback if fails
+                                useAuthStore.setState((state) => ({
+                                    user: state.user ? {
+                                        ...state.user,
+                                        preferencias: { ...state.user.preferencias, mostrar_launchpad: current }
+                                    } : null
+                                }));
+                                toast.error('Error', 'No se pudo guardar la preferencia.');
+                            }
+                        }}
+                        disabled={!isComplete}
+                    />
+                </div>
+            </div>
+
             <style>{`
                 @media (max-width: 1200px) {
                     .perfil-top-grid { grid-template-columns: 1fr !important; }
@@ -334,9 +399,21 @@ function FeatureItem({ label, active }: { label: string, active: boolean }) {
     );
 }
 
-function NotificationItem({ icon, title, description, checked, onChange }: any) {
+function NotificationItem({ icon, title, description, checked, onChange, disabled }: any) {
     return (
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '24px', borderRadius: '16px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', height: '100%', transition: 'all 0.2s' }}>
+        <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            padding: '24px',
+            borderRadius: '16px',
+            backgroundColor: 'var(--bg-secondary)',
+            border: '1px solid var(--border-color)',
+            height: '100%',
+            transition: 'all 0.2s',
+            opacity: disabled ? 0.6 : 1,
+            pointerEvents: disabled ? 'none' : 'auto'
+        }}>
             <div style={{ display: 'flex', gap: '18px', alignItems: 'flex-start' }}>
                 <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', flexShrink: 0, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>{icon}</div>
                 <div>

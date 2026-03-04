@@ -45,12 +45,15 @@ import { useSessionEnforcer } from '@/hooks/useSessionEnforcer';
 import { useGlobalConfig } from '@/hooks/useGlobalConfig';
 import { configService } from '@/services/configService';
 import { subscriptionService } from '@/services/subscriptionService';
+import { useLaunchpadStore } from '@/store/useLaunchpadStore';
+import { Rocket, Target, CheckCircle2 } from 'lucide-react';
 
 const SIDEBAR_OPEN = 240;
 const SIDEBAR_COLLAPSED = 72;
 
 const navItems = [
-    { to: '/dashboard', icon: LayoutDashboard, label: 'Inicio', active: true },
+    { to: '/launchpad', icon: Rocket, label: 'Launchpad (Onboarding)', active: true, isLaunchpad: true },
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', active: true },
     { to: '/mis-costeos', icon: Calculator, label: 'Mis Costeos', active: true },
     { to: '/ofertas', icon: Gift, label: 'Ofertas Irresistibles', active: true },
     { to: '/referidos', icon: Share2, label: 'Sistema de Referidos', active: true },
@@ -86,7 +89,9 @@ export function AppLayout() {
     const { user, logout } = useAuthStore();
     const { unreadCount, fetchNotifications } = useNotificationStore();
     const { tiendaActual } = useStoreStore();
+    const { isComplete, progress, fetchStatus, isLoading: isLaunchpadLoading } = useLaunchpadStore();
     const navigate = useNavigate();
+    const location = useLocation();
     const [logos, setLogos] = useState<{ light: string | null; dark: string | null }>({ light: null, dark: null });
 
     useEffect(() => {
@@ -106,7 +111,39 @@ export function AppLayout() {
 
     useEffect(() => {
         fetchNotifications();
-    }, [fetchNotifications]);
+        if (user) {
+            fetchStatus(user.id, tiendaActual?.id);
+        }
+    }, [fetchNotifications, fetchStatus, user, tiendaActual?.id]);
+
+    // Redirección Launchpad si no está completo o si el usuario quiere verlo como inicio
+    useEffect(() => {
+        // No redirigir si el componente está cargando o no se ha inicializado el usuario
+        if (isLaunchpadLoading || !user) return;
+
+        const isComplete_local = isComplete;
+        const showLaunchpad = user?.preferencias?.mostrar_launchpad ?? true;
+        const currentPath = location.pathname;
+        const isPublicPage = ['/pricing', '/login', '/registro', '/verificar-email'].includes(currentPath);
+
+        if (isPublicPage || currentPath === '/launchpad') return;
+
+        // Caso 1: Obligatorio si no está completo
+        if (!isComplete_local) {
+            navigate('/launchpad');
+            return;
+        }
+
+        // Caso 2: Redirección de "Inicio" (Landing Page)
+        // Si el usuario entra al dominio raíz '/', decidir a dónde va
+        if (currentPath === '/' || currentPath === '/dashboard') {
+            if (showLaunchpad && currentPath === '/') {
+                navigate('/launchpad');
+            } else if (!showLaunchpad && currentPath === '/') {
+                navigate('/dashboard');
+            }
+        }
+    }, [isComplete, isLaunchpadLoading, user, location.pathname, navigate]);
 
     const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_OPEN;
     // Si el drawer está abierto en móvil, forzamos que NO esté colapsado para mostrar textos
@@ -132,7 +169,6 @@ export function AppLayout() {
                     flexDirection: 'column',
                     zIndex: 50,
                     transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
-                    overflow: 'hidden',
                     ...(mobileOpen ? { left: 0 } : {})
                 }}
                 className={`lg:left-0 ${!mobileOpen ? 'max-lg:-left-full' : ''}`}
@@ -143,10 +179,12 @@ export function AppLayout() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: effectivelyCollapsed ? 'center' : 'space-between',
-                        padding: effectivelyCollapsed ? '0' : '0 16px 0 20px',
-                        borderBottom: '1px solid rgba(255,255,255,0.1)',
+                        padding: effectivelyCollapsed ? '0' : '0 12px 0 20px',
+                        borderBottom: '1px solid rgba(255,255,255,0.08)',
                         height: '64px',
+                        minHeight: '64px',
                         transition: 'padding 250ms ease',
+                        boxSizing: 'border-box'
                     }}
                 >
                     {!effectivelyCollapsed && (
@@ -188,20 +226,26 @@ export function AppLayout() {
                             }
                         }}
                         style={{
-                            padding: '8px',
-                            borderRadius: '88px',
+                            padding: '10px',
+                            borderRadius: '12px',
                             background: 'none',
                             border: 'none',
-                            color: 'rgba(255,255,255,0.4)',
+                            color: 'rgba(255,255,255,0.6)',
                             cursor: 'pointer',
                             display: 'flex',
-                            transition: 'color 150ms',
+                            transition: 'all 150ms ease',
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.color = '#fff';
+                            e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.color = 'rgba(255,255,255,0.6)';
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
                         aria-label={effectivelyCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
                     >
-                        {window.innerWidth < 1024 ? <X size={20} /> : (effectivelyCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />)}
+                        {window.innerWidth < 1024 ? <X size={24} /> : <Menu size={24} />}
                     </button>
                 </div>
 
@@ -210,55 +254,70 @@ export function AppLayout() {
                     <StoreSelector collapsed={effectivelyCollapsed} />
                 </div>
 
-                {/* Navegación */}
-                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', padding: effectivelyCollapsed ? '4px 8px 12px' : '0 12px 16px' }}>
+                {/* Navegación - Con scroll si es necesario */}
+                <nav style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    padding: effectivelyCollapsed ? '4px 8px 12px' : '0 12px 16px',
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(255,255,255,0.1) transparent'
+                }}>
                     {/* Módulos Activos */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        {navItems.filter(i => i.active).map((item) => {
-                            if (item.children) {
+                        {navItems
+                            .filter(i => {
+                                if ((i as any).isLaunchpad && user?.preferencias?.mostrar_launchpad === false) return false;
+                                return i.active;
+                            })
+                            .map((item) => {
+                                if (item.children) {
+                                    return (
+                                        <SidebarGroupItem
+                                            key={item.label}
+                                            {...item as any}
+                                            collapsed={effectivelyCollapsed}
+                                            isOpen={openGroup === item.label}
+                                            onToggle={() => setOpenGroup(openGroup === item.label ? null : item.label)}
+                                            onClickSub={() => setMobileOpen(false)}
+                                        />
+                                    );
+                                }
+
+                                const isRestrictedByStore = !tiendaActual && (item.to === '/mis-costeos' || item.to === '/ofertas');
+                                const isRestrictedByFeature =
+                                    (item.to === '/dashboard' && !subscriptionService.isDashboardEnabled()) ||
+                                    (item.to === '/sincronizar' && !subscriptionService.isDropiSyncEnabled());
+
+                                const isRestrictedBySubscription = user?.estadoSuscripcion !== 'activa' && item.to !== '/configuracion' && item.to?.startsWith('/configuracion') === false && user?.rol !== 'admin' && user?.rol !== 'superadmin';
+
+                                const isRestricted = isRestrictedByStore || isRestrictedBySubscription || (isRestrictedByFeature && user?.rol !== 'admin' && user?.rol !== 'superadmin');
+
+                                let tooltip = undefined;
+                                if (isRestrictedBySubscription) {
+                                    tooltip = "Se requiere una suscripción activa para acceder";
+                                } else if (isRestrictedByFeature && user?.rol !== 'admin' && user?.rol !== 'superadmin') {
+                                    tooltip = "Este plan no incluye esta funcionalidad";
+                                } else if (isRestrictedByStore) {
+                                    tooltip = "Selecciona o crea una tienda para acceder";
+                                }
+
                                 return (
-                                    <SidebarGroupItem
-                                        key={item.label}
+                                    <SidebarNavItem
+                                        key={item.to}
                                         {...item as any}
                                         collapsed={effectivelyCollapsed}
-                                        isOpen={openGroup === item.label}
-                                        onToggle={() => setOpenGroup(openGroup === item.label ? null : item.label)}
-                                        onClickSub={() => setMobileOpen(false)}
+                                        isDark={isDark}
+                                        end={item.to === '/'}
+                                        onClick={() => setMobileOpen(false)}
+                                        disabled={isRestricted}
+                                        tooltip={tooltip}
                                     />
                                 );
-                            }
-
-                            const isRestrictedByStore = !tiendaActual && (item.to === '/mis-costeos' || item.to === '/ofertas');
-                            const isRestrictedByFeature =
-                                (item.to === '/dashboard' && !subscriptionService.isDashboardEnabled()) ||
-                                (item.to === '/sincronizar' && !subscriptionService.isDropiSyncEnabled());
-
-                            const isRestrictedBySubscription = user?.estadoSuscripcion !== 'activa' && item.to !== '/configuracion' && item.to?.startsWith('/configuracion') === false && user?.rol !== 'admin' && user?.rol !== 'superadmin';
-
-                            const isRestricted = isRestrictedByStore || isRestrictedBySubscription || (isRestrictedByFeature && user?.rol !== 'admin' && user?.rol !== 'superadmin');
-
-                            let tooltip = undefined;
-                            if (isRestrictedBySubscription) {
-                                tooltip = "Se requiere una suscripción activa para acceder";
-                            } else if (isRestrictedByFeature && user?.rol !== 'admin' && user?.rol !== 'superadmin') {
-                                tooltip = "Este plan no incluye esta funcionalidad";
-                            } else if (isRestrictedByStore) {
-                                tooltip = "Selecciona o crea una tienda para acceder";
-                            }
-
-                            return (
-                                <SidebarNavItem
-                                    key={item.to}
-                                    {...item as any}
-                                    collapsed={effectivelyCollapsed}
-                                    isDark={isDark}
-                                    end={item.to === '/'}
-                                    onClick={() => setMobileOpen(false)}
-                                    disabled={isRestricted}
-                                    tooltip={tooltip}
-                                />
-                            );
-                        })}
+                            })}
                     </div>
 
                     {/* Módulos Próximamente */}
@@ -333,8 +392,10 @@ export function AppLayout() {
                         justifyContent: 'space-between',
                         padding: '0 28px',
                         height: '64px',
+                        minHeight: '64px',
                         backgroundColor: 'var(--bg-primary)',
                         borderBottom: '1px solid var(--border-color)',
+                        boxSizing: 'border-box'
                     }}
                 >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -344,8 +405,60 @@ export function AppLayout() {
                             className="flex lg:hidden items-center justify-center dc-hamburger-button"
                             aria-label="Menú"
                         >
-                            <Menu size={20} />
+                            <Menu size={24} />
                         </button>
+
+                        {/* Launchpad Progress Indicator - Always Visible */}
+                        {progress > 0 && user?.preferencias?.mostrar_launchpad !== false && (
+                            <div
+                                onClick={() => navigate('/launchpad')}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '16px',
+                                    backgroundColor: 'var(--bg-secondary)', padding: '6px 16px',
+                                    borderRadius: '12px', border: '1px solid var(--border-color)',
+                                    cursor: 'pointer', transition: 'all 0.2s',
+                                    marginLeft: '12px'
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {isComplete ? <CheckCircle2 size={16} color="var(--color-success)" /> : <Rocket size={16} color="var(--color-primary)" />}
+                                    <span style={{ fontSize: '11px', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                                        LAUNCHPAD: <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>{progress}%</span>
+                                    </span>
+                                </div>
+                                <div style={{
+                                    width: '80px', height: '6px', backgroundColor: 'var(--bg-tertiary)',
+                                    borderRadius: '3px', overflow: 'hidden', display: 'flex'
+                                }}>
+                                    <div style={{
+                                        width: `${progress}%`, height: '100%',
+                                        backgroundColor: isComplete ? 'var(--color-success)' : 'var(--color-primary)',
+                                        transition: 'width 0.5s ease-out'
+                                    }} />
+                                </div>
+                                {!isComplete ? (
+                                    <div style={{
+                                        fontSize: '9px', fontWeight: 700, padding: '2px 8px',
+                                        backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
+                                        color: 'var(--color-primary)', borderRadius: '6px',
+                                        textTransform: 'uppercase'
+                                    }}>
+                                        Continuar
+                                    </div>
+                                ) : (
+                                    <div style={{
+                                        fontSize: '9px', fontWeight: 700, padding: '2px 8px',
+                                        backgroundColor: 'rgba(var(--color-success-rgb), 0.1)',
+                                        color: 'var(--color-success)', borderRadius: '6px',
+                                        textTransform: 'uppercase'
+                                    }}>
+                                        Completado
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -472,12 +585,6 @@ export function AppLayout() {
                                                     <>{user?.nombres?.[0] || 'U'}</>
                                                 )}
                                             </div>
-                                            <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 2px' }}>
-                                                {user?.nombres || 'Usuario'} {user?.apellidos || ''}
-                                            </p>
-                                            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', margin: '0 0 12px' }}>
-                                                {user?.email || 'No disponible'}
-                                            </p>
                                             <span
                                                 style={{
                                                     display: 'inline-block',
@@ -630,46 +737,47 @@ function SidebarGroupItem({ label, icon: Icon, children, collapsed, isOpen, onTo
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <button
-                onClick={collapsed ? undefined : onToggle}
-                onMouseEnter={() => setHovered(true)}
-                onMouseLeave={() => setHovered(false)}
-                title={collapsed ? label : undefined}
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: collapsed ? 'center' : 'space-between',
-                    gap: '12px',
-                    padding: collapsed ? '12px' : '10px 14px',
-                    borderRadius: '10px',
-                    fontSize: '14px',
-                    fontWeight: isChildActive ? 600 : 500,
-                    backgroundColor: isChildActive && !isOpen
-                        ? 'var(--color-primary)'
-                        : hovered ? 'rgba(255,255,255,0.08)' : 'transparent',
-                    color: (isChildActive && !isOpen) || hovered ? '#fff' : 'rgba(255,255,255,0.7)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 200ms ease',
-                    width: '100%',
-                    textAlign: 'left'
-                }}
-            >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Icon size={18} style={{ flexShrink: 0 }} />
-                    {!collapsed && <span>{label}</span>}
-                </div>
-                {!collapsed && (
-                    <ChevronDown
-                        size={14}
-                        style={{
-                            transform: isOpen ? 'rotate(180deg)' : 'rotate(0)',
-                            transition: 'transform 200ms ease',
-                            opacity: 0.5
-                        }}
-                    />
-                )}
-            </button>
+            <Tooltip content={label} position="right" delay={50} offset={12} disabled={!collapsed}>
+                <button
+                    onClick={collapsed ? undefined : onToggle}
+                    onMouseEnter={() => setHovered(true)}
+                    onMouseLeave={() => setHovered(false)}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: collapsed ? 'center' : 'space-between',
+                        gap: '12px',
+                        padding: collapsed ? '12px' : '10px 14px',
+                        borderRadius: '10px',
+                        fontSize: '14px',
+                        fontWeight: isChildActive ? 600 : 500,
+                        backgroundColor: isChildActive && !isOpen
+                            ? 'var(--color-primary)'
+                            : hovered ? 'rgba(255,255,255,0.08)' : 'transparent',
+                        color: (isChildActive && !isOpen) || hovered ? '#fff' : 'rgba(255,255,255,0.7)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'all 200ms ease',
+                        width: '100%',
+                        textAlign: 'left'
+                    }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <Icon size={collapsed ? 22 : 18} style={{ flexShrink: 0 }} />
+                        {!collapsed && <span>{label}</span>}
+                    </div>
+                    {!collapsed && (
+                        <ChevronDown
+                            size={14}
+                            style={{
+                                transform: isOpen ? 'rotate(180deg)' : 'rotate(0)',
+                                transition: 'transform 200ms ease',
+                                opacity: 0.5
+                            }}
+                        />
+                    )}
+                </button>
+            </Tooltip>
 
             {!collapsed && (
                 <div style={{
@@ -769,7 +877,7 @@ function SidebarNavItem({
                         ...customStyle
                     }}
                 >
-                    <Icon size={18} style={{ flexShrink: 0 }} />
+                    <Icon size={collapsed ? 22 : 18} style={{ flexShrink: 0 }} />
                     {!collapsed && label}
                 </div>
             </Tooltip>
@@ -777,39 +885,40 @@ function SidebarNavItem({
     }
 
     return (
-        <NavLink
-            to={to}
-            end={end}
-            onClick={onClick}
-            title={collapsed ? label : undefined}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            style={({ isActive }) => ({
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: collapsed ? 'center' : 'flex-start',
-                gap: '12px',
-                padding: collapsed ? '12px' : '10px 14px',
-                borderRadius: '10px',
-                fontSize: '14px',
-                fontWeight: isActive ? 600 : 500,
-                textDecoration: 'none',
-                transition: 'all 150ms ease',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                backgroundColor: isActive
-                    ? 'var(--color-primary)'
-                    : hovered
-                        ? 'rgba(255,255,255,0.08)'
-                        : 'transparent',
-                color: isActive ? '#fff' : hovered ? '#fff' : 'var(--sidebar-text)',
-                transform: hovered && !isActive ? 'translateX(2px)' : 'none',
-                ...customStyle
-            })}
-        >
-            <Icon size={18} style={{ flexShrink: 0 }} />
-            {!collapsed && label}
-        </NavLink>
+        <Tooltip content={label} position="right" delay={50} offset={12} disabled={!collapsed}>
+            <NavLink
+                to={to}
+                end={end}
+                onClick={onClick}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+                style={({ isActive }) => ({
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: collapsed ? 'center' : 'flex-start',
+                    gap: '12px',
+                    padding: collapsed ? '12px' : '10px 14px',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: isActive ? 600 : 500,
+                    textDecoration: 'none',
+                    transition: 'all 150ms ease',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    backgroundColor: isActive
+                        ? 'var(--color-primary)'
+                        : hovered
+                            ? 'rgba(255,255,255,0.08)'
+                            : 'transparent',
+                    color: isActive ? '#fff' : hovered ? '#fff' : 'var(--sidebar-text)',
+                    transform: hovered && !isActive ? 'translateX(2px)' : 'none',
+                    ...customStyle
+                })}
+            >
+                <Icon size={collapsed ? 22 : 18} style={{ flexShrink: 0 }} />
+                {!collapsed && label}
+            </NavLink>
+        </Tooltip>
     );
 }
 function ClockDisplay() {

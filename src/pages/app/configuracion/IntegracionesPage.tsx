@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MetaAdsIntegrationCard } from '@/components/configuracion/MetaAdsIntegrationCard';
 import { MetaAdAccountsTable } from '@/components/configuracion/MetaAdAccountsTable';
 
 export function IntegracionesPage() {
+    const [selectedIntegrationId, setSelectedIntegrationId] = useState<string | null>(null);
+
     return (
         <div style={{
             display: 'flex',
@@ -11,10 +13,15 @@ export function IntegracionesPage() {
             animation: 'fadeIn 0.3s'
         }}>
             {/* Tarjeta de Conexión (Arriba) */}
-            <MetaAdsIntegrationCard />
+            <MetaAdsIntegrationCard
+                onSelectIntegration={setSelectedIntegrationId}
+                selectedId={selectedIntegrationId}
+            />
 
             {/* Listado de Cuentas (Abajo) */}
-            <MetaAdAccountsTable />
+            <MetaAdAccountsTable
+                integrationId={selectedIntegrationId}
+            />
         </div>
     );
 }

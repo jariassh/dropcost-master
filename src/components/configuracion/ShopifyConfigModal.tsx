@@ -22,7 +22,7 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
     const [copied, setCopied] = useState(false);
     const [copiedScopes, setCopiedScopes] = useState(false);
 
-    const SHOPIFY_SCOPES = ['read_orders', 'write_orders', 'read_all_orders', 'read_products', 'read_inventory'];
+    const SHOPIFY_SCOPES = ['read_orders', 'read_all_orders', 'read_products', 'read_inventory', 'read_analytics'];
     const scopesString = SHOPIFY_SCOPES.join(',');
 
     // Estados para Asistente Generador de Token
@@ -249,37 +249,63 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
 
                     {/* API Scopes Section */}
                     <div style={{
-                        padding: '14px',
+                        padding: '16px',
                         backgroundColor: 'var(--bg-secondary)',
                         border: '1px solid var(--border-color)',
-                        borderRadius: '12px'
+                        borderRadius: '12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '12px'
                     }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                            <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                Permisos (API Scopes) requeridos:
+                        <div>
+                            <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                Permisos (API Scopes) requeridos y su objetivo:
                             </p>
-                            <button
-                                onClick={handleCopyScopes}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 20px' }}>
+                                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', lineHeight: 1.4 }}>
+                                    <strong style={{ color: 'var(--color-primary)' }}>read_orders:</strong> Ventas y órdenes del día.
+                                </div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', lineHeight: 1.4 }}>
+                                    <strong style={{ color: 'var(--color-primary)' }}>read_all_orders:</strong> Importación histórico (Backfill).
+                                </div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', lineHeight: 1.4 }}>
+                                    <strong style={{ color: 'var(--color-primary)' }}>read_products:</strong> Vínculo automático a costeos.
+                                </div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', lineHeight: 1.4 }}>
+                                    <strong style={{ color: 'var(--color-primary)' }}>read_inventory:</strong> Stock en tiempo real.
+                                </div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', lineHeight: 1.4, gridColumn: 'span 2' }}>
+                                    <strong style={{ color: 'var(--color-primary)' }}>read_analytics:</strong> Métricas agregadas de rendimiento.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <input
+                                type="text"
+                                readOnly
+                                value={scopesString}
                                 style={{
-                                    background: 'none', border: 'none', color: 'var(--color-primary)',
-                                    display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 600,
-                                    cursor: 'pointer', padding: '4px 8px', borderRadius: '4px',
-                                    backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)'
+                                    flex: 1, padding: '10px 12px',
+                                    backgroundColor: 'var(--bg-primary)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: '8px',
+                                    color: 'var(--text-secondary)',
+                                    fontSize: '12px', outline: 'none',
+                                    fontFamily: 'monospace'
                                 }}
+                            />
+                            <Button
+                                variant="secondary"
+                                onClick={handleCopyScopes}
+                                style={{ padding: '0 12px', height: '38px', gap: '8px', fontSize: '11px', minWidth: '130px' }}
                             >
-                                {copiedScopes ? <CheckCircle2 size={12} /> : <Copy size={12} />}
-                                {copiedScopes ? 'Copiados' : 'Copiar formato App'}
-                            </button>
+                                {copiedScopes ? <CheckCircle2 size={14} /> : <Copy size={14} />}
+                                {copiedScopes ? 'Copiados' : 'Copiar Scopes'}
+                            </Button>
                         </div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                            {SHOPIFY_SCOPES.map(scope => (
-                                <Badge key={scope} variant="pill-secondary" style={{ fontSize: '10px', textTransform: 'lowercase', fontFamily: 'monospace' }}>
-                                    {scope}
-                                </Badge>
-                            ))}
-                        </div>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '10.5px', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>
-                            * Configura estos permisos en tu App Personalizada de Shopify.
+                        <p style={{ margin: 0, fontSize: '10.5px', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>
+                            * Pega estos scopes en la sección "Admin API scopes" de tu App en Shopify.
                         </p>
                     </div>
 
@@ -424,7 +450,7 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
                                                 <ExternalLink size={12} /> Doc Shopify
                                             </a>
                                             <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>•</span>
-                                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Scopes: <strong style={{ color: 'var(--text-secondary)' }}>read_orders, write_orders, read_all_orders, products...</strong></span>
+                                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Scopes: <strong style={{ color: 'var(--text-secondary)' }}>read_orders, read_all_orders, read_products...</strong></span>
                                         </div>
                                         <Button
                                             variant="secondary"
@@ -491,7 +517,7 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
                         <Info size={18} color="var(--color-primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
                         <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                             <p style={{ margin: '0 0 8px 0' }}>
-                                <strong style={{ color: 'var(--text-primary)' }}>Webhook:</strong> Para ventas en tiempo real. Configura en Shopify {'>'} Notificaciones {'>'} Webhooks con evento <strong>Creación de pedido</strong>.
+                                <strong style={{ color: 'var(--text-primary)' }}>Webhook:</strong> Para ventas en tiempo real. Configura en Shopify {'>'} Notificaciones {'>'} Webhooks con eventos <strong>Creación de pedido</strong> y <strong>Cancelación de pedido</strong>.
                             </p>
                             {accessToken && (
                                 <p style={{ margin: 0 }}>

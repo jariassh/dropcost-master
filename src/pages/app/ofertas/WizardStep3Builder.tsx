@@ -234,14 +234,14 @@ export function WizardStep3Builder({
 
     return (
         <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '4px' }}>
                 🎁 Configura tu Obsequio
             </h3>
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
                 Precio: {formatCurrency(price)} · Ganancia actual: {formatCurrency(profit)}
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <Select
                     label="Tipo de obsequio"
                     options={GIFT_OPTIONS}
@@ -294,7 +294,7 @@ export function WizardStep3Builder({
                 </div>
             </div>
 
-            <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <ResultBox label="Valor percibido" value={formatCurrency(giftResult.perceivedValue)} color="var(--color-primary)" />
                 <ResultBox label="Costo regalo" value={`-${formatCurrency(giftResult.giftCost)}`} color="var(--color-error)" />
                 <ResultBox

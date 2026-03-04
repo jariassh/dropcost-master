@@ -17,7 +17,7 @@ interface AdAccount {
     linked_store_ids?: string[];
 }
 
-export function MetaAdAccountsTable() {
+export function MetaAdAccountsTable({ integrationId }: { integrationId?: string | null }) {
     const { user } = useAuthStore();
     const toast = useToast();
     const { fetchTiendas } = useStoreStore();
@@ -25,7 +25,6 @@ export function MetaAdAccountsTable() {
     const [accounts, setAccounts] = useState<AdAccount[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
-    const [isConnected, setIsConnected] = useState(false);
     const [dbLinks, setDbLinks] = useState<{ tienda_id: string, meta_ad_account_id: string }[]>([]);
 
     // Modal state
@@ -41,11 +40,16 @@ export function MetaAdAccountsTable() {
         const { data } = await supabase
             .from('tiendas_meta_ads' as any)
             .select('tienda_id, meta_ad_account_id');
-        if (data) setDbLinks(data);
+        if (data) setDbLinks(data as any);
     };
 
-    const fetchMetaAccounts = async () => {
-        const { data: metaData, error } = await supabase.functions.invoke('get-meta-accounts');
+    const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+
+    const fetchMetaAccounts = async (sync = false) => {
+        const { data: metaData, error } = await supabase.functions.invoke('get-meta-accounts', {
+            body: { sync, integrationId }
+        });
+
         if (!error && metaData?.ad_accounts) {
             const mapped = metaData.ad_accounts.map((acc: any) => ({
                 id: acc.id,
@@ -55,30 +59,34 @@ export function MetaAdAccountsTable() {
                 status: acc.account_status === 1 ? 'ACTIVE' : 'DISABLED',
                 business_name: acc.business?.name || 'Personal'
             }));
-            setAccounts(mapped);
+            const mappedSorted = mapped.sort((a: any, b: any) => {
+                const bizA = a.business_name || 'Personal';
+                const bizB = b.business_name || 'Personal';
+                if (bizA !== bizB) return bizA.localeCompare(bizB);
+                return a.nombre.localeCompare(b.nombre);
+            });
+            setAccounts(mappedSorted);
+            setLastSyncedAt(metaData.last_synced_at || (sync ? new Date().toISOString() : null));
         } else {
+            console.error("Error fetching meta accounts:", error);
             setAccounts([]);
         }
     };
 
     const initialLoad = async () => {
-        if (!user) return;
+        if (!user || !integrationId) {
+            setIsLoading(false);
+            return;
+        }
+
         setIsLoading(true);
         try {
             await fetchTiendas();
-            const { data: interaction } = await supabase
-                .from('integraciones')
-                .select('estado')
-                .eq('usuario_id', user.id)
-                .eq('tipo', 'meta_ads')
-                .maybeSingle();
-
-            const connected = interaction?.estado === 'conectado';
-            setIsConnected(connected);
-
-            if (connected) {
-                await Promise.all([fetchDbLinks(), fetchMetaAccounts()]);
+            const promises = [fetchDbLinks()];
+            if (accounts.length === 0) {
+                promises.push(fetchMetaAccounts());
             }
+            await Promise.all(promises);
         } catch (err) {
             console.error("Error initial load:", err);
         } finally {
@@ -88,12 +96,12 @@ export function MetaAdAccountsTable() {
 
     useEffect(() => {
         initialLoad();
-    }, [user]);
+    }, [user, integrationId]);
 
     const handleSync = async () => {
         setIsSyncing(true);
         try {
-            await fetchMetaAccounts();
+            await fetchMetaAccounts(true);
             await fetchDbLinks();
             toast.success('Sincronización Completada', 'Datos actualizados desde Meta.');
         } catch (error) {
@@ -117,7 +125,7 @@ export function MetaAdAccountsTable() {
         );
     }
 
-    if (!isConnected) {
+    if (!integrationId) {
         return (
             <Card style={{ height: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 40px', minHeight: '400px' }}>
                 <div style={{
@@ -130,7 +138,7 @@ export function MetaAdAccountsTable() {
                 </div>
                 <h3 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 12px', color: 'var(--text-primary)' }}>Cuentas Publicitarias</h3>
                 <p style={{ maxWidth: '320px', fontSize: '15px', color: 'var(--text-tertiary)', lineHeight: 1.6, margin: 0 }}>
-                    Conecta tu perfil de Meta Ads en la tarjeta superior para listar y gestionar tus cuentas aquí.
+                    Selecciona o conecta un perfil de Meta Ads en la tarjeta superior para listar y gestionar tus cuentas aquí.
                 </p>
             </Card>
         );
@@ -160,15 +168,24 @@ export function MetaAdAccountsTable() {
                     </div>
                 </div>
 
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleSync}
-                    isLoading={isSyncing}
-                    style={{ border: '1px solid var(--border-color)', gap: '8px' }}
-                >
-                    <RefreshCw size={14} /> Sincronizar
-                </Button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {lastSyncedAt && (
+                        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '12px' }}>
+                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                                Sincronizado: {new Date(lastSyncedAt).toLocaleString()}
+                            </span>
+                        </div>
+                    )}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleSync}
+                        isLoading={isSyncing}
+                        style={{ border: '1px solid var(--border-color)', gap: '8px' }}
+                    >
+                        <RefreshCw size={14} /> Sincronizar
+                    </Button>
+                </div>
             </div>
 
             <div style={{ overflowX: 'auto', flex: 1, minHeight: '300px' }}>

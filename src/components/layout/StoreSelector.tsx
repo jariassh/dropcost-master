@@ -79,16 +79,17 @@ export function StoreSelector({ collapsed }: StoreSelectorProps) {
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
                     <div style={{
-                        width: '24px',
-                        height: '24px',
+                        width: collapsed ? '30px' : '24px',
+                        height: collapsed ? '30px' : '24px',
                         borderRadius: '6px',
                         backgroundColor: 'var(--color-primary)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        flexShrink: 0
+                        flexShrink: 0,
+                        transition: 'all 250ms ease'
                     }}>
-                        <Store size={14} color="#fff" />
+                        <Store size={collapsed ? 18 : 14} color="#fff" />
                     </div>
                     {!collapsed && (
                         <span style={{
