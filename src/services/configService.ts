@@ -92,6 +92,25 @@ export interface GlobalConfig {
 
     // Integraciones
     meta_app_id?: string;
+
+    // Tipografía
+    font_family_primary?: string;
+    font_family_secondary?: string;
+    font_size_base?: string;
+    font_size_h1?: string;
+    font_size_h2?: string;
+    font_size_h3?: string;
+    font_size_h4?: string;
+    font_size_small?: string;
+    font_size_tiny?: string;
+    font_letter_spacing_h?: string;
+    font_family_accent?: string;
+    font_family_mono?: string;
+    font_line_height_base?: string;
+    font_line_height_headings?: string;
+    font_line_height_small?: string;
+    font_line_height_mono?: string;
+    font_letter_spacing_labels?: string;
 }
 
 export interface ConfigHistory {
@@ -218,7 +237,24 @@ export const configService = {
                 youtube_url: '',
                 
                 terminos_condiciones_url: '',
-                politica_privacidad_url: ''
+                politica_privacidad_url: '',
+                font_family_primary: 'Poppins',
+                font_family_secondary: 'Inter',
+                font_family_accent: 'Lora',
+                font_family_mono: 'JetBrains Mono',
+                font_size_base: '14px',
+                font_size_h1: '36px',
+                font_size_h2: '28px',
+                font_size_h3: '20px',
+                font_size_h4: '16px',
+                font_size_small: '12px',
+                font_size_tiny: '11px',
+                font_letter_spacing_h: '0px',
+                font_letter_spacing_labels: '0.5px',
+                font_line_height_base: '1.6',
+                font_line_height_headings: '1.2',
+                font_line_height_small: '1.4',
+                font_line_height_mono: '1.5',
              };
              localStorage.setItem(CACHE_KEY, JSON.stringify(fallback));
              return fallback;
@@ -269,7 +305,14 @@ export const configService = {
             'pais_operacion', 'instagram_url', 'linkedin_url', 'twitter_url', 'youtube_url',
             'terminos_condiciones_url', 'politica_privacidad_url',
             // Integraciones
-            'meta_app_id'
+            'meta_app_id',
+            // Tipografía
+            'font_family_primary', 'font_family_secondary',
+            'font_size_base', 'font_size_h1', 'font_size_h2', 'font_size_h3', 'font_size_h4',
+            'font_size_small', 'font_size_tiny',
+            'font_letter_spacing_h', 'font_letter_spacing_labels',
+            'font_family_accent', 'font_family_mono',
+            'font_line_height_base', 'font_line_height_headings', 'font_line_height_small', 'font_line_height_mono'
         ];
 
         fields.forEach(f => {
@@ -397,6 +440,24 @@ export const configService = {
             color_admin_panel_link: '#EF4444',
             color_admin_sidebar_active: '#EF4444',
             color_admin_sidebar_return: '#1F2937',
+            // Tipografía por defecto
+            font_family_primary: 'Poppins',
+            font_family_secondary: 'Inter',
+            font_family_accent: 'Lora',
+            font_family_mono: 'JetBrains Mono',
+            font_size_base: '14px',
+            font_size_h1: '36px',
+            font_size_h2: '28px',
+            font_size_h3: '20px',
+            font_size_h4: '16px',
+            font_size_small: '12px',
+            font_size_tiny: '11px',
+            font_letter_spacing_h: '0px',
+            font_letter_spacing_labels: '0.5px',
+            font_line_height_base: '1.6',
+            font_line_height_headings: '1.2',
+            font_line_height_small: '1.4',
+            font_line_height_mono: '1.5',
         };
         await this.updateConfig(defaults);
     },

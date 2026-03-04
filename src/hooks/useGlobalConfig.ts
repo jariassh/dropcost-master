@@ -3,6 +3,21 @@ import { useQuery } from '@tanstack/react-query';
 import { configService, GlobalConfig } from '@/services/configService';
 import { useTheme } from './useTheme';
 
+const loadGoogleFont = (fontName?: string) => {
+    if (!fontName || ['Inter', 'system-ui', 'sans-serif', 'serif', 'monospace'].includes(fontName)) return;
+
+    // Normalizar ID para evitar duplicados
+    const fontId = `gfont-${fontName.replace(/\s+/g, '-').toLowerCase()}`;
+    if (document.getElementById(fontId)) return;
+
+    const link = document.createElement('link');
+    link.id = fontId;
+    link.rel = 'stylesheet';
+    // Importamos un rango amplio de pesos para asegurar compatibilidad
+    link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, '+')}:wght@300;400;500;600;700;800&display=swap`;
+    document.head.appendChild(link);
+};
+
 export function useGlobalConfig() {
     const { theme } = useTheme();
 
@@ -10,7 +25,13 @@ export function useGlobalConfig() {
         try {
             if (!config) return;
 
-            // 1. Aplicar Colores (Variables CSS)
+            // 1. Cargar Fuentes Dinámicamente
+            loadGoogleFont(config.font_family_primary); // RF Secondary -> Body
+            loadGoogleFont(config.font_family_secondary); // RF Primary -> Headings
+            loadGoogleFont(config.font_family_accent); // RF Accent -> Lora
+            loadGoogleFont(config.font_family_mono); // RF Mono -> JetBrains
+
+            // 2. Aplicar Colores (Variables CSS)
             const root = document.documentElement;
             const isDark = theme === 'dark';
 
@@ -68,7 +89,27 @@ export function useGlobalConfig() {
             setProp('--color-admin-sidebar-active', config.color_admin_sidebar_active);
             setProp('--color-admin-sidebar-return', config.color_admin_sidebar_return);
 
-            // 2. Aplicar SEO (Metadatos)
+            // 2. Aplicar Tipografía (Variables CSS)
+            setProp('--font-body', config.font_family_primary || 'Poppins');
+            setProp('--font-headings', config.font_family_secondary || 'Inter');
+            setProp('--font-accent', config.font_family_accent || 'Lora');
+            setProp('--font-mono', config.font_family_mono || 'JetBrains Mono');
+            
+            setProp('--fs-base', config.font_size_base);
+            setProp('--fs-h1', config.font_size_h1);
+            setProp('--fs-h2', config.font_size_h2);
+            setProp('--fs-h3', config.font_size_h3);
+            setProp('--fs-h4', config.font_size_h4);
+            setProp('--fs-small', config.font_size_small);
+            setProp('--fs-tiny', config.font_size_tiny);
+            setProp('--ls-h', config.font_letter_spacing_h);
+            setProp('--ls-labels', config.font_letter_spacing_labels || '0.5px');
+            setProp('--lh-base', config.font_line_height_base || '1.6');
+            setProp('--lh-headings', config.font_line_height_headings || '1.2');
+            setProp('--lh-small', config.font_line_height_small || '1.4');
+            setProp('--lh-mono', config.font_line_height_mono || '1.5');
+
+            // 3. Aplicar SEO (Metadatos)
             if (config.meta_title) document.title = config.meta_title;
             
             // Meta Description
