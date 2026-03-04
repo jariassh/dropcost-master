@@ -128,8 +128,8 @@ export function AppLayout() {
 
         if (isPublicPage || currentPath === '/launchpad') return;
 
-        // Caso 1: Obligatorio si no está completo
-        if (!isComplete_local) {
+        // Caso 1: Obligatorio si no está completo y tiene menos del 40% de progreso
+        if (!isComplete_local && progress < 40) {
             navigate('/launchpad');
             return;
         }
@@ -143,7 +143,7 @@ export function AppLayout() {
                 navigate('/dashboard');
             }
         }
-    }, [isComplete, isLaunchpadLoading, user, location.pathname, navigate]);
+    }, [isComplete, progress, isLaunchpadLoading, user, location.pathname, navigate]);
 
     const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_OPEN;
     // Si el drawer está abierto en móvil, forzamos que NO esté colapsado para mostrar textos

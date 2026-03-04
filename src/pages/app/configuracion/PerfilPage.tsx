@@ -336,7 +336,7 @@ export function PerfilPage() {
                             ? "Activa o desactiva la redirección automática al Launchpad."
                             : "Este ajuste se habilitará automáticamente al completar el 100% de la configuración."
                         }
-                        checked={user?.preferencias?.mostrar_launchpad ?? true}
+                        checked={!isComplete ? true : (user?.preferencias?.mostrar_launchpad ?? true)}
                         onChange={async () => {
                             if (!isComplete) {
                                 toast.error('Configuración Incompleta', 'Debes llegar al 100% del Launchpad para poder desactivarlo.');
