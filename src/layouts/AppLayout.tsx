@@ -4,6 +4,7 @@
  * Header con toggle tema, notificaciones y dropdown usuario premium.
  */
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useNotificationStore } from '@/store/notificationStore';
 import { NotificationPanel } from '@/components/layout/NotificationPanel';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
@@ -33,6 +34,7 @@ import {
     X,
     UploadCloud,
     Clock,
+    Users,
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
@@ -48,17 +50,27 @@ const SIDEBAR_OPEN = 240;
 const SIDEBAR_COLLAPSED = 72;
 
 const navItems = [
-    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', active: true },
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Inicio', active: true },
     { to: '/mis-costeos', icon: Calculator, label: 'Mis Costeos', active: true },
     { to: '/ofertas', icon: Gift, label: 'Ofertas Irresistibles', active: true },
     { to: '/referidos', icon: Share2, label: 'Sistema de Referidos', active: true },
     { to: '/billetera', icon: Wallet, label: 'Billetera / Wallet', active: true },
     { to: '/sincronizar', icon: UploadCloud, label: 'Sincronizar Envíos', active: true },
-    { to: '/configuracion', icon: Settings, label: 'Configuración', active: true },
+    {
+        label: 'Configuraciones',
+        icon: Settings,
+        active: true,
+        children: [
+            { to: '/configuracion/perfil', label: 'Mi Perfil' },
+            { to: '/configuracion/tiendas', label: 'Mis Tiendas' },
+            { to: '/configuracion/integraciones', label: 'Integraciones' },
+            { to: '/configuracion/seguridad', label: 'Seguridad' },
+        ]
+    },
     { to: '/analisis-regional', icon: Map, label: 'Análisis Regional', active: false },
-    { to: '/acortador', icon: Link2, label: 'Acortador URL', active: false },
+    { to: '/contactos', icon: Users, label: 'Contactos', active: false },
     { to: '/capacitacion', icon: GraduationCap, label: 'Capacitación', active: false },
-    { to: '/historial', icon: HistoryIcon, label: 'Historial de Actividad', active: true },
+    { to: '/historial', icon: HistoryIcon, label: 'Historial Actividad', active: true },
 ];
 
 const adminLink = { to: '/admin', icon: ShieldAlert, label: 'Panel Administración' };
@@ -69,6 +81,7 @@ export function AppLayout() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
+    const [openGroup, setOpenGroup] = useState<string | null>(null);
     const { isDark, toggleTheme } = useTheme();
     const { user, logout } = useAuthStore();
     const { unreadCount, fetchNotifications } = useNotificationStore();
@@ -202,12 +215,25 @@ export function AppLayout() {
                     {/* Módulos Activos */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {navItems.filter(i => i.active).map((item) => {
+                            if (item.children) {
+                                return (
+                                    <SidebarGroupItem
+                                        key={item.label}
+                                        {...item as any}
+                                        collapsed={effectivelyCollapsed}
+                                        isOpen={openGroup === item.label}
+                                        onToggle={() => setOpenGroup(openGroup === item.label ? null : item.label)}
+                                        onClickSub={() => setMobileOpen(false)}
+                                    />
+                                );
+                            }
+
                             const isRestrictedByStore = !tiendaActual && (item.to === '/mis-costeos' || item.to === '/ofertas');
                             const isRestrictedByFeature =
                                 (item.to === '/dashboard' && !subscriptionService.isDashboardEnabled()) ||
                                 (item.to === '/sincronizar' && !subscriptionService.isDropiSyncEnabled());
 
-                            const isRestrictedBySubscription = user?.estadoSuscripcion !== 'activa' && item.to !== '/configuracion' && user?.rol !== 'admin' && user?.rol !== 'superadmin';
+                            const isRestrictedBySubscription = user?.estadoSuscripcion !== 'activa' && item.to !== '/configuracion' && item.to?.startsWith('/configuracion') === false && user?.rol !== 'admin' && user?.rol !== 'superadmin';
 
                             const isRestricted = isRestrictedByStore || isRestrictedBySubscription || (isRestrictedByFeature && user?.rol !== 'admin' && user?.rol !== 'superadmin');
 
@@ -223,7 +249,7 @@ export function AppLayout() {
                             return (
                                 <SidebarNavItem
                                     key={item.to}
-                                    {...item}
+                                    {...item as any}
                                     collapsed={effectivelyCollapsed}
                                     isDark={isDark}
                                     end={item.to === '/'}
@@ -243,7 +269,16 @@ export function AppLayout() {
                             </span>
                         )}
                         {navItems.filter(i => !i.active).map((item) => (
-                            <SidebarNavItem key={item.to} {...item} collapsed={effectivelyCollapsed} isDark={isDark} disabled onClick={() => setMobileOpen(false)} />
+                            <SidebarNavItem
+                                key={item.label}
+                                to={(item as any).to || '#'}
+                                icon={item.icon}
+                                label={item.label}
+                                collapsed={effectivelyCollapsed}
+                                isDark={isDark}
+                                disabled
+                                onClick={() => setMobileOpen(false)}
+                            />
                         ))}
                     </div>
 
@@ -573,6 +608,112 @@ function DropdownItem({
             {icon}
             {label}
         </button>
+    );
+}
+
+interface SidebarGroupItemProps {
+    label: string;
+    icon: React.ComponentType<{ size: number; style?: React.CSSProperties }>;
+    children: { to: string; label: string }[];
+    collapsed: boolean;
+    isOpen: boolean;
+    onToggle: () => void;
+    onClickSub: () => void;
+}
+
+function SidebarGroupItem({ label, icon: Icon, children, collapsed, isOpen, onToggle, onClickSub }: SidebarGroupItemProps) {
+    const [hovered, setHovered] = useState(false);
+    const location = useLocation();
+
+    // Check if any child is active
+    const isChildActive = children.some(child => location.pathname === child.to);
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <button
+                onClick={collapsed ? undefined : onToggle}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+                title={collapsed ? label : undefined}
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: collapsed ? 'center' : 'space-between',
+                    gap: '12px',
+                    padding: collapsed ? '12px' : '10px 14px',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: isChildActive ? 600 : 500,
+                    backgroundColor: isChildActive && !isOpen
+                        ? 'var(--color-primary)'
+                        : hovered ? 'rgba(255,255,255,0.08)' : 'transparent',
+                    color: (isChildActive && !isOpen) || hovered ? '#fff' : 'rgba(255,255,255,0.7)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 200ms ease',
+                    width: '100%',
+                    textAlign: 'left'
+                }}
+            >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Icon size={18} style={{ flexShrink: 0 }} />
+                    {!collapsed && <span>{label}</span>}
+                </div>
+                {!collapsed && (
+                    <ChevronDown
+                        size={14}
+                        style={{
+                            transform: isOpen ? 'rotate(180deg)' : 'rotate(0)',
+                            transition: 'transform 200ms ease',
+                            opacity: 0.5
+                        }}
+                    />
+                )}
+            </button>
+
+            {!collapsed && (
+                <div style={{
+                    maxHeight: isOpen ? `${children.length * 40}px` : '0',
+                    overflow: 'hidden',
+                    transition: 'max-height 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                    paddingLeft: '16px'
+                }}>
+                    {children.map(child => (
+                        <NavLink
+                            key={child.to}
+                            to={child.to}
+                            onClick={onClickSub}
+                            style={({ isActive }) => ({
+                                display: 'flex',
+                                alignItems: 'center',
+                                padding: '8px 14px',
+                                borderRadius: '8px',
+                                fontSize: '13px',
+                                fontWeight: isActive ? 600 : 400,
+                                textDecoration: 'none',
+                                color: isActive ? 'var(--color-primary)' : 'rgba(255,255,255,0.5)',
+                                transition: 'all 150ms ease',
+                                borderLeft: isActive ? '2px solid var(--color-primary)' : '2px solid transparent',
+                                backgroundColor: isActive ? 'rgba(var(--color-primary-rgb), 0.05)' : 'transparent',
+                            })}
+                            className="hover-bg-subitem"
+                        >
+                            {child.label}
+                        </NavLink>
+                    ))}
+                </div>
+            )}
+
+            <style>{`
+                .hover-bg-subitem:hover {
+                    color: #fff !important;
+                    background-color: rgba(255,255,255,0.03);
+                }
+            `}</style>
+        </div>
     );
 }
 

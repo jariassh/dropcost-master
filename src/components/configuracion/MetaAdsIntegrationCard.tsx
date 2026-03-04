@@ -139,7 +139,7 @@ export function MetaAdsIntegrationCard() {
     const isConnected = integration?.estado === 'conectado';
 
     return (
-        <div style={{ maxWidth: '800px', animation: 'fadeIn 0.3s' }}>
+        <div style={{ animation: 'fadeIn 0.3s' }}>
             <Card>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -187,8 +187,9 @@ export function MetaAdsIntegrationCard() {
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
-                            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                                Para gestionar qué cuentas se asocian a cada tienda, ve a <strong>Mis Tiendas</strong>.
+                            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <AlertCircle size={14} color="var(--color-primary)" />
+                                Selecciona y vincula tus cuentas publicitarias en la tabla de <strong>Cuentas de Meta Ads</strong>.
                             </p>
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <Button variant="secondary" onClick={handleConnect} style={{ gap: '8px' }} size="sm">
