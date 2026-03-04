@@ -5,7 +5,7 @@ import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Spinner } from '@/components/common/Spinner';
 import { Toggle } from '@/components/common/Toggle';
-import { Alert, useToast, CodeEditor } from '@/components/common';
+import { Alert, useToast, CodeEditor, Select, SelectOption, UnitInput } from '@/components/common';
 import {
     Search,
     Palette,
@@ -49,16 +49,35 @@ export function AdminSettingsPage() {
 
     // Sincronizar estado local con remoto al cargar o resetear
     useEffect(() => {
-        if (remoteConfig && !config) {
-            const sanitized = {
-                ...remoteConfig,
-                logo_variante_url: remoteConfig.logo_variante_url || '',
-                logo_footer_url: remoteConfig.logo_footer_url || '',
-                site_url: remoteConfig.site_url || '',
-            };
-            setConfig(sanitized);
+        if (remoteConfig) {
+            setConfig(prev => {
+                // Si ya tenemos un estado local y no es un "mount" inicial, 
+                // pero faltan campos críticos (debido a actualizaciones de esquema), los fusionamos.
+                const base = prev || remoteConfig;
+                return {
+                    ...base,
+                    // Asegurar que los nuevos campos de tipografía tengan valores si vienen nulos de la DB/caché
+                    font_family_primary: base.font_family_primary || 'Poppins',
+                    font_family_secondary: base.font_family_secondary || 'Inter',
+                    font_family_accent: base.font_family_accent || 'Lora',
+                    font_family_mono: base.font_family_mono || 'JetBrains Mono',
+                    font_size_base: base.font_size_base || '14px',
+                    font_size_h1: base.font_size_h1 || '36px',
+                    font_size_h2: base.font_size_h2 || '28px',
+                    font_size_h3: base.font_size_h3 || '20px',
+                    font_size_h4: base.font_size_h4 || '16px',
+                    font_size_small: base.font_size_small || '12px',
+                    font_size_tiny: base.font_size_tiny || '11px',
+                    font_letter_spacing_h: base.font_letter_spacing_h || '0px',
+                    font_letter_spacing_labels: base.font_letter_spacing_labels || '0.5px',
+                    font_line_height_base: base.font_line_height_base || '1.6',
+                    font_line_height_headings: base.font_line_height_headings || '1.25',
+                    font_line_height_small: base.font_line_height_small || '1.4',
+                    font_line_height_mono: base.font_line_height_mono || '1.5',
+                } as GlobalConfig;
+            });
         }
-    }, [remoteConfig, config]);
+    }, [remoteConfig]);
 
     // Efecto Premium: Aplicar cambios de SEO/Branding en tiempo real (Vista Previa)
     useEffect(() => {
@@ -120,7 +139,7 @@ export function AdminSettingsPage() {
             {/* Header Section - Same as Dashboard */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+                    <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
                         Administración Global
                     </h1>
                     <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
@@ -546,8 +565,10 @@ function SectionBranding({ config, setConfig }: any) {
                 </Card>
             </div>
 
+            <SectionTypography config={config} setConfig={setConfig} />
+
             <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '16px', letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
                     Administración de Colores
                 </h3>
                 <Card noPadding>
@@ -555,11 +576,11 @@ function SectionBranding({ config, setConfig }: any) {
                         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                             <thead>
                                 <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
-                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '80px' }}>Color</th>
-                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Nombre</th>
-                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Variable (Key)</th>
-                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Código</th>
-                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Categoría</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'capitalize', letterSpacing: '0.05em', width: '80px' }}>Color</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'capitalize', letterSpacing: '0.05em' }}>Nombre</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'capitalize', letterSpacing: '0.05em' }}>Variable (Key)</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'capitalize', letterSpacing: '0.05em' }}>Código</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'capitalize', letterSpacing: '0.05em', textAlign: 'right' }}>Categoría</th>
                                 </tr>
                             </thead>
                             <tbody style={{ backgroundColor: 'var(--card-bg)' }}>
@@ -656,6 +677,286 @@ function SectionBranding({ config, setConfig }: any) {
                 </Card>
             </div>
         </div>
+    );
+}
+
+const GOOGLE_FONT_OPTIONS: SelectOption[] = [
+    { value: 'Poppins', label: 'Poppins', details: 'Sans Serif - Moderno y limpio' },
+    { value: 'Inter', label: 'Inter', details: 'Sans Serif - Optimizado para UI' },
+    { value: 'Lora', label: 'Lora', details: 'Serif - Contemporáneo' },
+    { value: 'JetBrains Mono', label: 'JetBrains Mono', details: 'Monospace - Técnico y legible' },
+    { value: 'Roboto', label: 'Roboto', details: 'Sans Serif - Estándar y legible' },
+    { value: 'Montserrat', label: 'Montserrat', details: 'Sans Serif - Elegante y geométrico' },
+    { value: 'Bebas Neue', label: 'Bebas Neue', details: 'Display - Impactante (Mayúsculas)' },
+    { value: 'Oswald', label: 'Oswald', details: 'Sans Serif - Condensado y fuerte' },
+    { value: 'Lato', label: 'Lato', details: 'Sans Serif - Amigable y equilibrado' },
+    { value: 'Open Sans', label: 'Open Sans', details: 'Sans Serif - Versátil' },
+    { value: 'Playfair Display', label: 'Playfair Display', details: 'Serif - Clásico y lujoso' },
+    { value: 'Merriweather', label: 'Merriweather', details: 'Serif - Alta legibilidad' },
+    { value: 'Raleway', label: 'Raleway', details: 'Sans Serif - Estilizado' },
+    { value: 'Nunito', label: 'Nunito', details: 'Sans Serif - Redondeado y suave' },
+    { value: 'Ubuntu', label: 'Ubuntu', details: 'Sans Serif - Distintivo' },
+    { value: 'Quicksand', label: 'Quicksand', details: 'Sans Serif - Muy redondeado' },
+    { value: 'Work Sans', label: 'Work Sans', details: 'Sans Serif - Profesional' },
+    { value: 'Fira Sans', label: 'Fira Sans', details: 'Sans Serif - Técnico' },
+    { value: 'Kanit', label: 'Kanit', details: 'Sans Serif - Moderno Thai' },
+    { value: 'Rubik', label: 'Rubik', details: 'Sans Serif - Amigable' },
+    { value: 'Anton', label: 'Anton', details: 'Display - Muy grueso' }
+];
+
+function SectionTypography({ config, setConfig }: any) {
+    return (
+        <Card title="Tipografía y Tamaños">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                    <div className="space-y-6">
+                        <h4 className="text-sm font-bold flex items-center gap-2" style={{ fontFamily: 'var(--font-body)', textTransform: 'none' }}>
+                            <Type size={16} className="text-[var(--color-primary)]" /> Familias de Fuente
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Select
+                                label="Fuente Primaria (Cuerpo/Lectura)"
+                                options={GOOGLE_FONT_OPTIONS}
+                                value={config.font_family_primary}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_family_primary: val }))}
+                                placeholder="Seleccionar fuente..."
+                            />
+                            <Select
+                                label="Fuente Secundaria (Encabezados)"
+                                options={GOOGLE_FONT_OPTIONS}
+                                value={config.font_family_secondary}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_family_secondary: val }))}
+                                placeholder="Seleccionar fuente..."
+                            />
+                            <Select
+                                label="Fuente Accent (Citas/Destacados)"
+                                options={GOOGLE_FONT_OPTIONS}
+                                value={config.font_family_accent}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_family_accent: val }))}
+                                placeholder="Seleccionar fuente..."
+                            />
+                            <Select
+                                label="Fuente Mono (Código/Técnico)"
+                                options={GOOGLE_FONT_OPTIONS}
+                                value={config.font_family_mono}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_family_mono: val }))}
+                                placeholder="Seleccionar fuente..."
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        <h4 className="text-sm font-bold flex items-center gap-2" style={{ fontFamily: 'var(--font-body)', textTransform: 'none' }}>
+                            <Layout size={16} className="text-[var(--color-primary)]" /> Escala de Tamaños
+                        </h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <UnitInput
+                                label="Base (Body)"
+                                value={config.font_size_base}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_size_base: val }))}
+                            />
+                            <UnitInput
+                                label="Título H1"
+                                value={config.font_size_h1}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_size_h1: val }))}
+                            />
+                            <UnitInput
+                                label="Título H2"
+                                value={config.font_size_h2}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_size_h2: val }))}
+                            />
+                            <UnitInput
+                                label="Título H3"
+                                value={config.font_size_h3}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_size_h3: val }))}
+                            />
+                            <UnitInput
+                                label="Pequeño (Label)"
+                                value={config.font_size_small}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_size_small: val }))}
+                            />
+                            <UnitInput
+                                label="Diminuto (Cap)"
+                                value={config.font_size_tiny}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_size_tiny: val }))}
+                            />
+                            <UnitInput
+                                label="Interletrado (H)"
+                                value={config.font_letter_spacing_h}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_letter_spacing_h: val }))}
+                            />
+                            <UnitInput
+                                label="Line Height (B)"
+                                value={config.font_line_height_base}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_line_height_base: val }))}
+                                helperText="Cuerpo"
+                            />
+                            <UnitInput
+                                label="Line Height (H)"
+                                value={config.font_line_height_headings}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_line_height_headings: val }))}
+                                helperText="Títulos"
+                            />
+                            <UnitInput
+                                label="Line Height (S)"
+                                value={config.font_line_height_small}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_line_height_small: val }))}
+                                helperText="Labels"
+                            />
+                            <UnitInput
+                                label="Line Height (M)"
+                                value={config.font_line_height_mono}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_line_height_mono: val }))}
+                                helperText="Código"
+                            />
+                            <UnitInput
+                                label="Interletrado (L)"
+                                value={config.font_letter_spacing_labels}
+                                onChange={(val) => setConfig((prev: any) => ({ ...prev, font_letter_spacing_labels: val }))}
+                                helperText="Labels/Tiny"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <h4 className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] mb-2">Vista Previa Premium</h4>
+
+                    {/* Hero Preview Style */}
+                    <div
+                        style={{
+                            padding: '40px',
+                            borderRadius: '24px',
+                            background: 'linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%)',
+                            border: '1px solid var(--border-color)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '24px',
+                            boxShadow: 'inset 0 0 40px rgba(0,0,0,0.05)'
+                        }}
+                    >
+                        <div className="space-y-4">
+                            <span
+                                style={{
+                                    fontFamily: 'var(--font-body)',
+                                    fontSize: config.font_size_tiny,
+                                    color: 'var(--color-primary)',
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.1em'
+                                }}
+                            >
+                                Categoría Destacada
+                            </span>
+                            <h1
+                                style={{
+                                    fontFamily: 'var(--font-headings)',
+                                    fontSize: config.font_size_h1,
+                                    margin: 0,
+                                    lineHeight: config.font_line_height_headings || '1.25',
+                                    color: 'var(--text-primary)',
+                                    fontWeight: 700,
+                                    textTransform: (config.font_family_secondary === 'Bebas Neue' || config.font_family_secondary === 'Anton') ? 'uppercase' : 'none',
+                                    letterSpacing: config.font_letter_spacing_h
+                                }}
+                            >
+                                Domina tu Costeo con Precisión
+                            </h1>
+                            <h3
+                                style={{
+                                    fontFamily: 'var(--font-headings)',
+                                    fontSize: config.font_size_h3,
+                                    margin: 0,
+                                    color: 'var(--text-secondary)',
+                                    fontWeight: 600,
+                                    lineHeight: config.font_line_height_headings || '1.25',
+                                    letterSpacing: config.font_letter_spacing_h
+                                }}
+                            >
+                                La herramienta definitiva para Dropshippers
+                            </h3>
+                        </div>
+
+                        <p
+                            style={{
+                                fontFamily: 'var(--font-body)',
+                                fontSize: config.font_size_base,
+                                margin: 0,
+                                lineHeight: config.font_line_height_base || 1.6,
+                                color: 'var(--text-secondary)',
+                                maxWidth: '90%'
+                            }}
+                        >
+                            Optimiza tus márgenes y escala tu negocio con datos reales en tiempo real.
+                            DropCost Master te permite visualizar cada centavo de tu operación.
+                        </p>
+
+
+                        {/* Quote Block */}
+                        <div style={{
+                            fontFamily: config.font_family_accent || 'Lora',
+                            fontSize: '16px',
+                            fontStyle: 'italic',
+                            color: 'var(--text-primary)',
+                            borderLeft: '4px solid var(--color-primary)',
+                            paddingLeft: '16px',
+                        }}>
+                            "Este sistema ha transformado la rentabilidad de mi tienda desde el primer día."
+                        </div>
+
+                        {/* Mono Block */}
+                        <div style={{
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            backgroundColor: 'rgba(0,0,0,0.2)',
+                            fontFamily: config.font_family_mono || 'JetBrains Mono',
+                            fontSize: '12px',
+                            color: 'var(--color-primary-light)',
+                            width: 'fit-content'
+                        }}>
+                            GET /api/v1/profits/sync
+                        </div>
+
+                        <div className="flex gap-4 pt-4">
+                            <button style={{
+                                padding: '12px 24px',
+                                borderRadius: '12px',
+                                backgroundColor: 'var(--color-primary)',
+                                color: 'white',
+                                border: 'none',
+                                fontWeight: 600,
+                                fontSize: config.font_size_small,
+                                fontFamily: 'var(--font-body)'
+                            }}>
+                                Comenzar ahora
+                            </button>
+                            <button style={{
+                                padding: '12px 24px',
+                                borderRadius: '12px',
+                                backgroundColor: 'transparent',
+                                color: 'var(--text-primary)',
+                                border: '1px solid var(--border-color)',
+                                fontWeight: 600,
+                                fontSize: config.font_size_small,
+                                fontFamily: 'var(--font-body)'
+                            }}>
+                                Ver demo
+                            </button>
+                        </div>
+
+                        <div className="flex justify-between items-center pt-8 border-t border-[var(--border-color)] opacity-60">
+                            <span style={{ fontFamily: 'var(--font-body)', fontSize: config.font_size_tiny, color: 'var(--text-tertiary)' }}>
+                                © 2026 DropCost Master
+                            </span>
+                            <div className="flex gap-4">
+                                <span style={{ fontFamily: 'var(--font-body)', fontSize: config.font_size_tiny, color: 'var(--text-tertiary)' }}>Privacidad</span>
+                                <span style={{ fontFamily: 'var(--font-body)', fontSize: config.font_size_tiny, color: 'var(--text-tertiary)' }}>Términos</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Card>
     );
 }
 

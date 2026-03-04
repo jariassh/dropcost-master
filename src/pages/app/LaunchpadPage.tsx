@@ -194,8 +194,11 @@ export function LaunchpadPage() {
                         color: 'var(--color-primary)'
                     }}>
                         <Rocket size={32} />
-                        <h1 style={{ fontSize: '24px', fontWeight: 900, letterSpacing: '-0.02em', margin: 0 }}>
-                            LAUNCHPAD <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>| ONBOARDING</span>
+                        <h1 style={{ fontFamily: 'var(--font-headings)', fontSize: '32px', letterSpacing: 'var(--ls-h)', margin: 0, display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                            LAUNCHPAD
+                            <span style={{ fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '14px', letterSpacing: '0', textTransform: 'none' }}>
+                                | ONBOARDING
+                            </span>
                         </h1>
                     </div>
                     <p style={{ color: 'var(--text-tertiary)', fontSize: '14px', margin: 0 }}>
