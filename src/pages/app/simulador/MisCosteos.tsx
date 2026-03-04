@@ -201,8 +201,9 @@ export function MisCosteos() {
             setConfirmOpen(false);
             setItemToDelete(null);
             fetchCosteos();
-        } catch (error) {
-            toast.error('Error al eliminar costeo');
+        } catch (error: any) {
+            toast.error(error.message || 'Error al eliminar costeo');
+            setConfirmOpen(false);
         }
     }
 

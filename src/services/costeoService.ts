@@ -163,6 +163,9 @@ export const costeoService = {
 
         if (error) {
             console.error('Error deleting costeo:', error);
+            if (error.code === '23503') {
+                throw new Error('No se puede eliminar el costeo porque tiene ventas/órdenes asociadas en el historial.');
+            }
             throw new Error('No se pudo eliminar el costeo');
         }
 

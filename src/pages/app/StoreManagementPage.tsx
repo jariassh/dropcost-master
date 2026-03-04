@@ -22,7 +22,6 @@ import { useStoreStore } from '@/store/useStoreStore';
 import { useToast, Button, Input, Spinner, Badge } from '@/components/common';
 import type { Tienda } from '@/types/store.types';
 import { ShopifyConfigModal } from '@/components/configuracion/ShopifyConfigModal';
-import { MetaAdsConfigModal } from '@/components/configuracion/MetaAdsConfigModal';
 import { supabase } from '@/lib/supabase';
 import { subscriptionService } from '@/services/subscriptionService';
 
@@ -37,10 +36,7 @@ export function StoreManagementPage() {
     const [logoUrl, setLogoUrl] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [isShopifyOpen, setIsShopifyOpen] = useState(false);
-    const [isMetaOpen, setIsMetaOpen] = useState(false);
-    const [hasMetaAccounts, setHasMetaAccounts] = useState(false);
-    const [isMetaProfileConnected, setIsMetaProfileConnected] = useState(false);
-    const [isLoadingIntegrations, setIsLoadingIntegrations] = useState(true);
+    const [isLoadingIntegrations, setIsLoadingIntegrations] = useState(false);
 
     useEffect(() => {
         const found = tiendas.find(t => t.id === id);
@@ -48,35 +44,7 @@ export function StoreManagementPage() {
             setTienda(found);
             setNombre(found.nombre);
             setLogoUrl(found.logo_url || '');
-
-            // Check integration statuses
-            const checkIntegrations = async () => {
-                setIsLoadingIntegrations(true);
-                try {
-                    // 1. Check if user has Meta profile connected (General)
-                    const { data: interaction } = await supabase
-                        .from('integraciones')
-                        .select('estado')
-                        .eq('usuario_id', found.usuario_id)
-                        .eq('tipo', 'meta_ads')
-                        .maybeSingle();
-
-                    setIsMetaProfileConnected(interaction?.estado === 'conectado');
-
-                    // 2. Check if there are linked meta accounts for THIS store
-                    const { count } = await (supabase
-                        .from('tiendas_meta_ads' as any)
-                        .select('*', { count: 'exact', head: true })
-                        .eq('tienda_id', found.id) as any);
-
-                    setHasMetaAccounts(!!count && count > 0);
-                } catch (err) {
-                    console.error('Error checking integrations:', err);
-                } finally {
-                    setIsLoadingIntegrations(false);
-                }
-            };
-            checkIntegrations();
+            setIsLoadingIntegrations(false);
         } else if (tiendas.length > 0) {
             navigate('/configuracion');
         }
@@ -180,7 +148,7 @@ export function StoreManagementPage() {
                     {/* Integraciones */}
                     <section>
                         <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px' }}>Integraciones Disponibles</h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }} className="integrations-grid">
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }} className="integrations-grid">
                             <IntegrationCard
                                 title="Shopify"
                                 description="Sincroniza tus pedidos y costos de productos automáticamente."
@@ -188,23 +156,6 @@ export function StoreManagementPage() {
                                 connected={!!tienda.shopify_domain}
                                 color="#95BF47"
                                 onClick={() => setIsShopifyOpen(true)}
-                            />
-                            <IntegrationCard
-                                title="Meta Ads"
-                                description={!subscriptionService.canConnectMetaAds()
-                                    ? "Este plan no incluye vinculación de cuentas Meta."
-                                    : (isMetaProfileConnected
-                                        ? "Vincula cuentas publicitarias para sincronizar el gasto real."
-                                        : "Primero debes conectar tu perfil de Meta en Configuración."
-                                    )
-                                }
-                                icon={<Facebook size={24} />}
-                                connected={hasMetaAccounts}
-                                color="#1877F2"
-                                onClick={() => setIsMetaOpen(true)}
-                                disabled={!isMetaProfileConnected || !subscriptionService.canConnectMetaAds()}
-                                isLoading={isLoadingIntegrations}
-                                restrictionIcon={!subscriptionService.canConnectMetaAds()}
                             />
                             <IntegrationCard
                                 title="Dropi"
@@ -259,23 +210,6 @@ export function StoreManagementPage() {
                 `}</style>
 
             <ShopifyConfigModal isOpen={isShopifyOpen} onClose={() => setIsShopifyOpen(false)} />
-            <MetaAdsConfigModal
-                isOpen={isMetaOpen}
-                onClose={() => {
-                    setIsMetaOpen(false);
-                    // Refresh status
-                    const checkMeta = async () => {
-                        const { count } = await (supabase
-                            .from('tiendas_meta_ads' as any)
-                            .select('*', { count: 'exact', head: true })
-                            .eq('tienda_id', tienda.id) as any);
-                        setHasMetaAccounts(!!count && count > 0);
-                    };
-                    checkMeta();
-                }}
-                tiendaId={tienda.id}
-                tiendaNombre={tienda.nombre}
-            />
         </div>
     );
 }

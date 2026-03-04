@@ -25,6 +25,10 @@ const MisCosteos = lazy(() => import('@/pages/app/simulador/MisCosteos').then(m 
 const OfertasPage = lazy(() => import('@/pages/app/ofertas/OfertasPage').then(m => ({ default: m.OfertasPage })));
 const OfertaWizard = lazy(() => import('@/pages/app/ofertas/OfertaWizard').then(m => ({ default: m.OfertaWizard })));
 const ConfiguracionPage = lazy(() => import('@/pages/app/ConfiguracionPage').then(m => ({ default: m.ConfiguracionPage })));
+const PerfilPage = lazy(() => import('@/pages/app/configuracion/PerfilPage').then(m => ({ default: m.PerfilPage })));
+const SeguridadPage = lazy(() => import('@/pages/app/configuracion/SeguridadPage').then(m => ({ default: m.SeguridadPage })));
+const IntegracionesPage = lazy(() => import('@/pages/app/configuracion/IntegracionesPage').then(m => ({ default: m.IntegracionesPage })));
+const TiendasPage = lazy(() => import('@/pages/app/configuracion/TiendasPage').then(m => ({ default: m.TiendasPage })));
 const ReferidosPage = lazy(() => import('@/pages/app/ReferidosPage').then(m => ({ default: m.ReferidosPage })));
 const WalletPage = lazy(() => import('@/pages/app/WalletPage').then(m => ({ default: m.WalletPage })));
 const StoreManagementPage = lazy(() => import('@/pages/app/StoreManagementPage').then(m => ({ default: m.StoreManagementPage })));
@@ -133,7 +137,12 @@ export function AppRouter() {
                         <Route path="/analisis-regional" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
                         <Route path="/sincronizar" element={<SubscriptionGuard><SincronizarPage /></SubscriptionGuard>} />
 
-                        <Route path="/configuracion" element={<ConfiguracionPage />} />
+                        <Route path="/configuracion" element={<ConfiguracionPage />}>
+                            <Route path="perfil" element={<PerfilPage />} />
+                            <Route path="seguridad" element={<SeguridadPage />} />
+                            <Route path="integraciones" element={<IntegracionesPage />} />
+                            <Route path="tiendas" element={<TiendasPage />} />
+                        </Route>
                         <Route path="/referidos" element={<SubscriptionGuard><ReferidosPage /></SubscriptionGuard>} />
                         <Route path="/billetera" element={<SubscriptionGuard><WalletPage /></SubscriptionGuard>} />
                         <Route path="/configuracion/tiendas/:id" element={<SubscriptionGuard><StoreManagementPage /></SubscriptionGuard>} />
