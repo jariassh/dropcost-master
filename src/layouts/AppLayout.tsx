@@ -52,7 +52,7 @@ const SIDEBAR_OPEN = 240;
 const SIDEBAR_COLLAPSED = 72;
 
 const navItems = [
-    { to: '/launchpad', icon: Rocket, label: 'Launchpad (Onboarding)', active: true, isLaunchpad: true },
+    { to: '/launchpad', icon: Rocket, label: 'Launchpad (Inicio)', active: true, isLaunchpad: true },
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', active: true },
     { to: '/mis-costeos', icon: Calculator, label: 'Mis Costeos', active: true },
     { to: '/ofertas', icon: Gift, label: 'Ofertas Irresistibles', active: true },
@@ -270,7 +270,10 @@ export function AppLayout() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {navItems
                             .filter(i => {
-                                if ((i as any).isLaunchpad && user?.preferencias?.mostrar_launchpad === false) return false;
+                                if ((i as any).isLaunchpad) {
+                                    const showLp = !isComplete ? true : (user?.preferencias?.mostrar_launchpad ?? true);
+                                    if (!showLp) return false;
+                                }
                                 return i.active;
                             })
                             .map((item) => {
@@ -292,7 +295,7 @@ export function AppLayout() {
                                     (item.to === '/dashboard' && !subscriptionService.isDashboardEnabled()) ||
                                     (item.to === '/sincronizar' && !subscriptionService.isDropiSyncEnabled());
 
-                                const isRestrictedBySubscription = user?.estadoSuscripcion !== 'activa' && item.to !== '/configuracion' && item.to?.startsWith('/configuracion') === false && user?.rol !== 'admin' && user?.rol !== 'superadmin';
+                                const isRestrictedBySubscription = user?.estadoSuscripcion !== 'activa' && item.to !== '/launchpad' && item.to !== '/configuracion' && item.to?.startsWith('/configuracion') === false && user?.rol !== 'admin' && user?.rol !== 'superadmin';
 
                                 const isRestricted = isRestrictedByStore || isRestrictedBySubscription || (isRestrictedByFeature && user?.rol !== 'admin' && user?.rol !== 'superadmin');
 
@@ -408,8 +411,8 @@ export function AppLayout() {
                             <Menu size={24} />
                         </button>
 
-                        {/* Launchpad Progress Indicator - Always Visible */}
-                        {progress > 0 && user?.preferencias?.mostrar_launchpad !== false && (
+                        {/* Launchpad Progress Indicator - Always Visible if not complete, otherwise follows preferences */}
+                        {progress > 0 && (!isComplete || user?.preferencias?.mostrar_launchpad !== false) && (
                             <div
                                 onClick={() => navigate('/launchpad')}
                                 style={{
