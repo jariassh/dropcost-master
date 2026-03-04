@@ -76,10 +76,11 @@ export function Card({
                         )}
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <h3 style={{
-                                fontSize: '16px',
-                                fontWeight: 700,
+                                fontSize: 'var(--fs-card-title)',
+                                fontWeight: 600,
                                 color: 'var(--text-primary)',
-                                margin: 0
+                                margin: 0,
+                                letterSpacing: 'var(--ls-h)'
                             }}>
                                 {title}
                             </h3>
