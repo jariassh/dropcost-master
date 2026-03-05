@@ -12,27 +12,49 @@ import { supabase } from '@/lib/supabase';
 // Single-session polling interval handle
 let _sessionPollInterval: ReturnType<typeof setInterval> | null = null;
 
-/** Inicia polling cada 60s para detectar logins desde otro dispositivo */
+/** Inicia polling periódico para detectar logins desde otro dispositivo */
 function startSessionPolling(userId: string) {
     stopSessionPolling();
-    _sessionPollInterval = setInterval(async () => {
-        const localToken = localStorage.getItem('dc_session_token');
-        if (!localToken) return; // No hay token local, no aplica
+    let isChecking = false;
 
-        const { data } = await supabase
-            .from('users')
-            .select('session_token')
-            .eq('id', userId)
-            .maybeSingle();
+    const checkSession = async () => {
+        if (isChecking) return;
+        isChecking = true;
 
-        const dbToken = (data as any)?.session_token;
-        if (dbToken && dbToken !== localToken) {
-            // Otro dispositivo inició sesión → cerrar esta sesión
-            localStorage.removeItem('dc_session_token');
-            await supabase.auth.signOut();
-            useAuthStore.getState().logout();
+        try {
+            const localToken = localStorage.getItem('dc_session_token');
+            if (!localToken) return;
+
+            const { data, error } = await supabase
+                .from('users')
+                .select('session_token')
+                .eq('id', userId)
+                .maybeSingle();
+                
+            if (error) {
+                 console.warn('[SessionPolling] Error al leer session_token (posible token expirado):', error.message);
+                 if (error.code === 'PGRST301' || error.message?.includes('JWT')) {
+                     useAuthStore.getState().logout();
+                 }
+                 return;
+            }
+
+            const dbToken = (data as any)?.session_token;
+            if (dbToken && dbToken !== localToken) {
+                // Otro dispositivo inició sesión → cerrar esta sesión
+                console.warn('[SessionPolling] Discrepancia de token detectada. Cerrando sesión actual.');
+                useAuthStore.getState().logout();
+            }
+        } catch (err) {
+            console.error('[SessionPolling] Excepcion:', err);
+        } finally {
+            isChecking = false;
         }
-    }, 60_000); // cada 60 segundos
+    };
+
+    // Validar inicialmente a los 3 segundos, luego cada 10 segundos
+    setTimeout(checkSession, 3_000);
+    _sessionPollInterval = setInterval(checkSession, 10_000);
 }
 
 /** Cancela el polling de sesión */
@@ -371,7 +393,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     logout: async () => {
-        await authService.logoutUser();
+        try {
+            await authService.logoutUser();
+        } catch(e) { /* ignore network error, we MUST logout anyway */ }
+
         // Limpiar persistencia de 2FA al hacer logout explícito
         stopSessionPolling();
         const user = useAuthStore.getState().user;
@@ -382,12 +407,14 @@ export const useAuthStore = create<AuthState>((set) => ({
 
         // Log Auditoría: Logout
         if (user) {
-            auditService.recordLog({
-                accion: 'LOGOUT',
-                entidad: 'USER',
-                entidadId: user?.id,
-                detalles: {}
-            });
+            try {
+                auditService.recordLog({
+                    accion: 'LOGOUT',
+                    entidad: 'USER',
+                    entidadId: user?.id,
+                    detalles: {}
+                }).catch(() => {});
+            } catch(e) {}
         }
 
         set({
