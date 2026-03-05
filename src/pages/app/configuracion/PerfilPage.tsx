@@ -118,10 +118,10 @@ export function PerfilPage() {
             <div className="perfil-top-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1fr', gap: isMobile ? '16px' : '24px', alignItems: 'stretch' }}>
 
                 {/* Personal Info Card (Vertical Layout for more height) */}
-                <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: isMobile ? '20px 16px' : '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+                <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: isMobile ? '24px' : '16px', padding: isMobile ? '24px 16px' : '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: isMobile ? '0 0 20px' : '0 0 28px', gap: '12px', width: '100%', boxSizing: 'border-box' }}>
-                        <h3 style={{ fontSize: isMobile ? '17px' : '18px', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)' }}>
-                            <User size={18} color="var(--color-primary)" />
+                        <h3 style={{ fontSize: isMobile ? '18px' : '18px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)' }}>
+                            <User size={20} color="var(--color-primary)" />
                             Información Personal
                         </h3>
                         {user?.emailVerificado && (
@@ -192,7 +192,7 @@ export function PerfilPage() {
                 {/* Right Column: Membership & Help (Stacked) */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '16px' : '24px', flex: 1 }}>
                     {/* Membership Card */}
-                    <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', flex: 1, boxSizing: 'border-box' }}>
+                    <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: isMobile ? '24px' : '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', flex: 2, boxSizing: 'border-box' }}>
                         {isActive ? (
                             <>
                                 <div style={{ padding: isMobile ? '20px 16px' : '24px', background: 'linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.1) 0%, rgba(var(--color-primary-rgb), 0.02) 100%)', borderBottom: '1px solid var(--border-color)' }}>
@@ -248,8 +248,8 @@ export function PerfilPage() {
                     </div>
 
                     {/* Help & Support Card (Smaller buttons) */}
-                    <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: isMobile ? '20px 16px' : '20px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                    <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: isMobile ? '24px' : '16px', padding: isMobile ? '20px' : '20px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', boxSizing: 'border-box' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
                             <div style={{ padding: '8px', backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)', borderRadius: '10px', color: 'var(--color-primary)' }}>
                                 <HelpCircle size={18} />
                             </div>
@@ -286,10 +286,10 @@ export function PerfilPage() {
             </div>
 
             {/* Bottom Row: Notifications (Full Width) */}
-            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: isMobile ? '20px 16px' : '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', boxSizing: 'border-box' }}>
+            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: isMobile ? '24px' : '16px', padding: isMobile ? '24px 16px' : '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', boxSizing: 'border-box' }}>
                 <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: '16px', marginBottom: '24px' }}>
                     <div style={{ minWidth: 0, flex: 1 }}>
-                        <h3 style={{ fontSize: isMobile ? '17px' : '18px', fontWeight: 800, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)' }}>
+                        <h3 style={{ fontSize: isMobile ? '18px' : '18px', fontWeight: 700, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)' }}>
                             <Bell size={20} color="var(--color-primary)" />
                             Personalizar Notificaciones
                         </h3>
@@ -326,10 +326,10 @@ export function PerfilPage() {
             </div>
 
             {/* Launchpad Preferences */}
-            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: isMobile ? '20px 16px' : '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', marginTop: '24px', boxSizing: 'border-box' }}>
+            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: isMobile ? '24px' : '16px', padding: isMobile ? '24px 16px' : '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', marginTop: '24px', boxSizing: 'border-box' }}>
                 <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: '16px', marginBottom: '24px' }}>
                     <div style={{ minWidth: 0, flex: 1 }}>
-                        <h3 style={{ fontSize: isMobile ? '17px' : '18px', fontWeight: 800, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)' }}>
+                        <h3 style={{ fontSize: isMobile ? '18px' : '18px', fontWeight: 700, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)' }}>
                             <Rocket size={20} color="var(--color-primary)" />
                             Launchpad (Onboarding)
                         </h3>

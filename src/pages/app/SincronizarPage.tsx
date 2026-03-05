@@ -161,26 +161,19 @@ export function SincronizarPage() {
     };
 
     return (
-        <div style={{ padding: '32px', maxWidth: '1200px', margin: '0 auto', animation: 'fadeIn 0.3s' }}>
+        <div className="sync-container" style={{ maxWidth: '1200px', margin: '0 auto', animation: 'fadeIn 0.3s' }}>
             {/* Header del Wizard */}
-            <div style={{ marginBottom: '40px', textAlign: 'center' }}>
-                <h1 style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontWeight: 900, marginBottom: '12px', color: 'var(--text-primary)', letterSpacing: '-0.05em', lineHeight: 1.1 }}>
-                    Sincronización <span style={{ color: 'var(--color-primary)' }}>Inteligente</span>
+            <div className="sync-header" style={{ marginBottom: '40px', textAlign: 'center' }}>
+                <h1 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '8px', color: 'var(--text-primary)' }}>
+                    Sincronizador <span style={{ color: 'var(--color-primary)' }}>Inteligente</span> de Pedidos
                 </h1>
-                <p style={{ fontSize: '16px', color: 'var(--text-tertiary)', marginBottom: '32px', maxWidth: '600px', margin: '0 auto 32px', lineHeight: 1.6 }}>
-                    Vincula automáticamente tus reportes de Dropi con Shopify para mantener el control total del estatus de tus paquetes.
+                <p style={{ fontSize: '15px', color: 'var(--text-secondary)', marginBottom: '32px' }}>
+                    Vincula los reportes de Dropi con tus órdenes de Shopify para automatizar el seguimiento.
                 </p>
-                <div style={{
-                    maxWidth: '700px',
-                    margin: '0 auto',
-                    backgroundColor: 'var(--card-bg)',
-                    padding: '12px 24px',
-                    borderRadius: '24px',
-                    border: '1px solid var(--border-color)',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.04)',
-                    overflowX: 'auto'
-                }}>
-                    <StepIndicator steps={steps} currentStep={step} />
+                <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+                    <Card style={{ padding: '16px 24px', borderRadius: '24px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', border: '1px solid var(--border-color)' }}>
+                        <StepIndicator steps={steps} currentStep={step} />
+                    </Card>
                 </div>
             </div>
 
@@ -188,148 +181,86 @@ export function SincronizarPage() {
 
                 {/* ─── STEP 1: SUBIR ─── */}
                 {step === 1 && (
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 580px))',
-                        gap: '32px',
-                        alignItems: 'start',
-                        justifyContent: 'center'
-                    }}>
-                        <Card style={{ padding: '0', overflow: 'hidden', border: '1px solid var(--border-color)', borderRadius: '32px', boxShadow: 'var(--shadow-xl)', position: 'relative' }}>
+                    <div className="step-1-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '32px' }}>
+                        <Card style={{ padding: '48px', textAlign: 'center' }}>
                             <div
                                 onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}
                                 onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                                 onDragLeave={() => setDragActive(false)}
                                 onDrop={(e) => { e.preventDefault(); setDragActive(false); if (e.dataTransfer.files?.[0]) handleFile(e.dataTransfer.files[0]); }}
                                 onClick={() => inputRef.current?.click()}
+                                className="sync-drop-zone"
                                 style={{
-                                    padding: '80px 48px',
-                                    textAlign: 'center',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    backgroundColor: dragActive ? 'rgba(0,102,255,0.03)' : 'var(--card-bg)',
-                                    backgroundImage: dragActive ? 'none' : 'radial-gradient(circle at 50% 50%, rgba(0, 102, 255, 0.02) 0%, transparent 100%)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    gap: '24px',
-                                    position: 'relative',
-                                    border: dragActive ? '2px solid var(--color-primary)' : '2px dashed var(--border-color)',
-                                    margin: '12px',
-                                    borderRadius: '24px'
+                                    border: `2px dashed ${dragActive ? 'var(--color-primary)' : 'var(--border-color)'}`,
+                                    backgroundColor: dragActive ? 'rgba(0,102,255,0.05)' : 'rgba(0,0,0,0.02)',
+                                    borderRadius: '20px', cursor: 'pointer', transition: 'all 0.2s',
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px'
                                 }}
                             >
                                 <input ref={inputRef} type="file" accept=".xlsx, .xls, .csv" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} style={{ display: 'none' }} />
-
-                                <div style={{
-                                    width: '100px',
-                                    height: '100px',
-                                    borderRadius: '32px',
-                                    backgroundColor: selectedFile ? 'rgba(16, 185, 129, 0.1)' : 'rgba(0,102,255,0.08)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: selectedFile ? 'var(--color-success)' : 'var(--color-primary)',
-                                    transition: 'transform 0.3s',
-                                    boxShadow: '0 8px 16px rgba(0,0,0,0.05)',
-                                    marginBottom: '8px'
-                                }}>
-                                    {selectedFile ? <Check size={48} strokeWidth={2.5} /> : <UploadCloud size={48} strokeWidth={1.5} />}
+                                <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'rgba(0,102,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
+                                    {selectedFile ? <FileSpreadsheet size={40} /> : <UploadCloud size={40} />}
                                 </div>
-
                                 {selectedFile ? (
-                                    <div style={{ animation: 'scaleIn 0.3s' }}>
-                                        <h3 style={{ fontSize: '24px', fontWeight: 900, marginBottom: '8px', color: 'var(--text-primary)' }}>{selectedFile.name}</h3>
-                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: 'var(--bg-secondary)', padding: '6px 14px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
-                                            <FileSpreadsheet size={16} color="var(--color-success)" />
-                                            <span style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 700 }}>{(selectedFile.size / 1024).toFixed(2)} KB • Listo para procesar</span>
-                                        </div>
+                                    <div style={{ padding: '0 20px' }}>
+                                        <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '4px' }}>{selectedFile.name}</h3>
+                                        <p style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>{(selectedFile.size / 1024).toFixed(2)} KB • Archivo listo</p>
                                     </div>
                                 ) : (
-                                    <div style={{ maxWidth: '380px' }}>
-                                        <h3 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '12px', color: 'var(--text-primary)' }}>Carga tu reporte de Dropi</h3>
-                                        <p style={{ color: 'var(--text-tertiary)', fontSize: '15px', lineHeight: 1.5 }}>
-                                            Arrastra tu archivo <strong>.xlsx</strong> aquí o selecciona uno de tu equipo para comenzar.
+                                    <div style={{ padding: '0 20px', width: '100%' }}>
+                                        <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Carga el reporte de Dropi</h3>
+                                        <p className="sync-instruction-desktop" style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '20px' }}>
+                                            Arrastra tu archivo Excel o haz clic para buscarlo
                                         </p>
-                                    </div>
-                                )}
-
-                                {!selectedFile && (
-                                    <div style={{
-                                        padding: '12px 32px',
-                                        borderRadius: '16px',
-                                        backgroundColor: 'var(--color-primary)',
-                                        color: '#fff',
-                                        fontWeight: 800,
-                                        fontSize: '15px',
-                                        marginTop: '8px',
-                                        boxShadow: '0 10px 25px rgba(0, 102, 255, 0.3)',
-                                        transition: 'all 0.3s'
-                                    }}>
-                                        Explorar Archivos
+                                        <p className="sync-instruction-mobile" style={{ display: 'none', color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>
+                                            Haz clic en el botón de abajo para seleccionar tu archivo Excel.
+                                        </p>
+                                        <div
+                                            className="sync-upload-btn"
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '8px',
+                                                backgroundColor: 'var(--color-primary)',
+                                                color: 'white',
+                                                padding: '14px 28px',
+                                                borderRadius: '12px',
+                                                fontWeight: 700,
+                                                fontSize: '15px',
+                                                boxShadow: '0 4px 12px rgba(0,102,255,0.2)',
+                                                width: 'auto'
+                                            }}
+                                        >
+                                            <UploadCloud size={18} />
+                                            Seleccionar Archivo
+                                        </div>
                                     </div>
                                 )}
                             </div>
-
                             {selectedFile && (
-                                <div style={{ padding: '32px', backgroundColor: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)', textAlign: 'center' }}>
-                                    <Button
-                                        variant="primary"
-                                        size="lg"
-                                        style={{ width: '280px', height: '56px', borderRadius: '16px', fontSize: '16px', fontWeight: 800 }}
-                                        onClick={() => setStep(2)}
-                                        rightIcon={<ChevronRight size={20} />}
-                                    >
-                                        Continuar Mapeo
-                                    </Button>
-                                </div>
+                                <Button
+                                    variant="primary"
+                                    size="lg"
+                                    style={{ marginTop: '32px', width: '240px' }}
+                                    onClick={() => setStep(2)}
+                                    rightIcon={<ChevronRight size={18} />}
+                                >
+                                    Siguiente paso
+                                </Button>
                             )}
                         </Card>
-
-                        <aside style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                            <div style={{
-                                backgroundColor: 'var(--card-bg)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: '32px',
-                                padding: '32px',
-                                boxShadow: 'var(--shadow-xl)',
-                                position: 'relative',
-                                overflow: 'hidden'
-                            }}>
-                                <div style={{
-                                    position: 'absolute',
-                                    top: 0, right: 0,
-                                    width: '120px', height: '120px',
-                                    background: 'linear-gradient(135deg, transparent 50%, rgba(0,102,255,0.03) 100%)',
-                                    borderRadius: '0 0 0 100%'
-                                }} />
-
-                                <h4 style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', fontSize: '18px', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-                                    <ShieldCheck size={24} color="var(--color-primary)" strokeWidth={2.5} />
-                                    Guía de Éxito
+                        <aside style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} className="sync-aside">
+                            <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px' }}>
+                                <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', fontSize: '14px', fontWeight: 700 }}>
+                                    <Settings2 size={16} color="var(--color-primary)" />
+                                    Instrucciones
                                 </h4>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                    <InstructionItem step="1" text="Exporta 'Mis Pedidos' de Dropi en XLSX." />
-                                    <InstructionItem step="2" text="Verifica que el ID de Shopify sea visible." />
-                                    <InstructionItem step="3" text="Carga el archivo y asigna las columnas." />
-                                </div>
-                                <div style={{
-                                    marginTop: '32px',
-                                    padding: '20px',
-                                    backgroundColor: 'var(--bg-secondary)',
-                                    borderRadius: '20px',
-                                    border: '1px solid var(--border-color)',
-                                    display: 'flex',
-                                    gap: '12px',
-                                    alignItems: 'center'
-                                }}>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                        <Info size={20} color="var(--color-warning)" />
-                                    </div>
-                                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, lineHeight: 1.5 }}>
-                                        Procesa tus archivos diariamente para mantener tus KPIs actualizados.
-                                    </p>
-                                </div>
+                                <ul style={{ paddingLeft: '18px', margin: 0, color: 'var(--text-secondary)', fontSize: '13px', lineHeight: 1.8 }}>
+                                    <li>Exporta el reporte de "Mis Pedidos" desde Dropi en formato XLSX.</li>
+                                    <li>Asegúrate de incluir la columna de ID de orden de Shopify.</li>
+                                    <li>No es necesario que las columnas tengan nombres específicos, las mapearemos en el siguiente paso.</li>
+                                </ul>
                             </div>
                         </aside>
                     </div>
@@ -337,108 +268,72 @@ export function SincronizarPage() {
 
                 {/* ─── STEP 2: ASIGNAR ─── */}
                 {step === 2 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                        <Card noPadding style={{ overflow: 'hidden', borderRadius: '24px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-xl)' }}>
-                            <div style={{ padding: '32px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '12px', margin: 0 }}>
-                                        <TableIcon size={22} color="var(--color-primary)" />
-                                        Mapeo de Datos
-                                    </h3>
-                                    <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                                        Asocia las columnas de tu Excel con los campos del sistema.
-                                    </p>
-                                </div>
-                                <Badge>{headers.length} columnas detectadas</Badge>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        <Card style={{ padding: '0', overflow: 'visible' }}>
+                            <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'rgba(0,0,0,0.02)' }}>
+                                <h3 style={{ fontSize: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <TableIcon size={18} color="var(--color-primary)" />
+                                    Mapeo de Columnas
+                                </h3>
+                                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                                    Vincula los encabezados de tu archivo con los campos de DropCost.
+                                </p>
                             </div>
 
                             <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                                <table style={{ width: '100%', minWidth: '900px', borderCollapse: 'collapse', fontSize: '14px', tableLayout: 'fixed' }}>
-                                    <thead>
-                                        <tr style={{ textAlign: 'left', backgroundColor: 'var(--bg-primary)', borderBottom: '2px solid var(--border-color)' }}>
-                                            <th style={{ padding: '20px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '280px' }}>Campo en Sistema</th>
-                                            <th style={{ padding: '20px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '250px' }}>Muestra de Datos</th>
-                                            <th style={{ padding: '20px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '120px' }}>Estado</th>
-                                            <th style={{ padding: '20px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '250px' }}>Columna Excel</th>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', minWidth: '800px' }}>
+                                    <thead style={{ backgroundColor: 'transparent', borderBottom: '1px solid var(--border-color)' }}>
+                                        <tr>
+                                            <th style={{ padding: '16px 24px', textAlign: 'left', color: 'var(--text-tertiary)', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase' }}>Campo Destino</th>
+                                            <th style={{ padding: '16px 24px', textAlign: 'left', color: 'var(--text-tertiary)', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase' }}>Previsualización</th>
+                                            <th style={{ padding: '16px 24px', textAlign: 'left', color: 'var(--text-tertiary)', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase' }}>Estado</th>
+                                            <th style={{ padding: '16px 24px', textAlign: 'left', color: 'var(--text-tertiary)', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase' }}>Columna en Excel</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {MAPPABLE_FIELDS.map((f, idx) => {
+                                        {MAPPABLE_FIELDS.map((f) => {
                                             const mappedHeader = mapping[f.key];
                                             const headerIndex = headers.indexOf(mappedHeader);
                                             const dataPreview = headerIndex !== -1 ? previewData.map(row => row[headerIndex]).filter(v => v !== undefined).slice(0, 3) : [];
 
                                             return (
-                                                <tr
-                                                    key={f.key}
-                                                    style={{
-                                                        borderBottom: idx === MAPPABLE_FIELDS.length - 1 ? 'none' : '1px solid var(--border-color)',
-                                                        backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.01)',
-                                                        transition: 'all 0.2s'
-                                                    }}
-                                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,102,255,0.02)'}
-                                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.01)'}
-                                                >
-                                                    <td style={{ padding: '16px 24px' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                            <div style={{
-                                                                width: '32px',
-                                                                height: '32px',
-                                                                borderRadius: '8px',
-                                                                backgroundColor: mappedHeader ? 'rgba(0,102,255,0.08)' : 'var(--bg-secondary)',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                color: mappedHeader ? 'var(--color-primary)' : 'var(--text-tertiary)',
-                                                                fontSize: '12px',
-                                                                fontWeight: 800
-                                                            }}>
-                                                                {idx + 1}
-                                                            </div>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                                <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{f.label}</span>
-                                                                {f.mandatory && <span style={{ color: 'var(--color-error)', fontSize: '16px', fontWeight: 900 }}>•</span>}
-                                                                <Tooltip content={f.tooltip}>
-                                                                    <Info size={14} style={{ opacity: 0.4, cursor: 'help' }} />
-                                                                </Tooltip>
-                                                            </div>
+                                                <tr key={f.key} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.2s' }}>
+                                                    <td style={{ padding: '20px 24px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{f.label}</span>
+                                                            {f.mandatory && <span style={{ color: '#EF4444', fontSize: '12px', fontWeight: 800 }}>*</span>}
+                                                            <Tooltip content={f.tooltip}>
+                                                                <Info size={14} style={{ opacity: 0.5, cursor: 'help' }} />
+                                                            </Tooltip>
                                                         </div>
                                                     </td>
-                                                    <td style={{ padding: '16px 24px' }}>
+                                                    <td style={{ padding: '20px 24px' }}>
                                                         {mappedHeader ? (
-                                                            <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '4px' }}>
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                                 {dataPreview.length > 0 ? dataPreview.map((val, i) => (
-                                                                    <span key={i} style={{
-                                                                        fontSize: '11px',
-                                                                        color: 'var(--text-secondary)',
-                                                                        padding: '4px 10px',
-                                                                        borderRadius: '6px',
-                                                                        backgroundColor: 'var(--bg-secondary)',
-                                                                        whiteSpace: 'nowrap',
-                                                                        border: '1px solid var(--border-color)'
-                                                                    }}>
-                                                                        {String(val || '---').substring(0, 20)}
+                                                                    <span key={i} style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                                                                        {String(val || '---').substring(0, 30)}
                                                                     </span>
-                                                                )) : <span style={{ color: 'var(--text-tertiary)', fontStyle: 'italic', fontSize: '12px' }}>Vacío</span>}
+                                                                )) : <span style={{ color: 'var(--text-tertiary)', fontStyle: 'italic' }}>Sin datos...</span>}
                                                             </div>
                                                         ) : (
-                                                            <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>N/A</span>
+                                                            <span style={{ color: 'var(--text-tertiary)' }}>Selecciona una columna</span>
                                                         )}
                                                     </td>
-                                                    <td style={{ padding: '16px 24px' }}>
+                                                    <td style={{ padding: '20px 24px' }}>
                                                         {mappedHeader ? (
-                                                            <Badge variant="success">OK</Badge>
+                                                            <Badge variant="success">Asignado</Badge>
                                                         ) : (
                                                             <Badge variant={f.mandatory ? "error" : "pill-secondary"}>
-                                                                {f.mandatory ? 'REQUERIDO' : 'OMITIDO'}
+                                                                {f.mandatory ? 'Pendiente' : 'Omitido'}
                                                             </Badge>
                                                         )}
                                                     </td>
-                                                    <td style={{ padding: '16px 24px' }}>
-                                                        <div style={{ width: '240px' }}>
+                                                    <td style={{ padding: '20px 24px' }}>
+                                                        <div style={{ width: '220px' }}>
                                                             <Select
                                                                 options={[
-                                                                    { value: '', label: '-- No mapear --' },
+                                                                    { value: '', label: '-- Ignorar columna --' },
                                                                     ...headers.map(h => ({ value: h, label: h }))
                                                                 ]}
                                                                 value={mappedHeader || ''}
@@ -454,12 +349,12 @@ export function SincronizarPage() {
                             </div>
                         </Card>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
+                        <div className="sync-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
                             <Button variant="secondary" onClick={() => setStep(1)} leftIcon={<ChevronLeft size={18} />}>
                                 Volver al archivo
                             </Button>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', color: 'var(--text-secondary)' }}>
+                            <div className="sync-actions-right" style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                                <label className="sync-checkbox" style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', color: 'var(--text-secondary)' }}>
                                     <input
                                         type="checkbox"
                                         checked={skipEmpty}
@@ -488,7 +383,7 @@ export function SincronizarPage() {
                 {/* ─── STEP 3: VERIFICAR ─── */}
                 {step === 3 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                        <div className="summary-grid" style={{ marginBottom: '20px' }}>
+                        <div className="summary-grid">
                             <Card style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
                                 <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(0, 102, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
                                     <Database size={24} />
@@ -552,7 +447,7 @@ export function SincronizarPage() {
                 {/* ─── STEP 4: RESULTADOS ─── */}
                 {step === 4 && syncResult && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                        <div className="results-grid" style={{ marginBottom: '20px' }}>
+                        <div className="results-grid">
                             <Card style={{ padding: '24px', textAlign: 'center' }}>
                                 <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Filas Procesadas</p>
                                 <p style={{ margin: '8px 0 0', fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)' }}>{syncResult.total_rows}</p>
@@ -616,52 +511,89 @@ export function SincronizarPage() {
             </div>
 
             <style>{`
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-                @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-                
-                .summary-grid {
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    gap: 20px;
-                }
-                .results-grid {
-                    display: grid;
-                    grid-template-columns: repeat(4, 1fr);
-                    gap: 20px;
-                }
-                
-                @media (max-width: 900px) {
-                    .results-grid {
-                        grid-template-columns: repeat(2, 1fr);
-                    }
-                }
-                
-                @media (max-width: 768px) {
-                    .summary-grid {
-                        grid-template-columns: 1fr;
-                    }
-                }
-                
-                @media (max-width: 480px) {
-                    .results-grid {
-                        grid-template-columns: 1fr;
-                    }
-                }
-            `}</style>
-        </div>
-    );
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+tr:hover { background-color: rgba(0,0,0,0.01); }
+
+.sync-container {
+    padding: 32px;
 }
 
-function InstructionItem({ step, text }: { step: string; text: string }) {
-    return (
-        <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
-            <div style={{
-                width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'rgba(0,102,255,0.08)', color: 'var(--color-primary)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 900, flexShrink: 0, marginTop: '2px'
-            }}>
-                {step}
-            </div>
-            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{text}</p>
+.sync-drop-zone {
+    padding: 80px 48px !important;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 900px) {
+    .results-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .sync-container {
+        padding: 4px !important;
+    }
+    .sync-header h1 {
+        font-size: 24px !important;
+    }
+    .sync-header p {
+        font-size: 14px !important;
+        margin-bottom: 24px !important;
+    }
+    .sync-drop-zone {
+        padding: 40px 20px !important;
+    }
+    .sync-instruction-desktop {
+        display: none !important;
+    }
+    .sync-instruction-mobile {
+        display: block !important;
+    }
+    .sync-upload-btn {
+        width: 100% !important;
+        padding: 16px !important;
+    }
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+    .step-1-grid {
+        grid-template-columns: 1fr !important;
+        gap: 24px !important;
+    }
+    .sync-aside {
+        order: 2;
+    }
+    .sync-actions {
+        flex-direction: column;
+        gap: 20px;
+        align-items: stretch !important;
+    }
+    .sync-actions-right {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+    .sync-checkbox {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .results-grid {
+        grid-template-columns: 1fr;
+    }
+}
+`}</style>
         </div>
     );
 }

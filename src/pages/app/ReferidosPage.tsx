@@ -214,180 +214,67 @@ export function ReferidosPage() {
             title="Referidos Premium"
             description="Gana comisiones invitando a otros dropshippers. El Sistema de Referidos es un beneficio exclusivo para miembros Pro y Enterprise."
         >
-            <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 4px' }}>
-                <div style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-                    <div style={{ flex: 1, minWidth: '300px' }}>
-                        <h1 style={{ fontSize: '32px', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '12px', letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div className="referidos-page-container" style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px' }}>
+                <div className="referidos-header" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ maxWidth: '650px' }}>
+                        <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                             {copy.title}
                             {isTrueLider && (
-                                <span style={{
+                                <span className="lider-badge-gold" style={{
                                     fontSize: '11px',
-                                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                                    background: 'linear-gradient(135deg, #FFD700 0%, #F59E0B 100%)',
                                     color: '#000',
-                                    padding: '5px 14px',
-                                    borderRadius: '50px',
+                                    padding: '4px 12px',
+                                    borderRadius: '20px',
                                     fontWeight: 900,
-                                    boxShadow: '0 4px 12px rgba(255, 165, 0, 0.2)',
+                                    boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)',
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.05em'
                                 }}>
-                                    LÍDER GOLD ⭐
+                                    LÍDER GOLD 🌟
                                 </span>
                             )}
                         </h1>
-                        <p style={{ color: 'var(--text-tertiary)', margin: 0, fontSize: '16px', lineHeight: 1.5, maxWidth: '650px' }}>
+                        <p style={{ color: 'var(--text-tertiary)', margin: 0, fontSize: '15px' }}>
                             {copy.description}
                         </p>
                     </div>
                     {!isTrueLider && (
-                        <div style={{
-                            padding: '20px',
-                            backgroundColor: 'var(--bg-secondary)',
-                            borderRadius: '24px',
-                            border: '1px solid var(--border-color)',
-                            minWidth: '240px',
-                            boxShadow: 'var(--shadow-sm)'
-                        }}>
-                            <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                PROGRESO A LÍDER
+                        <div className="path-to-leader" style={{ textAlign: 'right', minWidth: '200px' }}>
+                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                                TU CAMINO A LÍDER ({stats?.totalReferred}/{stats?.minReferredForLeader})
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                <span style={{ fontSize: '18px', fontWeight: 900, color: 'var(--color-primary)' }}>{stats?.totalReferred}</span>
-                                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-tertiary)' }}>objetivo {stats?.minReferredForLeader}</span>
+                            <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '10px', overflow: 'hidden' }}>
+                                <div style={{ width: `${progressToLider}%`, height: '100%', backgroundColor: 'var(--color-primary)', borderRadius: '10px' }}></div>
                             </div>
-                            <div style={{ width: '100%', height: '10px', backgroundColor: 'var(--border-color)', borderRadius: '10px', overflow: 'hidden', marginBottom: '10px' }}>
-                                <div style={{ width: `${progressToLider}%`, height: '100%', background: 'linear-gradient(90deg, var(--color-primary) 0%, #6366f1 100%)', borderRadius: '10px', transition: 'width 1s ease-out' }}></div>
-                            </div>
-                            <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: 0, lineHeight: 1.4 }}>
-                                Desbloquea comisiones de <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>Nivel 2</span> alcanzando {stats?.minReferredForLeader} amigos.
-                            </p>
+                            <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '4px', lineHeight: 1.3 }}>Llega a {stats?.minReferredForLeader} referidos para desbloquear el <span style={{ color: 'var(--color-primary)', fontWeight: 700 }}>Nivel 2</span>.</p>
                         </div>
                     )}
                 </div>
 
                 {/* Enlace de Referido */}
-                <div style={{
-                    backgroundColor: 'var(--card-bg)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '32px',
-                    padding: 'clamp(20px, 5vw, 40px)',
-                    marginBottom: '40px',
-                    background: 'linear-gradient(145deg, var(--card-bg) 0%, rgba(0, 102, 255, 0.03) 100%)',
-                    boxShadow: 'var(--shadow-xl)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    borderLeft: '4px solid var(--color-primary)',
-                    width: '100%',
-                    boxSizing: 'border-box'
+                <div className="referral-link-card" style={{
+                    backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '24px', marginBottom: '32px',
+                    background: 'linear-gradient(135deg, var(--card-bg) 0%, rgba(0, 102, 255, 0.03) 100%)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', position: 'relative', overflow: 'hidden'
                 }}>
                     <div style={{ position: 'relative', zIndex: 1 }}>
-                        <div style={{ marginBottom: '24px' }}>
-                            <h3 style={{ margin: '0 0 8px', fontWeight: 900, fontSize: '22px', display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-                                <LinkIcon size={24} color="var(--color-primary)" strokeWidth={2.5} />
-                                Tu Enlace de Crecimiento
-                            </h3>
-                            <p style={{ color: 'var(--text-tertiary)', fontSize: '14px', margin: 0, fontWeight: 500 }}>
-                                Comparte este enlace con tu comunidad y empieza a recibir comisiones automáticas.
-                            </p>
-                        </div>
-
-                        <div className="referral-input-group" style={{
-                            display: 'flex',
-                            gap: '12px',
-                            flexWrap: 'wrap',
-                            alignItems: 'stretch',
-                            backgroundColor: 'var(--bg-secondary)',
-                            padding: '12px',
-                            borderRadius: '24px',
-                            border: '1px solid var(--border-color)',
-                            boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)',
-                            width: '100%',
-                            boxSizing: 'border-box'
-                        }}>
-                            <div className="referral-input-wrapper" style={{
-                                flex: '1 1 300px',
-                                position: 'relative',
-                                display: 'flex',
-                                alignItems: 'center'
-                            }}>
-                                <input
-                                    readOnly
-                                    id="referral-link-input"
-                                    value={referralLink}
-                                    style={{
-                                        width: '100%',
-                                        backgroundColor: 'var(--card-bg)',
-                                        border: '1px solid var(--border-color)',
-                                        borderRadius: '16px',
-                                        padding: '14px 20px',
-                                        fontSize: '13px',
-                                        color: 'var(--text-primary)',
-                                        fontWeight: 700,
-                                        boxShadow: 'var(--shadow-sm)',
-                                        transition: 'all 0.2s ease',
-                                        outline: 'none',
-                                        cursor: 'text',
-                                        fontFamily: 'monospace',
-                                        boxSizing: 'border-box'
-                                    }}
-                                    onClick={(e) => {
-                                        (e.target as HTMLInputElement).select();
-                                    }}
-                                />
+                        <h3 style={{ margin: '0 0 16px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <LinkIcon size={18} color="var(--color-primary)" /> Tu Enlace Personal
+                        </h3>
+                        <div className="referral-link-row" style={{ display: 'flex', gap: '12px' }}>
+                            <div className="referral-link-display" style={{ flex: 1, backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '12px 16px', fontSize: '14px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {referralLink}
                             </div>
-                            <button
-                                className="referral-copy-button"
-                                onClick={handleCopy}
-                                style={{
-                                    backgroundColor: copied ? 'var(--color-success)' : 'var(--color-primary)',
-                                    color: '#ffffff',
-                                    border: 'none',
-                                    borderRadius: '16px',
-                                    padding: '0 24px',
-                                    minHeight: '50px',
-                                    fontWeight: 800,
-                                    fontSize: '13px',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '8px',
-                                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                                    boxShadow: copied
-                                        ? '0 8px 20px rgba(16, 185, 129, 0.2)'
-                                        : '0 8px 20px rgba(0, 102, 255, 0.2)',
-                                    flex: '1 1 auto',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.05em',
-                                    whiteSpace: 'nowrap'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
-                                    e.currentTarget.style.filter = 'brightness(1.1)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'none';
-                                    e.currentTarget.style.filter = 'none';
-                                }}
-                            >
-                                {copied ? <Check size={16} strokeWidth={3} /> : <Copy size={16} strokeWidth={3} />}
-                                {copied ? 'Copiado' : 'Copiar Enlace'}
+                            <button className="referral-copy-btn" onClick={handleCopy} style={{ backgroundColor: copied ? 'var(--color-success)' : 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '12px', padding: '0 20px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}>
+                                {copied ? <Check size={18} /> : <Copy size={18} />} {copied ? '¡Copiado!' : 'Copiar'}
                             </button>
                         </div>
                     </div>
-                    <div style={{
-                        position: 'absolute',
-                        right: '-20px',
-                        top: '-20px',
-                        width: '150px',
-                        height: '150px',
-                        background: 'radial-gradient(circle, rgba(0, 102, 255, 0.05) 0%, transparent 70%)',
-                        zIndex: 0
-                    }} />
+                    <LinkIcon size={140} style={{ position: 'absolute', right: '-30px', bottom: '-40px', color: 'rgba(0, 102, 255, 0.04)', transform: 'rotate(-15deg)', opacity: 0.5 }} />
                 </div>
 
                 {/* Estadísticas */}
-                <div className="stats-grid" style={{ marginBottom: '32px' }}>
+                <div className="referidos-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '32px' }}>
                     <StatsCard
                         title="Interés Generado"
                         value={stats?.totalClicks || 0}
@@ -402,7 +289,7 @@ export function ReferidosPage() {
                         color="var(--color-success)"
                         subtitle="en tu primer nivel"
                     />
-                    <div className="earnings-card">
+                    <div className="referidos-earnings-card">
                         <StatsCard
                             title="Ganancias Totales"
                             value={convertValue(stats?.totalEarned || 0)}
@@ -414,61 +301,11 @@ export function ReferidosPage() {
                     </div>
                 </div>
 
-                <style>{`
-                    .stats-grid {
-                        display: grid;
-                        grid-template-columns: repeat(3, 1fr);
-                        gap: 20px;
-                    }
-
-                    @media (max-width: 768px) {
-                        .stats-grid {
-                            grid-template-columns: repeat(2, 1fr);
-                        }
-                        .earnings-card {
-                            grid-column: span 2;
-                        }
-                    }
-
-                    @media (max-width: 600px) {
-                        .referral-input-group {
-                            flex-direction: column !important;
-                            padding: 16px !important;
-                            gap: 16px !important;
-                        }
-                        
-                        .referral-input-wrapper {
-                            width: 100% !important;
-                            flex: none !important;
-                        }
-
-                        .referral-copy-button {
-                            width: 100% !important;
-                            flex: none !important;
-                            min-height: 56px !important;
-                        }
-                    }
-
-                    @media (max-width: 480px) {
-                        .stats-grid {
-                            grid-template-columns: 1fr;
-                        }
-                        .earnings-card {
-                            grid-column: span 1;
-                        }
-                    }
-
-                    @keyframes slideUp {
-                        from { opacity: 0; transform: translateY(20px); }
-                        to { opacity: 1; transform: translateY(0); }
-                    }
-                `}</style>
-
                 {/* Tabs para Líderes (Existing Code) */}
                 {canSeeLevel2 && (
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-                        <button onClick={() => setActiveTab('nivel1')} style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer', backgroundColor: activeTab === 'nivel1' ? 'var(--color-primary)' : 'var(--bg-tertiary)', color: activeTab === 'nivel1' ? '#fff' : 'var(--text-secondary)' }}>Amigos Directos (Nivel 1)</button>
-                        <button onClick={() => setActiveTab('nivel2')} style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer', backgroundColor: activeTab === 'nivel2' ? 'var(--color-primary)' : 'var(--bg-tertiary)', color: activeTab === 'nivel2' ? '#fff' : 'var(--text-secondary)' }}>Red de Amigos (Nivel 2)</button>
+                    <div className="referidos-tabs" style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto', paddingBottom: '8px' }}>
+                        <button onClick={() => setActiveTab('nivel1')} style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer', backgroundColor: activeTab === 'nivel1' ? 'var(--color-primary)' : 'var(--bg-tertiary)', color: activeTab === 'nivel1' ? '#fff' : 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Amigos Directos (Nivel 1)</button>
+                        <button onClick={() => setActiveTab('nivel2')} style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, border: 'none', cursor: 'pointer', backgroundColor: activeTab === 'nivel2' ? 'var(--color-primary)' : 'var(--bg-tertiary)', color: activeTab === 'nivel2' ? '#fff' : 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Red de Amigos (Nivel 2)</button>
                     </div>
                 )}
 
@@ -478,54 +315,97 @@ export function ReferidosPage() {
                     <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 500 }}>{(activeTab === 'nivel1' ? referredUsers : level2Users).length} {(activeTab === 'nivel1' ? referredUsers : level2Users).length === 1 ? 'amigo' : 'amigos'} en total</div>
                 </div>
 
-                <Card noPadding style={{ boxShadow: 'var(--shadow-xl)', borderRadius: '24px', border: '1px solid var(--border-color)', overflow: 'hidden', backgroundColor: 'var(--card-bg)' }}>
+                <style>{`
+                    @media (max-width: 767px) {
+                        .referidos-page-container {
+                            padding: 16px !important;
+                        }
+                        .referidos-header {
+                            flex-direction: column !important;
+                            gap: 20px !important;
+                        }
+                        .referidos-header h1 {
+                            font-size: 32px !important;
+                            font-weight: 900 !important;
+                            line-height: 1.1 !important;
+                        }
+                        .path-to-leader {
+                            text-align: left !important;
+                            width: 100% !important;
+                            max-width: none !important;
+                        }
+                        .referral-link-card {
+                            border-radius: 32px !important;
+                            padding: 24px 20px !important;
+                        }
+                        .referidos-stats-grid {
+                            grid-template-columns: repeat(2, 1fr) !important;
+                            gap: 12px !important;
+                        }
+                        .referidos-earnings-card {
+                            grid-column: span 2;
+                        }
+                        .referral-link-row {
+                            flex-direction: column !important;
+                        }
+                        .referral-copy-btn {
+                            width: 100% !important;
+                            justify-content: center !important;
+                            padding: 12px 20px !important;
+                        }
+                    }
+                    @media (max-width: 480px) {
+                        .referidos-stats-grid {
+                            grid-template-columns: 1fr !important;
+                        }
+                        .referidos-earnings-card {
+                            grid-column: span 1;
+                        }
+                    }
+                `}</style>
+
+                <Card noPadding style={{ boxShadow: 'var(--shadow-lg)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
                     <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                        <table style={{ width: '100%', minWidth: '940px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                        <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                             <thead>
-                                <tr style={{ textAlign: 'left', backgroundColor: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)' }}>
-                                    <th style={{ padding: '20px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', width: '320px' }}>Usuario</th>
-                                    <th style={{ padding: '20px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', width: '200px' }}>{activeTab === 'nivel1' ? 'Plan' : 'Invitado Por'}</th>
-                                    <th style={{ padding: '20px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', width: '140px' }}>Estado</th>
-                                    <th style={{ padding: '20px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', width: '160px' }}>Fecha</th>
-                                    <th style={{ padding: '20px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', width: '120px' }}>Acción</th>
+                                <tr style={{ textAlign: 'left', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '300px' }}>Usuario</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '150px' }}>{activeTab === 'nivel1' ? 'Plan' : 'Invitado Por'}</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '160px' }}>Verificación</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '150px' }}>Registro</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '130px' }}>Detalles</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {(activeTab === 'nivel1' ? referredUsers : level2Users).length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} style={{ padding: '80px 48px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
-                                            <div style={{ marginBottom: '20px', opacity: 0.3 }}><Users size={64} strokeWidth={1} /></div>
-                                            <div style={{ fontWeight: 800, fontSize: '18px', marginBottom: '8px', color: 'var(--text-secondary)' }}>{activeTab === 'nivel1' ? '¡Tu red está esperando!' : 'Aún no hay actividad en tu Nivel 2'}</div>
-                                            <p style={{ fontSize: '14px', margin: 0 }}>Comparte tu enlace para empezar a generar impacto.</p>
+                                        <td colSpan={5} style={{ padding: '60px 48px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                                            <div style={{ marginBottom: '16px', opacity: 0.5 }}><Users size={48} strokeWidth={1.5} /></div>
+                                            <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '8px', color: 'var(--text-secondary)' }}>{activeTab === 'nivel1' ? '¡Tu red está esperando!' : 'Aún no hay actividad en tu Nivel 2'}</div>
                                         </td>
                                     </tr>
                                 ) : (
-                                    (activeTab === 'nivel1' ? referredUsers : level2Users).map((r, idx) => (
+                                    (activeTab === 'nivel1' ? referredUsers : level2Users).map((r) => (
                                         <tr
                                             key={r.id}
-                                            style={{
-                                                borderBottom: idx === (activeTab === 'nivel1' ? referredUsers : level2Users).length - 1 ? 'none' : '1px solid var(--border-color)',
-                                                transition: 'all 0.2s',
-                                                backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.01)'
-                                            }}
-                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,102,255,0.03)'}
-                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.01)'}
+                                            style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.2s' }}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                         >
-                                            <td style={{ padding: '20px 24px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                                            <td style={{ padding: '16px 24px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                     <div style={{
-                                                        width: '44px',
-                                                        height: '44px',
-                                                        borderRadius: '14px',
+                                                        width: '40px',
+                                                        height: '40px',
+                                                        borderRadius: '12px',
                                                         background: r.avatar_url ? 'transparent' : 'linear-gradient(135deg, var(--color-primary), #6366f1)',
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
                                                         color: 'white',
-                                                        fontWeight: 800,
-                                                        fontSize: '15px',
+                                                        fontWeight: 700,
+                                                        fontSize: '14px',
                                                         flexShrink: 0,
-                                                        boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
                                                         overflow: 'hidden'
                                                     }}>
                                                         {r.avatar_url ? (
@@ -538,45 +418,18 @@ export function ReferidosPage() {
                                                             <>{(r.nombres?.charAt(0) || '')}{(r.apellidos?.charAt(0) || r.email.charAt(0)).toUpperCase()}</>
                                                         )}
                                                     </div>
-                                                    <div>
-                                                        <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>{r.nombres ? `${r.nombres} ${r.apellidos}` : 'Miembro DropCost'}</div>
-                                                        <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 500 }}>{r.email}</div>
+                                                    <div style={{ overflow: 'hidden', flex: 1 }}>
+                                                        <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.nombres ? `${r.nombres} ${r.apellidos}` : 'Nuevo Miembro'}</div>
+                                                        <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.email}</div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td style={{ padding: '20px 24px' }}>
-                                                {activeTab === 'nivel1' ? getPlanBadge(r) : (
-                                                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--color-primary)' }}></div>
-                                                        {r.referenteDe || 'N/A'}
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td style={{ padding: '20px 24px' }}>{getVerificationBadge(r)}</td>
-                                            <td style={{ padding: '20px 24px' }}>
-                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 700 }}>{formatDisplayDate(r.createdAt).split(' ')[0]}</span>
-                                                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{formatDisplayDate(r.createdAt).split(' ').slice(1).join(' ')}</span>
-                                                </div>
-                                            </td>
-                                            <td style={{ padding: '20px 24px', textAlign: 'center' }}>
-                                                <button
-                                                    onClick={() => handleOpenDetails(r)}
-                                                    style={{
-                                                        background: 'var(--bg-secondary)',
-                                                        border: '1px solid var(--border-color)',
-                                                        color: 'var(--color-primary)',
-                                                        padding: '8px 16px',
-                                                        borderRadius: '10px',
-                                                        cursor: 'pointer',
-                                                        fontSize: '12px',
-                                                        fontWeight: 800,
-                                                        transition: 'all 0.2s'
-                                                    }}
-                                                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-primary)'; e.currentTarget.style.color = '#fff'; }}
-                                                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'; e.currentTarget.style.color = 'var(--color-primary)'; }}
-                                                >
-                                                    {activeTab === 'nivel1' ? 'Ver Perfil' : 'Referente'}
+                                            <td style={{ padding: '16px 24px' }}>{activeTab === 'nivel1' ? getPlanBadge(r) : <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}><ArrowRight size={14} color="var(--color-primary)" /> {r.referenteDe || 'N/A'}</div>}</td>
+                                            <td style={{ padding: '16px 24px' }}>{getVerificationBadge(r)}</td>
+                                            <td style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)' }}>{formatDisplayDate(r.createdAt)}</td>
+                                            <td style={{ padding: '16px 24px' }}>
+                                                <button onClick={() => handleOpenDetails(r)} style={{ background: 'rgba(0, 102, 255, 0.05)', border: 'none', color: 'var(--color-primary)', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 700 }}>
+                                                    {activeTab === 'nivel1' ? 'Detalles' : 'Referente'}
                                                 </button>
                                             </td>
                                         </tr>

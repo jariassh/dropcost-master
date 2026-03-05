@@ -154,13 +154,13 @@ export function SeguridadPage() {
     return (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '16px' : '24px', animation: 'fadeIn 0.3s', boxSizing: 'border-box' }}>
             {/* Card 1: Email */}
-            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: isMobile ? '20px 16px' : '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' }}>
+            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: isMobile ? '24px' : '16px', padding: isMobile ? '24px 16px' : '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: isMobile ? '20px' : '32px' }}>
                     <div style={{ padding: '10px', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: '10px', color: '#3B82F6' }}>
                         <Mail size={20} />
                     </div>
                     <div>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Correo Electrónico</h3>
+                        <h3 style={{ fontSize: isMobile ? '18px' : '18px', fontWeight: 700, margin: 0 }}>Correo Electrónico</h3>
                         <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>Gestiona tu dirección de contacto</p>
                     </div>
                 </div>
@@ -196,13 +196,13 @@ export function SeguridadPage() {
             </div>
 
             {/* Card 2: Password */}
-            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: isMobile ? '20px 16px' : '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' }}>
+            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: isMobile ? '24px' : '16px', padding: isMobile ? '24px 16px' : '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: isMobile ? '20px' : '32px' }}>
                     <div style={{ padding: '10px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '10px', color: 'var(--color-error)' }}>
                         <Key size={20} />
                     </div>
                     <div>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Cambiar Contraseña</h3>
+                        <h3 style={{ fontSize: isMobile ? '18px' : '18px', fontWeight: 700, margin: 0 }}>Cambiar Contraseña</h3>
                         <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>Mejora la seguridad de tu acceso</p>
                     </div>
                 </div>
@@ -250,7 +250,7 @@ export function SeguridadPage() {
             </div>
 
             {/* Card 3: 2FA Authentication (Hero Card) */}
-            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: isMobile ? '24px 16px' : '40px 24px', textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', boxSizing: 'border-box' }}>
+            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: isMobile ? '24px' : '16px', padding: isMobile ? '24px 16px' : '40px 24px', textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', boxSizing: 'border-box' }}>
                 <div style={{
                     width: isMobile ? '48px' : '64px', height: isMobile ? '48px' : '64px', borderRadius: '50%', marginBottom: isMobile ? '16px' : '20px',
                     backgroundColor: is2FAEnabled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.1)',
@@ -260,9 +260,9 @@ export function SeguridadPage() {
                 }}>
                     <Smartphone size={isMobile ? 24 : 32} />
                 </div>
-                <h3 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 800, margin: '0 0 12px' }}>Autenticación 2FA</h3>
-                <p style={{ maxWidth: '380px', margin: '0 auto 24px', fontSize: '12px', color: 'var(--text-tertiary)', lineHeight: 1.5 }}>
-                    Capa de seguridad extra enviada a tu email en cada inicio de sesión.
+                <h3 style={{ fontSize: isMobile ? '18px' : '18px', fontWeight: 800, margin: '0 0 12px' }}>Autenticación 2FA</h3>
+                <p style={{ maxWidth: '380px', margin: '0 auto 24px', fontSize: isMobile ? '12px' : '13px', color: 'var(--text-tertiary)', lineHeight: isMobile ? 1.5 : 1.6 }}>
+                    Añade una capa de seguridad extra enviando un código de confirmación a tu email en cada inicio de sesión.
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 20px', borderRadius: '14px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', marginTop: 'auto' }}>
                     <span style={{ fontSize: '11px', fontWeight: 800, color: is2FAEnabled ? 'var(--color-success)' : 'var(--text-tertiary)', letterSpacing: '0.05em' }}>
@@ -285,13 +285,13 @@ export function SeguridadPage() {
             </div>
 
             {/* Card 4: Session Guard (Hero style) */}
-            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: isMobile ? '24px 16px' : '40px 24px', textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', boxSizing: 'border-box' }}>
+            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: isMobile ? '24px' : '16px', padding: isMobile ? '24px 16px' : '40px 24px', textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', boxSizing: 'border-box' }}>
                 <div style={{ width: isMobile ? '48px' : '64px', height: isMobile ? '48px' : '64px', borderRadius: '50%', marginBottom: isMobile ? '16px' : '20px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
                     <Shield size={isMobile ? 24 : 32} />
                 </div>
-                <h3 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 800, margin: '0 0 12px' }}>Sesión Segura</h3>
-                <p style={{ maxWidth: '380px', margin: '0 auto 24px', fontSize: '12px', color: 'var(--text-tertiary)', lineHeight: 1.5 }}>
-                    Si inicias sesión en otro dispositivo, la anterior se cerrará automáticamente.
+                <h3 style={{ fontSize: isMobile ? '18px' : '18px', fontWeight: 800, margin: '0 0 12px' }}>Sesión Segura</h3>
+                <p style={{ maxWidth: '380px', margin: '0 auto 24px', fontSize: isMobile ? '12px' : '13px', color: 'var(--text-tertiary)', lineHeight: isMobile ? 1.5 : 1.6 }}>
+                    Tu cuenta utiliza <strong>Session Guard</strong>. Si inicias sesión en otro dispositivo, la sesión anterior se cerrará automáticamente.
                 </p>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '12px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10B981', fontSize: '11px', fontWeight: 800, border: '1px solid rgba(16, 185, 129, 0.2)', marginTop: 'auto' }}>
                     <CheckCircle2 size={14} />

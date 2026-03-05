@@ -183,7 +183,8 @@ export function LaunchpadPage() {
             padding: isMobile ? '24px 16px' : '40px 20px',
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center'
+            alignItems: 'center',
+            boxSizing: 'border-box'
         }}>
             {/* Header Area */}
             <div style={{
@@ -194,41 +195,27 @@ export function LaunchpadPage() {
                 display: 'flex',
                 flexDirection: isMobile ? 'column' : 'row',
                 justifyContent: 'space-between',
-                alignItems: isMobile ? 'flex-start' : 'flex-start',
-                gap: isMobile ? '24px' : '0',
-                padding: isMobile ? '0' : '0 24px'
+                alignItems: isMobile ? 'center' : 'flex-start',
+                padding: isMobile ? '0 16px' : '0 24px',
+                gap: isMobile ? '24px' : '0'
             }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: isMobile ? 'center' : 'left' }}>
                     <div style={{
                         display: 'flex', alignItems: 'center', gap: '12px',
-                        color: 'var(--color-primary)'
+                        color: 'var(--color-primary)',
+                        justifyContent: isMobile ? 'center' : 'flex-start'
                     }}>
                         <Rocket size={isMobile ? 24 : 32} />
-                        <h1 style={{
-                            fontFamily: 'var(--font-headings)',
-                            fontSize: isMobile ? '24px' : '32px',
-                            letterSpacing: 'var(--ls-h)',
-                            margin: 0,
-                            display: 'flex',
-                            flexDirection: isMobile ? 'column' : 'row',
-                            alignItems: isMobile ? 'flex-start' : 'baseline',
-                            gap: isMobile ? '2px' : '8px'
-                        }}>
+                        <h1 style={{ fontFamily: 'var(--font-headings)', fontSize: isMobile ? '24px' : '32px', letterSpacing: 'var(--ls-h)', margin: 0, display: 'flex', alignItems: 'baseline', gap: '8px', fontWeight: 800 }}>
                             LAUNCHPAD
-                            <span style={{
-                                fontFamily: 'var(--font-body)',
-                                color: 'var(--text-secondary)',
-                                fontWeight: 600,
-                                fontSize: isMobile ? '12px' : '14px',
-                                letterSpacing: '0',
-                                textTransform: 'none',
-                                opacity: 0.7
-                            }}>
-                                | ONBOARDING
-                            </span>
+                            {!isMobile && (
+                                <span style={{ fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '14px', letterSpacing: '0', textTransform: 'none' }}>
+                                    | ONBOARDING
+                                </span>
+                            )}
                         </h1>
                     </div>
-                    <p style={{ color: 'var(--text-tertiary)', fontSize: isMobile ? '13px' : '14px', margin: 0, maxWidth: '500px' }}>
+                    <p style={{ color: 'var(--text-tertiary)', fontSize: isMobile ? '13px' : '14px', margin: 0 }}>
                         Configura tu negocio de dropshipping en minutos con nuestra guía paso a paso.
                     </p>
                 </div>
@@ -246,12 +233,12 @@ export function LaunchpadPage() {
                         <Button
                             onClick={handleContinueClick}
                             variant="primary"
-                            size={isMobile ? "md" : "lg"}
+                            size="lg"
                             fullWidth={isMobile}
                             style={{
                                 gap: '12px',
                                 padding: isMobile ? '0 24px' : '0 32px',
-                                height: isMobile ? '48px' : '52px',
+                                height: '52px',
                                 borderRadius: '16px',
                                 fontWeight: 800,
                                 boxShadow: '0 4px 12px rgba(var(--color-primary-rgb), 0.3)'

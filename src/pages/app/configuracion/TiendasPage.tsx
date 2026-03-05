@@ -71,25 +71,19 @@ export function TiendasPage() {
         <div style={{ animation: 'fadeIn 0.3s' }}>
             {user?.estadoSuscripcion === 'activa' || user?.rol === 'admin' || user?.rol === 'superadmin' ? (
                 <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: isMobile ? '20px' : '24px', flexDirection: isMobile ? 'column' : 'row', gap: '16px' }}>
                         <div style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}>
-                            <h3 style={{ fontSize: isMobile ? '18px' : '18px', fontWeight: 700, margin: 0 }}>Gestión de Tiendas</h3>
+                            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Gestión de Tiendas</h3>
                             <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>
                                 Administra tus puntos de venta y sus configuraciones
                             </p>
                         </div>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: isMobile ? 'stretch' : 'center',
-                            flexDirection: isMobile ? 'column' : 'row',
-                            gap: '12px',
-                            width: isMobile ? '100%' : 'auto'
-                        }}>
+                        <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', gap: '12px', width: isMobile ? '100%' : 'auto', flexDirection: isMobile ? 'column' : 'row' }}>
                             <div style={{
                                 padding: '8px 16px', backgroundColor: 'var(--bg-secondary)',
                                 borderRadius: '12px', border: '1px solid var(--border-color)',
                                 display: 'flex', alignItems: 'center', gap: '8px',
-                                flex: isMobile ? 1 : 'unset',
+                                flex: isMobile ? 1 : 'none',
                                 justifyContent: isMobile ? 'space-between' : 'flex-start'
                             }}>
                                 <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
@@ -114,7 +108,7 @@ export function TiendasPage() {
 
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
                         {tiendas.map((tienda) => (
-                            <div key={tienda.id} style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: isMobile ? '20px' : '24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                            <div key={tienda.id} style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: isMobile ? '24px' : '16px', padding: isMobile ? '20px' : '24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', boxSizing: 'border-box' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                                         <div style={{ width: '48px', height: '48px', borderRadius: '10px', backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
