@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Cookie } from 'lucide-react';
 import { useEffect } from 'react';
 
-export default function CookiesPage() {
+export function CookiesPage() {
     const lastUpdate = '24 de febrero de 2026';
 
     useEffect(() => {
