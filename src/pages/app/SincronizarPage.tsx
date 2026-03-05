@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { UploadCloud, FileSpreadsheet, Info, CheckCircle2, AlertCircle, ChevronRight, ChevronLeft, Table as TableIcon, Check, Settings2, ShieldCheck, Database, AlertTriangle } from 'lucide-react';
-import { Button, Badge, Card, Input, Tooltip, Select } from '@/components/common';
+import { Button, Badge, Card, Input, Tooltip, Select, PageHeader } from '@/components/common';
 import { StepIndicator } from '@/components/common/StepIndicator';
 import { syncService, type SyncResult } from '@/services/syncService';
 import { useStoreStore } from '@/store/useStoreStore';
@@ -163,18 +163,17 @@ export function SincronizarPage() {
     return (
         <div className="sync-container" style={{ maxWidth: '1200px', margin: '0 auto', animation: 'fadeIn 0.3s' }}>
             {/* Header del Wizard */}
-            <div className="sync-header" style={{ marginBottom: '40px', textAlign: 'center' }}>
-                <h1 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '8px', color: 'var(--text-primary)' }}>
-                    Sincronizador <span style={{ color: 'var(--color-primary)' }}>Inteligente</span> de Pedidos
-                </h1>
-                <p style={{ fontSize: '15px', color: 'var(--text-secondary)', marginBottom: '32px' }}>
-                    Vincula los reportes de Dropi con tus órdenes de Shopify para automatizar el seguimiento.
-                </p>
-                <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-                    <Card style={{ padding: '16px 24px', borderRadius: '24px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', border: '1px solid var(--border-color)' }}>
-                        <StepIndicator steps={steps} currentStep={step} />
-                    </Card>
-                </div>
+            <PageHeader
+                title="Sincronizador"
+                highlight="Inteligente"
+                description="Vincula los reportes de Dropi con tus órdenes de Shopify para automatizar el seguimiento."
+                icon={UploadCloud}
+            />
+
+            <div style={{ maxWidth: '600px', margin: '0 auto 40px' }}>
+                <Card style={{ padding: '16px 24px', borderRadius: '24px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', border: '1px solid var(--border-color)' }}>
+                    <StepIndicator steps={steps} currentStep={step} />
+                </Card>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -203,12 +202,12 @@ export function SincronizarPage() {
                                 </div>
                                 {selectedFile ? (
                                     <div style={{ padding: '0 20px' }}>
-                                        <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '4px' }}>{selectedFile.name}</h3>
+                                        <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '4px' }}>{selectedFile.name}</h3>
                                         <p style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>{(selectedFile.size / 1024).toFixed(2)} KB • Archivo listo</p>
                                     </div>
                                 ) : (
                                     <div style={{ padding: '0 20px', width: '100%' }}>
-                                        <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Carga el reporte de Dropi</h3>
+                                        <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '8px' }}>Carga el reporte de Dropi</h3>
                                         <p className="sync-instruction-desktop" style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '20px' }}>
                                             Arrastra tu archivo Excel o haz clic para buscarlo
                                         </p>
@@ -226,7 +225,7 @@ export function SincronizarPage() {
                                                 color: 'white',
                                                 padding: '14px 28px',
                                                 borderRadius: '12px',
-                                                fontWeight: 700,
+                                                fontWeight: 600,
                                                 fontSize: '15px',
                                                 boxShadow: '0 4px 12px rgba(0,102,255,0.2)',
                                                 width: 'auto'
@@ -252,7 +251,7 @@ export function SincronizarPage() {
                         </Card>
                         <aside style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} className="sync-aside">
                             <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px' }}>
-                                <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', fontSize: '14px', fontWeight: 700 }}>
+                                <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', fontSize: '14px', fontWeight: 600 }}>
                                     <Settings2 size={16} color="var(--color-primary)" />
                                     Instrucciones
                                 </h4>
@@ -271,7 +270,7 @@ export function SincronizarPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <Card style={{ padding: '0', overflow: 'visible' }}>
                             <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'rgba(0,0,0,0.02)' }}>
-                                <h3 style={{ fontSize: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <h3 style={{ fontSize: '16px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <TableIcon size={18} color="var(--color-primary)" />
                                     Mapeo de Columnas
                                 </h3>
@@ -301,7 +300,7 @@ export function SincronizarPage() {
                                                     <td style={{ padding: '20px 24px' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                             <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{f.label}</span>
-                                                            {f.mandatory && <span style={{ color: '#EF4444', fontSize: '12px', fontWeight: 800 }}>*</span>}
+                                                            {f.mandatory && <span style={{ color: '#EF4444', fontSize: '12px', fontWeight: 600 }}>*</span>}
                                                             <Tooltip content={f.tooltip}>
                                                                 <Info size={14} style={{ opacity: 0.5, cursor: 'help' }} />
                                                             </Tooltip>
@@ -390,7 +389,7 @@ export function SincronizarPage() {
                                 </div>
                                 <div>
                                     <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Registros detectados</p>
-                                    <p style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>{totalRows} órdenes</p>
+                                    <p style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>{totalRows} órdenes</p>
                                 </div>
                             </Card>
                             <Card style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -399,7 +398,7 @@ export function SincronizarPage() {
                                 </div>
                                 <div>
                                     <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Campos Vinculados</p>
-                                    <p style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>{Object.keys(mapping).length} campos</p>
+                                    <p style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>{Object.keys(mapping).length} campos</p>
                                 </div>
                             </Card>
                             <Card style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -408,7 +407,7 @@ export function SincronizarPage() {
                                 </div>
                                 <div>
                                     <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Protección de datos</p>
-                                    <p style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>{skipEmpty ? 'Activada' : 'Desactivada'}</p>
+                                    <p style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>{skipEmpty ? 'Activada' : 'Desactivada'}</p>
                                 </div>
                             </Card>
                         </div>
@@ -423,7 +422,7 @@ export function SincronizarPage() {
                                 }}>
                                     <CheckCircle2 size={32} />
                                 </div>
-                                <h3 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px' }}>Todo listo para sincronizar</h3>
+                                <h3 style={{ fontSize: '22px', fontWeight: 600, marginBottom: '12px' }}>Todo listo para sincronizar</h3>
                                 <p style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: 1.6, marginBottom: '32px' }}>
                                     Al hacer clic en el botón de abajo, actualizaremos los estados logísticos en la base de datos haciendo match por el <strong>ID de Shopify</strong>. Esta acción no se puede deshacer.
                                 </p>
@@ -450,19 +449,19 @@ export function SincronizarPage() {
                         <div className="results-grid">
                             <Card style={{ padding: '24px', textAlign: 'center' }}>
                                 <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Filas Procesadas</p>
-                                <p style={{ margin: '8px 0 0', fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)' }}>{syncResult.total_rows}</p>
+                                <p style={{ margin: '8px 0 0', fontSize: '28px', fontWeight: 600, color: 'var(--text-primary)' }}>{syncResult.total_rows}</p>
                             </Card>
                             <Card style={{ padding: '24px', textAlign: 'center' }}>
                                 <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Coincidencias</p>
-                                <p style={{ margin: '8px 0 0', fontSize: '28px', fontWeight: 800, color: 'var(--color-success)' }}>{syncResult.matched}</p>
+                                <p style={{ margin: '8px 0 0', fontSize: '28px', fontWeight: 600, color: 'var(--color-success)' }}>{syncResult.matched}</p>
                             </Card>
                             <Card style={{ padding: '24px', textAlign: 'center' }}>
                                 <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Actualizadas</p>
-                                <p style={{ margin: '8px 0 0', fontSize: '28px', fontWeight: 800, color: 'var(--color-primary)' }}>{syncResult.updated}</p>
+                                <p style={{ margin: '8px 0 0', fontSize: '28px', fontWeight: 600, color: 'var(--color-primary)' }}>{syncResult.updated}</p>
                             </Card>
                             <Card style={{ padding: '24px', textAlign: 'center' }}>
                                 <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Sin Match</p>
-                                <p style={{ margin: '8px 0 0', fontSize: '28px', fontWeight: 800, color: 'var(--color-warning)' }}>{syncResult.skipped}</p>
+                                <p style={{ margin: '8px 0 0', fontSize: '28px', fontWeight: 600, color: 'var(--color-warning)' }}>{syncResult.skipped}</p>
                             </Card>
                         </div>
 
@@ -470,7 +469,7 @@ export function SincronizarPage() {
                             <Card style={{ padding: '24px', border: '1px solid var(--color-warning)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                                     <AlertTriangle size={18} color="var(--color-warning)" />
-                                    <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700 }}>Errores ({syncResult.errors.length})</h4>
+                                    <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>Errores ({syncResult.errors.length})</h4>
                                 </div>
                                 <div style={{ maxHeight: '150px', overflow: 'auto', fontSize: '13px', color: 'var(--text-secondary)' }}>
                                     {syncResult.errors.slice(0, 20).map((err, i) => (
@@ -485,7 +484,7 @@ export function SincronizarPage() {
 
                         <Card style={{ padding: '32px', textAlign: 'center' }}>
                             <CheckCircle2 size={48} color="var(--color-success)" style={{ margin: '0 auto 16px' }} />
-                            <h3 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>Sincronización completada</h3>
+                            <h3 style={{ fontSize: '22px', fontWeight: 600, marginBottom: '8px' }}>Sincronización completada</h3>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '24px' }}>
                                 Se actualizaron {syncResult.updated} órdenes con los datos de Dropi.
                                 {syncResult.skipped > 0 && ` ${syncResult.skipped} filas no encontraron match.`}
