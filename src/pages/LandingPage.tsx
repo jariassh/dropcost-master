@@ -275,10 +275,10 @@ export function LandingPage() {
             }}>
                 <div className="hero-grid" style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '64px', alignItems: 'center' }}>
                     <div className="reveal revealed hero-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                        <div style={{ marginBottom: '24px', padding: '8px 16px', borderRadius: '100px', backgroundColor: 'rgba(0, 102, 255, 0.1)', color: 'var(--color-primary)', border: '1px solid rgba(0, 102, 255, 0.2)', fontWeight: 700, fontSize: '14px' }}>
+                        <div style={{ marginBottom: '24px', padding: '8px 16px', borderRadius: '100px', backgroundColor: 'rgba(0, 102, 255, 0.1)', color: 'var(--color-primary)', border: '1px solid rgba(0, 102, 255, 0.2)', fontWeight: 600, fontSize: '14px' }}>
                             🎉 Únete a la nueva era del COD
                         </div>
-                        <h1 style={{ fontSize: 'clamp(40px, 5vw, 64px)', fontWeight: 900, lineHeight: 1.1, marginBottom: '24px', letterSpacing: '-0.03em' }}>
+                        <h1 style={{ fontSize: 'clamp(40px, 5vw, 64px)', fontWeight: 600, lineHeight: 1.1, marginBottom: '24px', letterSpacing: '-0.03em' }}>
                             Vende más, <br />
                             <span style={{ color: 'var(--color-primary)' }}>gana de verdad.</span>
                         </h1>
@@ -286,8 +286,8 @@ export function LandingPage() {
                             La única herramienta diseñada por dropshippers para resolver la falta de rentabilidad del COD. Deja de adivinar y empieza a escalar.
                         </p>
                         <div className="hero-buttons" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-                            <a href="#pricing" className="hero-btn-primary" style={{ padding: '16px 32px', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: '12px', fontWeight: 700, textDecoration: 'none', fontSize: '18px', boxShadow: '0 8px 24px rgba(0, 102, 255, 0.3)' }}>Comenzar Ahora</a>
-                            <a href="#comparison" className="hero-btn-secondary" style={{ padding: '16px 32px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', borderRadius: '12px', fontWeight: 700, textDecoration: 'none', fontSize: '18px', border: '1px solid var(--border-color)' }}>Ver Simulador</a>
+                            <a href="#pricing" className="hero-btn-primary" style={{ padding: '16px 32px', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: '12px', fontWeight: 600, textDecoration: 'none', fontSize: '18px', boxShadow: '0 8px 24px rgba(0, 102, 255, 0.3)' }}>Comenzar Ahora</a>
+                            <a href="#comparison" className="hero-btn-secondary" style={{ padding: '16px 32px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', borderRadius: '12px', fontWeight: 600, textDecoration: 'none', fontSize: '18px', border: '1px solid var(--border-color)' }}>Ver Simulador</a>
                         </div>
                     </div>
                     {/* Hero Image / Mockup */}
@@ -329,7 +329,7 @@ export function LandingPage() {
             <section style={{ padding: '100px var(--main-padding)', backgroundColor: 'var(--bg-secondary)' }} id="features">
                 <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                     <div className="reveal" style={{ textAlign: 'center', marginBottom: '80px' }}>
-                        <h2 style={{ fontSize: '40px', fontWeight: 800, marginBottom: '24px' }}>Todo lo que necesitas para escalar</h2>
+                        <h2 style={{ fontSize: '40px', fontWeight: 600, marginBottom: '24px' }}>Todo lo que necesitas para escalar</h2>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '18px', maxWidth: '600px', margin: '0 auto' }}>
                             Hemos automatizado lo que antes te tomaba horas en Excel. Control total en un solo panel.
                         </p>
@@ -373,7 +373,7 @@ export function LandingPage() {
             <section style={{ padding: '100px var(--main-padding)', backgroundColor: 'var(--bg-primary)' }} id="testimonials">
                 <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                     <div className="reveal" style={{ textAlign: 'center', marginBottom: '64px' }}>
-                        <h2 style={{ fontSize: '40px', fontWeight: 800, marginBottom: '16px' }}>Historias de Éxito Real</h2>
+                        <h2 style={{ fontSize: '40px', fontWeight: 600, marginBottom: '16px' }}>Historias de Éxito Real</h2>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '18px' }}>Expertos que pasaron de adivinar a ganar con números.</p>
                     </div>
                     <div style={{ position: 'relative' }}>
@@ -547,7 +547,7 @@ export function LandingPage() {
             {/* FAQ SECTION */}
             <section style={{ padding: '100px var(--main-padding)', backgroundColor: 'var(--bg-secondary)' }}>
                 <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-                    <h2 className="reveal" style={{ fontSize: '36px', fontWeight: 800, textAlign: 'center', marginBottom: '48px' }}>Preguntas Frecuentes</h2>
+                    <h2 className="reveal" style={{ fontSize: '36px', fontWeight: 600, textAlign: 'center', marginBottom: '48px' }}>Preguntas Frecuentes</h2>
                     <div className="reveal" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <FAQItem
                             question="¿Qué es DropCost Master?"
@@ -636,7 +636,7 @@ function FeatureItem({ icon, title, description }: { icon: React.ReactNode; titl
             <div className="icon-container" style={{ color: 'var(--color-primary)', padding: '12px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', alignSelf: 'flex-start' }}>
                 {icon}
             </div>
-            <h3 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>{title}</h3>
+            <h3 style={{ fontSize: '22px', fontWeight: 600, color: 'var(--text-primary)' }}>{title}</h3>
             <p style={{ fontSize: '16px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{description}</p>
         </Card>
     );
@@ -692,7 +692,7 @@ function TestimonialCard({ name, location, countryCode, content, image, revenue,
                 </div>
                 <div style={{
                     fontSize: '12px',
-                    fontWeight: 700,
+                    fontWeight: 600,
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
                     color: '#10B981',
                     padding: '4px 10px',
@@ -708,7 +708,7 @@ function TestimonialCard({ name, location, countryCode, content, image, revenue,
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
                 <img src={image} alt={name} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
                 <div>
-                    <div style={{ fontWeight: 800, fontSize: '16px', color: 'var(--text-primary)' }}>{name}</div>
+                    <div style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)' }}>{name}</div>
                     <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {location}
                         <img
@@ -743,7 +743,7 @@ function FAQItem({ question, answer, isOpen, onToggle }: { question: string; ans
             boxShadow: isOpen ? '0 4px 20px rgba(0, 102, 255, 0.08)' : 'none'
         }} onClick={onToggle}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h4 style={{ fontSize: '18px', fontWeight: 700, color: isOpen ? 'var(--color-primary)' : 'var(--text-primary)' }}>{question}</h4>
+                <h4 style={{ fontSize: '18px', fontWeight: 600, color: isOpen ? 'var(--color-primary)' : 'var(--text-primary)' }}>{question}</h4>
                 {isOpen ? <ChevronUp size={20} color="var(--color-primary)" /> : <ChevronDown size={20} />}
             </div>
 
@@ -761,7 +761,7 @@ function ComparisonSection({ visible, setVisible }: { visible: boolean; setVisib
         <section style={{ padding: '100px var(--main-padding)', backgroundColor: 'var(--bg-primary)' }} id="comparison">
             <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                 <div className="reveal" style={{ textAlign: 'center', marginBottom: '80px' }}>
-                    <h2 style={{ fontSize: '40px', fontWeight: 800, marginBottom: '24px' }}>Excel vs DropCost Master</h2>
+                    <h2 style={{ fontSize: '40px', fontWeight: 600, marginBottom: '24px' }}>Excel vs DropCost Master</h2>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '18px', maxWidth: '600px', margin: '0 auto' }}>
                         ¿Sabías que el 80% de los dropshippers COD pierden dinero sin saberlo? Mira la diferencia real.
                     </p>
@@ -772,7 +772,7 @@ function ComparisonSection({ visible, setVisible }: { visible: boolean; setVisib
                         <Card style={{ padding: '32px', border: '2px solid #EF4444', height: '100%', backgroundColor: 'rgba(239, 68, 68, 0.02)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', color: '#EF4444' }}>
                                 <TrendingDown size={32} />
-                                <h3 style={{ fontSize: '24px', fontWeight: 800 }}>El "Ojímetro"</h3>
+                                <h3 style={{ fontSize: '24px', fontWeight: 600 }}>El "Ojímetro"</h3>
                             </div>
                             <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <ComparisonItem label="Precio de venta" value="$59.900" />
@@ -782,8 +782,8 @@ function ComparisonSection({ visible, setVisible }: { visible: boolean; setVisib
                                 <div style={{ borderTop: '1px dashed var(--border-color)', margin: '8px 0' }}></div>
                                 <ComparisonItem label="Utilidad APARENTE" value="+$13.900" color="#10B981" bold />
                                 <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '16px', borderRadius: '12px', marginTop: '16px' }}>
-                                    <p style={{ fontSize: '14px', color: '#EF4444', fontWeight: 700 }}>¡Peligro! Ignoras el 30% de devoluciones.</p>
-                                    <p style={{ fontSize: '18px', color: '#EF4444', fontWeight: 800, marginTop: '4px' }}>Resultado Real: -$3.180</p>
+                                    <p style={{ fontSize: '14px', color: '#EF4444', fontWeight: 600 }}>¡Peligro! Ignoras el 30% de devoluciones.</p>
+                                    <p style={{ fontSize: '18px', color: '#EF4444', fontWeight: 600, marginTop: '4px' }}>Resultado Real: -$3.180</p>
                                 </div>
                             </ul>
                         </Card>
@@ -800,13 +800,13 @@ function ComparisonSection({ visible, setVisible }: { visible: boolean; setVisib
                                 padding: '6px 20px',
                                 borderRadius: '30px',
                                 fontSize: '13px',
-                                fontWeight: 800,
+                                fontWeight: 600,
                                 boxShadow: '0 4px 12px rgba(0, 102, 255, 0.3)',
                                 zIndex: 10
                             }}>RECOMENDADO</div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', color: 'var(--color-primary)' }}>
                                 <TrendingUp size={32} />
-                                <h3 style={{ fontSize: '24px', fontWeight: 800 }}>DropCost Master</h3>
+                                <h3 style={{ fontSize: '24px', fontWeight: 600 }}>DropCost Master</h3>
                             </div>
                             <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <ComparisonItem label="Precio Sugerido" value="$90.396" bold color="var(--color-primary)" />
@@ -816,8 +816,8 @@ function ComparisonSection({ visible, setVisible }: { visible: boolean; setVisib
                                 <div style={{ borderTop: '1px dashed var(--border-color)', margin: '8px 0' }}></div>
                                 <ComparisonItem label="Utilidad NETA (20%)" value="+$18.079" color="#10B981" bold />
                                 <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '16px', borderRadius: '12px', marginTop: '16px' }}>
-                                    <p style={{ fontSize: '14px', color: '#10B981', fontWeight: 700 }}>Incluye impacto de devoluciones real.</p>
-                                    <p style={{ fontSize: '18px', color: '#10B981', fontWeight: 800, marginTop: '4px' }}>Rentabilidad Matemática</p>
+                                    <p style={{ fontSize: '14px', color: '#10B981', fontWeight: 600 }}>Incluye impacto de devoluciones real.</p>
+                                    <p style={{ fontSize: '18px', color: '#10B981', fontWeight: 600, marginTop: '4px' }}>Rentabilidad Matemática</p>
                                 </div>
                             </ul>
                         </Card>
@@ -832,7 +832,7 @@ function ComparisonSection({ visible, setVisible }: { visible: boolean; setVisib
                             backgroundColor: 'var(--bg-secondary)',
                             border: '1px solid var(--border-color)',
                             borderRadius: '10px',
-                            fontWeight: 700,
+                            fontWeight: 600,
                             cursor: 'pointer',
                             display: 'inline-flex',
                             alignItems: 'center',
@@ -845,16 +845,16 @@ function ComparisonSection({ visible, setVisible }: { visible: boolean; setVisib
 
                     {visible && (
                         <div className="reveal revealed" style={{ marginTop: '24px', padding: '32px', textAlign: 'left', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '20px' }}>
-                            <h4 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '24px' }}>Proyección Financiera Anual (Ejemplo 50 ventas/día)</h4>
+                            <h4 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '24px' }}>Proyección Financiera Anual (Ejemplo 50 ventas/día)</h4>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px' }}>
                                 <div style={{ padding: '24px', backgroundColor: 'var(--bg-primary)', borderRadius: '16px' }}>
                                     <p style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 600 }}>Pérdida con Excel</p>
-                                    <p style={{ fontSize: '28px', fontWeight: 900, color: '#EF4444', margin: '8px 0' }}>-$57.240.000 /año</p>
+                                    <p style={{ fontSize: '28px', fontWeight: 600, color: '#EF4444', margin: '8px 0' }}>-$57.240.000 /año</p>
                                     <p style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Dinero que dejas de percibir por un costeo incorrecto.</p>
                                 </div>
                                 <div style={{ padding: '24px', backgroundColor: 'var(--bg-primary)', borderRadius: '16px', border: '1px solid var(--color-primary)' }}>
                                     <p style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 600 }}>Utilidad con DropCost</p>
-                                    <p style={{ fontSize: '28px', fontWeight: 900, color: '#10B981', margin: '8px 0' }}>+$325.422.000 /año</p>
+                                    <p style={{ fontSize: '28px', fontWeight: 600, color: '#10B981', margin: '8px 0' }}>+$325.422.000 /año</p>
                                     <p style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Resultado de escalar con un margen del 20% real.</p>
                                 </div>
                             </div>
@@ -895,7 +895,7 @@ function LocalPricingSection({
     return (
         <section id="pricing" style={{ padding: '100px var(--main-padding)', backgroundColor: 'var(--bg-secondary)' }}>
             <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
-                <h2 className="reveal" style={{ fontSize: '48px', fontWeight: 900, marginBottom: '24px' }}>Planes que Escalan Contigo</h2>
+                <h2 className="reveal" style={{ fontSize: '48px', fontWeight: 600, marginBottom: '24px' }}>Planes que Escalan Contigo</h2>
                 <p className="reveal" style={{ color: 'var(--text-secondary)', fontSize: '18px', marginBottom: '40px', maxWidth: '600px', margin: '0 auto' }}>
                     Sin contratos forzosos. Cancela cuando quieras.
                 </p>

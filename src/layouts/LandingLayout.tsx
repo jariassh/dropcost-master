@@ -103,7 +103,7 @@ export function LandingLayout() {
                                 }}>
                                     <div style={{ width: '20px', height: '20px', border: '3px solid white', borderRadius: '4px' }}></div>
                                 </div>
-                                <span style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+                                <span style={{ fontSize: '22px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
                                     DropCost <span style={{ color: 'var(--color-primary)' }}>Master</span>
                                 </span>
                             </div>
@@ -191,7 +191,7 @@ export function LandingLayout() {
                                 backgroundColor: 'var(--color-primary)',
                                 color: 'white',
                                 borderRadius: '10px',
-                                fontWeight: 700,
+                                fontWeight: 600,
                                 textDecoration: 'none',
                                 fontSize: '14px',
                                 boxShadow: '0 4px 12px rgba(0, 102, 255, 0.2)',
@@ -244,7 +244,7 @@ export function LandingLayout() {
                             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                         </button>
                         <Link to="/login" onClick={() => setIsMenuOpen(false)} style={{ textDecoration: 'none', fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>Iniciar Sesión</Link>
-                        <Link to="/registro" onClick={() => setIsMenuOpen(false)} style={{ backgroundColor: 'var(--color-primary)', color: 'white', padding: '16px', borderRadius: '12px', textAlign: 'center', textDecoration: 'none', fontWeight: 700, boxShadow: '0 4px 12px rgba(0, 102, 255, 0.2)' }}>Empezar Ahora</Link>
+                        <Link to="/registro" onClick={() => setIsMenuOpen(false)} style={{ backgroundColor: 'var(--color-primary)', color: 'white', padding: '16px', borderRadius: '12px', textAlign: 'center', textDecoration: 'none', fontWeight: 600, boxShadow: '0 4px 12px rgba(0, 102, 255, 0.2)' }}>Empezar Ahora</Link>
                     </div>
                 )}
             </header>
@@ -286,7 +286,7 @@ export function LandingLayout() {
                                         }}>
                                             <div style={{ width: '16px', height: '16px', border: '2px solid white', borderRadius: '3px' }}></div>
                                         </div>
-                                        <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+                                        <span style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
                                             DropCost <span style={{ color: 'var(--color-primary)' }}>Master</span>
                                         </span>
                                     </div>
@@ -305,7 +305,7 @@ export function LandingLayout() {
 
                         {/* Column 2: Product */}
                         <div className="footer-column">
-                            <h4 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '24px' }}>Producto</h4>
+                            <h4 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '24px' }}>Producto</h4>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <FooterLink href="#features">Funciones</FooterLink>
                                 <FooterLink href="#comparison">Excel vs Nos</FooterLink>
@@ -316,7 +316,7 @@ export function LandingLayout() {
 
                         {/* Column 3: Soporte */}
                         <div className="footer-column">
-                            <h4 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '24px' }}>Soporte</h4>
+                            <h4 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '24px' }}>Soporte</h4>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <FooterLink href={`mailto:${config?.email_contacto || 'soporte@dropcost.com'}`} icon={<Mail size={16} />}>Email de Soporte</FooterLink>
                                 <FooterLink href={config?.telefono ? `https://wa.me/${config.telefono.replace(/\D/g, '')}` : '#'} icon={<i className="fa-brands fa-whatsapp" style={{ fontSize: '18px', color: '#25D366' }}></i>}>WhatsApp Directo</FooterLink>
@@ -350,7 +350,7 @@ export function LandingLayout() {
                                 alignItems: 'center',
                                 gap: '6px',
                                 fontSize: '11px',
-                                fontWeight: 800,
+                                fontWeight: 600,
                                 color: 'var(--success)',
                                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
                                 padding: '4px 10px',

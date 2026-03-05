@@ -145,7 +145,7 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
                             <Facebook size={isMobile ? 20 : 24} />
                         </div>
                         <div>
-                            <h3 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 700, margin: 0 }}>Meta Ads (Facebook)</h3>
+                            <h3 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 600, margin: 0 }}>Meta Ads (Facebook)</h3>
                             <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', lineHeight: 1.4 }}>
                                 {isConnected ? (isMobile ? 'Perfiles conectados' : 'Gestiona tus perfiles conectados') : 'Conecta tu cuenta para ver el CPA real'}
                             </p>
@@ -169,7 +169,7 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
 
                 {isConnected ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', margin: '0 0 -8px', textTransform: 'uppercase' }}>Perfiles Conectados</p>
+                        <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', margin: '0 0 -8px', textTransform: 'uppercase' }}>Perfiles Conectados</p>
 
                         {integrations.map((item) => (
                             <div
@@ -191,7 +191,7 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
                                         style={{ accentColor: 'var(--color-primary)', width: '16px', height: '16px', flexShrink: 0 }}
                                     />
                                     <div style={{ flex: 1, overflow: 'hidden' }}>
-                                        <p style={{ margin: 0, fontSize: isMobile ? '13px' : '15px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+                                        <p style={{ margin: 0, fontSize: isMobile ? '13px' : '15px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
                                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.meta_user_name}</span>
                                             <CheckCircle2 size={12} color="#10B981" style={{ flexShrink: 0 }} />
                                         </p>
@@ -258,7 +258,7 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
                             variant="primary"
                             style={{
                                 backgroundColor: canConnect ? '#1877F2' : 'var(--text-tertiary)',
-                                border: 'none', gap: '10px', padding: '14px 32px', fontSize: '15px', fontWeight: 700,
+                                border: 'none', gap: '10px', padding: '14px 32px', fontSize: '15px', fontWeight: 600,
                                 opacity: canConnect ? 1 : 0.6, cursor: canConnect ? 'pointer' : 'not-allowed'
                             }}
                             onClick={() => setShowNewProfileWarning(true)}

@@ -69,7 +69,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
                 ) : currency ? (
                     <div style={{
                         fontSize: '11px',
-                        fontWeight: 700,
+                        fontWeight: 600,
                         backgroundColor: 'var(--bg-secondary)',
                         padding: '4px 10px',
                         borderRadius: '8px',
@@ -82,7 +82,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
             </div>
             <div>
                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>{title}</p>
-                <h2 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                <h2 style={{ fontSize: '28px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
                     {typeof value === 'number' && currency ? formatCurrency(value, currency) : value}
                 </h2>
                 {subtitle && (

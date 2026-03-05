@@ -166,7 +166,7 @@ export function RegisterPage() {
                 >
                     <Mail size={32} color="#10B981" />
                 </div>
-                <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     ¡Cuenta creada!
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '16px' }}>
@@ -208,7 +208,7 @@ export function RegisterPage() {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)' }}>
                         <Sparkles size={16} fill="currentColor" style={{ opacity: 0.5 }} />
-                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
                             Beneficio DropCost
                         </span>
                     </div>
@@ -242,7 +242,7 @@ export function RegisterPage() {
                 </div>
             )}
 
-            <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px', textAlign: 'center' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px', textAlign: 'center' }}>
                 Crear cuenta
             </h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '32px', textAlign: 'center', lineHeight: 1.5 }}>
@@ -346,7 +346,7 @@ export function RegisterPage() {
                                 }}>
                                     <Sparkles size={14} />
                                 </div>
-                                <p style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: 700, margin: 0 }}>
+                                <p style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: 600, margin: 0 }}>
                                     Contraseña Sugerida
                                 </p>
                             </div>
@@ -359,7 +359,7 @@ export function RegisterPage() {
                                     borderRadius: '8px',
                                     fontSize: '13px',
                                     color: 'var(--color-primary)',
-                                    fontWeight: 700,
+                                    fontWeight: 600,
                                     textAlign: 'center',
                                     border: '1px solid var(--border-color)',
                                     letterSpacing: '0.5px'
@@ -507,7 +507,7 @@ export function RegisterPage() {
                 ¿Ya tienes una cuenta?{' '}
                 <Link
                     to="/login"
-                    style={{ color: 'var(--color-primary)', fontWeight: 700, textDecoration: 'none' }}
+                    style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}
                     onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
                     onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
                 >

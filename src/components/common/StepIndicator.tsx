@@ -42,7 +42,7 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     fontSize: '12px',
-                                    fontWeight: 800,
+                                    fontWeight: 600,
                                     transition: 'all 250ms ease',
                                     backgroundColor: isCompleted
                                         ? 'var(--color-success)'

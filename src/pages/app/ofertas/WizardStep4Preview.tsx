@@ -30,7 +30,7 @@ export function WizardStep4Preview({
 
     return (
         <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>
                 Vista previa de tu oferta
             </h3>
             <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
@@ -50,7 +50,7 @@ export function WizardStep4Preview({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                     <span style={{ fontSize: '28px' }}>{strategy.icon}</span>
                     <div>
-                        <p style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                        <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>
                             {costeo.nombre_producto}
                         </p>
                         <span
@@ -106,7 +106,7 @@ export function WizardStep4Preview({
 
                                 {/* Max purchase */}
                                 <div style={{ padding: '12px', border: '1px solid var(--color-primary)', borderRadius: '8px', backgroundColor: 'rgba(0,102,255,0.03)' }}>
-                                    <p style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>Mejor Oferta ({bundleConfig.quantity} uds)</p>
+                                    <p style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px' }}>Mejor Oferta ({bundleConfig.quantity} uds)</p>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                             <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Precio/u:</span>
@@ -185,7 +185,7 @@ function PreviewItem({ label, value, color, highlight }: { label: string; value:
             }}
         >
             <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginBottom: '2px' }}>{label}</p>
-            <p style={{ fontSize: '16px', fontWeight: 700, color: color || 'var(--text-primary)' }}>{value}</p>
+            <p style={{ fontSize: '16px', fontWeight: 600, color: color || 'var(--text-primary)' }}>{value}</p>
         </div>
     );
 }

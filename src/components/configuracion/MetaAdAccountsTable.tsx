@@ -143,7 +143,7 @@ export function MetaAdAccountsTable({ integrationId }: { integrationId?: string 
                 }}>
                     <Target size={40} />
                 </div>
-                <h3 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 12px', color: 'var(--text-primary)' }}>Cuentas Publicitarias</h3>
+                <h3 style={{ fontSize: '20px', fontWeight: 600, margin: '0 0 12px', color: 'var(--text-primary)' }}>Cuentas Publicitarias</h3>
                 <p style={{ maxWidth: '320px', fontSize: '15px', color: 'var(--text-tertiary)', lineHeight: 1.6, margin: 0 }}>
                     Selecciona o conecta un perfil de Meta Ads en la tarjeta superior para listar y gestionar tus cuentas aquí.
                 </p>
@@ -156,7 +156,7 @@ export function MetaAdAccountsTable({ integrationId }: { integrationId?: string 
             <div style={{ padding: isMobile ? '16px' : '24px', borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', backgroundColor: 'var(--bg-primary)', gap: isMobile ? '16px' : '20px' }}>
                 <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '12px' : '20px' }}>
                     <div>
-                        <h3 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 800, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <h3 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 600, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <Zap size={18} style={{ color: 'var(--color-primary)' }} />
                             Cuentas de Meta Ads
                         </h3>
@@ -166,7 +166,7 @@ export function MetaAdAccountsTable({ integrationId }: { integrationId?: string 
                     {!isMobile && <div style={{ height: '32px', width: '1px', backgroundColor: 'var(--border-color)' }}></div>}
 
                     <div style={{ width: isMobile ? '100%' : 'auto' }}>
-                        <p style={{ margin: '0 0 4px', fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cuota de Plan</p>
+                        <p style={{ margin: '0 0 4px', fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cuota de Plan</p>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <Badge variant={activeAccountsCount >= totalQuota ? 'pill-warning' : 'pill-info'} style={{ fontSize: '10px', padding: '4px 10px', width: isMobile ? '100%' : 'auto', justifyContent: 'center' }}>
                                 {activeAccountsCount} / {totalQuota} {isMobile ? 'Vinculadas' : 'Cuentas vinculadas'}
@@ -227,7 +227,7 @@ export function MetaAdAccountsTable({ integrationId }: { integrationId?: string 
                                                     <Target size={20} />
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                    <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{acc.nombre}</span>
+                                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{acc.nombre}</span>
                                                     <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{acc.currency} • ID: {acc.account_id}</span>
                                                 </div>
                                             </div>
@@ -300,7 +300,7 @@ export function MetaAdAccountsTable({ integrationId }: { integrationId?: string 
 const tableHeaderStyle: React.CSSProperties = {
     padding: '12px 24px',
     textAlign: 'left',
-    fontWeight: 800,
+    fontWeight: 600,
     color: 'var(--text-tertiary)',
     fontSize: '11px',
     textTransform: 'uppercase',

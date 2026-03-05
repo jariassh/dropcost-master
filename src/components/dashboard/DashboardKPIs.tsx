@@ -105,7 +105,7 @@ export const DashboardKPIs: React.FC<Props> = ({ metrics, isLoading }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '32px' }}>
             {/* Fila 1: KPIs PRINCIPALES */}
             <div>
-                <p style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '12px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '12px' }}>
                     KPIs Principales
                 </p>
                 <div
@@ -124,7 +124,7 @@ export const DashboardKPIs: React.FC<Props> = ({ metrics, isLoading }) => {
 
             {/* Fila 2: MÉTRICAS SECUNDARIAS */}
             <div>
-                <p style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '12px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '12px' }}>
                     Métricas Secundarias
                 </p>
                 <div
@@ -230,7 +230,7 @@ function KPICard({ card, index, isLoading, isMobile }: { card: any; index: numbe
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                             <p style={{
                                 fontSize: '10px',
-                                fontWeight: 700,
+                                fontWeight: 600,
                                 color: 'var(--text-tertiary)',
                                 margin: 0,
                                 textTransform: 'uppercase',
@@ -242,7 +242,7 @@ function KPICard({ card, index, isLoading, isMobile }: { card: any; index: numbe
                                 {card.title}
                             </p>
                             {card.badge && !isLoading && !isMobile && (
-                                <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '20px', backgroundColor: card.bg, color: card.color }}>
+                                <span style={{ fontSize: '9px', fontWeight: 600, padding: '1px 6px', borderRadius: '20px', backgroundColor: card.bg, color: card.color }}>
                                     {card.badge}
                                 </span>
                             )}
@@ -253,7 +253,7 @@ function KPICard({ card, index, isLoading, isMobile }: { card: any; index: numbe
                         ) : (
                             <h3 style={{
                                 fontSize: isMobile ? '20px' : card.isInactive ? '20px' : '26px',
-                                fontWeight: 800,
+                                fontWeight: 600,
                                 color: card.isInactive ? 'var(--text-tertiary)' : 'var(--text-primary)',
                                 margin: 0,
                                 letterSpacing: '-0.02em',
@@ -292,7 +292,7 @@ function KPICard({ card, index, isLoading, isMobile }: { card: any; index: numbe
                         <Info size={13} />
                     </div>
                     <div className="kpi-help-tooltip" style={{ right: '0', left: 'auto' }}>
-                        <p style={{ margin: 0, fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>Setup Meta Ads:</p>
+                        <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>Setup Meta Ads:</p>
                         {card.helpText}
                     </div>
                 </>

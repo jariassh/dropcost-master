@@ -123,7 +123,7 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                     borderBottom: '1px solid var(--border-color)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
-                    <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>Retirar Fondos</h2>
+                    <h2 style={{ fontSize: '20px', fontWeight: 600, margin: 0 }}>Retirar Fondos</h2>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)' }}>
                         <X size={24} />
                     </button>
@@ -134,7 +134,7 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             <div style={{ textAlign: 'center' }}>
                                 <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginBottom: '8px' }}>Saldo disponible para retiro</p>
-                                <h3 style={{ fontSize: '32px', fontWeight: 800, color: 'var(--color-primary)' }}>
+                                <h3 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--color-primary)' }}>
                                     {formatCurrency(availableBalanceUsd * exchangeRate, currency)}
                                 </h3>
                             </div>
@@ -186,7 +186,7 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '8px' }}>
                                     <span>Total a descontar:</span>
-                                    <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                                         {formatCurrency((parseFloat(amountLocal) || 0) * 1.03, currency)}
                                     </span>
                                 </div>
@@ -263,7 +263,7 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                             }}>
                                 <CheckCircle2 size={48} />
                             </div>
-                            <h3 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '12px' }}>¡Solicitud Recibida!</h3>
+                            <h3 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '12px' }}>¡Solicitud Recibida!</h3>
                             <p style={{ color: 'var(--text-tertiary)', fontSize: '15px', lineHeight: '1.6', marginBottom: '32px' }}>
                                 Tu solicitud de retiro por <strong>{formatCurrency(parseFloat(amountLocal), currency)}</strong> ha sido enviada con éxito.
                                 <br />Se procesará el próximo viernes.
@@ -285,7 +285,7 @@ const IconInput: React.FC<{
     placeholder: string;
 }> = ({ label, icon: Icon, value, onChange, placeholder }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{label}</label>
+        <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{label}</label>
         <div style={{ position: 'relative' }}>
             <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }}>
                 <Icon size={18} />

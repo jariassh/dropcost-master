@@ -126,7 +126,7 @@ export function StepCreateStore({ onComplete }: StepCreateStoreProps) {
                     gap: isMobile ? '12px' : '0',
                     width: '100%'
                 }}>
-                    <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
+                    <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
                         {mode === 'select' ? 'Selecciona tu Tienda' : 'Configura tu Tienda'}
                     </h2>
                     {existingStores.length > 0 && (
@@ -135,7 +135,7 @@ export function StepCreateStore({ onComplete }: StepCreateStoreProps) {
                             border: '1px solid var(--color-primary)', display: 'flex', alignItems: 'center', gap: '6px'
                         }}>
                             <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--color-primary)' }} />
-                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-primary)' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-primary)' }}>
                                 {existingStores.length} {existingStores.length === 1 ? 'Tienda detectada' : 'Tiendas detectadas'}
                             </span>
                         </div>
@@ -223,7 +223,7 @@ export function StepCreateStore({ onComplete }: StepCreateStoreProps) {
 
                         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>País</label>
+                                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>País</label>
                                 <select
                                     value={pais}
                                     onChange={(e) => setPais(e.target.value)}
@@ -241,7 +241,7 @@ export function StepCreateStore({ onComplete }: StepCreateStoreProps) {
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>Moneda</label>
+                                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Moneda</label>
                                 <select
                                     value={moneda}
                                     onChange={(e) => setMoneda(e.target.value)}

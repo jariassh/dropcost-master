@@ -210,7 +210,7 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                 marginBottom: '16px'
             }} className="ofertas-filter-label">
                 <Filter size={14} style={{ color: 'var(--color-primary)', strokeWidth: 3 }} />
-                <span style={{ fontSize: '11px', fontWeight: 900, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Filtrar por Estrategia</span>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Filtrar por Estrategia</span>
             </div>
 
             <div style={{
@@ -232,7 +232,7 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                             padding: '10px 20px',
                             borderRadius: '14px',
                             fontSize: '13px',
-                            fontWeight: 800,
+                            fontWeight: 600,
                             border: '1px solid',
                             borderColor: filterStrategy === s ? 'var(--color-primary)' : 'var(--border-color)',
                             backgroundColor: filterStrategy === s ? 'rgba(0,102,255,0.08)' : 'var(--card-bg)',
@@ -346,12 +346,12 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                             >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     <div>
-                                        <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 4px', color: 'var(--text-primary)' }}>{o.productName}</h3>
+                                        <h3 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 4px', color: 'var(--text-primary)' }}>{o.productName}</h3>
                                         <span style={{
                                             padding: '4px 10px',
                                             borderRadius: '8px',
                                             fontSize: '11px',
-                                            fontWeight: 800,
+                                            fontWeight: 600,
                                             backgroundColor: 'rgba(0,102,255,0.06)',
                                             color: 'var(--color-primary)',
                                             textTransform: 'uppercase'
@@ -363,7 +363,7 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                                         padding: '6px 12px',
                                         borderRadius: '8px',
                                         fontSize: '11px',
-                                        fontWeight: 800,
+                                        fontWeight: 600,
                                         backgroundColor: o.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.1)',
                                         color: o.status === 'active' ? 'var(--color-success)' : 'var(--text-tertiary)',
                                         textTransform: 'uppercase'
@@ -383,11 +383,11 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                                 }}>
                                     <div>
                                         <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Ganancia</p>
-                                        <p style={{ fontSize: '15px', fontWeight: 800, color: 'var(--color-success)' }}>{formatCurrency(o.estimatedProfit)}</p>
+                                        <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-success)' }}>{formatCurrency(o.estimatedProfit)}</p>
                                     </div>
                                     <div>
                                         <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Margen</p>
-                                        <p style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>{o.estimatedMarginPercent}%</p>
+                                        <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>{o.estimatedMarginPercent}%</p>
                                     </div>
                                 </div>
 
@@ -416,7 +416,7 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                     marginTop: '24px'
                 }}>
                     <Filter size={48} style={{ color: 'var(--text-tertiary)', marginBottom: '16px', opacity: 0.5 }} />
-                    <h4 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                    <h4 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
                         No hay ofertas con estos filtros
                     </h4>
                     <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>

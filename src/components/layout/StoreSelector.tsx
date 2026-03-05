@@ -128,7 +128,7 @@ export function StoreSelector({ collapsed }: StoreSelectorProps) {
                         zIndex: 60,
                         animation: 'fadeIn 150ms ease-out',
                     }}>
-                        <p style={{ margin: '8px 12px 12px', fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        <p style={{ margin: '8px 12px 12px', fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                             Mis Tiendas
                         </p>
 

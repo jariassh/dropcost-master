@@ -157,7 +157,7 @@ export function OfertaWizard({ isOpen, onClose }: OfertaWizardProps) {
                     }}>
                         <Gift size={18} />
                     </div>
-                    <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                    <span style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>
                         Crear Nueva Oferta
                     </span>
                 </div>
@@ -226,7 +226,7 @@ export function OfertaWizard({ isOpen, onClose }: OfertaWizardProps) {
                             disabled={step === 1}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: '8px',
-                                padding: '10px 18px', fontSize: '13px', fontWeight: 700,
+                                padding: '10px 18px', fontSize: '13px', fontWeight: 600,
                                 color: step === 1 ? 'var(--text-tertiary)' : 'var(--text-primary)',
                                 backgroundColor: 'var(--bg-primary)',
                                 border: '1px solid var(--border-color)',
@@ -245,7 +245,7 @@ export function OfertaWizard({ isOpen, onClose }: OfertaWizardProps) {
                                 disabled={!canGoNext()}
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '8px',
-                                    padding: '10px 24px', fontSize: '13px', fontWeight: 700,
+                                    padding: '10px 24px', fontSize: '13px', fontWeight: 600,
                                     color: '#fff',
                                     backgroundColor: canGoNext() ? 'var(--color-primary)' : 'var(--text-tertiary)',
                                     border: 'none', borderRadius: '10px',
@@ -261,7 +261,7 @@ export function OfertaWizard({ isOpen, onClose }: OfertaWizardProps) {
                                 onClick={handleActivate}
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '8px',
-                                    padding: '10px 24px', fontSize: '13px', fontWeight: 700,
+                                    padding: '10px 24px', fontSize: '13px', fontWeight: 600,
                                     color: '#fff',
                                     background: 'var(--color-success)',
                                     border: 'none', borderRadius: '10px',

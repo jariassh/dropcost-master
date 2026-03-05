@@ -254,7 +254,7 @@ export function StepConnectShopify({ tiendaId, onComplete }: StepConnectShopifyP
                 }}>
                     <LinkIcon size={isMobile ? 24 : 32} />
                 </div>
-                <h2 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                <h2 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     {isAlreadyConnected ? 'Shopify Conectado' : 'Configuración de Shopify'}
                 </h2>
                 <p style={{ color: 'var(--text-tertiary)', fontSize: isMobile ? '13px' : '14px' }}>
@@ -283,7 +283,7 @@ export function StepConnectShopify({ tiendaId, onComplete }: StepConnectShopifyP
                     gap: '12px'
                 }}>
                     <div>
-                        <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                             Permisos (API Scopes) requeridos y su objetivo:
                         </p>
                         <div style={{
@@ -511,7 +511,7 @@ export function StepConnectShopify({ tiendaId, onComplete }: StepConnectShopifyP
                         padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px',
                         border: '1px solid var(--border-color)', marginTop: '8px'
                     }}>
-                        <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>Enlace de Webhook para Shopify</p>
+                        <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Enlace de Webhook para Shopify</p>
                         <div style={{ position: 'relative', width: '100%', boxSizing: 'border-box' }}>
                             <input
                                 type="text"

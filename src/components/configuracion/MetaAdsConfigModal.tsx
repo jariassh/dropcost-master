@@ -189,7 +189,7 @@ export function MetaAdsConfigModal({ isOpen, onClose, tiendaId, tiendaNombre }: 
                     }}>
                         <AlertCircle size={32} />
                     </div>
-                    <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Perfil de Meta no Conectado</h3>
+                    <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '12px' }}>Perfil de Meta no Conectado</h3>
                     <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>
                         Primero debes conectar tu perfil de Meta en la sección de Integraciones Generales para poder gestionar las cuentas publicitarias de tus tiendas.
                     </p>
@@ -235,7 +235,7 @@ export function MetaAdsConfigModal({ isOpen, onClose, tiendaId, tiendaNombre }: 
 
                     {/* Sección de Cuentas Vinculadas */}
                     <section>
-                        <h4 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '16px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <CheckCircle2 size={16} color="#10B981" />
                             Cuentas Vinculadas a esta Tienda
                         </h4>
@@ -251,7 +251,7 @@ export function MetaAdsConfigModal({ isOpen, onClose, tiendaId, tiendaNombre }: 
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                             <Facebook size={18} color="#1877F2" />
                                             <div>
-                                                <p style={{ margin: 0, fontWeight: 700, fontSize: '14px' }}>{acc.meta_ad_account_name}</p>
+                                                <p style={{ margin: 0, fontWeight: 600, fontSize: '14px' }}>{acc.meta_ad_account_name}</p>
                                                 <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-tertiary)' }}>ID: {acc.meta_ad_account_id}</p>
                                             </div>
                                         </div>
@@ -317,7 +317,7 @@ export function MetaAdsConfigModal({ isOpen, onClose, tiendaId, tiendaNombre }: 
 
                     {/* Lista de Cuentas Disponibles */}
                     <section style={{ flex: 1, minHeight: '300px', display: 'flex', flexDirection: 'column' }}>
-                        <h4 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', color: 'var(--text-secondary)' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '16px', color: 'var(--text-secondary)' }}>
                             Cuentas Disponibles en tu Perfil
                         </h4>
 
@@ -343,7 +343,7 @@ export function MetaAdsConfigModal({ isOpen, onClose, tiendaId, tiendaNombre }: 
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                 <Facebook size={18} color={isLinked ? 'var(--text-tertiary)' : "#1877F2"} />
                                                 <div>
-                                                    <p style={{ margin: 0, fontWeight: 700, fontSize: '14px' }}>{account.name}</p>
+                                                    <p style={{ margin: 0, fontWeight: 600, fontSize: '14px' }}>{account.name}</p>
                                                     <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                         ID: {account.id}
                                                         <span style={{

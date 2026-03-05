@@ -163,7 +163,7 @@ export function SimuladorResults({
                         <div style={{
                             padding: '4px 10px', borderRadius: '20px',
                             backgroundColor: 'rgba(255,255,255,0.15)',
-                            fontSize: '10px', fontWeight: 700, color: '#fff',
+                            fontSize: '10px', fontWeight: 600, color: '#fff',
                             textTransform: 'uppercase', letterSpacing: '0.05em',
                             display: 'flex', alignItems: 'center', gap: '6px',
                         }}>
@@ -179,7 +179,7 @@ export function SimuladorResults({
                             </button>
                         </div>
                     ) : (
-                        <p style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                        <p style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
                             Precio de Venta Sugerido
                         </p>
                     )}
@@ -188,7 +188,7 @@ export function SimuladorResults({
                 <div style={{ position: 'relative', marginBottom: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
                         {/* El símbolo de moneda es dinámico ahora a través de formatCurrency, pero aquí lo mantenemos simple para el input */}
-                        <span style={{ fontSize: '32px', fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>
+                        <span style={{ fontSize: '32px', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>
                             {currency === 'USD' ? '$' : currency === 'MXN' ? '$' : currency === 'COP' ? '$' : ''}
                         </span>
                         <input
@@ -215,7 +215,7 @@ export function SimuladorResults({
                             }}
                             style={{
                                 background: 'transparent', border: 'none', outline: 'none', color: '#fff',
-                                fontSize: '48px', fontWeight: 700, textAlign: 'center', width: '220px',
+                                fontSize: '48px', fontWeight: 600, textAlign: 'center', width: '220px',
                                 letterSpacing: '-1.5px', textShadow: '0 2px 10px rgba(0,0,0,0.1)',
                                 cursor: isVolumeActive ? 'not-allowed' : 'text',
                             }}
@@ -228,7 +228,7 @@ export function SimuladorResults({
                             display: 'flex', alignItems: 'center', gap: '4px',
                             backgroundColor: delta > 0 ? 'var(--color-success)' : 'var(--color-error)',
                             color: '#fff', padding: '2px 8px', borderRadius: '12px',
-                            fontSize: '11px', fontWeight: 700, boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                            fontSize: '11px', fontWeight: 600, boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
                         }}>
                             {delta > 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                             {delta > 0 ? '+' : ''}{formatCurrency(delta)}
@@ -239,13 +239,13 @@ export function SimuladorResults({
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '12px' }}>
                     <div style={{ padding: '12px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)' }}>
                         <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginBottom: '4px' }}>Utilidad / Venta</p>
-                        <p style={{ fontSize: '18px', fontWeight: 700, color: (results?.netProfitPerSale ?? 0) > 0 ? 'var(--color-success)' : 'var(--color-error)' }}>
+                        <p style={{ fontSize: '18px', fontWeight: 600, color: (results?.netProfitPerSale ?? 0) > 0 ? 'var(--color-success)' : 'var(--color-error)' }}>
                             {formatCurrency(results?.netProfitPerSale ?? 0)}
                         </p>
                     </div>
                     <div style={{ padding: '12px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)' }}>
                         <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginBottom: '4px' }}>Efectividad</p>
-                        <p style={{ fontSize: '18px', fontWeight: 700, color: '#fff' }}>{results?.finalEffectivenessPercent ?? 0}%</p>
+                        <p style={{ fontSize: '18px', fontWeight: 600, color: '#fff' }}>{results?.finalEffectivenessPercent ?? 0}%</p>
                     </div>
                 </div>
             </div>
@@ -254,7 +254,7 @@ export function SimuladorResults({
             {isVolumeActive && (
                 <div style={{ padding: '18px 20px', borderRadius: '14px', background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', boxShadow: '0 6px 20px rgba(5,150,105,0.25)', textAlign: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '4px' }}>
-                        <p style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                        <p style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
                             Precio por {maxUnits} unidades
                         </p>
                         {hasVolumeOverride || isVolumeFocused ? (
@@ -267,7 +267,7 @@ export function SimuladorResults({
                         ) : null}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px', marginBottom: '14px' }}>
-                        <span style={{ fontSize: '24px', fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>
+                        <span style={{ fontSize: '24px', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>
                             {currency === 'USD' ? '$' : currency === 'MXN' ? '$' : '$'}
                         </span>
                         <input
@@ -289,21 +289,21 @@ export function SimuladorResults({
                                     setVolumeInputValue('');
                                 }
                             }}
-                            style={{ background: 'transparent', border: 'none', outline: 'none', color: '#fff', fontSize: '32px', fontWeight: 700, textAlign: 'center', width: '180px' }}
+                            style={{ background: 'transparent', border: 'none', outline: 'none', color: '#fff', fontSize: '32px', fontWeight: 600, textAlign: 'center', width: '180px' }}
                         />
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                         <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.12)' }}>
                             <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', marginBottom: '3px' }}>Unidad</p>
-                            <p style={{ fontSize: '14px', fontWeight: 700, color: '#fff' }}>{formatCurrency(vPrice / maxUnits)}</p>
+                            <p style={{ fontSize: '14px', fontWeight: 600, color: '#fff' }}>{formatCurrency(vPrice / maxUnits)}</p>
                         </div>
                         <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.12)' }}>
                             <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', marginBottom: '3px' }}>Ahorro</p>
-                            <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-success)' }}>{formatCurrency(vSavingsTotal)}</p>
+                            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-success)' }}>{formatCurrency(vSavingsTotal)}</p>
                         </div>
                         <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.12)' }}>
                             <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', marginBottom: '3px' }}>Rentabilidad</p>
-                            <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-success)' }}>{formatCurrency(vProfit)}</p>
+                            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-success)' }}>{formatCurrency(vProfit)}</p>
                         </div>
                     </div>
                 </div>
@@ -312,25 +312,25 @@ export function SimuladorResults({
             {/* ─── Breakdown ─── */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div style={{ padding: '16px', borderRadius: '12px', backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '14px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '14px' }}>
                         Logística Real {isVolumeActive ? '(Bundle)' : ''}
                     </p>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                         <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Flete + Recaudo</span>
-                        <span style={{ fontSize: '15px', fontWeight: 700 }}>{formatCurrency(rawFleteRecaudo)}</span>
+                        <span style={{ fontSize: '15px', fontWeight: 600 }}>{formatCurrency(rawFleteRecaudo)}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ fontSize: '13px', color: 'var(--color-error)' }}>Devolución</span>
-                        <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-error)' }}>-{formatCurrency(rawReturnLoss)}</span>
+                        <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-error)' }}>-{formatCurrency(rawReturnLoss)}</span>
                     </div>
                 </div>
 
                 <div style={{ padding: '16px', borderRadius: '12px', backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '14px' }}>Efectividad</p>
+                    <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '14px' }}>Efectividad</p>
                     <div style={{ marginBottom: '12px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                             <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Confirmación</span>
-                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-warning)' }}>{confirmationPct.toFixed(0)}%</span>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-warning)' }}>{confirmationPct.toFixed(0)}%</span>
                         </div>
                         <div style={{ height: '6px', borderRadius: '3px', backgroundColor: 'var(--bg-secondary)', overflow: 'hidden' }}>
                             <div style={{ height: '100%', width: `${confirmationPct}%`, backgroundColor: 'var(--color-warning)' }} />
@@ -339,7 +339,7 @@ export function SimuladorResults({
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                             <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Entrega Final</span>
-                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-success)' }}>{finalEffectivenessPercent}%</span>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-success)' }}>{finalEffectivenessPercent}%</span>
                         </div>
                         <div style={{ height: '6px', borderRadius: '3px', backgroundColor: 'var(--bg-secondary)', overflow: 'hidden' }}>
                             <div style={{ height: '100%', width: `${finalEffectivenessPercent}%`, backgroundColor: 'var(--color-success)' }} />
@@ -349,7 +349,7 @@ export function SimuladorResults({
             </div>
 
             <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-                <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '14px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '14px' }}>
                     Desglose {isVolumeActive ? `(${maxUnits} uds)` : '(1 ud)'}
                 </p>
                 <div style={{ display: 'flex', height: '24px', borderRadius: '6px', overflow: 'hidden', marginBottom: '12px' }}>
@@ -357,7 +357,7 @@ export function SimuladorResults({
                         const pct = suggestedPrice > 0 ? (seg.value / suggestedPrice) * 100 : 0;
                         if (pct <= 2) return null;
                         return (
-                            <div key={seg.label} style={{ width: `${pct}%`, backgroundColor: seg.color, fontSize: '11px', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div key={seg.label} style={{ width: `${pct}%`, backgroundColor: seg.color, fontSize: '11px', fontWeight: 600, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 {pct > 18 ? seg.label : ''}
                             </div>
                         );
@@ -366,7 +366,7 @@ export function SimuladorResults({
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     {breakdownSegments.map((seg) => (
                         <div key={seg.label}>
-                            <p style={{ fontSize: '12px', fontWeight: 700, color: seg.color }}>{seg.label}</p>
+                            <p style={{ fontSize: '12px', fontWeight: 600, color: seg.color }}>{seg.label}</p>
                             <p style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{suggestedPrice > 0 ? ((seg.value / suggestedPrice) * 100).toFixed(0) : 0}%</p>
                         </div>
                     ))}

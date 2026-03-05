@@ -133,7 +133,7 @@ function ToastItem({ toast }: { toast: ToastMessage }) {
                 <p
                     style={{
                         fontSize: '15px',
-                        fontWeight: 800,
+                        fontWeight: 600,
                         color: 'var(--text-primary)',
                         lineHeight: '1.4',
                         letterSpacing: '-0.01em',

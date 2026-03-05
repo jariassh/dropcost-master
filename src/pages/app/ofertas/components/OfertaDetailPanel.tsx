@@ -56,7 +56,7 @@ export function OfertaDetailPanel({ oferta, onClose, onDelete }: OfertaDetailPan
                         >
                             <ChevronLeft size={18} />
                         </button>
-                        <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+                        <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                             Detalles de Oferta
                         </h2>
                     </div>
@@ -91,7 +91,7 @@ export function OfertaDetailPanel({ oferta, onClose, onDelete }: OfertaDetailPan
                             <Package size={32} color="var(--text-tertiary)" />
                         </div>
                         <div>
-                            <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                            <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
                                 {oferta.productName}
                             </h3>
                             <div style={{ display: 'flex', gap: '8px' }}>
@@ -101,7 +101,7 @@ export function OfertaDetailPanel({ oferta, onClose, onDelete }: OfertaDetailPan
                                     backgroundColor: 'rgba(0,102,255,0.1)',
                                     color: 'var(--color-primary)',
                                     fontSize: '10px',
-                                    fontWeight: 700
+                                    fontWeight: 600
                                 }}>
                                     #OFF-{oferta.id.slice(0, 5).toUpperCase()}
                                 </span>
@@ -126,7 +126,7 @@ export function OfertaDetailPanel({ oferta, onClose, onDelete }: OfertaDetailPan
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--color-primary)' }}>
                             <Settings size={15} />
-                            <h4 style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.8 }}>
+                            <h4 style={{ fontSize: '10.5px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.8 }}>
                                 ESTRATEGIA & CONFIGURACIÓN
                             </h4>
                         </div>
@@ -142,7 +142,7 @@ export function OfertaDetailPanel({ oferta, onClose, onDelete }: OfertaDetailPan
                         }}>
                             <div>
                                 <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 600 }}>Estrategia</p>
-                                <p style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 700 }}>
+                                <p style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 600 }}>
                                     {strategyInfo.label}
                                 </p>
                             </div>
@@ -150,14 +150,14 @@ export function OfertaDetailPanel({ oferta, onClose, onDelete }: OfertaDetailPan
                                 <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 600 }}>
                                     {oferta.strategyType === 'bundle' ? 'Máx Unidades' : 'Incentivo'}
                                 </p>
-                                <p style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 700 }}>
+                                <p style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 600 }}>
                                     {oferta.strategyType === 'bundle' ? `${oferta.bundleConfig?.quantity || 3} Unidades` :
                                         oferta.strategyType === 'descuento' ? `${oferta.discountConfig?.discountPercent}%` : 'Regalo'}
                                 </p>
                             </div>
                             <div>
                                 <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 600 }}>% Margen 2+</p>
-                                <p style={{ fontSize: '13px', color: '#10B981', fontWeight: 700 }}>
+                                <p style={{ fontSize: '13px', color: '#10B981', fontWeight: 600 }}>
                                     {oferta.bundleConfig?.marginPercent || 50}%
                                 </p>
                             </div>
@@ -168,7 +168,7 @@ export function OfertaDetailPanel({ oferta, onClose, onDelete }: OfertaDetailPan
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--color-primary)' }}>
                             <FileText size={15} />
-                            <h4 style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.8 }}>
+                            <h4 style={{ fontSize: '10.5px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.8 }}>
                                 DESGLOSE FINANCIERO (PROYECCIÓN)
                             </h4>
                         </div>
@@ -183,10 +183,10 @@ export function OfertaDetailPanel({ oferta, onClose, onDelete }: OfertaDetailPan
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-secondary)', zIndex: 10 }}>
                                     <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                        <th style={{ textAlign: 'left', padding: '10px 14px', fontSize: '9px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>VOL</th>
-                                        <th style={{ textAlign: 'left', padding: '10px 14px', fontSize: '9px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>PRECIO VENTA</th>
-                                        <th style={{ textAlign: 'left', padding: '10px 14px', fontSize: '9px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>AHORRO</th>
-                                        <th style={{ textAlign: 'left', padding: '10px 14px', fontSize: '9px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>UTILIDAD</th>
+                                        <th style={{ textAlign: 'left', padding: '10px 14px', fontSize: '9px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>VOL</th>
+                                        <th style={{ textAlign: 'left', padding: '10px 14px', fontSize: '9px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>PRECIO VENTA</th>
+                                        <th style={{ textAlign: 'left', padding: '10px 14px', fontSize: '9px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>AHORRO</th>
+                                        <th style={{ textAlign: 'left', padding: '10px 14px', fontSize: '9px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>UTILIDAD</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -198,10 +198,10 @@ export function OfertaDetailPanel({ oferta, onClose, onDelete }: OfertaDetailPan
 
                                         return (
                                             <tr key={qty} style={{ borderBottom: idx < arr.length - 1 ? '1px solid var(--border-color)' : 'none' }}>
-                                                <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-primary)', fontWeight: 700 }}>{qty} Ud</td>
+                                                <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-primary)', fontWeight: 600 }}>{qty} Ud</td>
                                                 <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>{formatCurrency(price)}</td>
                                                 <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--color-primary)', fontWeight: 600 }}>{savings}</td>
-                                                <td style={{ padding: '12px 14px', fontSize: '12px', color: '#10B981', fontWeight: 700 }}>{formatCurrency(profit)}</td>
+                                                <td style={{ padding: '12px 14px', fontSize: '12px', color: '#10B981', fontWeight: 600 }}>{formatCurrency(profit)}</td>
                                             </tr>
                                         );
                                     })}
@@ -221,7 +221,7 @@ export function OfertaDetailPanel({ oferta, onClose, onDelete }: OfertaDetailPan
                             backgroundColor: 'var(--bg-secondary)',
                             color: 'var(--text-primary)',
                             fontSize: '12.5px',
-                            fontWeight: 700,
+                            fontWeight: 600,
                             border: '1px solid var(--border-color)',
                             cursor: 'pointer'
                         }}
@@ -240,7 +240,7 @@ export function OfertaDetailPanel({ oferta, onClose, onDelete }: OfertaDetailPan
                                 backgroundColor: 'var(--color-error)',
                                 color: '#fff',
                                 fontSize: '12.5px',
-                                fontWeight: 700,
+                                fontWeight: 600,
                                 border: 'none',
                                 cursor: 'pointer'
                             }}

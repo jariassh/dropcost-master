@@ -47,7 +47,7 @@ export function PrivacidadPage() {
                     </Link>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Shield size={20} color="var(--color-primary)" />
-                        <span style={{ fontSize: '16px', fontWeight: 700 }}>DropCost Master</span>
+                        <span style={{ fontSize: '16px', fontWeight: 600 }}>DropCost Master</span>
                     </div>
                 </div>
             </header>
@@ -60,7 +60,7 @@ export function PrivacidadPage() {
             }}>
                 <h1 style={{
                     fontSize: '32px',
-                    fontWeight: 700,
+                    fontWeight: 600,
                     marginBottom: '8px',
                     lineHeight: 1.2,
                 }}>
@@ -161,7 +161,7 @@ export function PrivacidadPage() {
                         <li><strong>Retirar</strong> su consentimiento en cualquier momento.</li>
                     </ul>
                     <div style={{ marginTop: '20px', padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                        <p style={{ fontWeight: 700, marginBottom: '8px', color: 'var(--text-primary)' }}>Para solicitar la eliminación de sus datos:</p>
+                        <p style={{ fontWeight: 600, marginBottom: '8px', color: 'var(--text-primary)' }}>Para solicitar la eliminación de sus datos:</p>
                         <ol style={{ margin: 0, paddingLeft: '20px' }}>
                             <li>Envíe un email a <strong>privacidad@dropcost.jariash.com</strong> con el asunto "Solicitud de Eliminación de Datos".</li>
                             <li>Incluya su nombre completo y el correo electrónico asociado a su cuenta.</li>
@@ -242,7 +242,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
         <section style={{ marginBottom: '32px' }}>
             <h2 style={{
                 fontSize: '20px',
-                fontWeight: 700,
+                fontWeight: 600,
                 marginBottom: '12px',
                 color: 'var(--text-primary)',
             }}>

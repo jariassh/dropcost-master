@@ -123,7 +123,7 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
                     gap: '12px'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-                        <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                             Notificaciones
                         </span>
                         {unreadCount > 0 && (
@@ -131,7 +131,7 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
                                 backgroundColor: 'var(--color-primary)',
                                 color: '#fff',
                                 fontSize: '10px',
-                                fontWeight: 800,
+                                fontWeight: 600,
                                 padding: '2px 8px',
                                 borderRadius: '10px',
                                 flexShrink: 0
@@ -148,7 +148,7 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
                                 border: 'none',
                                 color: 'var(--color-primary)',
                                 fontSize: '12px',
-                                fontWeight: 700,
+                                fontWeight: 600,
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',

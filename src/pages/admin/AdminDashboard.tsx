@@ -61,7 +61,7 @@ export const AdminDashboard: React.FC = () => {
         <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '40px', padding: '0 var(--main-padding)' }}>
             {/* Header Section */}
             <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+                <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
                     Panel de Administración
                 </h1>
                 <p style={{ fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
@@ -91,7 +91,7 @@ export const AdminDashboard: React.FC = () => {
                                 <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
                                     {stat.label}
                                 </p>
-                                <p style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0 0 0' }}>
+                                <p style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', margin: '4px 0 0 0' }}>
                                     {stat.value}
                                 </p>
                             </div>

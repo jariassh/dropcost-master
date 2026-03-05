@@ -59,7 +59,7 @@ export function AuthLayout() {
                             >
                                 <BarChart3 size={24} color="#fff" />
                             </div>
-                            <span style={{ color: '#fff', fontSize: '20px', fontWeight: 700 }}>
+                            <span style={{ color: '#fff', fontSize: '20px', fontWeight: 600 }}>
                                 DropCost Master
                             </span>
                         </>
@@ -80,7 +80,7 @@ export function AuthLayout() {
                     <h1
                         style={{
                             fontSize: 'clamp(32px, 4vw, 48px)',
-                            fontWeight: 700,
+                            fontWeight: 600,
                             color: '#fff',
                             lineHeight: 1.15,
                             marginBottom: '20px',

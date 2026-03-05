@@ -19,7 +19,7 @@ import {
     ShieldAlert
 } from 'lucide-react';
 import { useStoreStore } from '@/store/useStoreStore';
-import { useToast, Button, Input, Spinner, Badge } from '@/components/common';
+import { useToast, Button, Input, Spinner, Badge, PageHeader } from '@/components/common';
 import type { Tienda } from '@/types/store.types';
 import { ShopifyConfigModal } from '@/components/configuracion/ShopifyConfigModal';
 import { supabase } from '@/lib/supabase';
@@ -37,6 +37,14 @@ export function StoreManagementPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [isShopifyOpen, setIsShopifyOpen] = useState(false);
     const [isLoadingIntegrations, setIsLoadingIntegrations] = useState(false);
+
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         const found = tiendas.find(t => t.id === id);
@@ -87,34 +95,19 @@ export function StoreManagementPage() {
                 Volver a Mis Tiendas
             </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
-                <div style={{
-                    width: '64px', height: '64px', borderRadius: '16px',
-                    backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    overflow: 'hidden'
-                }}>
-                    {tienda.logo_url ? (
-                        <img src={tienda.logo_url} alt={tienda.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                        <Building2 size={32} style={{ color: 'var(--color-primary)' }} />
-                    )}
-                </div>
-                <div>
-                    <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                        Gestionar Tienda: {tienda.nombre}
-                    </h1>
-                    <p style={{ margin: 0, color: 'var(--text-tertiary)', fontSize: '14px' }}>
-                        ID: {tienda.id} • Moneda: {tienda.moneda}
-                    </p>
-                </div>
-            </div>
+            <PageHeader
+                title="Gestionar"
+                highlight={tienda.nombre}
+                description={`ID: ${tienda.id} • Moneda: ${tienda.moneda}`}
+                icon={Building2}
+                isMobile={isMobile}
+            />
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '32px' }} className="management-grid">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
                     {/* Información Básica */}
                     <section style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '24px' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <Info size={18} color="var(--color-primary)" />
                             Información de la Tienda
                         </h3>
@@ -147,7 +140,7 @@ export function StoreManagementPage() {
 
                     {/* Integraciones */}
                     <section>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px' }}>Integraciones Disponibles</h3>
+                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>Integraciones Disponibles</h3>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }} className="integrations-grid">
                             <IntegrationCard
                                 title="Shopify"
@@ -171,7 +164,7 @@ export function StoreManagementPage() {
 
                 <aside>
                     <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px' }}>
-                        <h4 style={{ margin: '0 0 16px', fontWeight: 700, fontSize: '15px' }}>Vista Previa</h4>
+                        <h4 style={{ margin: '0 0 16px', fontWeight: 600, fontSize: '15px' }}>Vista Previa</h4>
                         <div style={{
                             padding: '20px', backgroundColor: 'var(--card-bg)', borderRadius: '12px',
                             border: '1px solid var(--card-border)', textAlign: 'center'
@@ -188,7 +181,7 @@ export function StoreManagementPage() {
                                     <Building2 size={24} color="var(--color-primary)" />
                                 )}
                             </div>
-                            <p style={{ margin: 0, fontWeight: 700 }}>{nombre || 'Tienda Nueva'}</p>
+                            <p style={{ margin: 0, fontWeight: 600 }}>{nombre || 'Tienda Nueva'}</p>
                             <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--text-tertiary)' }}>{tienda.moneda} • {tienda.pais}</p>
                         </div>
                         <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '16px', lineHeight: 1.5 }}>
@@ -234,7 +227,7 @@ function IntegrationCard({ title, description, icon, connected, color, onClick, 
                 </Badge>
             </div>
             <div>
-                <h4 style={{ margin: '0 0 4px', fontWeight: 700 }}>{title}</h4>
+                <h4 style={{ margin: '0 0 4px', fontWeight: 600 }}>{title}</h4>
                 <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)', lineHeight: 1.5 }}>{description}</p>
             </div>
             <Button

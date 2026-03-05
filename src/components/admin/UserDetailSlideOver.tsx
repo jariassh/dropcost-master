@@ -313,7 +313,7 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                             justifyContent: 'center',
                             color: 'white',
                             fontSize: '24px',
-                            fontWeight: 700,
+                            fontWeight: 600,
                             boxShadow: 'var(--shadow-lg)',
                             overflow: 'hidden'
                         }}>
@@ -344,7 +344,7 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                                     />
                                 </div>
                             ) : (
-                                <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                                <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
                                     {user.nombres} {user.apellidos}
                                 </h3>
                             )}
@@ -370,7 +370,7 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                                     backgroundColor: 'var(--bg-secondary)',
                                     borderRadius: '6px',
                                     fontSize: '10px',
-                                    fontWeight: 700,
+                                    fontWeight: 600,
                                     color: 'var(--text-tertiary)',
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.05em'
@@ -405,24 +405,24 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                         {/* Stats Grid */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                             <div style={{ padding: '16px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '16px' }}>
-                                <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Lifetime Value</p>
-                                <p style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>$0.00</p>
+                                <p style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Lifetime Value</p>
+                                <p style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>$0.00</p>
                             </div>
                             <div style={{ padding: '16px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '16px' }}>
-                                <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Total Tiendas</p>
-                                <p style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                <p style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Total Tiendas</p>
+                                <p style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>
                                     {totalStores !== null ? totalStores : '...'}
                                 </p>
                             </div>
                             <div style={{ padding: '16px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '16px' }}>
-                                <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Logins</p>
-                                <p style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                <p style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Logins</p>
+                                <p style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>
                                     {totalLogins !== null ? totalLogins : '...'}
                                 </p>
                             </div>
                             <div style={{ padding: '16px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '16px' }}>
-                                <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Registrado</p>
-                                <p style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                <p style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Registrado</p>
+                                <p style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>
                                     {new Date(user.fecha_registro).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
                                 </p>
                             </div>
@@ -432,7 +432,7 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)' }}>
                                 <CheckCircle2 size={16} />
-                                <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Suscripción Actual</h4>
+                                <h4 style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Suscripción Actual</h4>
                             </div>
                             <div style={{
                                 padding: '20px',
@@ -445,7 +445,7 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                             }}>
                                 <div style={{ display: 'flex', justifyContent: 'between', alignItems: 'center' }}>
                                     <div style={{ flex: 1 }}>
-                                        <h5 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                                        <h5 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
                                             {plans.find(p => p.slug === user.plan_id)?.name || (user.plan_id === 'plan_pro' ? 'Plan Pro' : user.plan_id === 'plan_enterprise' ? 'Plan Enterprise' : 'Plan Gratis')}
                                         </h5>
                                         <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Siguiente cobro: N/A</p>
@@ -456,13 +456,13 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                                     <div style={{ height: '8px', width: '100%', backgroundColor: 'var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
                                         <div style={{ height: '100%', width: `${usage}%`, backgroundColor: 'var(--color-primary)', transition: 'width 0.5s ease-out' }} />
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
                                         <span>Uso del ciclo: {usage}%</span>
                                         <span>Expira: {expiryDate}</span>
                                     </div>
                                     {isEditing && (
                                         <div style={{ marginTop: '12px' }}>
-                                            <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Fecha Vencimiento</p>
+                                            <p style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Fecha Vencimiento</p>
                                             <input
                                                 type="date"
                                                 value={editForm.fecha_vencimiento_plan ? new Date(editForm.fecha_vencimiento_plan).toISOString().split('T')[0] : ''}
@@ -477,7 +477,7 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
 
                         {/* Information Details */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <h4 style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Información de Contacto</h4>
+                            <h4 style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Información de Contacto</h4>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 {isEditing ? (
@@ -539,7 +539,7 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                         {/* Security */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Rol del Sistema</p>
+                                <p style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Rol del Sistema</p>
                                 {isEditing ? (
                                     <select
                                         value={editForm.rol}
@@ -559,7 +559,7 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                                 )}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Verificación</p>
+                                <p style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Verificación</p>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: user.email_verificado ? 'var(--color-success)' : 'var(--color-warning)' }}>
                                         {user.email_verificado ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
@@ -575,7 +575,7 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                                                 background: 'none',
                                                 border: 'none',
                                                 cursor: 'pointer',
-                                                fontWeight: 700,
+                                                fontWeight: 600,
                                                 padding: '2px 6px',
                                                 borderRadius: '4px',
                                                 transition: 'background-color 0.2s'
@@ -592,7 +592,7 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                         {/* Activity Timeline */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <h4 style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Actividad Reciente</h4>
+                                <h4 style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Actividad Reciente</h4>
                                 <Button variant="ghost" size="sm" onClick={() => fetchActivity()} disabled={loadingActivity}>
                                     <RefreshCw size={14} style={{ animation: loadingActivity ? 'spin 1s linear infinite' : 'none' }} />
                                 </Button>

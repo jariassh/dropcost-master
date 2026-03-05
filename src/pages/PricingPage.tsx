@@ -176,7 +176,7 @@ export const PricingPage: React.FC = () => {
         }}>
             {/* Header */}
             <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-                <h1 style={{ fontSize: '36px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '16px' }}>
+                <h1 style={{ fontSize: '36px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '16px' }}>
                     Planes que Escalan Contigo
                 </h1>
                 <p style={{ fontSize: '18px', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto 32px' }}>
@@ -192,7 +192,7 @@ export const PricingPage: React.FC = () => {
                             borderRadius: '12px',
                             border: 'none',
                             fontSize: '14px',
-                            fontWeight: 700,
+                            fontWeight: 600,
                             cursor: 'pointer',
                             backgroundColor: billingPeriod === 'monthly' ? 'var(--card-bg)' : 'transparent',
                             color: billingPeriod === 'monthly' ? 'var(--text-primary)' : 'var(--text-secondary)',
@@ -209,7 +209,7 @@ export const PricingPage: React.FC = () => {
                             borderRadius: '12px',
                             border: 'none',
                             fontSize: '14px',
-                            fontWeight: 700,
+                            fontWeight: 600,
                             cursor: 'pointer',
                             backgroundColor: billingPeriod === 'semiannual' ? 'var(--card-bg)' : 'transparent',
                             color: billingPeriod === 'semiannual' ? 'var(--color-primary)' : 'var(--text-secondary)', // Highlight semiannual

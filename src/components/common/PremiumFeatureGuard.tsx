@@ -84,7 +84,7 @@ export const PremiumFeatureGuard: React.FC<PremiumFeatureGuardProps> = ({
             }}>
                 <Lock size={32} />
             </div>
-            <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '12px', color: 'var(--text-primary)' }}>{title}</h2>
+            <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '12px', color: 'var(--text-primary)' }}>{title}</h2>
             <div style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '32px', maxWidth: '480px', margin: '0 auto 32px' }}>
                 {description}
             </div>

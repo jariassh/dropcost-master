@@ -138,14 +138,14 @@ export const CostingsAnalyticsTable: React.FC<Props> = ({ data, isLoading }) => 
                                         </div>
                                     </td>
                                     <td style={cellStyle}>
-                                        <span style={{ fontWeight: 700 }}>{formatSmartCurrency(item.target_price)}</span>
+                                        <span style={{ fontWeight: 600 }}>{formatSmartCurrency(item.target_price)}</span>
                                     </td>
                                     <td style={cellStyle}>
                                         <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{formatSmartCurrency(item.real_spend)}</span>
                                     </td>
                                     <td style={cellStyle}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontWeight: 700 }}>{formatSmartCurrency(item.real_cpa)}</span>
+                                            <span style={{ fontWeight: 600 }}>{formatSmartCurrency(item.real_cpa)}</span>
                                             <MetricIndicator
                                                 real={item.real_cpa}
                                                 target={item.target_cpa}
@@ -163,7 +163,7 @@ export const CostingsAnalyticsTable: React.FC<Props> = ({ data, isLoading }) => 
                                             borderRadius: '6px',
                                             backgroundColor: item.real_roas >= 3 ? 'var(--color-success)15' : 'var(--color-warning)15',
                                             color: item.real_roas >= 3 ? 'var(--color-success)' : 'var(--color-warning)',
-                                            fontWeight: 700,
+                                            fontWeight: 600,
                                             fontSize: '12px'
                                         }}>
                                             {item.real_roas.toFixed(2)}x
@@ -172,7 +172,7 @@ export const CostingsAnalyticsTable: React.FC<Props> = ({ data, isLoading }) => 
                                     <td style={cellStyle}>
                                         <span style={{
                                             fontSize: '10px',
-                                            fontWeight: 800,
+                                            fontWeight: 600,
                                             textTransform: 'uppercase',
                                             backgroundColor: item.real_spend > 0 ? 'var(--color-success)15' : 'var(--bg-secondary)',
                                             color: item.real_spend > 0 ? 'var(--color-success)' : 'var(--text-tertiary)',
@@ -258,7 +258,7 @@ const headerStyle: React.CSSProperties = {
     textAlign: 'left',
     padding: '16px 12px',
     fontSize: '11px',
-    fontWeight: 700,
+    fontWeight: 600,
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
     color: 'var(--text-tertiary)'

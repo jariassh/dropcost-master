@@ -84,7 +84,7 @@ export function CookieBanner() {
             </div>
 
             <div style={{ flex: 1 }}>
-                <h4 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '4px', color: 'var(--text-primary)' }}>Tu privacidad es Master</h4>
+                <h4 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px', color: 'var(--text-primary)' }}>Tu privacidad es Master</h4>
                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
                     Usamos cookies propias y de terceros para mejorar tu experiencia y analizar el tráfico.
                     Consulta nuestra <Link to="/cookies" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}>Política de Cookies</Link>.
@@ -141,7 +141,7 @@ export function CookieBanner() {
                         border: 'none',
                         borderRadius: '10px',
                         fontSize: '14px',
-                        fontWeight: 700,
+                        fontWeight: 600,
                         cursor: 'pointer',
                         boxShadow: '0 4px 12px rgba(0, 102, 255, 0.2)',
                         transition: 'all 0.2s'

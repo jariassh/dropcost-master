@@ -291,7 +291,7 @@ export function SimuladorPage() {
                         <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                             Editando Producto
                         </div>
-                        <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                        <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)' }}>
                             {costeoPadre?.nombre_producto}
                         </h1>
                     </div>
@@ -312,7 +312,7 @@ export function SimuladorPage() {
                         style={{
                             padding: '12px 20px', borderRadius: '12px', border: '1.5px solid var(--border-color)',
                             backgroundColor: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)',
-                            fontWeight: 700, fontSize: '14px'
+                            fontWeight: 600, fontSize: '14px'
                         }}
                     >
                         Cancelar
@@ -322,7 +322,7 @@ export function SimuladorPage() {
                         disabled={isSaving || !isDirty}
                         style={{
                             display: 'flex', alignItems: 'center', gap: '8px',
-                            padding: '12px 28px', fontSize: '14px', fontWeight: 700,
+                            padding: '12px 28px', fontSize: '14px', fontWeight: 600,
                             borderRadius: '12px', cursor: (isSaving || !isDirty) ? 'not-allowed' : 'pointer',
                             backgroundColor: isDirty ? 'var(--color-primary)' : 'var(--text-tertiary)',
                             color: '#fff', border: 'none',

@@ -461,7 +461,7 @@ const MJMLComponentList = ({ onSelect }: { onSelect: (component: any) => void })
                     Object.entries(filteredCategories).map(([category, comps]: [string, any]) => (
                         <div key={category} className="border-b border-[var(--border-color)] last:border-0">
                             <div style={{ padding: '10px 24px', backgroundColor: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', opacity: 0.8 }}>
-                                <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{category}</span>
+                                <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{category}</span>
                             </div>
                             {comps.map((c: any) => (
                                 <button
@@ -559,7 +559,7 @@ const VariableList = ({ onSelect }: { onSelect: (v: string) => void }) => {
                     Object.entries(filteredCategories).map(([category, vars]: [string, any]) => (
                         <div key={category} className="border-b border-[var(--border-color)] last:border-0">
                             <div style={{ padding: '10px 24px', backgroundColor: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', opacity: 0.8 }}>
-                                <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{category}</span>
+                                <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{category}</span>
                             </div>
                             {vars.map((v: any) => (
                                 <button
@@ -868,7 +868,7 @@ const SenderSelector = ({ currentName, currentPrefix, domain, onSelect, template
                                         backgroundColor: 'var(--bg-secondary)',
                                         borderRadius: '6px',
                                         fontSize: '10px',
-                                        fontWeight: 800,
+                                        fontWeight: 600,
                                         color: 'var(--text-tertiary)',
                                         border: '1px solid var(--border-color)',
                                         minWidth: '24px',
@@ -2212,7 +2212,7 @@ export function AdminEmailTemplatesPage() {
             <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
                     <div style={{ flex: '1', minWidth: '280px' }}>
-                        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
+                        <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
                             Plantillas de correo electrónico
                         </h1>
                         <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
@@ -2332,7 +2332,7 @@ export function AdminEmailTemplatesPage() {
                                         alignItems: 'center',
                                         gap: '8px',
                                         fontSize: '11px',
-                                        fontWeight: 800,
+                                        fontWeight: 600,
                                         transition: 'all 0.2s',
                                         whiteSpace: 'nowrap'
                                     }}
@@ -2353,7 +2353,7 @@ export function AdminEmailTemplatesPage() {
                                         alignItems: 'center',
                                         gap: '8px',
                                         fontSize: '11px',
-                                        fontWeight: 800,
+                                        fontWeight: 600,
                                         transition: 'all 0.2s',
                                         whiteSpace: 'nowrap'
                                     }}
@@ -2512,7 +2512,7 @@ export function AdminEmailTemplatesPage() {
                                                             {!item.is_folder && item.trigger_event && (
                                                                 <div style={{
                                                                     fontSize: '10px',
-                                                                    fontWeight: 900,
+                                                                    fontWeight: 600,
                                                                     color: 'var(--color-primary)',
                                                                     backgroundColor: 'var(--color-primary-light)',
                                                                     padding: '2px 8px',
@@ -3237,7 +3237,7 @@ export function AdminEmailTemplatesPage() {
                                 <div style={{ backgroundColor: '#f8fafc', padding: '20px 24px', borderBottom: '1px solid #e2e8f0' }}>
                                     {/* Window Bar */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Nuevo Mensaje</span>
+                                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Nuevo Mensaje</span>
                                         <div style={{ display: 'flex', gap: '8px' }}>
                                             <div style={{ width: '12px', height: '12px', borderRadius: '3px', border: '1.5px solid #cbd5e1' }}></div>
                                             <div style={{ width: '12px', height: '12px', borderRadius: '3px', border: '1.5px solid #cbd5e1' }}></div>
@@ -3267,7 +3267,7 @@ export function AdminEmailTemplatesPage() {
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                             <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 500, minWidth: '60px' }}>Asunto:</span>
-                                            <span style={{ fontSize: '13px', color: '#1e293b', fontWeight: 700 }}>{renderPreview(selectedTemplate.subject || '(Sin Asunto)')}</span>
+                                            <span style={{ fontSize: '13px', color: '#1e293b', fontWeight: 600 }}>{renderPreview(selectedTemplate.subject || '(Sin Asunto)')}</span>
                                         </div>
                                     </div>
                                 </div>

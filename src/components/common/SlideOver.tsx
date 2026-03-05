@@ -59,7 +59,7 @@ export function SlideOver({
                                     <h1 style={{
                                         paddingLeft: '32px',
                                         fontSize: '22px',
-                                        fontWeight: 800,
+                                        fontWeight: 600,
                                         color: 'var(--text-primary)',
                                         margin: 0
                                     }} id="slide-over-title">

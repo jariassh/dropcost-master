@@ -3,7 +3,7 @@ import { Store, Building2, Trash2, Plus, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useStoreStore } from '@/store/useStoreStore';
-import { Button, ConfirmDialog, useToast } from '@/components/common';
+import { Button, ConfirmDialog, useToast, PageHeader } from '@/components/common';
 import { CreateStoreModal } from '@/components/layout/CreateStoreModal';
 import { cargarPaises, Pais } from '@/services/paisesService';
 
@@ -71,40 +71,40 @@ export function TiendasPage() {
         <div style={{ animation: 'fadeIn 0.3s' }}>
             {user?.estadoSuscripcion === 'activa' || user?.rol === 'admin' || user?.rol === 'superadmin' ? (
                 <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: isMobile ? '20px' : '24px', flexDirection: isMobile ? 'column' : 'row', gap: '16px' }}>
-                        <div style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}>
-                            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Gestión de Tiendas</h3>
-                            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                                Administra tus puntos de venta y sus configuraciones
-                            </p>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', gap: '12px', width: isMobile ? '100%' : 'auto', flexDirection: isMobile ? 'column' : 'row' }}>
-                            <div style={{
-                                padding: '8px 16px', backgroundColor: 'var(--bg-secondary)',
-                                borderRadius: '12px', border: '1px solid var(--border-color)',
-                                display: 'flex', alignItems: 'center', gap: '8px',
-                                flex: isMobile ? 1 : 'none',
-                                justifyContent: isMobile ? 'space-between' : 'flex-start'
-                            }}>
-                                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                                    Cuota: <span style={{ color: (tiendas.length >= (user?.plan?.limits?.stores ?? 1) && user?.plan?.limits?.stores !== -1) ? 'var(--color-error)' : 'var(--color-primary)' }}>
-                                        {tiendas.length}/{user?.plan?.limits?.stores === -1 ? '∞' : (user?.plan?.limits?.stores ?? 1)} Tiendas
-                                    </span>
+                    <PageHeader
+                        title="Gestión de"
+                        highlight="Tiendas"
+                        description="Administra tus puntos de venta y sus configuraciones"
+                        icon={Store}
+                        isMobile={isMobile}
+                        actions={
+                            <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', gap: '12px', width: isMobile ? '100%' : 'auto', flexDirection: isMobile ? 'column' : 'row' }}>
+                                <div style={{
+                                    padding: '8px 16px', backgroundColor: 'var(--bg-secondary)',
+                                    borderRadius: '12px', border: '1px solid var(--border-color)',
+                                    display: 'flex', alignItems: 'center', gap: '8px',
+                                    flex: isMobile ? 1 : 'none',
+                                    justifyContent: isMobile ? 'space-between' : 'flex-start'
+                                }}>
+                                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                        Cuota: <span style={{ color: (tiendas.length >= (user?.plan?.limits?.stores ?? 1) && user?.plan?.limits?.stores !== -1) ? 'var(--color-error)' : 'var(--color-primary)' }}>
+                                            {tiendas.length}/{user?.plan?.limits?.stores === -1 ? '∞' : (user?.plan?.limits?.stores ?? 1)} Tiendas
+                                        </span>
+                                    </div>
+                                    <div style={{ width: isMobile ? '40%' : '60px', height: '6px', backgroundColor: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
+                                        <div style={{
+                                            width: `${user?.plan?.limits?.stores === -1 ? 0 : Math.min((tiendas.length / (user?.plan?.limits?.stores ?? 1)) * 100, 100)}%`,
+                                            height: '100%',
+                                            backgroundColor: (tiendas.length >= (user?.plan?.limits?.stores ?? 1) && user?.plan?.limits?.stores !== -1) ? 'var(--color-error)' : 'var(--color-primary)'
+                                        }} />
+                                    </div>
                                 </div>
-                                <div style={{ width: isMobile ? '40%' : '60px', height: '6px', backgroundColor: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
-                                    <div style={{
-                                        width: `${user?.plan?.limits?.stores === -1 ? 0 : Math.min((tiendas.length / (user?.plan?.limits?.stores ?? 1)) * 100, 100)}%`,
-                                        height: '100%',
-                                        backgroundColor: (tiendas.length >= (user?.plan?.limits?.stores ?? 1) && user?.plan?.limits?.stores !== -1) ? 'var(--color-error)' : 'var(--color-primary)'
-                                    }} />
-                                </div>
+                                <Button variant="primary" onClick={handleOpenCreateStore} leftIcon={<Plus size={16} />} fullWidth={isMobile}>
+                                    Nueva Tienda
+                                </Button>
                             </div>
-                            <Button variant="primary" onClick={handleOpenCreateStore} style={{ gap: '8px' }} fullWidth={isMobile}>
-                                <Plus size={16} />
-                                Nueva Tienda
-                            </Button>
-                        </div>
-                    </div>
+                        }
+                    />
 
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
                         {tiendas.map((tienda) => (
@@ -115,7 +115,7 @@ export function TiendasPage() {
                                             {tienda.logo_url ? <img src={tienda.logo_url} alt={tienda.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building2 size={24} style={{ color: 'var(--color-primary)' }} />}
                                         </div>
                                         <div>
-                                            <h4 style={{ margin: 0, fontWeight: 700, fontSize: '16px' }}>{tienda.nombre}</h4>
+                                            <h4 style={{ margin: 0, fontWeight: 600, fontSize: '16px' }}>{tienda.nombre}</h4>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                                                 {(() => {
                                                     const pais = allCountries.find(p => p.codigo_iso_2 === tienda.pais);
@@ -154,7 +154,7 @@ export function TiendasPage() {
                     <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(0, 102, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', margin: '0 auto 20px' }}>
                         <CreditCard size={32} />
                     </div>
-                    <h4 style={{ margin: '0 0 8px', fontWeight: 800, fontSize: '20px' }}>Activa tu plan</h4>
+                    <h4 style={{ margin: '0 0 8px', fontWeight: 600, fontSize: '20px' }}>Activa tu plan</h4>
                     <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>Necesitas una suscripción activa para gestionar tiendas.</p>
                     <Button variant="primary" onClick={() => navigate('/pricing')}>Ver Planes</Button>
                 </div>

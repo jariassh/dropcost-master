@@ -85,7 +85,7 @@ export function CookiePreferencesModal() {
                             color: 'white',
                             border: 'none',
                             borderRadius: '10px',
-                            fontWeight: 700,
+                            fontWeight: 600,
                             cursor: 'pointer',
                             boxShadow: 'var(--shadow-md)'
                         }}
@@ -121,7 +121,7 @@ function PreferenceItem({ title, description, checked, disabled = false, onChang
             onClick={() => !disabled && onChange && onChange(!checked)}
         >
             <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '15px', fontWeight: 700, marginBottom: '4px', color: 'var(--text-primary)' }}>{title}</div>
+                <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px', color: 'var(--text-primary)' }}>{title}</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{description}</div>
             </div>
             <div style={{

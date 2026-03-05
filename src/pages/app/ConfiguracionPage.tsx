@@ -30,7 +30,7 @@ export function ConfiguracionPage() {
     return (
         <div style={{ maxWidth: '1440px', margin: '0 auto', padding: isMobile ? '12px' : '20px', boxSizing: 'border-box' }}>
             <div style={{ marginBottom: isMobile ? '20px' : '32px' }}>
-                <h1 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px' }}>
+                <h1 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 8px' }}>
                     Configuración del Sistema
                 </h1>
                 <p style={{ margin: 0, fontSize: isMobile ? '12px' : '14px', color: 'var(--text-tertiary)', lineHeight: 1.5 }}>
