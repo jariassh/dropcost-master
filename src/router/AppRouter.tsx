@@ -7,7 +7,7 @@ import { AuthLayout } from '@/layouts/AuthLayout';
 import { LandingLayout } from '@/layouts/LandingLayout';
 import { Spinner } from '@/components/common/Spinner';
 import { SubscriptionGuard } from '@/components/common/SubscriptionGuard';
-import { AffiliateTracker } from '@/components/marketing/AffiliateTracker';
+import { AffiliateTracker } from '@/components/common/AffiliateTracker';
 
 // Lazy loading de páginas para mejor performance
 const DashboardPage = lazy(() => import('@/pages/app/DashboardPage').then(m => ({ default: m.DashboardPage })));
@@ -21,7 +21,7 @@ const ContactosPage = lazy(() => import('@/pages/app/ContactosPage').then(m => (
 const LaunchpadPage = lazy(() => import('@/pages/app/LaunchpadPage').then(m => ({ default: m.LaunchpadPage })));
 
 // Configuración
-const ConfiguracionPage = lazy(() => import('@/pages/app/configuracion/ConfiguracionPage').then(m => ({ default: m.ConfiguracionPage })));
+const ConfiguracionPage = lazy(() => import('@/pages/app/ConfiguracionPage').then(m => ({ default: m.ConfiguracionPage })));
 const PerfilPage = lazy(() => import('@/pages/app/configuracion/PerfilPage').then(m => ({ default: m.PerfilPage })));
 const SeguridadPage = lazy(() => import('@/pages/app/configuracion/SeguridadPage').then(m => ({ default: m.SeguridadPage })));
 const IntegracionesPage = lazy(() => import('@/pages/app/configuracion/IntegracionesPage').then(m => ({ default: m.IntegracionesPage })));
@@ -38,8 +38,8 @@ const UpdatePasswordPage = lazy(() => import('@/pages/auth/UpdatePasswordPage').
 
 // Callbacks & Feedback
 const PaymentStatusPage = lazy(() => import('@/pages/app/PaymentStatusPage').then(m => ({ default: m.PaymentStatusPage })));
-const MetaCallbackPage = lazy(() => import('@/pages/app/MetaCallbackPage').then(m => ({ default: m.MetaCallbackPage })));
-const UserAuditLogsPage = lazy(() => import('@/pages/app/UserAuditLogsPage').then(m => ({ default: m.UserAuditLogsPage })));
+const MetaCallbackPage = lazy(() => import('@/pages/auth/MetaCallbackPage').then(m => ({ default: m.MetaCallbackPage })));
+const UserAuditLogsPage = lazy(() => import('@/pages/UserAuditLogsPage'));
 
 // Admin
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
@@ -57,7 +57,7 @@ const LandingPage = lazy(() => import('@/pages/LandingPage').then(m => ({ defaul
 const PricingPage = lazy(() => import('@/pages/PricingPage').then(m => ({ default: m.PricingPage })));
 const TerminosPage = lazy(() => import('@/pages/legal/TerminosPage').then(m => ({ default: m.TerminosPage })));
 const PrivacidadPage = lazy(() => import('@/pages/legal/PrivacidadPage').then(m => ({ default: m.PrivacidadPage })));
-const CookiesPage = lazy(() => import('@/pages/legal/CookiesPage'));
+const CookiesPage = lazy(() => import('@/pages/legal/CookiesPage').then(m => ({ default: m.CookiesPage })));
 
 function ChargingPage() {
     return (
