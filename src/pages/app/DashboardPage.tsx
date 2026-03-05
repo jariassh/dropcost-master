@@ -2,13 +2,15 @@
  * Página Dashboard — Visualización de métricas operacionales.
  */
 import React, { useEffect, useState, useMemo } from 'react';
-import { Card, Tooltip as DSTooltip } from '@/components/common';
-import { BarChart3, RefreshCw, Filter, TrendingUp, Store, Zap, ShoppingCart, ShoppingBag, Info } from 'lucide-react';
+import { Card, Tooltip as DSTooltip, PageHeader } from '@/components/common';
+import { BarChart3, RefreshCw, Filter, TrendingUp, Store, Zap, ShoppingCart, ShoppingBag, Info, LayoutDashboard } from 'lucide-react';
 import { DashboardKPIs } from '@/components/dashboard/DashboardKPIs';
 import { CostingsAnalyticsTable } from '@/components/dashboard/CostingsAnalyticsTable';
 import { OrderDetailsModal } from '@/components/dashboard/OrderDetailsModal';
 import { getDashboardMetrics } from '@/services/dashboardService';
+import { contactService } from '@/services/contactService';
 import { useNotificationStore } from '@/store/notificationStore';
+import { useAuthStore } from '@/store/authStore';
 import { DashboardMetrics, DashboardOrder } from '@/types/dashboard';
 import { useStoreStore } from '@/store/useStoreStore';
 import { formatSmartCurrency } from '@/utils/currencyUtils';
@@ -23,8 +25,11 @@ import {
 
 export function DashboardPage() {
     const { tiendaActual } = useStoreStore();
+    const { user } = useAuthStore();
     const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isModuleEnabled, setIsModuleEnabled] = useState(false);
+    const [acceptanceDate, setAcceptanceDate] = useState<string | undefined>();
     const [timeRange, setTimeRange] = useState<'today' | 'week' | 'month'>('today');
     const [historyDays, setHistoryDays] = useState(7);
     const [roasPeriod, setRoasPeriod] = useState<'thisMonth' | 'lastMonth' | 'last3Months'>('thisMonth');
@@ -47,8 +52,15 @@ export function DashboardPage() {
 
         setIsLoading(true);
         try {
-            const data = await getDashboardMetrics({ tienda_id: tiendaActual.id });
+            // Fetch metrics and module status in parallel
+            const [data, moduleStatus] = await Promise.all([
+                getDashboardMetrics({ tienda_id: tiendaActual.id }),
+                contactService.checkModuleStatus(tiendaActual.id)
+            ]);
+
             setMetrics(data);
+            setIsModuleEnabled(moduleStatus.isEnabled);
+            setAcceptanceDate(moduleStatus.acceptanceDate);
         } catch (error) {
             console.error('Error cargando métricas:', error);
         } finally {
@@ -100,96 +112,76 @@ export function DashboardPage() {
 
     return (
         <div style={{ animation: 'fadeIn 300ms ease-out', paddingBottom: '40px' }}>
-            {/* Header de página */}
-            <div
-                style={{
-                    display: 'flex',
-                    flexDirection: isMobile ? 'column' : 'row',
-                    justifyContent: 'space-between',
-                    alignItems: isMobile ? 'flex-start' : 'flex-end',
-                    gap: isMobile ? '16px' : '0',
-                    marginBottom: isMobile ? '20px' : '28px'
-                }}
-            >
-                <div>
-                    <h1
-                        style={{
-                            fontSize: isMobile ? '24px' : '28px',
-                            fontWeight: 800,
-                            color: 'var(--text-primary)',
-                            margin: '0 0 4px',
-                            letterSpacing: '-0.02em',
-                            lineHeight: 1.1
-                        }}
-                    >
-                        Resumen de {tiendaActual?.nombre || 'Operaciones'}
-                    </h1>
-                    <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-secondary)', margin: 0 }}>
-                        {timeRange === 'today' ? 'Datos de hoy' : timeRange === 'week' ? 'Resumen semanal' : 'Resumen mensual'}
-                    </p>
-                </div>
+            <PageHeader
+                title="Resumen de"
+                highlight={tiendaActual?.nombre || 'Operaciones'}
+                description={timeRange === 'today' ? 'Datos de hoy' : timeRange === 'week' ? 'Resumen semanal' : 'Resumen mensual'}
+                icon={LayoutDashboard}
+                isMobile={isMobile}
+                actions={
+                    <div style={{ display: 'flex', gap: '12px', width: isMobile ? '100%' : 'auto', alignItems: 'center' }}>
+                        <div
+                            style={{
+                                display: 'flex',
+                                backgroundColor: 'var(--bg-secondary)',
+                                padding: '4px',
+                                borderRadius: '10px',
+                                flex: isMobile ? 1 : 'none',
+                                justifyContent: isMobile ? 'space-around' : 'flex-start'
+                            }}
+                        >
+                            {(['today', 'week', 'month'] as const).map((range) => (
+                                <button
+                                    key={range}
+                                    onClick={() => setTimeRange(range)}
+                                    style={{
+                                        padding: '6px 12px',
+                                        borderRadius: '8px',
+                                        border: 'none',
+                                        fontSize: '12px',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        backgroundColor: timeRange === range ? 'var(--card-bg)' : 'transparent',
+                                        color: timeRange === range ? 'var(--color-primary)' : 'var(--text-secondary)',
+                                        boxShadow: timeRange === range ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                                        transition: 'all 200ms ease',
+                                        flex: isMobile ? 1 : 'none',
+                                        minWidth: isMobile ? 'none' : '70px'
+                                    }}
+                                >
+                                    {range === 'today' ? 'Hoy' : range === 'week' ? '7D' : '30D'}
+                                </button>
+                            ))}
+                        </div>
 
-                <div style={{ display: 'flex', gap: '12px', width: isMobile ? '100%' : 'auto' }}>
-                    <div
-                        style={{
-                            display: 'flex',
-                            backgroundColor: 'var(--bg-secondary)',
-                            padding: '4px',
-                            borderRadius: '10px',
-                            flex: isMobile ? 1 : 'none',
-                            justifyContent: isMobile ? 'space-around' : 'flex-start'
-                        }}
-                    >
-                        {(['today', 'week', 'month'] as const).map((range) => (
-                            <button
-                                key={range}
-                                onClick={() => setTimeRange(range)}
-                                style={{
-                                    padding: '6px 12px',
-                                    borderRadius: '8px',
-                                    border: 'none',
-                                    fontSize: '12px',
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                    backgroundColor: timeRange === range ? 'var(--bg-primary)' : 'transparent',
-                                    color: timeRange === range ? 'var(--color-primary)' : 'var(--text-secondary)',
-                                    boxShadow: timeRange === range ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
-                                    transition: 'all 200ms ease',
-                                    flex: isMobile ? 1 : 'none'
-                                }}
-                            >
-                                {range === 'today' ? 'Hoy' : range === 'week' ? 'Semana' : 'Mes'}
-                            </button>
-                        ))}
+                        <button
+                            onClick={handleRefresh}
+                            style={{
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '10px',
+                                border: '1px solid var(--border-color)',
+                                backgroundColor: 'var(--bg-primary)',
+                                color: 'var(--text-secondary)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                flexShrink: 0
+                            }}
+                        >
+                            <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
+                        </button>
                     </div>
-
-                    <button
-                        onClick={handleRefresh}
-                        style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '10px',
-                            border: '1px solid var(--border-color)',
-                            backgroundColor: 'var(--bg-primary)',
-                            color: 'var(--text-secondary)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            flexShrink: 0
-                        }}
-                    >
-                        <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
-                    </button>
-                </div>
-            </div>
+                }
+            />
 
             {!tiendaActual?.id ? (
                 <div style={{ padding: isMobile ? '40px 20px' : '80px 40px', textAlign: 'center', backgroundColor: 'var(--bg-secondary)', borderRadius: '24px', border: '1px dashed var(--border-color)', maxWidth: '600px', margin: '40px auto' }}>
                     <div style={{ width: isMobile ? '60px' : '80px', height: isMobile ? '60px' : '80px', borderRadius: '50%', backgroundColor: 'var(--color-primary)15', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
                         <Store size={isMobile ? 32 : 40} color="var(--color-primary)" />
                     </div>
-                    <h3 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '12px' }}>Selecciona tu Tienda</h3>
+                    <h3 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '12px' }}>Selecciona tu Tienda</h3>
                     <p style={{ color: 'var(--text-secondary)', fontSize: isMobile ? '14px' : '15px', lineHeight: 1.6, marginBottom: '24px' }}>
                         Para ver el rendimiento operacional, los KPIs avanzados y las alertas de campañas, primero debes elegir una tienda del menú lateral.
                     </p>
@@ -379,7 +371,7 @@ export function DashboardPage() {
                                                     dataKey="roas"
                                                     position="top"
                                                     formatter={(val: any) => typeof val === 'number' && val > 0 ? `${val}x` : ''}
-                                                    style={{ fill: 'var(--text-primary)', fontSize: 10, fontWeight: 800 }}
+                                                    style={{ fill: 'var(--text-primary)', fontSize: 10, fontWeight: 600 }}
                                                     offset={12}
                                                 />
                                             </Bar>
@@ -402,66 +394,94 @@ export function DashboardPage() {
                     >
                         {/* Tabla de Órdenes Recientes */}
                         <Card title="Últimas Órdenes Shopify" icon={<ShoppingCart size={16} />}>
-                            <div style={{ padding: '8px 0', maxHeight: '400px', overflowY: 'auto' }}>
+                            <div style={{ padding: '8px 0', maxHeight: '400px', overflowY: 'auto', overflowX: 'hidden' }}>
                                 {metrics?.recentOrders && metrics.recentOrders.length > 0 ? (
-                                    metrics.recentOrders.map((order, idx) => (
-                                        <div
-                                            key={order.id}
-                                            onClick={() => handleOrderClick(order)}
-                                            className="order-row-hover"
-                                            style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                                padding: '16px 12px',
-                                                margin: '0 -12px',
-                                                borderBottom: idx === metrics.recentOrders.length - 1 ? 'none' : '1px solid var(--border-color)',
-                                                transition: 'all 200ms ease',
-                                                cursor: 'pointer',
-                                                borderRadius: '8px'
-                                            }}
-                                        >
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <div style={{
-                                                    width: '36px',
-                                                    height: '36px',
-                                                    borderRadius: '8px',
-                                                    backgroundColor: 'var(--bg-secondary)',
+                                    metrics.recentOrders.map((order, idx) => {
+                                        const isOrderRestricted = !isModuleEnabled || (acceptanceDate && new Date(order.date) < new Date(acceptanceDate));
+
+                                        return (
+                                            <div
+                                                key={order.id}
+                                                onClick={() => !isOrderRestricted ? handleOrderClick(order) : addNotification({
+                                                    userId: user?.id || 'guest',
+                                                    title: 'Módulo de Contactos Requerido',
+                                                    message: 'Para ver detalles de tus clientes, debes habilitar el Módulo Contactos y los datos deben ser posteriores a la habilitación.',
+                                                    type: 'info'
+                                                })}
+                                                className={!isOrderRestricted ? "order-row-hover" : ""}
+                                                style={{
                                                     display: 'flex',
+                                                    justifyContent: 'space-between',
                                                     alignItems: 'center',
-                                                    justifyContent: 'center'
-                                                }}>
-                                                    <ShoppingBag size={18} color="var(--text-tertiary)" />
+                                                    padding: '16px 12px',
+                                                    margin: '0 -12px',
+                                                    borderBottom: idx === metrics.recentOrders.length - 1 ? 'none' : '1px solid var(--border-color)',
+                                                    transition: 'all 200ms ease',
+                                                    cursor: isOrderRestricted ? 'not-allowed' : 'pointer',
+                                                    borderRadius: '8px',
+                                                    opacity: isOrderRestricted ? 0.6 : 1,
+                                                    position: 'relative'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                    <div style={{
+                                                        width: '36px',
+                                                        height: '36px',
+                                                        borderRadius: '8px',
+                                                        backgroundColor: 'var(--bg-secondary)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
+                                                    }}>
+                                                        {isOrderRestricted ? (
+                                                            <div style={{ color: 'var(--text-tertiary)' }}>
+                                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                                            </div>
+                                                        ) : (
+                                                            <ShoppingBag size={18} color="var(--text-tertiary)" />
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                                                            {order.order_number}
+                                                        </p>
+                                                        <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0 }}>
+                                                            {new Date(order.date).toLocaleDateString()} • {order.campaign_name || 'Directo'}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div>
+                                                <div style={{ textAlign: 'right' }}>
                                                     <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
-                                                        {order.order_number}
+                                                        ${order.total.toFixed(2)}
                                                     </p>
-                                                    <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0 }}>
-                                                        {new Date(order.date).toLocaleDateString()} • {order.campaign_name || 'Directo'}
-                                                    </p>
+                                                    <span
+                                                        style={{
+                                                            fontSize: '10px',
+                                                            fontWeight: 600,
+                                                            textTransform: 'uppercase',
+                                                            color: order.fulfillment === 'entregado' ? 'var(--color-success)' : order.status === 'paid' ? 'var(--color-success)' : order.status === 'cancelled' ? 'var(--color-error)' : 'var(--color-warning)',
+                                                            backgroundColor: order.fulfillment === 'entregado' ? 'var(--color-success)15' : order.status === 'paid' ? 'var(--color-success)15' : order.status === 'cancelled' ? 'var(--color-error)15' : 'var(--color-warning)15',
+                                                            padding: '2px 8px',
+                                                            borderRadius: '6px'
+                                                        }}
+                                                    >
+                                                        {order.status}
+                                                    </span>
                                                 </div>
-                                            </div>
-                                            <div style={{ textAlign: 'right' }}>
-                                                <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-                                                    ${order.total.toFixed(2)}
-                                                </p>
-                                                <span
-                                                    style={{
+                                                {isOrderRestricted && (
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        right: '12px',
+                                                        top: '8px',
                                                         fontSize: '10px',
-                                                        fontWeight: 800,
-                                                        textTransform: 'uppercase',
-                                                        color: order.fulfillment === 'entregado' ? 'var(--color-success)' : order.status === 'paid' ? 'var(--color-success)' : order.status === 'cancelled' ? 'var(--color-error)' : 'var(--color-warning)',
-                                                        backgroundColor: order.fulfillment === 'entregado' ? 'var(--color-success)15' : order.status === 'paid' ? 'var(--color-success)15' : order.status === 'cancelled' ? 'var(--color-error)15' : 'var(--color-warning)15',
-                                                        padding: '2px 8px',
-                                                        borderRadius: '6px'
-                                                    }}
-                                                >
-                                                    {order.status}
-                                                </span>
+                                                        color: 'var(--text-tertiary)'
+                                                    }}>
+
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
-                                    ))
+                                        );
+                                    })
                                 ) : (
                                     <NoDataView />
                                 )}
@@ -489,7 +509,7 @@ export function DashboardPage() {
                                         <div key={i} style={{ marginBottom: '20px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                                                 <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{campaign.name}</span>
-                                                <span style={{ fontSize: '12px', color: 'var(--color-success)', fontWeight: 700 }}>{formatSmartCurrency(campaign.spend)} Gasto</span>
+                                                <span style={{ fontSize: '12px', color: 'var(--color-success)', fontWeight: 600 }}>{formatSmartCurrency(campaign.spend)} Gasto</span>
                                             </div>
                                             <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', overflow: 'hidden' }}>
                                                 <div style={{
@@ -526,6 +546,7 @@ export function DashboardPage() {
                 isOpen={isOrderModalOpen}
                 onClose={() => setIsOrderModalOpen(false)}
                 order={selectedOrder}
+                isRestricted={!!(selectedOrder && (!isModuleEnabled || (acceptanceDate && new Date(selectedOrder.date) < new Date(acceptanceDate))))}
             />
 
             <style>{`
