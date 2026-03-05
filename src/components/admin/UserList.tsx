@@ -89,7 +89,7 @@ export const UserList: React.FC = () => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 0.4s ease-out' }}>
             {/* Toolbar */}
-            <div style={{
+            <div className="dc-user-toolbar" style={{
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -122,7 +122,7 @@ export const UserList: React.FC = () => {
                     </div>
 
                     <select
-                        className="dc-input"
+                        className="dc-input dc-user-status-filter"
                         style={{
                             padding: '10px 16px',
                             backgroundColor: 'var(--bg-primary)',
@@ -145,7 +145,7 @@ export const UserList: React.FC = () => {
                     </select>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', justifyContent: 'space-between' }} className="w-full sm:w-auto">
+                <div className="dc-user-pagination-container" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', justifyContent: 'space-between' }}>
                     <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                         {totalCount > 0 ? `${(page - 1) * 10 + 1}-${Math.min(page * 10, totalCount)} de ${totalCount}` : '0 usuarios'}
                     </p>
@@ -181,11 +181,47 @@ export const UserList: React.FC = () => {
                             <ChevronRight size={18} />
                         </button>
                     </div>
-                    <Button onClick={() => { }} style={{ borderRadius: '12px', padding: '0 20px', height: '44px' }} className="w-full sm:w-auto">
+                    <Button onClick={() => { }} style={{ borderRadius: '12px', padding: '0 20px', height: '44px' }} className="dc-user-create-btn">
                         <Plus size={18} style={{ marginRight: '8px' }} /> Crear Usuario
                     </Button>
                 </div>
             </div>
+
+            <style>{`
+                @media (max-width: 767px) {
+                    .dc-user-toolbar {
+                        flex-direction: column !important;
+                        align-items: stretch !important;
+                    }
+                    .dc-user-pagination-container {
+                        flex-direction: column !important;
+                        align-items: stretch !important;
+                        gap: 12px !important;
+                    }
+                    .dc-user-pagination-container p {
+                        text-align: center;
+                    }
+                    .dc-user-pagination-container > div {
+                        justify-content: center !important;
+                    }
+                    .dc-user-create-btn {
+                        width: 100% !important;
+                    }
+                    .dc-user-status-filter {
+                        min-width: 0 !important;
+                    }
+                    /* Mobile table optimization */
+                    table th:nth-child(2),
+                    table th:nth-child(5),
+                    table td:nth-child(2),
+                    table td:nth-child(5) {
+                        display: none !important;
+                    }
+                    table th, table td {
+                        padding: 12px 16px !important;
+                    }
+                }
+            `}</style>
 
             {/* Table Card */}
             <Card noPadding style={{ overflow: 'hidden', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border-color)' }}>

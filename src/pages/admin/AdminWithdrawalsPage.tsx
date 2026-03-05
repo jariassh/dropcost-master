@@ -169,62 +169,46 @@ export const AdminWithdrawalsPage: React.FC = () => {
 
     return (
         <>
-            <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 20px' }}>
+            <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', padding: '0 var(--main-padding)', display: 'flex', flexDirection: 'column', gap: '32px' }}>
                 {/* Header */}
-                <div style={{
-                    marginBottom: '32px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexDirection: window.innerWidth < 768 ? 'column' : 'row',
-                    textAlign: window.innerWidth < 768 ? 'center' : 'left',
-                    gap: '20px'
-                }}>
-                    <div>
-                        <h1 style={{
-                            fontSize: window.innerWidth < 768 ? '24px' : '28px',
-                            fontWeight: 800,
-                            color: 'var(--text-primary)',
-                            marginBottom: '8px'
-                        }}>
-                            Administración de Retiros
-                        </h1>
-                        <p style={{ fontSize: '15px', color: 'var(--text-tertiary)' }}>
-                            Supervisa y procesa las solicitudes de pago de los usuarios.
-                        </p>
+                <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }} className="dc-admin-header-container">
+                        <div style={{ flex: '1', minWidth: '280px' }} className="dc-admin-header-text">
+                            <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
+                                Gestión de Retiros
+                            </h1>
+                            <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                                Supervisa y procesa las solicitudes de pago de los usuarios.
+                            </p>
+                        </div>
+                        <button
+                            className="dc-admin-refresh-btn"
+                            onClick={loadWithdrawals}
+                            disabled={loading}
+                            style={{
+                                padding: '10px 20px',
+                                backgroundColor: 'var(--bg-secondary)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '12px',
+                                fontSize: '14px',
+                                fontWeight: 600,
+                                color: 'var(--text-primary)',
+                                cursor: loading ? 'not-allowed' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                transition: 'all 0.2s',
+                                height: 'fit-content'
+                            }}
+                        >
+                            <RefreshCw size={16} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+                            Actualizar
+                        </button>
                     </div>
-                    <button
-                        onClick={loadWithdrawals}
-                        disabled={loading}
-                        style={{
-                            padding: '10px 20px',
-                            backgroundColor: 'var(--bg-secondary)',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: '12px',
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            color: 'var(--text-primary)',
-                            cursor: loading ? 'not-allowed' : 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            transition: 'all 0.2s',
-                            width: window.innerWidth < 768 ? '100%' : 'auto',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <RefreshCw size={16} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
-                        Actualizar
-                    </button>
                 </div>
 
                 {/* Stats Cards */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: window.innerWidth < 480 ? '1fr' : 'repeat(auto-fit, minmax(240px, 1fr))',
-                    gap: '20px',
-                    marginBottom: '32px'
-                }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }} className="dc-withdraw-stats-grid">
                     <StatsCard
                         title="Solicitudes Pendientes"
                         value={stats.pending}
@@ -260,10 +244,10 @@ export const AdminWithdrawalsPage: React.FC = () => {
                         borderBottom: '1px solid var(--border-color)',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '16px'
+                        gap: '20px'
                     }}>
                         {/* Search */}
-                        <div style={{ position: 'relative', maxWidth: window.innerWidth < 768 ? '100%' : '400px' }}>
+                        <div className="dc-admin-filters-row" style={{ position: 'relative', maxWidth: '400px', width: '100%' }}>
                             <Search
                                 size={18}
                                 style={{
@@ -283,51 +267,47 @@ export const AdminWithdrawalsPage: React.FC = () => {
                                     width: '100%',
                                     padding: '12px 12px 12px 44px',
                                     backgroundColor: 'var(--bg-secondary)',
-                                    border: '1px solid var(--border-color)',
+                                    border: '1.5px solid var(--border-color)',
                                     borderRadius: '12px',
                                     fontSize: '14px',
                                     color: 'var(--text-primary)',
                                     outline: 'none',
                                     transition: 'all 0.2s'
                                 }}
+                                onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
+                                onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
                             />
                         </div>
 
                         {/* Filter Tabs */}
-                        <div style={{
+                        <div className="dc-withdraw-tabs" style={{
                             display: 'flex',
                             gap: '8px',
-                            flexWrap: 'nowrap',
-                            width: '100%',
                             overflowX: 'auto',
-                            paddingBottom: '8px',
-                            msOverflowStyle: 'none',
-                            scrollbarWidth: 'none'
-                        }} className="hide-scrollbar">
-                            {(['todos', 'pendientes', 'completados', 'rechazados'] as const).map((s) => {
-                                const filterValue = s === 'todos' ? 'todos' : s.slice(0, -1); // 'pendientes' -> 'pendiente'
-                                return (
-                                    <button
-                                        key={s}
-                                        onClick={() => setFilter(filterValue as any)}
-                                        style={{
-                                            padding: '10px 20px',
-                                            borderRadius: '12px',
-                                            fontSize: '13px',
-                                            fontWeight: 700,
-                                            border: filter === filterValue ? 'none' : '1px solid var(--border-color)',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s',
-                                            backgroundColor: filter === filterValue ? 'var(--color-primary)' : 'var(--bg-secondary)',
-                                            color: filter === filterValue ? '#fff' : 'var(--text-secondary)',
-                                            whiteSpace: 'nowrap',
-                                            flexShrink: 0
-                                        }}
-                                    >
-                                        {s.charAt(0).toUpperCase() + s.slice(1)}
-                                    </button>
-                                );
-                            })}
+                            paddingBottom: '4px',
+                            scrollbarWidth: 'none',
+                            msOverflowStyle: 'none'
+                        }}>
+                            {(['todos', 'pendiente', 'completado', 'rechazado'] as const).map((s) => (
+                                <button
+                                    key={s}
+                                    onClick={() => setFilter(s)}
+                                    style={{
+                                        padding: '10px 20px',
+                                        borderRadius: '12px',
+                                        fontSize: '13px',
+                                        fontWeight: 700,
+                                        border: '1.5px solid transparent',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        backgroundColor: filter === s ? 'var(--color-primary)' : 'var(--bg-tertiary)',
+                                        color: filter === s ? '#fff' : 'var(--text-secondary)',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                >
+                                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
@@ -335,7 +315,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
                     <div style={{ overflowX: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
-                                <tr style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                                <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
                                     <th style={tableHeaderStyle}>Usuario</th>
                                     <th style={tableHeaderStyle}>Cantidad Solicitada</th>
                                     <th style={tableHeaderStyle}>Monto Debitado ({displayCurrency})</th>
@@ -344,7 +324,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
                                     <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody style={{ backgroundColor: 'var(--card-bg)' }}>
                                 {filteredWithdrawals.length === 0 ? (
                                     <tr>
                                         <td colSpan={6} style={{ padding: '60px 20px', textAlign: 'center' }}>
@@ -376,8 +356,10 @@ export const AdminWithdrawalsPage: React.FC = () => {
                                             key={w.id}
                                             style={{
                                                 borderBottom: '1px solid var(--border-color)',
-                                                transition: 'background-color 0.2s'
+                                                transition: 'background-color 0.2s',
+                                                cursor: 'pointer'
                                             }}
+                                            onClick={() => setSelectedWithdrawal(w)}
                                             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
                                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                         >
@@ -407,7 +389,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>
+                                                        <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
                                                             {(w as any).users?.nombres} {(w as any).users?.apellidos}
                                                         </div>
                                                         <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -427,15 +409,15 @@ export const AdminWithdrawalsPage: React.FC = () => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td style={{ ...tableCellStyle, fontWeight: 500 }}>
+                                            <td style={{ ...tableCellStyle, fontWeight: 700 }}>
                                                 {formatCurrency(w.monto_local, w.moneda_destino)}
                                             </td>
-                                            <td style={{ ...tableCellStyle, color: 'var(--text-secondary)' }}>
+                                            <td style={{ ...tableCellStyle, color: 'var(--text-secondary)', fontWeight: 600 }}>
                                                 {formatCurrency(getConverted(w.monto_usd), displayCurrency)}
                                             </td>
                                             <td style={tableCellStyle}>
                                                 <div style={{ fontSize: '13px' }}>
-                                                    <div style={{ fontWeight: 500, color: 'var(--text-primary)', marginBottom: '2px' }}>
+                                                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '2px' }}>
                                                         {w.banco_nombre}
                                                     </div>
                                                     <div style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>
@@ -447,7 +429,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
                                                 <StatusBadge status={w.estado} />
                                             </td>
                                             <td style={{ ...tableCellStyle, textAlign: 'right' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }} onClick={(e) => e.stopPropagation()}>
                                                     {w.estado === 'pendiente' && (
                                                         <>
                                                             <button
@@ -517,6 +499,55 @@ export const AdminWithdrawalsPage: React.FC = () => {
                 </Card>
             </div>
 
+            <style>{`
+                @media (max-width: 767px) {
+                    .dc-admin-header-row {
+                        text-align: center !important;
+                        margin-bottom: 8px;
+                    }
+                    .dc-admin-header-row h1 {
+                        font-size: 22px !important;
+                    }
+                    .dc-admin-header-container {
+                        flex-direction: column !important;
+                        text-align: center !important;
+                    }
+                    .dc-admin-header-text {
+                        min-width: 100% !important;
+                    }
+                    .dc-admin-refresh-btn {
+                        width: 100% !important;
+                        justify-content: center !important;
+                    }
+                    .dc-admin-filters-row {
+                        max-width: 100% !important;
+                    }
+                    .dc-withdraw-tabs {
+                        margin: 0 -12px !important;
+                        padding-left: 12px !important;
+                        padding-right: 12px !important;
+                    }
+                    .dc-withdraw-tabs::-webkit-scrollbar {
+                        display: none;
+                    }
+                    .dc-withdraw-stats-grid {
+                        grid-template-columns: 1fr !important;
+                        gap: 16px !important;
+                    }
+                    
+                    /* Table Mobile Optimization */
+                    table th:nth-child(2),
+                    table th:nth-child(4),
+                    table td:nth-child(2),
+                    table td:nth-child(4) {
+                        display: none !important;
+                    }
+                    table th, table td {
+                        padding: 12px 16px !important;
+                    }
+                }
+            `}</style>
+
             {/* Reject Modal */}
             {rejectTarget && (
                 <RejectModal
@@ -570,12 +601,11 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
 const tableHeaderStyle: React.CSSProperties = {
     padding: '16px 24px',
     textAlign: 'left',
-    fontSize: '11px',
-    fontWeight: 800,
-    color: 'var(--text-tertiary)',
+    fontSize: '12px',
+    fontWeight: 500,
+    color: 'var(--text-secondary)',
     textTransform: 'uppercase',
-    letterSpacing: '0.1em',
-    borderBottom: '1px solid var(--border-color)'
+    letterSpacing: '0.05em'
 };
 
 const tableCellStyle: React.CSSProperties = {
@@ -665,19 +695,13 @@ const RejectModal: React.FC<{
                         {error && <span style={{ fontSize: '12px', color: '#EF4444' }}>⚠ {error}</span>}
                     </div>
 
-                    <div style={{
-                        display: 'flex',
-                        gap: '12px',
-                        justifyContent: 'flex-end',
-                        flexDirection: window.innerWidth < 480 ? 'column' : 'row'
-                    }}>
+                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                         <button
                             onClick={onClose}
                             style={{
                                 padding: '10px 20px', borderRadius: '10px', fontSize: '14px', fontWeight: 600,
                                 backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
-                                color: 'var(--text-primary)', cursor: 'pointer',
-                                width: window.innerWidth < 480 ? '100%' : 'auto'
+                                color: 'var(--text-primary)', cursor: 'pointer'
                             }}
                         >
                             Cancelar
@@ -687,8 +711,7 @@ const RejectModal: React.FC<{
                             style={{
                                 padding: '10px 20px', borderRadius: '10px', fontSize: '14px', fontWeight: 600,
                                 backgroundColor: '#EF4444', border: 'none',
-                                color: '#fff', cursor: 'pointer',
-                                width: window.innerWidth < 480 ? '100%' : 'auto'
+                                color: '#fff', cursor: 'pointer'
                             }}
                         >
                             Rechazar Retiro

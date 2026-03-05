@@ -79,20 +79,53 @@ export const AdminPlansPage: React.FC = () => {
     };
 
     return (
-        <div style={{ padding: '0 var(--main-padding)', fontFamily: "'Inter', sans-serif" }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '16px', flexWrap: 'wrap' }}>
-                <div>
-                    <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                        Gestión de Planes
-                    </h1>
-                    <p style={{ color: 'var(--text-secondary)' }}>
-                        Configura los niveles de suscripción y precios.
-                    </p>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 var(--main-padding)', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+                    <div style={{ flex: '1', minWidth: '280px' }}>
+                        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
+                            Gestión de Planes
+                        </h1>
+                        <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                            Configura los niveles de suscripción y precios.
+                        </p>
+                    </div>
+                    <div className="dc-admin-actions">
+                        <Button onClick={handleCreate} leftIcon={<Plus size={18} />} className="dc-admin-create-btn">
+                            Nuevo Plan
+                        </Button>
+                    </div>
                 </div>
-                <Button onClick={handleCreate} leftIcon={<Plus size={18} />} className="w-full sm:w-auto">
-                    Nuevo Plan
-                </Button>
             </div>
+
+            <style>{`
+                @media (max-width: 767px) {
+                    .dc-admin-header-row {
+                        text-align: center !important;
+                        margin-bottom: 8px;
+                    }
+                    .dc-admin-header-row h1 {
+                        font-size: 22px !important;
+                    }
+                    .dc-admin-actions {
+                        width: 100% !important;
+                    }
+                    .dc-admin-create-btn {
+                        width: 100% !important;
+                        justify-content: center !important;
+                    }
+                    /* Table optimization */
+                    table th:nth-child(3),
+                    table th:nth-child(4),
+                    table td:nth-child(3),
+                    table td:nth-child(4) {
+                        display: none !important;
+                    }
+                    table th, table td {
+                        padding: 12px 16px !important;
+                    }
+                }
+            `}</style>
 
             {/* Plans Table */}
             <Card noPadding style={{

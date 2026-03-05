@@ -58,19 +58,19 @@ export const AdminDashboard: React.FC = () => {
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '40px', padding: '0 var(--main-padding)' }}>
             {/* Header Section */}
-            <div>
-                <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+            <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
                     Panel de Administración
                 </h1>
-                <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                <p style={{ fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                     Resumen global del estado de DropCost Master y herramientas de gestión.
                 </p>
             </div>
 
             {/* Stats Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }} className="dc-admin-stats-grid">
                 {statCards.map((stat) => (
                     <Card key={stat.label} hoverable>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -103,7 +103,7 @@ export const AdminDashboard: React.FC = () => {
             {/* Secondary Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <Card title="Usuarios Recientes">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {!stats || stats.recentUsers.length === 0 ? (
                             <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-tertiary)' }}>
                                 <Users size={32} style={{ opacity: 0.2, marginBottom: '12px' }} />
@@ -111,7 +111,7 @@ export const AdminDashboard: React.FC = () => {
                             </div>
                         ) : (
                             stats.recentUsers.map((user: any) => (
-                                <div key={user.id} style={{
+                                <div key={user.id} className="dc-recent-user-item" style={{
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
@@ -147,11 +147,12 @@ export const AdminDashboard: React.FC = () => {
                                             )}
                                         </div>
                                         <div style={{ minWidth: 0 }}>
-                                            <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                 {user.nombres} {user.apellidos}
                                             </p>
-                                            <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: '2px 0 0 0', whiteSpace: 'nowrap' }}>
-                                                {plans.find(p => p.slug === user.plan_id || p.id === user.plan_id)?.name || 'Plan Gratis'} •
+                                            <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: '4px 0 0 0', display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                                                <span>{plans.find(p => p.slug === user.plan_id || p.id === user.plan_id)?.name || 'Plan Gratis'}</span>
+                                                <span style={{ opacity: 0.5 }}>•</span>
                                                 <Tooltip content={`UTC: ${getDateTimeAuditInfo(user.fecha_registro).utc}`}>
                                                     <span style={{ cursor: 'help', borderBottom: '1px dotted var(--text-tertiary)' }}>
                                                         {formatDisplayDate(user.fecha_registro)}
@@ -159,16 +160,16 @@ export const AdminDashboard: React.FC = () => {
                                                 </Tooltip>
                                                 {user.pais && (
                                                     <>
-                                                        <span style={{ margin: '0 4px', opacity: 0.5 }}>•</span>
+                                                        <span style={{ opacity: 0.5 }}>•</span>
                                                         <img
                                                             src={`https://flagcdn.com/w40/${user.pais.toLowerCase()}.png`}
                                                             alt={user.pais}
-                                                            style={{ width: '14px', height: '10px', borderRadius: '1px', objectFit: 'cover', display: 'inline-block', verticalAlign: 'middle' }}
+                                                            style={{ width: '14px', height: '10px', borderRadius: '1px', objectFit: 'cover', display: 'inline-block' }}
                                                             title={allCountries.find(p => p.codigo_iso_2.toUpperCase() === user.pais.toUpperCase())?.nombre_es || user.pais}
                                                         />
                                                     </>
                                                 )}
-                                            </p>
+                                            </div>
                                         </div>
                                     </div>
                                     <div style={{ flexShrink: 0 }}>
@@ -184,7 +185,7 @@ export const AdminDashboard: React.FC = () => {
                 </Card>
 
                 <Card title="Estado del Sistema">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {[
                             { name: 'API Gateway (Edge)', status: 'Operativo', type: 'success' },
                             { name: 'Database (PostgreSQL)', status: 'Conectado', type: 'success' },
@@ -192,7 +193,7 @@ export const AdminDashboard: React.FC = () => {
                             { name: 'Integración Meta Ads', status: metaStatus === 'operativo' ? 'Sincronizado' : 'Pendiente', type: metaStatus === 'operativo' ? 'success' : 'warning' },
                             { name: 'Storage (Assets)', status: 'Operativo', type: 'success' },
                         ].map((item) => (
-                            <div key={item.name} style={{
+                            <div key={item.name} className="dc-status-item" style={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
@@ -225,6 +226,38 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                 </Card>
             </div >
+
+            <style>{`
+                @media (max-width: 767px) {
+                    .dc-admin-header-row {
+                        text-align: center !important;
+                        margin-bottom: 8px;
+                    }
+                    .dc-admin-header-row h1 {
+                        font-size: 22px !important;
+                    }
+                    .dc-admin-stats-grid {
+                        grid-template-columns: 1fr !important;
+                        gap: 16px !important;
+                    }
+                    .dc-recent-user-item {
+                        flex-direction: column !important;
+                        align-items: flex-start !important;
+                        gap: 12px !important;
+                        padding: 16px !important;
+                    }
+                    .dc-recent-user-item > div:last-child {
+                        align-self: flex-end;
+                    }
+                    .dc-status-item {
+                        padding: 12px 16px !important;
+                    }
+                    .dc-status-item span:first-child {
+                        white-space: normal !important;
+                        font-size: 13px !important;
+                    }
+                }
+            `}</style>
         </div >
     );
 };

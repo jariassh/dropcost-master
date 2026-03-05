@@ -146,14 +146,18 @@ export function AdminReferralPage() {
     if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '100px' }}><Spinner /></div>;
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            <div>
-                <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                    Sistema de Referidos
-                </h1>
-                <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)' }}>
-                    Monitoreo global y configuración dinámica del programa de referidos.
-                </p>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 var(--main-padding)', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+                    <div style={{ flex: '1', minWidth: '280px' }}>
+                        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
+                            Sistema de Referidos
+                        </h1>
+                        <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                            Monitoreo global y configuración dinámica del programa de referidos.
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {/* Global Stats */}
@@ -279,13 +283,13 @@ export function AdminReferralPage() {
                                     }}
                                 />
                                 <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
-                                    Días que una comisión debe esperar antes de estar disponible para retiro.
+                                    Días de retención antes de retiro.
                                 </span>
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                                    Monto Mínimo de Retiro (USD)
+                                    Monto Mín. Retiro (USD)
                                 </label>
                                 <input
                                     type="number"
@@ -298,7 +302,7 @@ export function AdminReferralPage() {
                                     }}
                                 />
                                 <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
-                                    Monto mínimo en USD que un usuario puede retirar.
+                                    Mínimo para solicitar retiro.
                                 </span>
                             </div>
                         </div>
@@ -316,7 +320,7 @@ export function AdminReferralPage() {
                             </div>
                         )}
 
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
+                        <div className="dc-referral-form-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
                             <button
                                 type="button"
                                 onClick={() => loadData()}
@@ -324,7 +328,7 @@ export function AdminReferralPage() {
                                 style={{
                                     padding: '10px 20px', borderRadius: '10px', border: '1px solid var(--border-color)',
                                     backgroundColor: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer',
-                                    fontWeight: 600
+                                    fontWeight: 600, flexShrink: 0
                                 }}
                             >
                                 Cancelar
@@ -335,7 +339,8 @@ export function AdminReferralPage() {
                                 style={{
                                     padding: '10px 24px', borderRadius: '10px', border: 'none',
                                     backgroundColor: 'var(--color-primary)', color: '#fff', cursor: 'pointer',
-                                    fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px'
+                                    fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px',
+                                    justifyContent: 'center', flex: 1, maxWidth: '250px'
                                 }}
                             >
                                 {isSaving ? <Spinner size="sm" /> : <Save size={18} />}
@@ -379,12 +384,12 @@ export function AdminReferralPage() {
 
             {/* Detailed Tables Section */}
             <div id="admin-referral-details" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ display: 'flex', gap: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '2px' }}>
+                <div className="dc-referral-tabs" style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '2px', overflowX: 'auto', scrollbarWidth: 'none' }}>
                     <button
                         onClick={() => setActiveListTab('users')}
                         style={{
                             padding: '12px 24px', fontSize: '15px', fontWeight: 700, cursor: 'pointer',
-                            background: 'none', border: 'none',
+                            background: 'none', border: 'none', whiteSpace: 'nowrap',
                             color: activeListTab === 'users' ? 'var(--color-primary)' : 'var(--text-tertiary)',
                             borderBottom: activeListTab === 'users' ? '3px solid var(--color-primary)' : '3px solid transparent',
                             transition: 'all 0.2s'
@@ -396,13 +401,13 @@ export function AdminReferralPage() {
                         onClick={() => setActiveListTab('leaders')}
                         style={{
                             padding: '12px 24px', fontSize: '15px', fontWeight: 700, cursor: 'pointer',
-                            background: 'none', border: 'none',
+                            background: 'none', border: 'none', whiteSpace: 'nowrap',
                             color: activeListTab === 'leaders' ? 'var(--color-primary)' : 'var(--text-tertiary)',
                             borderBottom: activeListTab === 'leaders' ? '3px solid var(--color-primary)' : '3px solid transparent',
                             transition: 'all 0.2s'
                         }}
                     >
-                        Red de Referentes (Afiliados y Líderes)
+                        Red de Referentes
                     </button>
                 </div>
 
@@ -528,6 +533,71 @@ export function AdminReferralPage() {
                     </div>
                 </Card>
             </div>
+
+            <style>{`
+                .dc-referral-stats-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 20px;
+                }
+                .dc-referral-main-grid {
+                    display: grid;
+                    grid-template-columns: 2fr 1fr;
+                    gap: 32px;
+                }
+                .dc-referral-config-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 20px;
+                }
+                @media (max-width: 1100px) {
+                    .dc-referral-stats-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                    .dc-referral-main-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+                @media (max-width: 767px) {
+                    .dc-admin-header-row {
+                        text-align: center !important;
+                        margin-bottom: 8px;
+                    }
+                    .dc-admin-header-row h1 {
+                        font-size: 22px !important;
+                    }
+                    .dc-referral-stats-grid {
+                        grid-template-columns: 1fr;
+                        gap: 16px;
+                    }
+                    .dc-referral-config-grid {
+                        grid-template-columns: 1fr;
+                        gap: 16px;
+                    }
+                    .dc-referral-form-actions {
+                        flex-direction: column-reverse !important;
+                        padding-top: 20px !important;
+                        gap: 12px !important;
+                    }
+                    .dc-referral-form-actions button {
+                        width: 100% !important;
+                        max-width: 100% !important;
+                    }
+                    .dc-referral-tabs::-webkit-scrollbar {
+                        display: none;
+                    }
+                    /* Table optimization */
+                    table th:nth-child(2),
+                    table th:nth-child(4),
+                    table td:nth-child(2),
+                    table td:nth-child(4) {
+                        display: none !important;
+                    }
+                    table th, table td {
+                        padding: 12px 16px !important;
+                    }
+                }
+            `}</style>
         </div>
     );
 }
@@ -553,42 +623,4 @@ function StatBox({ label, value, icon, color, onClick }: { label: string, value:
             </div>
         </Card>
     );
-}
-
-/* ─── Styles adicionales ─── */
-const adminReferralStyles = `
-    .dc-referral-stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-    }
-    .dc-referral-main-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-    }
-    .dc-referral-config-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-    }
-    @media (max-width: 1100px) {
-        .dc-referral-stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-        .dc-referral-main-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-    @media (max-width: 600px) {
-        .dc-referral-stats-grid {
-            grid-template-columns: 1fr;
-        }
-        .dc-referral-config-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-`;
-
-if (typeof document !== 'undefined') {
-    const styleSheet = document.createElement("style");
-    styleSheet.innerText = adminReferralStyles;
-    document.head.appendChild(styleSheet);
 }
