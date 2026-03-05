@@ -26,7 +26,7 @@ import { ContactDisclaimerModal } from '@/components/modulos/ContactDisclaimerMo
 import { useAuthStore } from '@/store/authStore';
 import * as XLSX from 'xlsx';
 
-export default function ContactosPage() {
+export function ContactosPage() {
     const { tiendaActual } = useStoreStore();
     const { user } = useAuthStore();
     const toast = useToast();
