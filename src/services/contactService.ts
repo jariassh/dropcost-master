@@ -26,7 +26,7 @@ export const contactService = {
 
         // 1. Verificar si el módulo está habilitado para esta tienda
         const { data: acceptance, error: accError } = await supabase
-            .from('contact_module_acceptance')
+            .from('contact_module_acceptance' as any)
             .select('*')
             .eq('tienda_id', tienda_id)
             .eq('estado', 'activo')
@@ -49,7 +49,7 @@ export const contactService = {
 
         // 2. Obtener los contactos mediante paginación y filtros
         let query = supabase
-            .from('shopify_clientes')
+            .from('shopify_clientes' as any)
             .select('*', { count: 'exact' })
             .eq('tienda_id', tienda_id);
 
@@ -75,10 +75,10 @@ export const contactService = {
         }
 
         return {
-            contacts: (data as ShopifyCliente[]) || [],
+            contacts: ((data as any[]) || []) as ShopifyCliente[],
             total: count || 0,
             is_module_enabled: true,
-            acceptance_date: acceptance.aceptado_en
+            acceptance_date: (acceptance as any)?.aceptado_en
         };
     },
 
@@ -87,7 +87,7 @@ export const contactService = {
      */
     async enableModule(tienda_id: string, user_id: string): Promise<boolean> {
         const { error } = await supabase
-            .from('contact_module_acceptance')
+            .from('contact_module_acceptance' as any)
             .upsert({
                 tienda_id,
                 user_id,
@@ -109,7 +109,7 @@ export const contactService = {
      */
     async logDownload(audit: Partial<ContactDownloadAudit>): Promise<void> {
         const { error } = await supabase
-            .from('contact_downloads')
+            .from('contact_downloads' as any)
             .insert([{
                 ...audit,
                 descargado_en: new Date().toISOString()
@@ -126,7 +126,7 @@ export const contactService = {
      */
     async revokeModule(tienda_id: string, user_id: string): Promise<boolean> {
         const { error } = await supabase
-            .from('contact_module_acceptance')
+            .from('contact_module_acceptance' as any)
             .update({ 
                 estado: 'revocado',
                 revocado_en: new Date().toISOString()
@@ -149,7 +149,7 @@ export const contactService = {
         if (!tienda_id) return { isEnabled: false };
 
         const { data, error } = await supabase
-            .from('contact_module_acceptance')
+            .from('contact_module_acceptance' as any)
             .select('aceptado_en')
             .eq('tienda_id', tienda_id)
             .eq('estado', 'activo')
@@ -162,7 +162,7 @@ export const contactService = {
 
         return {
             isEnabled: !!data,
-            acceptanceDate: data?.aceptado_en
+            acceptanceDate: (data as any)?.aceptado_en
         };
     }
 };
