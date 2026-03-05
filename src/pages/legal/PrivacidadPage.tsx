@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Shield } from 'lucide-react';
 
 export function PrivacidadPage() {
-    const lastUpdate = '28 de febrero de 2026';
+    const lastUpdate = '05 de marzo de 2026';
 
     return (
         <div style={{
@@ -85,6 +85,7 @@ export function PrivacidadPage() {
                         <li>Número de teléfono</li>
                         <li>País de residencia</li>
                         <li>Información de costeos, ofertas y configuraciones de negocio</li>
+                        <li><strong>Datos de Terceros (Gestión de Contactos):</strong> Nombres, números de teléfono y correos electrónicos de sus clientes de Shopify o importaciones manuales para su uso exclusivo en el módulo de CRM.</li>
                     </ul>
                     <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: '16px 0 8px' }}>
                         Información recopilada automáticamente:
@@ -106,6 +107,7 @@ export function PrivacidadPage() {
                         <li>Gestionar el programa de referidos y calcular comisiones.</li>
                         <li>Analizar patrones de uso para mejorar la experiencia del usuario.</li>
                         <li>Prevenir fraudes y garantizar la seguridad de la Plataforma.</li>
+                        <li><strong>Gestión de Contactos:</strong> Permitirle organizar y visualizar su propia base de datos de clientes exportada de Shopify para optimizar su estrategia de ventas.</li>
                     </ul>
                 </Section>
 
