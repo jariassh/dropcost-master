@@ -8,6 +8,7 @@
 DropCost Master es una plataforma integral diseñada para la optimización financiera de negocios de Dropshipping en LATAM. Soporta multitenancy, simulaciones financieras avanzadas e integraciones con Shopify y Meta Ads.
 
 ## 2. Últimas Actualizaciones (PM Focus)
+- **Módulo de Contactos v1.0:** Implementación completa (Base de datos, servicios, UI mobile-first e integración con Dashboard).
 - **Estandarización de Tipografía Global:** Implementación de un sistema de escala tipográfica (Poppins/Inter/Lora/JetBrains Mono) persistente en base de datos.
 - **Nuevo Administrador de Diseño:** Interfaz mejorada para personalizar tamaños, line-heights e interletrado en tiempo real.
 - **Refactorización de Plantillas de Email:** Se centralizó el estado de las plantillas usando hooks de React Query, eliminando redundancia y mejorando la velocidad de carga.
@@ -31,9 +32,10 @@ DropCost Master es una plataforma integral diseñada para la optimización finan
 - Control de sesión única.
 
 ## 4. Próximos pasos
-1. **Pruebas con Usuarios Reales:** Validación del flujo de OAuth en entorno de producción.
+1. **Analítica de Contactos:** Implementar gráficos de cohortes y LTV basados en la nueva base de datos.
 2. **Dashboard de Métricas:** Visualización de ROAS y CPA usando los datos sincronizados de Meta.
 3. **App Review en Meta:** Iniciar proceso de verificación para salir de modo "Developer".
+
 
 ---
 > **Audit status:** Estructura de Git limpia y rama push estable.
