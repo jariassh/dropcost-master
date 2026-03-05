@@ -135,53 +135,37 @@ export function AdminSettingsPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
-            {/* Header Section - Same as Dashboard */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
-                        Administración Global
-                    </h1>
-                    <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                        Gestiona la identidad visual, SEO y scripts estructurales de la plataforma.
-                    </p>
-                </div>
-                <div style={{
-                    display: 'flex',
-                    gap: '12px',
-                    width: window.innerWidth < 768 ? '100%' : 'auto',
-                    flexDirection: window.innerWidth < 480 ? 'column' : 'row'
-                }}>
-                    <Button
-                        variant="secondary"
-                        onClick={handleReset}
-                        disabled={isSaving}
-                        leftIcon={<RotateCcw size={14} />}
-                        style={{
-                            height: '42px',
-                            padding: '0 16px',
-                            borderRadius: '12px',
-                            fontSize: '13px',
-                            flex: 1
-                        }}
-                    >
-                        Restaurar
-                    </Button>
-                    <Button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        isLoading={isSaving}
-                        leftIcon={<Save size={14} />}
-                        style={{
-                            height: '42px',
-                            padding: '0 16px',
-                            borderRadius: '12px',
-                            fontSize: '13px',
-                            flex: 1
-                        }}
-                    >
-                        Guardar Cambios
-                    </Button>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '40px', padding: '0 var(--main-padding)' }}>
+            <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }} className="dc-admin-header-container">
+                    <div style={{ flex: '1', minWidth: '280px' }} className="dc-admin-header-text">
+                        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
+                            Administración Global
+                        </h1>
+                        <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                            Gestiona la identidad visual, SEO y scripts estructurales de la plataforma.
+                        </p>
+                    </div>
+                    <div className="dc-admin-actions" style={{ display: 'flex', gap: '12px' }}>
+                        <Button
+                            className="dc-admin-btn-reset"
+                            variant="secondary"
+                            onClick={handleReset}
+                            disabled={isSaving}
+                            leftIcon={<RotateCcw size={16} />}
+                        >
+                            Restaurar
+                        </Button>
+                        <Button
+                            className="dc-admin-btn-save"
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            isLoading={isSaving}
+                            leftIcon={<Save size={16} />}
+                        >
+                            Guardar Cambios
+                        </Button>
+                    </div>
                 </div>
             </div>
 
@@ -190,13 +174,15 @@ export function AdminSettingsPage() {
             <div
                 style={{
                     display: 'flex',
-                    gap: '32px',
+                    gap: '24px',
                     borderBottom: '1px solid var(--border-color)',
                     padding: '0 4px',
                     width: '100%',
-                    overflowX: 'auto'
+                    overflowX: 'auto',
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none'
                 }}
-                className="no-scrollbar"
+                className="dc-admin-tabs-scroll"
             >
                 {tabs.map((tab) => {
                     const isActive = activeTab === tab.id;
@@ -212,7 +198,7 @@ export function AdminSettingsPage() {
                                 borderBottom: `2px solid ${isActive ? 'var(--color-primary)' : 'transparent'}`,
                                 color: isActive ? 'var(--color-primary)' : 'var(--text-tertiary)',
                                 fontSize: '14px',
-                                fontWeight: isActive ? 600 : 500,
+                                fontWeight: 700,
                                 transition: 'all 200ms ease',
                                 backgroundColor: 'transparent',
                                 borderTop: 'none',
@@ -245,6 +231,41 @@ export function AdminSettingsPage() {
                     <SectionInfo config={config} setConfig={setConfig} />
                 )}
             </div>
+
+            <style>{`
+                @media (max-width: 767px) {
+                    .dc-admin-header-row {
+                        text-align: center !important;
+                        margin-bottom: 8px;
+                    }
+                    .dc-admin-header-row h1 {
+                        font-size: 22px !important;
+                    }
+                    .dc-admin-header-container {
+                        flex-direction: column !important;
+                        text-align: center !important;
+                    }
+                    .dc-admin-header-text {
+                        min-width: 100% !important;
+                    }
+                    .dc-admin-actions {
+                        width: 100% !important;
+                        flex-direction: column !important;
+                        gap: 12px !important;
+                    }
+                    .dc-admin-actions button {
+                        width: 100% !important;
+                        justify-content: center !important;
+                    }
+                    .dc-settings-grid {
+                        grid-template-columns: 1fr !important;
+                        gap: 24px !important;
+                    }
+                    .dc-admin-tabs-scroll::-webkit-scrollbar {
+                        display: none;
+                    }
+                }
+            `}</style>
         </div>
     );
 }
@@ -284,7 +305,7 @@ function ClearButton({ onClick }: { onClick: () => void }) {
 function SectionSEO({ config, setConfig, isDark }: any) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            <div className="dc-settings-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '32px' }}>
                 <Card title="Meta Contenido">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <Input

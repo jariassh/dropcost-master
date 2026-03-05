@@ -429,7 +429,7 @@ const MJMLComponentList = ({ onSelect }: { onSelect: (component: any) => void })
 
     return (
         <div
-            className="absolute right-0 top-full mt-2 w-80 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            className="dc-admin-dropdown dc-admin-mjml-list absolute right-0 top-full mt-2 w-80 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
             style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
         >
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
@@ -526,7 +526,7 @@ const VariableList = ({ onSelect }: { onSelect: (v: string) => void }) => {
 
     return (
         <div
-            className="absolute right-0 top-full mt-2 w-80 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            className="dc-admin-dropdown dc-admin-vars-list absolute right-0 top-full mt-2 w-80 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
             style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
         >
             {/* Buscador Dinámico */}
@@ -2207,109 +2207,58 @@ export function AdminEmailTemplatesPage() {
     });
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 0.4s ease-out' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 var(--main-padding)', display: 'flex', flexDirection: 'column', gap: '32px', animation: 'fadeIn 0.4s ease-out' }}>
             {/* Header */}
-            <div style={{
-                display: 'flex',
-                flexDirection: window.innerWidth < 768 ? 'column' : 'row',
-                alignItems: window.innerWidth < 768 ? 'center' : 'flex-start',
-                justifyContent: 'space-between',
-                textAlign: window.innerWidth < 768 ? 'center' : 'left',
-                padding: '0 16px',
-                marginBottom: '8px'
-            }}>
-                <div style={{ flex: 1 }}>
-                    <h1 style={{
-                        fontSize: window.innerWidth < 768 ? '24px' : '30px',
-                        fontWeight: 800,
-                        color: 'var(--text-primary)',
-                        marginBottom: '8px'
-                    }}>
-                        Plantillas de Correo
-                    </h1>
-                    <p style={{ fontSize: '15px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
-                        Cree y gestione plantillas para sus correos transaccionales.
-                    </p>
-                </div>
-
-                {!selectedTemplate && (
-                    <div style={{
-                        display: 'flex',
-                        gap: '10px',
-                        marginTop: window.innerWidth < 768 ? '20px' : '0',
-                        width: window.innerWidth < 768 ? '100%' : 'auto'
-                    }}>
-                        <Button
-                            variant="secondary"
-                            onClick={() => {
-                                setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
-                                setIsFolderModalOpen(true);
-                            }}
-                            leftIcon={<Folder size={18} />}
-                            style={{
-                                height: '42px',
-                                borderRadius: '10px',
-                                flex: 1,
-                                padding: '0 16px',
-                                fontSize: '13px'
-                            }}
-                        >
-                            Carpeta
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
-                                setIsCreateModalOpen(true);
-                            }}
-                            leftIcon={<Plus size={18} />}
-                            style={{
-                                height: '42px',
-                                borderRadius: '10px',
-                                flex: 1,
-                                padding: '0 16px',
-                                fontSize: '13px'
-                            }}
-                        >
-                            Nuevo
-                        </Button>
+            <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+                    <div style={{ flex: '1', minWidth: '280px' }}>
+                        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
+                            Plantillas de correo electrónico
+                        </h1>
+                        <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                            Cree y gestione plantillas para todos sus correos electrónicos transaccionales.
+                        </p>
                     </div>
-                )}
 
-                {selectedTemplate && (
-                    <div className="flex gap-3 mt-4 sm:mt-0">
-                        {selectedTemplate.mjml_content === undefined && (
+                    {selectedTemplate && (
+                        <div className="dc-admin-actions" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                            {selectedTemplate.mjml_content === undefined && (
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => setIsConfirmMJMLOpen(true)}
+                                    leftIcon={<Zap size={16} />}
+                                    style={{ borderRadius: '12px', color: 'var(--color-primary)', borderColor: 'var(--color-primary)', height: '48px' }}
+                                    className="dc-admin-btn-mobile"
+                                >
+                                    Convertir a MJML
+                                </Button>
+                            )}
                             <Button
                                 variant="secondary"
-                                onClick={() => setIsConfirmMJMLOpen(true)}
-                                leftIcon={<Zap size={16} />}
-                                style={{ borderRadius: '12px', color: 'var(--color-primary)', borderColor: 'var(--color-primary)', height: '48px' }}
+                                onClick={() => setSelectedTemplate(null)}
+                                style={{ borderRadius: '12px', height: '48px', padding: '0 24px' }}
+                                className="dc-admin-btn-mobile"
                             >
-                                Convertir a MJML
+                                Cancelar
                             </Button>
-                        )}
-                        <Button
-                            variant="secondary"
-                            onClick={() => setSelectedTemplate(null)}
-                            style={{ borderRadius: '12px', height: '48px', padding: '0 24px' }}
-                        >
-                            Cancelar
-                        </Button>
-                        <Button
-                            onClick={handleSave}
-                            isLoading={isSaving}
-                            leftIcon={<Save size={16} />}
-                            style={{ borderRadius: '12px', height: '48px', padding: '0 24px' }}
-                        >
-                            Guardar Cambios
-                        </Button>
-                    </div>
-                )}
+                            <Button
+                                onClick={handleSave}
+                                isLoading={isSaving}
+                                leftIcon={<Save size={16} />}
+                                style={{ borderRadius: '12px', height: '48px', padding: '0 24px' }}
+                                className="dc-admin-btn-mobile"
+                            >
+                                Guardar Cambios
+                            </Button>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {!selectedTemplate ? (
                 <React.Fragment>
-                    {/* Toolbar más espaciosa */}
-                    <div style={{
+                    {/* Toolbar */}
+                    <div className="dc-admin-toolbar" style={{
                         display: 'flex',
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -2318,39 +2267,34 @@ export function AdminEmailTemplatesPage() {
                         flexWrap: 'wrap',
                         marginBottom: '8px'
                     }}>
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: window.innerWidth < 640 ? 'column' : 'row',
-                            gap: '16px',
-                            flex: 1,
-                            width: '100%',
-                            maxWidth: window.innerWidth < 640 ? '100%' : '700px'
-                        }}>
+                        <div className="dc-admin-search-container" style={{ display: 'flex', gap: '16px', flex: 1, maxWidth: '700px' }}>
                             <div style={{ position: 'relative', flex: 2 }}>
                                 <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
                                 <input
                                     type="text"
-                                    placeholder="Buscar plantillas..."
+                                    placeholder="Buscar por nombre, asunto o descripción..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     style={{
                                         width: '100%',
-                                        padding: '12px 12px 12px 48px',
+                                        padding: '14px 14px 14px 48px',
                                         backgroundColor: 'var(--bg-primary)',
                                         border: '1.5px solid var(--border-color)',
                                         borderRadius: '14px',
                                         fontSize: '14px',
                                         color: 'var(--text-primary)',
                                         outline: 'none',
-                                        transition: 'all 0.2s ease'
+                                        transition: 'all 0.2s ease',
+                                        boxShadow: 'var(--shadow-sm)'
                                     }}
                                 />
                             </div>
 
                             <select
+                                className="dc-admin-select-mobile"
                                 style={{
                                     padding: '0 16px',
-                                    height: '46px',
+                                    height: '52px',
                                     backgroundColor: 'var(--bg-primary)',
                                     border: '1.5px solid var(--border-color)',
                                     borderRadius: '14px',
@@ -2359,19 +2303,21 @@ export function AdminEmailTemplatesPage() {
                                     color: 'var(--text-primary)',
                                     cursor: 'pointer',
                                     outline: 'none',
-                                    width: window.innerWidth < 640 ? '100%' : '180px'
+                                    flex: 1,
+                                    minWidth: '160px',
+                                    boxShadow: 'var(--shadow-sm)'
                                 }}
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value as any)}
                             >
-                                <option value="all">Estados</option>
+                                <option value="all">Todos los Estados</option>
                                 <option value="activo">Activos</option>
                                 <option value="archivado">Archivados</option>
                             </select>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }} className="w-full sm:w-auto">
-                            <div style={{ display: 'flex', gap: '4px', backgroundColor: 'var(--bg-secondary)', padding: '4px', borderRadius: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }} className="w-full sm:w-auto dc-admin-actions-container">
+                            <div className="dc-admin-tabs-scroll" style={{ display: 'flex', gap: '4px', backgroundColor: 'var(--bg-secondary)', padding: '4px', borderRadius: '12px', overflowX: 'auto' }}>
                                 <button
                                     onClick={() => setViewMode('recent')}
                                     style={{
@@ -2387,7 +2333,8 @@ export function AdminEmailTemplatesPage() {
                                         gap: '8px',
                                         fontSize: '11px',
                                         fontWeight: 800,
-                                        transition: 'all 0.2s'
+                                        transition: 'all 0.2s',
+                                        whiteSpace: 'nowrap'
                                     }}
                                 >
                                     <Clock size={16} /> RECIENTES
@@ -2407,11 +2354,35 @@ export function AdminEmailTemplatesPage() {
                                         gap: '8px',
                                         fontSize: '11px',
                                         fontWeight: 800,
-                                        transition: 'all 0.2s'
+                                        transition: 'all 0.2s',
+                                        whiteSpace: 'nowrap'
                                     }}
                                 >
                                     <ListIcon size={16} /> LISTADO
                                 </button>
+                            </div>
+                            <div style={{ display: 'flex', gap: '12px', flex: 1 }} className="dc-admin-create-btns">
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => {
+                                        setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
+                                        setIsFolderModalOpen(true);
+                                    }}
+                                    leftIcon={<Folder size={18} />}
+                                    style={{ height: '52px', borderRadius: '14px', padding: '0 24px', flex: 1 }}
+                                >
+                                    Carpeta
+                                </Button>
+                                <Button
+                                    onClick={() => {
+                                        setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
+                                        setIsCreateModalOpen(true);
+                                    }}
+                                    leftIcon={<Plus size={18} />}
+                                    style={{ height: '52px', borderRadius: '14px', padding: '0 24px', flex: 1 }}
+                                >
+                                    Nuevo
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -3174,7 +3145,7 @@ export function AdminEmailTemplatesPage() {
                         title="Vista Previa en Vivo"
                         icon={<Eye size={18} />}
                         headerAction={
-                            <div style={{ display: 'flex', gap: '4px', padding: '4px', backgroundColor: 'var(--bg-secondary)', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
+                            <div className="dc-admin-preview-actions" style={{ display: 'flex', gap: '4px', padding: '4px', backgroundColor: 'var(--bg-secondary)', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
                                 <button
                                     onClick={() => setPreviewDevice('mobile')}
                                     style={{
@@ -3505,4 +3476,88 @@ export function AdminEmailTemplatesPage() {
             />
         </div>
     );
+}
+
+const styles = `
+    @media (max-width: 767px) {
+        .dc-admin-header-row {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .dc-admin-header-row h1 {
+            font-size: 22px !important;
+        }
+        .dc-admin-toolbar {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 16px !important;
+        }
+        .dc-admin-search-container {
+            flex-direction: column !important;
+            max-width: none !important;
+        }
+        .dc-admin-select-mobile {
+            min-width: 0 !important;
+            width: 100% !important;
+        }
+        .dc-admin-actions-container {
+            width: 100% !important;
+            justify-content: space-between !important;
+        }
+        .dc-admin-create-btns {
+            width: 100% !important;
+        }
+        .dc-admin-btn-mobile {
+            flex: 1 !important;
+            padding: 0 16px !important;
+            font-size: 14px !important;
+        }
+        .dc-admin-tabs-scroll {
+            width: 100%;
+            padding-bottom: 4px;
+        }
+        .dc-admin-dropdown {
+            position: fixed !important;
+            top: auto !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            border-radius: 20px 20px 0 0 !important;
+            z-index: 1000 !important;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.3) !important;
+            max-height: 80vh !important;
+        }
+        /* Mobile table adjustments */
+        table th:nth-child(4), 
+        table th:nth-child(5),
+        table td:nth-child(4),
+        table td:nth-child(5) {
+            display: none !important;
+        }
+        table {
+            min-width: 600px !important;
+        }
+        .dc-admin-header-container {
+            flex-direction: column !important;
+            align-items: center !important;
+        }
+        .dc-admin-preview-actions {
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+        }
+    }
+`;
+
+// Inject styles
+if (typeof document !== 'undefined') {
+    const styleId = 'admin-email-templates-styles';
+    if (!document.getElementById(styleId)) {
+        const styleTag = document.createElement('style');
+        styleTag.id = styleId;
+        styleTag.textContent = styles;
+        document.head.appendChild(styleTag);
+    }
 }
