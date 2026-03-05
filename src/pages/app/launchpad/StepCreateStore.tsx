@@ -24,7 +24,7 @@ export function StepCreateStore({ onComplete }: StepCreateStoreProps) {
 
     // Create Form State
     const [nombre, setNombre] = useState('');
-    const [descripcion, setDescripcion] = useState('');
+
     const [pais, setPais] = useState('CO');
     const [moneda, setMoneda] = useState('COP');
     const [isLoading, setIsLoading] = useState(false);
@@ -80,7 +80,6 @@ export function StepCreateStore({ onComplete }: StepCreateStoreProps) {
                 .insert({
                     usuario_id: user?.id,
                     nombre,
-                    descripcion,
                     pais,
                     moneda,
                     active: true
@@ -214,12 +213,7 @@ export function StepCreateStore({ onComplete }: StepCreateStoreProps) {
                             required
                         />
 
-                        <Input
-                            label="Descripción (Opcional)"
-                            placeholder="Ej: Tienda enfocada en hogar y tecnología"
-                            value={descripcion}
-                            onChange={(e) => setDescripcion(e.target.value)}
-                        />
+
 
                         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
