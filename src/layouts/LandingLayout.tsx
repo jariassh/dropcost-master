@@ -15,7 +15,7 @@ import { useGeoCountry } from '@/hooks/useGeoCountry';
  * LandingLayout: Layout para la página de ventas.
  * Incluye un Header con Glassmorphism y un Footer comercial dinámico.
  */
-export function LandingLayout() {
+export function LandingLayout({ children }: { children?: React.ReactNode }) {
     const { theme, toggleTheme } = useTheme();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [config, setConfig] = useState<GlobalConfig | null>(null);
@@ -250,7 +250,7 @@ export function LandingLayout() {
             </header>
 
             <main style={{ paddingTop: '80px' }}>
-                <Outlet />
+                {children || <Outlet />}
             </main>
 
             {/* FOOTER */}
