@@ -45,6 +45,13 @@ export function MisCosteos() {
     const [pageSize, setPageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const [isCreateStoreOpen, setCreateStoreOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const [quota, setQuota] = useState<{ used: number; limit: number }>({ used: 0, limit: 0 });
 
@@ -284,11 +291,9 @@ export function MisCosteos() {
                 marginBottom: '40px',
                 flexWrap: 'wrap',
                 gap: '24px',
-                padding: '0 4px',
-                width: '100%',
-                boxSizing: 'border-box' as const
+                padding: '0 4px'
             }}>
-                <div style={{ flex: '1 1 250px', minWidth: 0 }}>
+                <div style={{ flex: 1, minWidth: isMobile ? 0 : '300px' }}>
                     <h1 style={{
                         fontSize: '34px',
                         fontWeight: 900,
@@ -303,7 +308,7 @@ export function MisCosteos() {
                     </p>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'stretch', gap: '20px', flexWrap: 'wrap', width: '100%', maxWidth: '100%' }}>
+                <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', gap: '20px', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
                     <div style={{
                         padding: '16px 24px',
                         backgroundColor: 'var(--card-bg)',
@@ -312,9 +317,9 @@ export function MisCosteos() {
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '10px',
-                        flex: '1 1 180px',
-                        boxShadow: 'var(--shadow-sm)',
-                        boxSizing: 'border-box' as const
+                        minWidth: isMobile ? 0 : '220px',
+                        flex: isMobile ? '1 1 100%' : 'unset',
+                        boxShadow: 'var(--shadow-sm)'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cuota de Uso</span>
@@ -348,9 +353,8 @@ export function MisCosteos() {
                             border: 'none', borderRadius: '16px', cursor: 'pointer',
                             boxShadow: '0 8px 20px rgba(0,102,255,0.25)',
                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                            flex: '1 1 180px',
-                            whiteSpace: 'nowrap' as const,
-                            boxSizing: 'border-box' as const
+                            width: isMobile ? '100%' : 'auto',
+                            flex: isMobile ? '1 1 100%' : 'unset'
                         }}
                         onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.transform = 'translateY(-2px)'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
@@ -376,49 +380,48 @@ export function MisCosteos() {
             <div style={{
                 marginBottom: '24px',
                 display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
+                gap: '16px',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent: 'space-between',
                 padding: '16px',
                 backgroundColor: 'var(--bg-secondary)',
                 borderRadius: '20px',
                 border: '1px solid var(--border-color)',
-                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)',
-                width: '100%',
-                boxSizing: 'border-box' as const
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
             }}>
-                {/* Fila 1: Buscador */}
-                <div style={{ position: 'relative', width: '100%' }}>
-                    <Search
-                        size={16}
-                        style={{
-                            position: 'absolute', left: '16px', top: '50%',
-                            transform: 'translateY(-50%)', color: 'var(--text-tertiary)',
-                        }}
-                    />
-                    <input
-                        type="text"
-                        placeholder="Buscar producto..."
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                        style={{
-                            width: '100%', padding: '12px 16px 12px 44px',
-                            fontSize: '13px', border: '1px solid var(--border-color)',
-                            borderRadius: '14px', backgroundColor: 'var(--card-bg)',
-                            color: 'var(--text-primary)', outline: 'none',
-                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.01)',
-                            boxSizing: 'border-box' as const,
-                        }}
-                    />
-                </div>
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', flex: 1, alignItems: 'center', flexDirection: isMobile ? 'column' : 'row' }}>
+                    {/* Buscador */}
+                    <div style={{ position: 'relative', flex: isMobile ? '1 1 100%' : '0 0 320px', maxWidth: isMobile ? '100%' : '320px', width: isMobile ? '100%' : 'auto' }}>
+                        <Search
+                            size={16}
+                            style={{
+                                position: 'absolute', left: '16px', top: '50%',
+                                transform: 'translateY(-50%)', color: 'var(--text-tertiary)',
+                            }}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Buscar producto..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            style={{
+                                width: '100%', padding: '12px 16px 12px 44px',
+                                fontSize: '13px', border: '1px solid var(--border-color)',
+                                borderRadius: '14px', backgroundColor: 'var(--card-bg)',
+                                color: 'var(--text-primary)', outline: 'none',
+                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.01)',
+                                boxSizing: 'border-box' as const,
+                            }}
+                        />
+                    </div>
 
-                {/* Fila 2: Fechas + Mostrar */}
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', width: '100%' }}>
-                    {/* Selector Inicio - Responsivo */}
-                    <div style={{ flex: '1 1 180px', minWidth: '150px', maxWidth: '100%' }}>
+                    {/* Selector Inicio */}
+                    <div style={{ flex: isMobile ? '1 1 100%' : '0 0 320px', maxWidth: isMobile ? '100%' : '320px', width: isMobile ? '100%' : 'auto' }}>
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -432,7 +435,7 @@ export function MisCosteos() {
                             boxShadow: '0 2px 4px rgba(0,0,0,0.01)',
                             height: '42px'
                         }}>
-                            <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--color-primary)', textTransform: 'uppercase', flexShrink: 0 }}>De</span>
+                            <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--color-primary)', textTransform: 'uppercase', minWidth: '22px' }}>De</span>
                             <input
                                 type="date"
                                 value={dateFilter.start}
@@ -449,16 +452,14 @@ export function MisCosteos() {
                                     cursor: 'pointer',
                                     flex: 1,
                                     fontWeight: 700,
-                                    minWidth: 0,
-                                    width: '100%',
-                                    boxSizing: 'border-box' as const,
+                                    minWidth: 0
                                 }}
                             />
                         </div>
                     </div>
 
-                    {/* Selector Fin - Responsivo */}
-                    <div style={{ flex: '1 1 180px', minWidth: '150px', maxWidth: '100%' }}>
+                    {/* Selector Fin */}
+                    <div style={{ flex: isMobile ? '1 1 100%' : '0 0 320px', maxWidth: isMobile ? '100%' : '320px', width: isMobile ? '100%' : 'auto' }}>
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -472,7 +473,7 @@ export function MisCosteos() {
                             boxShadow: '0 2px 4px rgba(0,0,0,0.01)',
                             height: '42px'
                         }}>
-                            <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--color-primary)', textTransform: 'uppercase', flexShrink: 0 }}>Al</span>
+                            <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--color-primary)', textTransform: 'uppercase', minWidth: '22px' }}>Al</span>
                             <input
                                 type="date"
                                 value={dateFilter.end}
@@ -489,16 +490,13 @@ export function MisCosteos() {
                                     cursor: 'pointer',
                                     flex: 1,
                                     fontWeight: 700,
-                                    minWidth: 0,
-                                    width: '100%',
-                                    boxSizing: 'border-box' as const,
+                                    minWidth: 0
                                 }}
                             />
                         </div>
                     </div>
 
-                    {/* Selector Mostrar */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: isMobile ? 0 : 'auto', width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-start' }}>
                         <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)' }}>Mostrar:</span>
                         <select
                             value={pageSize}
@@ -516,7 +514,6 @@ export function MisCosteos() {
                                 outline: 'none',
                                 cursor: 'pointer',
                                 fontWeight: 700,
-                                boxSizing: 'border-box' as const,
                             }}
                         >
                             <option value={10}>10</option>

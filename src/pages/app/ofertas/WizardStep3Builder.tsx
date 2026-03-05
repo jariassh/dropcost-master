@@ -6,7 +6,7 @@ import { Slider, Input, Select } from '@/components/common';
 import { calculateDiscount, calculateBundle, calculateGift } from './ofertasCalculations';
 import type { StrategyType, DiscountConfig, BundleConfig, GiftConfig, GiftType } from '@/types/ofertas';
 import type { SavedCosteo } from '@/types/simulator';
-import { AlertTriangle, TrendingDown, DollarSign, TrendingUp } from 'lucide-react';
+import { AlertTriangle, TrendingDown } from 'lucide-react';
 
 interface WizardStep3Props {
     strategyType: StrategyType;
@@ -78,19 +78,18 @@ export function WizardStep3Builder({
                     maxLabel="50% Máx"
                 />
 
-                <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
-                    <ResultBox label="Precio oferta" value={formatCurrency(result.offerPrice)} icon={<DollarSign size={14} />} />
+                <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <ResultBox label="Precio oferta" value={formatCurrency(result.offerPrice)} />
                     <ResultBox label="Descuento" value={`-${formatCurrency(result.discountAmount)}`} color="var(--color-error)" />
                     <ResultBox
                         label="Nueva ganancia"
                         value={formatCurrency(result.newProfit)}
                         color={result.newProfit > 0 ? 'var(--color-success)' : 'var(--color-error)'}
-                        highlight={result.newProfit > 0}
                     />
                     <ResultBox
                         label="Nuevo margen"
                         value={`${result.newMarginPercent}%`}
-                        color={result.newMarginPercent >= 5 ? 'var(--color-primary)' : 'var(--color-error)'}
+                        color={result.newMarginPercent >= 5 ? 'var(--text-primary)' : 'var(--color-error)'}
                     />
                 </div>
 
@@ -148,30 +147,27 @@ export function WizardStep3Builder({
                 {/* Table */}
                 <div
                     style={{
-                        borderRadius: '16px',
+                        borderRadius: '12px',
                         border: '1px solid var(--border-color)',
                         overflow: 'hidden',
                         overflowY: 'auto',
-                        maxHeight: '220px',
-                        backgroundColor: 'var(--card-bg)',
-                        boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.02)'
+                        maxHeight: '190px',
                     }}
                 >
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                         <thead>
                             <tr>
                                 {['Uds', 'Total', 'P/U', 'Ahorro/U', 'Tu Ganancia'].map((h) => (
                                     <th
                                         key={h}
                                         style={{
-                                            padding: '14px 16px',
+                                            padding: '10px 12px',
                                             textAlign: 'center',
-                                            fontWeight: 700,
+                                            fontWeight: 600,
                                             fontSize: '11px',
-                                            color: 'var(--text-tertiary)',
+                                            color: 'var(--text-secondary)',
                                             textTransform: 'uppercase',
-                                            letterSpacing: '0.05em',
-                                            borderBottom: '2px solid var(--border-color)',
+                                            borderBottom: '1px solid var(--border-color)',
                                             position: 'sticky',
                                             top: 0,
                                             zIndex: 10,
@@ -184,45 +180,30 @@ export function WizardStep3Builder({
                             </tr>
                         </thead>
                         <tbody>
-                            {table.map((row, idx) => (
+                            {table.map((row) => (
                                 <tr
                                     key={row.quantity}
-                                    style={{
-                                        borderBottom: idx === table.length - 1 ? 'none' : '1px solid var(--border-color)',
-                                        backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(0,102,255,0.015)',
-                                        transition: 'background-color 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,102,255,0.04)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? 'transparent' : 'rgba(0,102,255,0.015)'}
+                                    style={{ borderBottom: '1px solid var(--border-color)' }}
                                 >
-                                    <td style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 800, color: 'var(--text-primary)' }}>
+                                    <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>
                                         {row.quantity}
                                     </td>
-                                    <td style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600 }}>
+                                    <td style={{ padding: '10px 12px', textAlign: 'center' }}>
                                         {formatCurrency(row.totalPrice)}
                                     </td>
-                                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                    <td style={{ padding: '10px 12px', textAlign: 'center' }}>
                                         {formatCurrency(row.pricePerUnit)}
                                     </td>
-                                    <td style={{ padding: '12px 16px', textAlign: 'center', color: 'var(--color-primary)', fontWeight: 600 }}>
-                                        {row.savingsPerUnit > 0 ? (
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', backgroundColor: 'rgba(0,102,255,0.08)', padding: '2px 8px', borderRadius: '6px', fontSize: '12px' }}>
-                                                <TrendingDown size={12} /> {formatCurrency(row.savingsPerUnit)}
+                                    <td style={{ padding: '10px 12px', textAlign: 'center', color: 'var(--color-primary)' }}>
+                                        {row.savingsPerUnit > 0 && (
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                                                <TrendingDown size={10} /> {formatCurrency(row.savingsPerUnit)}
                                             </span>
-                                        ) : '-'}
+                                        )}
+                                        {row.savingsPerUnit === 0 && '-'}
                                     </td>
-                                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                        <span style={{
-                                            display: 'inline-block',
-                                            padding: '4px 10px',
-                                            borderRadius: '8px',
-                                            backgroundColor: 'rgba(16,185,129,0.1)',
-                                            color: 'var(--color-success)',
-                                            fontWeight: 700,
-                                            fontSize: '13px'
-                                        }}>
-                                            {formatCurrency(row.totalProfit)}
-                                        </span>
+                                    <td style={{ padding: '10px 12px', textAlign: 'center', color: 'var(--color-success)', fontWeight: 600 }}>
+                                        {formatCurrency(row.totalProfit)}
                                     </td>
                                 </tr>
                             ))}
@@ -313,17 +294,16 @@ export function WizardStep3Builder({
                 </div>
             </div>
 
-            <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
-                <ResultBox label="Valor percibido" value={formatCurrency(giftResult.perceivedValue)} color="var(--color-primary)" icon={<TrendingUp size={14} />} />
+            <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <ResultBox label="Valor percibido" value={formatCurrency(giftResult.perceivedValue)} color="var(--color-primary)" />
                 <ResultBox label="Costo regalo" value={`-${formatCurrency(giftResult.giftCost)}`} color="var(--color-error)" />
                 <ResultBox
                     label="Nueva ganancia"
                     value={formatCurrency(giftResult.newProfit)}
                     color={giftResult.newProfit > 0 ? 'var(--color-success)' : 'var(--color-error)'}
-                    highlight={giftResult.newProfit > 0}
                 />
                 <ResultBox
-                    label="Reducción"
+                    label="Reducción ganancia"
                     value={formatCurrency(giftResult.profitReduction)}
                     color="var(--text-secondary)"
                 />
@@ -336,28 +316,18 @@ export function WizardStep3Builder({
     );
 }
 
-function ResultBox({ label, value, color, icon, highlight }: { label: string; value: string; color?: string; icon?: React.ReactNode; highlight?: boolean }) {
+function ResultBox({ label, value, color }: { label: string; value: string; color?: string }) {
     return (
         <div
             style={{
-                padding: '16px',
-                borderRadius: '12px',
-                backgroundColor: highlight ? 'rgba(0,102,255,0.03)' : 'var(--bg-secondary)',
-                border: highlight ? '1px solid rgba(0,102,255,0.1)' : '1px solid var(--border-color)',
+                padding: '14px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-secondary)',
                 textAlign: 'center',
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '4px'
             }}
         >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-                {icon && <span style={{ color: 'var(--text-tertiary)' }}>{icon}</span>}
-                <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
-            </div>
-            <p style={{ fontSize: '18px', fontWeight: 800, color: color || 'var(--text-primary)' }}>{value}</p>
+            <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginBottom: '4px' }}>{label}</p>
+            <p style={{ fontSize: '16px', fontWeight: 700, color: color || 'var(--text-primary)' }}>{value}</p>
         </div>
     );
 }

@@ -9,7 +9,7 @@ import { Card } from '@/components/common/Card';
 import { OfertaDetailPanel } from './components/OfertaDetailPanel';
 import type { Oferta, StrategyType } from '@/types/ofertas';
 import { STRATEGIES } from '@/types/ofertas';
-import { Plus, Eye, Trash2, Gift, Filter, Copy, ArrowRight, X, Settings, Check } from 'lucide-react';
+import { Plus, Eye, Trash2, Gift, Filter, Copy } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useStoreStore } from '@/store/useStoreStore';
 import { ofertaService } from '@/services/ofertaService';
@@ -195,126 +195,158 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
     }
 
     return (
-        <div>
-            {/* Filters Section */}
+        <div style={{ padding: '0 4px' }}>
+            {/* Filters Bar - Horizontal Scroll */}
             <div style={{
-                marginBottom: '32px',
-                padding: '0 4px'
-            }}>
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    backgroundColor: 'var(--bg-secondary)',
-                    padding: '8px 14px',
-                    borderRadius: '16px',
-                    border: '1px solid var(--border-color)',
-                    width: 'fit-content',
-                    marginBottom: '16px',
-                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
-                }}>
-                    <Filter size={14} style={{ color: 'var(--color-primary)', strokeWidth: 3 }} />
-                    <span style={{ fontSize: '11px', fontWeight: 900, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Filtrar por Estrategia</span>
-                </div>
-
-                <div style={{
-                    display: 'flex',
-                    gap: '10px',
-                    overflowX: 'auto',
-                    paddingBottom: '8px',
-                    msOverflowStyle: 'none',
-                    scrollbarWidth: 'none',
-                    WebkitOverflowScrolling: 'touch',
-                    maskImage: 'linear-gradient(to right, black 90%, transparent 100%)'
-                }}>
-                    {['todas', 'descuento', 'bundle', 'obsequio'].map((s) => (
-                        <button
-                            key={s}
-                            onClick={() => setFilterStrategy(s as StrategyType | 'todas')}
-                            style={{
-                                padding: '10px 20px',
-                                borderRadius: '14px',
-                                fontSize: '13px',
-                                fontWeight: 800,
-                                border: '1px solid',
-                                borderColor: filterStrategy === s ? 'var(--color-primary)' : 'var(--border-color)',
-                                backgroundColor: filterStrategy === s ? 'rgba(0,102,255,0.08)' : 'var(--card-bg)',
-                                color: filterStrategy === s ? 'var(--color-primary)' : 'var(--text-secondary)',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                boxShadow: filterStrategy === s ? '0 4px 12px rgba(0, 102, 255, 0.12)' : '0 2px 4px rgba(0,0,0,0.02)',
-                                whiteSpace: 'nowrap',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px'
-                            }}
-                        >
-                            <span style={{ fontSize: '18px' }}>
-                                {s === 'todas' ? '🚀' : getStrategyInfo(s as StrategyType).icon}
-                            </span>
-                            {s === 'todas' ? 'Todas las Estrategias' : getStrategyInfo(s as StrategyType).label}
-                        </button>
-                    ))}
-                </div>
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                backgroundColor: 'var(--bg-secondary)',
+                padding: '8px 14px',
+                borderRadius: '16px',
+                border: '1px solid var(--border-color)',
+                width: 'fit-content',
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)',
+                marginBottom: '16px'
+            }} className="ofertas-filter-label">
+                <Filter size={14} style={{ color: 'var(--color-primary)', strokeWidth: 3 }} />
+                <span style={{ fontSize: '11px', fontWeight: 900, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Filtrar por Estrategia</span>
             </div>
 
-            {/* Cards Grid */}
             <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))',
-                gap: '24px'
-            }}>
-                {filtered.map((o) => {
-                    const strategyInfo = getStrategyInfo(o.strategyType);
-                    return (
-                        <div
-                            key={o.id}
-                            onClick={() => setDetailOferta(o)}
-                            style={{
-                                padding: '20px',
-                                borderRadius: '18px',
-                                backgroundColor: 'var(--card-bg)',
-                                border: detailOferta?.id === o.id
-                                    ? '2px solid var(--color-primary)'
-                                    : '1px solid var(--border-color)',
-                                cursor: 'pointer',
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '16px',
-                                position: 'relative',
-                                boxShadow: detailOferta?.id === o.id ? '0 8px 20px rgba(0,102,255,0.08)' : '0 2px 4px rgba(0,0,0,0.02)',
-                            }}
-                            onMouseEnter={(e) => {
-                                if (detailOferta?.id !== o.id) {
-                                    e.currentTarget.style.borderColor = 'var(--color-primary)';
-                                    e.currentTarget.style.transform = 'translateY(-4px)';
-                                    e.currentTarget.style.boxShadow = '0 16px 32px rgba(0,0,0,0.06)';
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                if (detailOferta?.id !== o.id) {
-                                    e.currentTarget.style.borderColor = 'var(--border-color)';
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.02)';
-                                }
-                            }}
-                        >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <div style={{
-                                        width: '48px', height: '48px',
-                                        borderRadius: '12px',
-                                        backgroundColor: 'var(--bg-secondary)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        fontSize: '28px'
-                                    }}>
-                                        {strategyInfo.icon}
-                                    </div>
+                display: 'flex',
+                gap: '10px',
+                overflowX: 'auto',
+                paddingBottom: '12px',
+                msOverflowStyle: 'none',
+                scrollbarWidth: 'none',
+                WebkitOverflowScrolling: 'touch',
+                marginBottom: '24px'
+            }} className="ofertas-filters-row">
+                <style>{`.ofertas-filters-row::-webkit-scrollbar { display: none; }`}</style>
+                {['todas', 'descuento', 'bundle', 'obsequio'].map((s) => (
+                    <button
+                        key={s}
+                        onClick={() => setFilterStrategy(s as StrategyType | 'todas')}
+                        style={{
+                            padding: '10px 20px',
+                            borderRadius: '14px',
+                            fontSize: '13px',
+                            fontWeight: 800,
+                            border: '1px solid',
+                            borderColor: filterStrategy === s ? 'var(--color-primary)' : 'var(--border-color)',
+                            backgroundColor: filterStrategy === s ? 'rgba(0,102,255,0.08)' : 'var(--card-bg)',
+                            color: filterStrategy === s ? 'var(--color-primary)' : 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                            boxShadow: filterStrategy === s ? '0 4px 12px rgba(0, 102, 255, 0.12)' : '0 2px 4px rgba(0,0,0,0.02)',
+                            whiteSpace: 'nowrap',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}
+                    >
+                        <span style={{ fontSize: '18px' }}>
+                            {s === 'todas' ? '🚀' : getStrategyInfo(s as StrategyType).icon}
+                        </span>
+                        {s === 'todas' ? 'Todas las Estrategias' : getStrategyInfo(s as StrategyType).label}
+                    </button>
+                ))}
+            </div>
+
+
+            {/* Table (desktop) */}
+            <div className="ofertas-desktop-view">
+                <Card noPadding style={{
+                    boxShadow: 'var(--shadow-lg)',
+                    borderRadius: '16px',
+                    border: '1px solid var(--border-color)',
+                    overflow: 'hidden'
+                }}>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                            <thead>
+                                <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                                    {['Producto', 'Estrategia', 'Ganancia Est.', 'Acciones'].map((col) => (
+                                        <th
+                                            key={col}
+                                            style={{
+                                                padding: '16px 24px',
+                                                textAlign: 'left',
+                                                fontWeight: 600,
+                                                color: 'var(--text-secondary)',
+                                                fontSize: '12px',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '0.05em',
+                                            }}
+                                        >
+                                            {col}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filtered.map((o) => {
+                                    const info = getStrategyInfo(o.strategyType);
+                                    return (
+                                        <tr
+                                            key={o.id}
+                                            style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.2s' }}
+                                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)')}
+                                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                                        >
+                                            <td style={{ padding: '16px 24px', fontWeight: 600 }}>{o.productName}</td>
+                                            <td style={{ padding: '16px 24px' }}>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    {info.icon} {info.label}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--color-success)' }}>
+                                                {formatCurrency(o.estimatedProfit)}
+                                            </td>
+                                            <td style={{ padding: '16px 24px' }}>
+                                                <div style={{ display: 'flex', gap: '6px' }}>
+                                                    <ActionBtn icon={<Eye size={14} />} title="Ver" onClick={() => setDetailOferta(o)} />
+                                                    <ActionBtn icon={<Copy size={14} />} title="Duplicar" onClick={() => handleDuplicate(o)} />
+                                                    {(user?.rol === 'admin' || user?.rol === 'superadmin' || user?.plan?.limits?.can_delete_offers) && (
+                                                        <ActionBtn icon={<Trash2 size={14} />} title="Eliminar" onClick={() => checkDelete(o.id)} danger />
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
+            </div>
+
+            {/* Cards (mobile) */}
+            <div className="ofertas-mobile-view">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '20px' }}>
+                    {filtered.map((o) => {
+                        const info = getStrategyInfo(o.strategyType);
+                        return (
+                            <div
+                                key={o.id}
+                                onClick={() => setDetailOferta(o)}
+                                style={{
+                                    padding: '20px',
+                                    borderRadius: '18px',
+                                    backgroundColor: 'var(--card-bg)',
+                                    border: '1px solid var(--border-color)',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '16px',
+                                    position: 'relative'
+                                }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     <div>
-                                        <h4 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                                            {o.productName}
-                                        </h4>
+                                        <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 4px', color: 'var(--text-primary)' }}>{o.productName}</h3>
                                         <span style={{
                                             padding: '4px 10px',
                                             borderRadius: '8px',
@@ -322,103 +354,81 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
                                             fontWeight: 800,
                                             backgroundColor: 'rgba(0,102,255,0.06)',
                                             color: 'var(--color-primary)',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.04em'
+                                            textTransform: 'uppercase'
                                         }}>
-                                            {strategyInfo.label}
+                                            {info.icon} {info.label}
                                         </span>
                                     </div>
+                                    <div style={{
+                                        padding: '6px 12px',
+                                        borderRadius: '8px',
+                                        fontSize: '11px',
+                                        fontWeight: 800,
+                                        backgroundColor: o.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                                        color: o.status === 'active' ? 'var(--color-success)' : 'var(--text-tertiary)',
+                                        textTransform: 'uppercase'
+                                    }}>
+                                        {o.status === 'active' ? 'Activa' : 'Pausa'}
+                                    </div>
                                 </div>
+
                                 <div style={{
-                                    padding: '6px 12px',
-                                    borderRadius: '8px',
-                                    fontSize: '11px',
-                                    fontWeight: 800,
-                                    backgroundColor: o.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.1)',
-                                    color: o.status === 'active' ? 'var(--color-success)' : 'var(--text-tertiary)',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.04em'
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr 1fr',
+                                    gap: '16px',
+                                    padding: '16px',
+                                    borderRadius: '14px',
+                                    backgroundColor: 'var(--bg-secondary)',
+                                    border: '1px solid var(--border-color)'
                                 }}>
-                                    {o.status === 'active' ? 'Activa' : 'Pausa'}
+                                    <div>
+                                        <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Ganancia</p>
+                                        <p style={{ fontSize: '15px', fontWeight: 800, color: 'var(--color-success)' }}>{formatCurrency(o.estimatedProfit)}</p>
+                                    </div>
+                                    <div>
+                                        <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Margen</p>
+                                        <p style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>{o.estimatedMarginPercent}%</p>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: '1fr 1fr',
-                                gap: '16px',
-                                padding: '16px',
-                                borderRadius: '14px',
-                                backgroundColor: 'var(--bg-secondary)',
-                                border: '1px solid var(--border-color)'
-                            }}>
-                                <div>
-                                    <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Ganancia</p>
-                                    <p style={{ fontSize: '15px', fontWeight: 800, color: 'var(--color-success)' }}>{formatCurrency(o.estimatedProfit)}</p>
-                                </div>
-                                <div>
-                                    <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Margen</p>
-                                    <p style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>{o.estimatedMarginPercent}%</p>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <ActionBtn icon={<Eye size={16} />} title="Ver detalles" onClick={() => setDetailOferta(o)} />
+                                        <ActionBtn icon={<Copy size={16} />} title="Duplicar" onClick={() => handleDuplicate(o)} />
+                                    </div>
+                                    {(user?.rol === 'admin' || user?.rol === 'superadmin' || user?.plan?.limits?.can_delete_offers) && (
+                                        <ActionBtn icon={<Trash2 size={16} />} title="Eliminar" onClick={() => checkDelete(o.id)} danger />
+                                    )}
                                 </div>
                             </div>
-
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginTop: '4px'
-                            }}>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <ActionBtn
-                                        icon={<Eye size={16} />}
-                                        title="Ver detalles"
-                                        onClick={(e) => { e.stopPropagation(); setDetailOferta(o); }}
-                                    />
-                                    <ActionBtn
-                                        icon={<Copy size={16} />}
-                                        title="Duplicar"
-                                        onClick={(e) => { e.stopPropagation(); handleDuplicate(o); }}
-                                    />
-                                </div>
-                                {(user?.rol === 'admin' || user?.rol === 'superadmin' || user?.plan?.limits?.can_delete_offers) && (
-                                    <ActionBtn
-                                        icon={<Trash2 size={16} />}
-                                        title="Eliminar"
-                                        onClick={(e) => { e.stopPropagation(); checkDelete(o.id); }}
-                                        danger
-                                    />
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
+                </div>
             </div>
 
-            {
-                filtered.length === 0 && ofertas.length > 0 && (
-                    <div style={{
-                        padding: '80px 24px',
-                        textAlign: 'center',
-                        backgroundColor: 'var(--card-bg)',
-                        borderRadius: '24px',
-                        border: '1px dashed var(--border-color)',
-                        marginTop: '24px'
-                    }}>
-                        <Filter size={48} style={{ color: 'var(--text-tertiary)', marginBottom: '16px', opacity: 0.5 }} />
-                        <h4 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                            No hay ofertas con estos filtros
-                        </h4>
-                        <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-                            Prueba seleccionando otra categoría o crea una nueva oferta.
-                        </p>
-                    </div>
-                )
-            }
+            {filtered.length === 0 && ofertas.length > 0 && (
+                <div style={{
+                    padding: '80px 24px',
+                    textAlign: 'center',
+                    backgroundColor: 'var(--card-bg)',
+                    borderRadius: '24px',
+                    border: '1px dashed var(--border-color)',
+                    marginTop: '24px'
+                }}>
+                    <Filter size={48} style={{ color: 'var(--text-tertiary)', marginBottom: '16px', opacity: 0.5 }} />
+                    <h4 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                        No hay ofertas con estos filtros
+                    </h4>
+                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                        Prueba seleccionando otra categoría o crea una nueva oferta.
+                    </p>
+                </div>
+            )}
 
             {/* Detail Panel */}
             {detailOferta && (
                 <OfertaDetailPanel
-                    oferta={detailOferta as Oferta}
+                    oferta={detailOferta}
                     onClose={() => setDetailOferta(null)}
                     onDelete={(id: string) => {
                         setDetailOferta(null);
@@ -431,20 +441,31 @@ export function OfertasDashboard({ onCreateNew }: OfertasDashboardProps) {
             <ConfirmDialog
                 isOpen={!!deleteConfirm}
                 title="Eliminar oferta"
-                description="¿Estás seguro de eliminar esta oferta? Esta acción no se puede deshacer y se perderán los datos vinculados."
+                description="¿Estás seguro de eliminar esta oferta? Esta acción no se puede deshacer."
                 confirmLabel="Sí, eliminar"
                 variant="danger"
                 onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
                 onCancel={() => setDeleteConfirm(null)}
             />
+
+            <style>{`
+                @media (max-width: 767px) {
+                    .ofertas-desktop-view { display: none !important; }
+                    .ofertas-mobile-view { display: block !important; }
+                }
+                @media (min-width: 768px) {
+                    .ofertas-desktop-view { display: block !important; }
+                    .ofertas-mobile-view { display: none !important; }
+                }
+            `}</style>
         </div>
     );
 }
 
-function ActionBtn({ icon, title, onClick, danger = false }: { icon: React.ReactNode; title: string; onClick: (e: React.MouseEvent) => void; danger?: boolean }) {
+function ActionBtn({ icon, title, onClick, danger = false }: { icon: React.ReactNode; title: string; onClick: () => void; danger?: boolean }) {
     return (
         <button
-            onClick={onClick}
+            onClick={(e) => { e.stopPropagation(); onClick(); }}
             title={title}
             style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -466,5 +487,14 @@ function ActionBtn({ icon, title, onClick, danger = false }: { icon: React.React
         >
             {icon}
         </button>
+    );
+}
+
+function InfoItem({ label, value }: { label: string; value: string }) {
+    return (
+        <div>
+            <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginBottom: '2px' }}>{label}</p>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>{value}</p>
+        </div>
     );
 }
