@@ -99,44 +99,64 @@ export function WizardStep2Costeo({ selectedCosteoId, onSelect }: WizardStep2Pro
                     {selectedCosteo && (
                         <div
                             style={{
-                                marginTop: '20px',
-                                padding: '20px',
-                                borderRadius: '12px',
-                                backgroundColor: 'var(--bg-secondary)',
+                                marginTop: '24px',
+                                padding: '24px',
+                                borderRadius: '16px',
+                                backgroundColor: 'var(--card-bg)',
                                 border: '1px solid var(--border-color)',
-                                animation: 'slideUp 200ms ease-out',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                                animation: 'slideUp 250ms ease-out',
                             }}
                         >
-                            <p style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px' }}>
-                                Detalle del costeo
-                            </p>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                                <div style={{
+                                    width: '32px', height: '32px', borderRadius: '8px',
+                                    backgroundColor: 'rgba(0,102,255,0.1)', color: 'var(--color-primary)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}>
+                                    <Package size={18} />
+                                </div>
+                                <p style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                    Detalle del costeo: {selectedCosteo.nombre_producto}
+                                </p>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                 <DetailItem
-                                    icon={<DollarSign size={14} />}
-                                    label="Precio final"
+                                    icon={<DollarSign size={16} />}
+                                    label="Precio Final Sugerido"
                                     value={formatCurrency(selectedCosteo.precio_final || 0)}
                                 />
                                 <DetailItem
-                                    icon={<TrendingUp size={14} />}
-                                    label="Utilidad neta"
+                                    icon={<TrendingUp size={16} />}
+                                    label="Utilidad Neta Estimada"
                                     value={formatCurrency(selectedCosteo.utilidad_neta || 0)}
                                     color="var(--color-success)"
                                 />
                                 <DetailItem
-                                    icon={<Package size={14} />}
-                                    label="Costo producto"
+                                    icon={<Package size={16} />}
+                                    label="Costo de Producto"
                                     value={formatCurrency(selectedCosteo.costo_producto || 0)}
                                 />
                                 <DetailItem
-                                    icon={<TrendingUp size={14} />}
-                                    label="Margen deseado"
+                                    icon={<TrendingUp size={16} />}
+                                    label="Margen Deseado"
                                     value={`${selectedCosteo.margen || 0}%`}
+                                    color="var(--color-primary)"
                                 />
                             </div>
+
                             {selectedCosteo.meta_campaign_id && (
-                                <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '12px' }}>
-                                    ID Campaña Meta: {selectedCosteo.meta_campaign_id}
-                                </p>
+                                <div style={{
+                                    marginTop: '20px', paddingTop: '16px',
+                                    borderTop: '1px solid var(--border-color)',
+                                    display: 'flex', alignItems: 'center', gap: '8px'
+                                }}>
+                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--text-tertiary)' }} />
+                                    <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
+                                        ID Campaña Meta: {selectedCosteo.meta_campaign_id}
+                                    </p>
+                                </div>
                             )}
                         </div>
                     )}

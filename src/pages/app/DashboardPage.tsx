@@ -31,6 +31,13 @@ export function DashboardPage() {
     const [selectedOrder, setSelectedOrder] = useState<DashboardOrder | null>(null);
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const { addNotification, notifications } = useNotificationStore();
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const fetchMetrics = async () => {
         if (!tiendaActual?.id) {
@@ -97,16 +104,18 @@ export function DashboardPage() {
             <div
                 style={{
                     display: 'flex',
+                    flexDirection: isMobile ? 'column' : 'row',
                     justifyContent: 'space-between',
-                    alignItems: 'flex-end',
-                    marginBottom: '28px'
+                    alignItems: isMobile ? 'flex-start' : 'flex-end',
+                    marginBottom: isMobile ? '24px' : '28px',
+                    gap: isMobile ? '16px' : '0'
                 }}
             >
                 <div>
 
                     <h1
                         style={{
-                            fontSize: '28px',
+                            fontSize: isMobile ? '22px' : '28px',
                             fontWeight: 800,
                             color: 'var(--text-primary)',
                             margin: '0 0 4px',
@@ -120,13 +129,15 @@ export function DashboardPage() {
                     </p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '10px', width: isMobile ? '100%' : 'auto' }}>
                     <div
                         style={{
                             display: 'flex',
                             backgroundColor: 'var(--bg-secondary)',
                             padding: '4px',
-                            borderRadius: '10px'
+                            borderRadius: '10px',
+                            flex: isMobile ? 1 : 'none',
+                            justifyContent: isMobile ? 'space-around' : 'flex-start'
                         }}
                     >
                         {(['today', 'week', 'month'] as const).map((range) => (
@@ -134,16 +145,17 @@ export function DashboardPage() {
                                 key={range}
                                 onClick={() => setTimeRange(range)}
                                 style={{
-                                    padding: '6px 16px',
+                                    padding: '6px 12px',
                                     borderRadius: '8px',
                                     border: 'none',
-                                    fontSize: '13px',
+                                    fontSize: '12px',
                                     fontWeight: 600,
                                     cursor: 'pointer',
                                     backgroundColor: timeRange === range ? 'var(--bg-primary)' : 'transparent',
                                     color: timeRange === range ? 'var(--color-primary)' : 'var(--text-secondary)',
                                     boxShadow: timeRange === range ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
-                                    transition: 'all 200ms ease'
+                                    transition: 'all 200ms ease',
+                                    flex: isMobile ? 1 : 'none'
                                 }}
                             >
                                 {range === 'today' ? 'Hoy' : range === 'week' ? 'Semana' : 'Mes'}
@@ -163,7 +175,8 @@ export function DashboardPage() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            flexShrink: 0
                         }}
                     >
                         <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
@@ -193,7 +206,7 @@ export function DashboardPage() {
                     <div
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
+                            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(450px, 1fr))',
                             gap: '24px',
                             marginBottom: '32px'
                         }}
@@ -285,19 +298,20 @@ export function DashboardPage() {
                             title="ROAS por Semana"
                             icon={<BarChart3 size={16} />}
                             headerAction={
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <select
                                         value={roasPeriod}
                                         onChange={(e) => setRoasPeriod(e.target.value as any)}
                                         style={{
-                                            padding: '4px 8px',
-                                            fontSize: '12px',
+                                            padding: '4px 6px',
+                                            fontSize: '11px',
                                             borderRadius: '6px',
                                             border: '1px solid var(--border-color)',
                                             backgroundColor: 'var(--bg-secondary)',
                                             color: 'var(--text-primary)',
                                             cursor: 'pointer',
-                                            outline: 'none'
+                                            outline: 'none',
+                                            maxWidth: isMobile ? '100px' : 'auto'
                                         }}
                                     >
                                         <option value="thisMonth">Este mes</option>
@@ -309,13 +323,13 @@ export function DashboardPage() {
                                         position="left"
                                     >
                                         <div style={{ color: 'var(--text-tertiary)', cursor: 'help', display: 'flex' }}>
-                                            <Info size={16} />
+                                            <Info size={14} />
                                         </div>
                                     </DSTooltip>
                                 </div>
                             }
                         >
-                            <div style={{ height: '350px', width: '100%', padding: '10px 0' }}>
+                            <div style={{ height: '320px', width: '100%', padding: '10px 0' }}>
                                 {metrics && metrics.history.length > 0 ? (
                                     <ResponsiveContainer width="100%" height="100%">
                                         <BarChart
@@ -343,7 +357,8 @@ export function DashboardPage() {
                                                 }
                                                 return weeklyData;
                                             })()}
-                                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                            margin={{ top: 35, right: 10, left: -20, bottom: 5 }}
+                                            barCategoryGap="30%"
                                         >
                                             <defs>
                                                 <linearGradient id="colorRoas" x1="0" y1="0" x2="0" y2="1">
@@ -359,12 +374,13 @@ export function DashboardPage() {
                                                 tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
                                             />
                                             <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} />
-                                            <Bar name="ROAS Real" dataKey="roas" fill="url(#colorRoas)" radius={[4, 4, 0, 0]} barSize={40}>
+                                            <Bar name="ROAS Real" dataKey="roas" fill="url(#colorRoas)" radius={[6, 6, 0, 0]}>
                                                 <LabelList
                                                     dataKey="roas"
                                                     position="top"
                                                     formatter={(val: any) => typeof val === 'number' && val > 0 ? `${val}x` : ''}
-                                                    style={{ fill: 'var(--text-primary)', fontSize: 11, fontWeight: 700 }}
+                                                    style={{ fill: 'var(--text-primary)', fontSize: 10, fontWeight: 800 }}
+                                                    offset={12}
                                                 />
                                             </Bar>
                                         </BarChart>
@@ -379,7 +395,7 @@ export function DashboardPage() {
                     <div
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+                            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(350px, 1fr))',
                             gap: '24px',
                             marginBottom: '32px'
                         }}

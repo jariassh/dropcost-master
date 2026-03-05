@@ -16,16 +16,16 @@ import {
     TrendingDown,
     Package,
     ArrowRight,
-    Store, // Re-added as it's used later
-    Check, X, Info, Eye, Link2 // Re-added as they are used later
+    Store,
+    Check, X, Info, Eye, Link2
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useStoreStore } from '@/store/useStoreStore';
 import { costeoService } from '@/services/costeoService';
-import { useToast, Card, Button, Input, Modal, Badge, Spinner, ConfirmDialog, EmptyState, Tooltip } from '@/components/common'; // Tooltip re-added
+import { useToast, Card, Button, Input, Modal, Badge, Spinner, ConfirmDialog, EmptyState, Tooltip } from '@/components/common';
 import { formatDisplayDate } from '@/utils/dateUtils';
 import type { SavedCosteo } from '@/types/simulator';
-import { CreateStoreModal } from '@/components/layout/CreateStoreModal'; // Re-added as it's used later
+import { CreateStoreModal } from '@/components/layout/CreateStoreModal';
 import { IntegrationLinkModal } from '@/components/configuracion/IntegrationLinkModal';
 
 export function MisCosteos() {
@@ -45,12 +45,9 @@ export function MisCosteos() {
     const [pageSize, setPageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const [isCreateStoreOpen, setCreateStoreOpen] = useState(false);
-    const [isCreateCosteoOpen, setCreateCosteoOpen] = useState(false);
-    const [newCosteoName, setNewCosteoName] = useState('');
 
     const [quota, setQuota] = useState<{ used: number; limit: number }>({ used: 0, limit: 0 });
 
-    // Confirmación de eliminación
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
@@ -66,25 +63,22 @@ export function MisCosteos() {
             const data = await costeoService.listCosteos(tiendaActual.id, user!.id);
             setCosteos(data);
 
-            // Obtener cuota - El límite viene del plan del usuario
             const count = data.length;
             const limit = user?.plan?.limits?.costeos_limit ?? 100;
             setQuota({ used: count, limit });
         } catch (error) {
-            console.error('Error listing costeos loop check:', error);
-            // Solo mostramos toast si no es un error de cancelación o similar
+            console.error('Error listing costeos:', error);
             toast.error('Error al cargar costeos');
         } finally {
             setIsLoading(false);
             isFetching.current = false;
         }
-    }, [tiendaActual?.id, storesLoading, user?.plan?.limits?.costeos_limit, toast]);
+    }, [tiendaActual?.id, storesLoading, user?.plan?.limits?.costeos_limit, toast, user?.id]);
 
     useEffect(() => {
         fetchCosteos();
     }, [fetchCosteos]);
 
-    // Migración única de localStorage (Rescate de datos previos)
     useEffect(() => {
         const doMigration = async () => {
             if (!tiendaActual?.id || storesLoading || isFetching.current) return;
@@ -95,7 +89,6 @@ export function MisCosteos() {
             try {
                 const localCosteos = JSON.parse(legacyData);
                 if (Array.isArray(localCosteos) && localCosteos.length > 0) {
-                    // Solo migrar si no hay costeos en DB (para no duplicar en cada refresh si algo falla)
                     const dbCosteos = await costeoService.listCosteos(tiendaActual.id, user!.id);
 
                     if (dbCosteos.length === 0) {
@@ -103,14 +96,12 @@ export function MisCosteos() {
 
                         for (const c of localCosteos) {
                             const nombre = c.nombre_producto || c.productName || 'Producto Migrado';
-                            // Creamos el registro base. Los detalles complejos (inputs/results) 
-                            // podrían migrarse aquí también si se desea, pero por ahora aseguramos el registro.
                             await costeoService.createEmptyCosteo(nombre, tiendaActual.id);
                         }
 
                         localStorage.removeItem('dropcost_costeos');
                         toast.success('Migración exitosa', `${localCosteos.length} costeos recuperados.`);
-                        fetchCosteos(); // Recargar lista
+                        fetchCosteos();
                     }
                 } else {
                     localStorage.removeItem('dropcost_costeos');
@@ -121,19 +112,17 @@ export function MisCosteos() {
         };
 
         doMigration();
-    }, [tiendaActual?.id, storesLoading, fetchCosteos, toast]);
+    }, [tiendaActual?.id, storesLoading, fetchCosteos, toast, user?.id]);
 
     const filteredCosteos = costeos.filter((c) => {
         const matchesSearch = c.nombre_producto.toLowerCase().includes(searchQuery.toLowerCase());
 
         let matchesDate = true;
         if (dateFilter.start) {
-            // Comparar con el inicio del día del usuario
             const startDate = new Date(dateFilter.start + 'T00:00:00');
             matchesDate = matchesDate && new Date(c.created_at) >= startDate;
         }
         if (dateFilter.end) {
-            // Comparar con el fin del día del usuario
             const endDate = new Date(dateFilter.end + 'T23:59:59');
             matchesDate = matchesDate && new Date(c.created_at) <= endDate;
         }
@@ -154,9 +143,20 @@ export function MisCosteos() {
 
     const formatDate = (iso: string) => formatDisplayDate(iso);
 
+    const [showNuevoModal, setShowNuevoModal] = useState(false);
+    const [nuevoNombre, setNuevoNombre] = useState('');
+    const [isCreating, setIsCreating] = useState(false);
+
+    const [showDuplicarModal, setShowDuplicarModal] = useState(false);
+    const [costeoToDuplicate, setCosteoToDuplicate] = useState<SavedCosteo | null>(null);
+    const [nuevoNombreCopia, setNuevoNombreCopia] = useState('');
+    const [isDuplicating, setIsDuplicating] = useState(false);
+
+    const [showLinkModal, setShowLinkModal] = useState(false);
+    const [costeoToLink, setCosteoToLink] = useState<SavedCosteo | null>(null);
+
     const handleDuplicate = (costeo: SavedCosteo) => {
         setCosteoToDuplicate(costeo);
-        // Sugerir nombre sin acumular "(copia)" infinitamente
         const baseNombre = costeo.nombre_producto.replace(/\s\(copia\)$/i, '');
         setNuevoNombreCopia(`${baseNombre} (copia)`);
         setShowDuplicarModal(true);
@@ -207,30 +207,6 @@ export function MisCosteos() {
         }
     }
 
-    // --- Estado para Nuevo Costeo (Modal) ---
-    const [showNuevoModal, setShowNuevoModal] = useState(false);
-    const [nuevoNombre, setNuevoNombre] = useState('');
-    const [isCreating, setIsCreating] = useState(false);
-
-    const [showDuplicarModal, setShowDuplicarModal] = useState(false);
-    const [costeoToDuplicate, setCosteoToDuplicate] = useState<SavedCosteo | null>(null);
-    const [nuevoNombreCopia, setNuevoNombreCopia] = useState('');
-    const [isDuplicating, setIsDuplicating] = useState(false);
-
-    const [showLinkModal, setShowLinkModal] = useState(false);
-    const [costeoToLink, setCosteoToLink] = useState<SavedCosteo | null>(null);
-
-    const handleVerCosteo = (id: string) => navigate(`/mis-costeos/${id}`);
-
-    async function handleUpdateField(id: string, field: string, value: string) {
-        try {
-            await costeoService.updateCosteo(id, { [field]: value } as any);
-            setCosteos(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
-        } catch (error) {
-            toast.error('Error al actualizar campo');
-        }
-    }
-
     const handleConfirmNuevo = async () => {
         if (!nuevoNombre.trim() || !tiendaActual?.id) {
             toast.warning('Ingresa un nombre para el producto y selecciona una tienda');
@@ -251,7 +227,6 @@ export function MisCosteos() {
         }
     };
 
-    // ─── ESTADO: SIN TIENDAS ───
     if (!storesLoading && tiendas.length === 0) {
         return (
             <div style={{
@@ -302,31 +277,60 @@ export function MisCosteos() {
     return (
         <div>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
-                <div>
-                    <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '40px',
+                flexWrap: 'wrap',
+                gap: '24px',
+                padding: '0 4px',
+                width: '100%',
+                boxSizing: 'border-box' as const
+            }}>
+                <div style={{ flex: '1 1 250px', minWidth: 0 }}>
+                    <h1 style={{
+                        fontSize: '34px',
+                        fontWeight: 900,
+                        color: 'var(--text-primary)',
+                        letterSpacing: '-0.03em',
+                        marginBottom: '8px'
+                    }}>
                         Mis Costeos
                     </h1>
-                    <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                        Gestiona y analiza la viabilidad de tus productos
+                    <p style={{ fontSize: '16px', color: 'var(--text-tertiary)', lineHeight: 1.5 }}>
+                        Analiza la rentabilidad real de tus productos y toma decisiones basadas en datos.
                     </p>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    {/* Indicador de Cuota */}
+                <div style={{ display: 'flex', alignItems: 'stretch', gap: '20px', flexWrap: 'wrap', width: '100%', maxWidth: '100%' }}>
                     <div style={{
-                        padding: '8px 16px', backgroundColor: 'var(--bg-secondary)',
-                        borderRadius: '12px', border: '1px solid var(--border-color)',
-                        display: 'flex', alignItems: 'center', gap: '8px'
+                        padding: '16px 24px',
+                        backgroundColor: 'var(--card-bg)',
+                        borderRadius: '20px',
+                        border: '1px solid var(--border-color)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '10px',
+                        flex: '1 1 180px',
+                        boxShadow: 'var(--shadow-sm)',
+                        boxSizing: 'border-box' as const
                     }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                            Cuota: <span style={{ color: quota.used >= quota.limit ? 'var(--color-error)' : 'var(--color-primary)' }}>{quota.used}/{quota.limit === -1 ? '∞' : quota.limit} Costeos</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cuota de Uso</span>
+                            <span style={{ fontSize: '13px', fontWeight: 800, color: quota.used >= quota.limit ? 'var(--color-error)' : 'var(--color-primary)' }}>
+                                {quota.used} / {quota.limit === -1 ? '∞' : quota.limit}
+                            </span>
                         </div>
-                        <div style={{ width: '60px', height: '6px', backgroundColor: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--bg-secondary)', borderRadius: '10px', overflow: 'hidden' }}>
                             <div style={{
-                                width: `${Math.min((quota.used / quota.limit) * 100, 100)}%`,
+                                width: `${Math.min((quota.used / Math.max(1, quota.limit)) * 100, 100)}%`,
                                 height: '100%',
-                                backgroundColor: quota.used >= quota.limit ? 'var(--color-error)' : 'var(--color-primary)'
+                                background: quota.used >= quota.limit
+                                    ? 'linear-gradient(90deg, #ef4444 0%, #b91c1c 100%)'
+                                    : 'linear-gradient(90deg, #0066FF 0%, #6366f1 100%)',
+                                borderRadius: '10px',
+                                transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)'
                             }} />
                         </div>
                     </div>
@@ -335,22 +339,27 @@ export function MisCosteos() {
                         onClick={() => setShowNuevoModal(true)}
                         disabled={quota.used >= quota.limit && user?.rol !== 'admin' && user?.rol !== 'superadmin'}
                         style={{
-                            display: 'flex', alignItems: 'center', gap: '8px',
-                            padding: '12px 24px', fontSize: '14px', fontWeight: 700,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                            padding: '0 32px', height: '60px', fontSize: '15px', fontWeight: 800,
                             color: '#fff',
                             background: quota.used >= quota.limit && user?.rol !== 'admin' && user?.rol !== 'superadmin'
                                 ? 'var(--text-tertiary)'
                                 : 'linear-gradient(135deg, #0066FF 0%, #003D99 100%)',
-                            border: 'none', borderRadius: '12px', cursor: 'pointer',
-                            boxShadow: '0 4px 14px rgba(0,102,255,0.2)',
+                            border: 'none', borderRadius: '16px', cursor: 'pointer',
+                            boxShadow: '0 8px 20px rgba(0,102,255,0.25)',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            flex: '1 1 180px',
+                            whiteSpace: 'nowrap' as const,
+                            boxSizing: 'border-box' as const
                         }}
+                        onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
                     >
-                        <Plus size={18} /> Nuevo Costeo
+                        <Plus size={20} strokeWidth={3} /> Nuevo Costeo
                     </button>
                 </div>
             </div>
 
-            {/* Banner Advertencia Cuota Baja */}
             {quota.limit - quota.used > 0 && quota.limit - quota.used < 10 && (
                 <div style={{
                     marginBottom: '24px', padding: '12px 20px', backgroundColor: 'rgba(245, 158, 11, 0.1)',
@@ -364,59 +373,66 @@ export function MisCosteos() {
                 </div>
             )}
 
-            {/* Filters */}
             <div style={{
                 marginBottom: '24px',
                 display: 'flex',
-                gap: '16px',
-                flexWrap: 'wrap',
-                alignItems: 'center',
-                justifyContent: 'space-between',
+                flexDirection: 'column',
+                gap: '12px',
                 padding: '16px',
-                backgroundColor: 'var(--bg-secondary)30',
-                borderRadius: '16px',
-                border: '1px solid var(--border-color)'
+                backgroundColor: 'var(--bg-secondary)',
+                borderRadius: '20px',
+                border: '1px solid var(--border-color)',
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)',
+                width: '100%',
+                boxSizing: 'border-box' as const
             }}>
-                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', flex: 1, alignItems: 'center' }}>
-                    {/* Buscador más corto */}
-                    <div style={{ position: 'relative', width: '320px' }}>
-                        <Search
-                            size={18}
-                            style={{
-                                position: 'absolute', left: '14px', top: '50%',
-                                transform: 'translateY(-50%)', color: 'var(--text-tertiary)',
-                            }}
-                        />
-                        <input
-                            type="text"
-                            placeholder="Buscar producto..."
-                            value={searchQuery}
-                            onChange={(e) => {
-                                setSearchQuery(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                            style={{
-                                width: '100%', padding: '10px 16px 10px 42px',
-                                fontSize: '14px', border: '1.5px solid var(--border-color)',
-                                borderRadius: '10px', backgroundColor: 'var(--card-bg)',
-                                color: 'var(--text-primary)', outline: 'none',
-                                transition: 'all 0.2s',
-                            }}
-                        />
-                    </div>
+                {/* Fila 1: Buscador */}
+                <div style={{ position: 'relative', width: '100%' }}>
+                    <Search
+                        size={16}
+                        style={{
+                            position: 'absolute', left: '16px', top: '50%',
+                            transform: 'translateY(-50%)', color: 'var(--text-tertiary)',
+                        }}
+                    />
+                    <input
+                        type="text"
+                        placeholder="Buscar producto..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        style={{
+                            width: '100%', padding: '12px 16px 12px 44px',
+                            fontSize: '13px', border: '1px solid var(--border-color)',
+                            borderRadius: '14px', backgroundColor: 'var(--card-bg)',
+                            color: 'var(--text-primary)', outline: 'none',
+                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.01)',
+                            boxSizing: 'border-box' as const,
+                        }}
+                    />
+                </div>
 
-                    {/* Selectores de Fecha con labels horizontales */}
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                {/* Fila 2: Fechas + Mostrar */}
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', width: '100%' }}>
+                    {/* Selector Inicio - Responsivo */}
+                    <div style={{ flex: '1 1 180px', minWidth: '150px', maxWidth: '100%' }}>
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '8px',
+                            gap: '12px',
                             backgroundColor: 'var(--card-bg)',
-                            padding: '2px 12px',
-                            borderRadius: '10px',
-                            border: '1.5px solid var(--border-color)'
+                            padding: '10px 16px',
+                            borderRadius: '14px',
+                            border: '1px solid var(--border-color)',
+                            width: '100%',
+                            boxSizing: 'border-box' as const,
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.01)',
+                            height: '42px'
                         }}>
-                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>DESDE:</span>
+                            <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--color-primary)', textTransform: 'uppercase', flexShrink: 0 }}>De</span>
                             <input
                                 type="date"
                                 value={dateFilter.start}
@@ -430,21 +446,33 @@ export function MisCosteos() {
                                     backgroundColor: 'transparent',
                                     color: 'var(--text-primary)',
                                     outline: 'none',
-                                    padding: '8px 0',
+                                    cursor: 'pointer',
+                                    flex: 1,
+                                    fontWeight: 700,
+                                    minWidth: 0,
+                                    width: '100%',
+                                    boxSizing: 'border-box' as const,
                                 }}
                             />
                         </div>
+                    </div>
 
+                    {/* Selector Fin - Responsivo */}
+                    <div style={{ flex: '1 1 180px', minWidth: '150px', maxWidth: '100%' }}>
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '8px',
+                            gap: '12px',
                             backgroundColor: 'var(--card-bg)',
-                            padding: '2px 12px',
-                            borderRadius: '10px',
-                            border: '1.5px solid var(--border-color)'
+                            padding: '10px 16px',
+                            borderRadius: '14px',
+                            border: '1px solid var(--border-color)',
+                            width: '100%',
+                            boxSizing: 'border-box' as const,
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.01)',
+                            height: '42px'
                         }}>
-                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>HASTA:</span>
+                            <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--color-primary)', textTransform: 'uppercase', flexShrink: 0 }}>Al</span>
                             <input
                                 type="date"
                                 value={dateFilter.end}
@@ -458,42 +486,47 @@ export function MisCosteos() {
                                     backgroundColor: 'transparent',
                                     color: 'var(--text-primary)',
                                     outline: 'none',
-                                    padding: '8px 0',
+                                    cursor: 'pointer',
+                                    flex: 1,
+                                    fontWeight: 700,
+                                    minWidth: 0,
+                                    width: '100%',
+                                    boxSizing: 'border-box' as const,
                                 }}
                             />
                         </div>
                     </div>
-                </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>Ver:</span>
-                    <select
-                        value={pageSize}
-                        onChange={(e) => {
-                            setPageSize(Number(e.target.value));
-                            setCurrentPage(1);
-                        }}
-                        style={{
-                            padding: '8px 12px',
-                            fontSize: '13px',
-                            border: '1.5px solid var(--border-color)',
-                            borderRadius: '10px',
-                            backgroundColor: 'var(--card-bg)',
-                            color: 'var(--text-primary)',
-                            outline: 'none',
-                            cursor: 'pointer',
-                            fontWeight: 600
-                        }}
-                    >
-                        <option value={10}>10 registros</option>
-                        <option value={20}>20 registros</option>
-                        <option value={50}>50 registros</option>
-                        <option value={100}>100 registros</option>
-                    </select>
+                    {/* Selector Mostrar */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                        <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)' }}>Mostrar:</span>
+                        <select
+                            value={pageSize}
+                            onChange={(e) => {
+                                setPageSize(Number(e.target.value));
+                                setCurrentPage(1);
+                            }}
+                            style={{
+                                padding: '10px 14px',
+                                fontSize: '13px',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '12px',
+                                backgroundColor: 'var(--card-bg)',
+                                color: 'var(--text-primary)',
+                                outline: 'none',
+                                cursor: 'pointer',
+                                fontWeight: 700,
+                                boxSizing: 'border-box' as const,
+                            }}
+                        >
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                            <option value={50}>50</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            {/* Table or Empty state */}
             {isLoading ? (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '80px' }}>
                     <Spinner size="lg" />
@@ -511,25 +544,34 @@ export function MisCosteos() {
                 />
             ) : (
                 <>
-                    <Card noPadding style={{ overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                    <Card noPadding style={{ overflow: 'hidden', boxShadow: 'var(--shadow-xl)', borderRadius: '24px', border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)' }}>
+                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', padding: '1px' }}>
+                            <table style={{ width: '100%', minWidth: '1200px', borderCollapse: 'collapse', fontSize: '14px', tableLayout: 'fixed' }}>
                                 <thead>
-                                    <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                                    <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)' }}>
                                         {[
-                                            { label: 'Producto' },
-                                            { label: 'Precio Final' },
-                                            { label: 'Utilidad' },
-                                            {
-                                                label: 'Integraciones',
-                                                tooltip: "Conecta este costeo con Shopify y la Campaña de Meta"
-                                            },
-                                            { label: 'Estado' },
-                                            { label: 'Fecha' },
-                                            { label: 'Acciones' }
+                                            { label: 'Producto', width: '320px' },
+                                            { label: 'Precio Final', width: '150px' },
+                                            { label: 'Utilidad', width: '160px' },
+                                            { label: 'Integraciones', width: '180px', tooltip: "Conecta este costeo con Shopify y la Campaña de Meta" },
+                                            { label: 'Estado', width: '130px' },
+                                            { label: 'Fecha', width: '220px' },
+                                            { label: 'Acciones', width: '140px', textAlign: 'right' }
                                         ].map((col) => (
-                                            <th key={col.label} style={{ padding: '16px 24px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)', fontSize: '12px', textTransform: 'uppercase' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <th
+                                                key={col.label}
+                                                style={{
+                                                    padding: '16px 24px',
+                                                    textAlign: col.textAlign as any || 'left',
+                                                    fontWeight: 700,
+                                                    color: 'var(--text-tertiary)',
+                                                    fontSize: '11px',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.05em',
+                                                    width: col.width
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: col.textAlign === 'right' ? 'flex-end' : 'flex-start' }}>
                                                     {col.label}
                                                     {col.tooltip && (
                                                         <Tooltip content={col.tooltip}>
@@ -544,71 +586,109 @@ export function MisCosteos() {
                                 <tbody>
                                     {paginatedCosteos.map((c) => (
                                         <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.2s' }}>
-                                            <td style={{ padding: '16px 24px' }}>
-                                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{c.nombre_producto}</span>
+                                            <td style={{ padding: '20px 24px', minWidth: '280px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                    <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '15px', letterSpacing: '-0.01em' }}>{c.nombre_producto}</span>
+                                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--bg-secondary)', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
+                                                        <Package size={10} color="var(--text-tertiary)" />
+                                                        <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>ID {c.id.slice(0, 8)}</span>
+                                                    </div>
+                                                </div>
                                             </td>
-                                            <td style={{ padding: '16px 24px', fontWeight: 700, color: c.estado === 'vacio' ? 'var(--text-tertiary)' : 'inherit' }}>
+                                            <td style={{ padding: '20px 24px', fontWeight: 800, color: c.estado === 'vacio' ? 'var(--text-tertiary)' : 'var(--text-primary)', fontSize: '15px', width: '140px' }}>
                                                 {c.estado === 'vacio' ? '---' : formatCurrency(c.precio_final)}
                                             </td>
-                                            <td style={{ padding: '16px 24px' }}>
-                                                <span style={{
-                                                    fontWeight: 700,
-                                                    color: c.estado === 'vacio' ? 'var(--text-tertiary)' : ((c.utilidad_neta || 0) > 0 ? 'var(--color-success)' : 'var(--color-error)')
-                                                }}>
-                                                    {c.estado === 'vacio' ? '---' : formatCurrency(c.utilidad_neta)}
-                                                </span>
+                                            <td style={{ padding: '20px 24px', width: '160px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                    <span style={{
+                                                        fontWeight: 900, fontSize: '15px',
+                                                        color: c.estado === 'vacio' ? 'var(--text-tertiary)' : ((c.utilidad_neta || 0) > 0 ? 'var(--color-success)' : 'var(--color-error)')
+                                                    }}>
+                                                        {c.estado === 'vacio' ? '---' : formatCurrency(c.utilidad_neta)}
+                                                    </span>
+                                                    {c.estado !== 'vacio' && c.margen && (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            {(c.margen || 0) > 30 ? <TrendingUp size={12} color="var(--color-success)" /> : <TrendingDown size={12} color="var(--color-warning)" />}
+                                                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 800 }}>
+                                                                MARGEN {c.margen}%
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </td>
-                                            <td style={{ padding: '8px 16px' }}>
+                                            <td style={{ padding: '20px 24px', width: '180px' }}>
                                                 <button
                                                     onClick={() => { setCosteoToLink(c); setShowLinkModal(true); }}
                                                     style={{
-                                                        display: 'flex', alignItems: 'center', gap: '6px',
-                                                        padding: '6px 12px', border: '1px solid var(--border-color)',
-                                                        borderRadius: '6px', backgroundColor: (c.product_id_shopify || c.meta_campaign_id) ? 'rgba(56, 189, 248, 0.1)' : 'var(--bg-primary)',
+                                                        display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                                        padding: '10px 16px', border: '1px solid var(--border-color)',
+                                                        borderRadius: '12px', backgroundColor: (c.product_id_shopify || c.meta_campaign_id) ? 'rgba(0, 102, 255, 0.08)' : 'var(--card-bg)',
                                                         color: (c.product_id_shopify || c.meta_campaign_id) ? 'var(--color-primary)' : 'var(--text-secondary)',
-                                                        fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+                                                        fontSize: '12px', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s',
+                                                        boxShadow: 'var(--shadow-sm)',
+                                                        whiteSpace: 'nowrap'
                                                     }}
                                                     onMouseEnter={(e) => {
+                                                        e.currentTarget.style.transform = 'translateY(-1px)';
+                                                        e.currentTarget.style.boxShadow = 'var(--shadow-md)';
                                                         if (!c.product_id_shopify && !c.meta_campaign_id) {
-                                                            e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                                                            e.currentTarget.style.borderColor = 'var(--color-primary)';
+                                                            e.currentTarget.style.color = 'var(--color-primary)';
                                                         }
                                                     }}
                                                     onMouseLeave={(e) => {
+                                                        e.currentTarget.style.transform = 'none';
+                                                        e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
                                                         if (!c.product_id_shopify && !c.meta_campaign_id) {
-                                                            e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+                                                            e.currentTarget.style.borderColor = 'var(--border-color)';
+                                                            e.currentTarget.style.color = 'var(--text-secondary)';
                                                         }
                                                     }}
                                                 >
-                                                    <Link2 size={14} />
-                                                    {c.product_id_shopify || c.meta_campaign_id ? 'Vincular (Editar)' : 'Vincular'}
+                                                    <Link2 size={16} />
+                                                    {c.product_id_shopify || c.meta_campaign_id ? 'Vinculado' : 'Vincular'}
                                                 </button>
                                             </td>
-                                            <td style={{ padding: '16px 24px' }}>
+                                            <td style={{ padding: '20px 24px', width: '140px' }}>
                                                 <span style={{
-                                                    padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700,
+                                                    padding: '8px 12px', borderRadius: '10px', fontSize: '10px', fontWeight: 900,
                                                     backgroundColor: c.estado === 'guardado' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
                                                     color: c.estado === 'guardado' ? 'var(--color-success)' : 'var(--color-warning)',
-                                                    textTransform: 'uppercase',
-                                                    display: 'inline-block',
-                                                    whiteSpace: 'nowrap'
+                                                    textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', letterSpacing: '0.05em'
                                                 }}>
-                                                    {c.estado === 'guardado' ? 'Analizado' : 'Sin Datos'}
+                                                    {c.estado === 'guardado' ? <Check size={14} strokeWidth={3} /> : <AlertCircle size={14} />}
+                                                    {c.estado === 'guardado' ? 'Analizado' : 'Incompleto'}
                                                 </span>
                                             </td>
-                                            <td style={{ padding: '16px 24px', color: 'var(--text-tertiary)' }}>{formatDate(c.created_at)}</td>
-                                            <td style={{ padding: '16px 24px' }}>
-                                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                                    <ActionBtn icon={<Eye size={16} />} title="Ver / Editar" onClick={() => navigate(`/mis-costeos/${c.id}`)} />
+                                            <td style={{ padding: '20px 24px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 700 }}>{formatDate(c.created_at).split(' ')[0]} {formatDate(c.created_at).split(' ')[1]} {formatDate(c.created_at).split(' ')[2]}</span>
+                                                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500 }}>{formatDate(c.created_at).split(' ').slice(3).join(' ')}</span>
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '20px 24px', width: '140px' }}>
+                                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'flex-end' }}>
                                                     <ActionBtn
-                                                        icon={<Copy size={16} />}
+                                                        icon={<Eye size={18} />}
+                                                        title="Ver / Editar"
+                                                        onClick={() => navigate(`/mis-costeos/${c.id}`)}
+                                                    />
+                                                    <ActionBtn
+                                                        icon={<Copy size={18} />}
                                                         title="Duplicar"
                                                         onClick={() => handleDuplicate(c)}
                                                         disabled={c.estado === 'vacio'}
-                                                        tooltip={c.estado === 'vacio' ? "Completa el costeo antes de duplicar" : undefined}
                                                     />
-                                                    <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--border-color)', margin: '0 4px' }} />
                                                     {(user?.rol === 'admin' || user?.rol === 'superadmin' || user?.plan?.limits?.can_delete_costeos) && (
-                                                        <ActionBtn icon={<Trash2 size={16} />} title="Eliminar" onClick={() => { setItemToDelete(c.id); setConfirmOpen(true); }} danger />
+                                                        <>
+                                                            <div style={{ width: '1px', height: '20px', backgroundColor: 'var(--border-color)' }} />
+                                                            <ActionBtn
+                                                                icon={<Trash2 size={18} />}
+                                                                title="Eliminar"
+                                                                onClick={() => { setItemToDelete(c.id); setConfirmOpen(true); }}
+                                                                danger
+                                                            />
+                                                        </>
                                                     )}
                                                 </div>
                                             </td>
@@ -619,139 +699,53 @@ export function MisCosteos() {
                         </div>
                     </Card>
 
-                    {/* Pagination Navigation */}
                     {totalPages > 1 && (
-                        <div style={{
-                            marginTop: '24px',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: '0 8px'
-                        }}>
+                        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 8px' }}>
                             <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
                                 Mostrando página <strong>{currentPage}</strong> de {totalPages} ({filteredCosteos.length} costeos totales)
                             </span>
                             <div style={{ display: 'flex', gap: '8px' }}>
-                                <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                    disabled={currentPage === 1}
-                                >
-                                    Anterior
-                                </Button>
-                                <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                    disabled={currentPage === totalPages}
-                                >
-                                    Siguiente
-                                </Button>
+                                <Button variant="secondary" size="sm" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1}>Anterior</Button>
+                                <Button variant="secondary" size="sm" onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages}>Siguiente</Button>
                             </div>
                         </div>
                     )}
                 </>
             )}
 
-            {/* Modal de Nuevo Costeo */}
-            <Modal
-                isOpen={showNuevoModal}
-                onClose={() => !isCreating && setShowNuevoModal(false)}
-                title="Nuevo Costeo"
-                size="sm"
-            >
+            <Modal isOpen={showNuevoModal} onClose={() => !isCreating && setShowNuevoModal(false)} title="Nuevo Costeo" size="sm">
                 <div>
-                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                        Ingresa el nombre del producto para comenzar la simulación. Se descontará 1 costeo de tu cuota.
-                    </p>
-                    <Input
-                        label="Nombre del Producto"
-                        placeholder="Ej: Crema hidratante"
-                        value={nuevoNombre}
-                        onChange={(e) => setNuevoNombre(e.target.value)}
-                        autoFocus
-                    />
+                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>Ingresa el nombre del producto para comenzar la simulación. Se descontará 1 costeo de tu cuota.</p>
+                    <Input label="Nombre del Producto" placeholder="Ej: Crema hidratante" value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} autoFocus />
                     <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-                        <Button
-                            variant="secondary"
-                            onClick={() => setShowNuevoModal(false)}
-                            disabled={isCreating}
-                            fullWidth
-                        >
-                            Cancelar
-                        </Button>
-                        <Button
-                            variant="primary"
-                            onClick={handleConfirmNuevo}
-                            isLoading={isCreating}
-                            disabled={!nuevoNombre.trim()}
-                            fullWidth
-                        >
-                            Comenzar
-                        </Button>
+                        <Button variant="secondary" onClick={() => setShowNuevoModal(false)} disabled={isCreating} fullWidth>Cancelar</Button>
+                        <Button variant="primary" onClick={handleConfirmNuevo} isLoading={isCreating} disabled={!nuevoNombre.trim()} fullWidth>Comenzar</Button>
                     </div>
                 </div>
             </Modal>
 
-            {/* Confirmar Eliminación */}
-            <ConfirmDialog
-                isOpen={confirmOpen}
-                title="Eliminar Costeo"
-                description="¿Estás seguro de que deseas eliminar este costeo? Esta acción retirará el registro de tu historial de forma permanente."
-                confirmLabel="Sí, eliminar"
-                variant="danger"
-                onConfirm={handleDelete}
-                onCancel={() => setConfirmOpen(false)}
-            />
+            <ConfirmDialog isOpen={confirmOpen} title="Eliminar Costeo" description="¿Estás seguro de que deseas eliminar este costeo? Esta acción retirará el registro de tu historial de forma permanente." confirmLabel="Sí, eliminar" variant="danger" onConfirm={handleDelete} onCancel={() => setConfirmOpen(false)} />
 
-            {/* Modal de Duplicar Costeo */}
-            <Modal
-                isOpen={showDuplicarModal}
-                onClose={() => !isDuplicating && setShowDuplicarModal(false)}
-                title="Duplicar Costeo"
-                size="sm"
-            >
+            <Modal isOpen={showDuplicarModal} onClose={() => !isDuplicating && setShowDuplicarModal(false)} title="Duplicar Costeo" size="sm">
                 <div>
-                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                        Ingresa el nombre para la nueva copia del costeo.
-                    </p>
-                    <Input
-                        label="Nombre del Producto"
-                        placeholder="Ej: Crema hidratante (Copia)"
-                        value={nuevoNombreCopia}
-                        onChange={(e) => setNuevoNombreCopia(e.target.value)}
-                        autoFocus
-                    />
+                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>Ingresa el nombre para la nueva copia del costeo.</p>
+                    <Input label="Nombre del Producto" placeholder="Ej: Crema hidratante (Copia)" value={nuevoNombreCopia} onChange={(e) => setNuevoNombreCopia(e.target.value)} autoFocus />
                     <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-                        <Button
-                            variant="secondary"
-                            onClick={() => setShowDuplicarModal(false)}
-                            disabled={isDuplicating}
-                            fullWidth
-                        >
-                            Cancelar
-                        </Button>
-                        <Button
-                            variant="primary"
-                            onClick={handleConfirmDuplicate}
-                            isLoading={isDuplicating}
-                            disabled={!nuevoNombreCopia.trim()}
-                            fullWidth
-                        >
-                            Duplicar
-                        </Button>
+                        <Button variant="secondary" onClick={() => setShowDuplicarModal(false)} disabled={isDuplicating} fullWidth>Cancelar</Button>
+                        <Button variant="primary" onClick={handleConfirmDuplicate} isLoading={isDuplicating} disabled={!nuevoNombreCopia.trim()} fullWidth>Duplicar</Button>
                     </div>
                 </div>
             </Modal>
 
-            {/* Modal para Vincular Integraciones Shopify/Meta */}
             <IntegrationLinkModal
                 isOpen={showLinkModal}
                 onClose={() => setShowLinkModal(false)}
                 costeo={costeoToLink}
                 tiendaId={tiendaActual?.id}
-                onSaveSuccess={fetchCosteos}
+                onSaveSuccess={() => {
+                    fetchCosteos();
+                    setShowLinkModal(false);
+                }}
             />
         </div>
     );

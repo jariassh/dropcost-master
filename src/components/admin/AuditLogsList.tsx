@@ -67,7 +67,7 @@ const DateRangePicker: React.FC<{
     }, []);
 
     return (
-        <div ref={containerRef} style={{ position: 'relative', flex: 1, minWidth: '280px' }}>
+        <div ref={containerRef} style={{ position: 'relative', flex: 1, minWidth: window.innerWidth < 480 ? '100%' : '240px' }}>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rango de Fechas</label>
             <button
                 type="button"
@@ -99,14 +99,16 @@ const DateRangePicker: React.FC<{
                 <div style={{
                     position: 'absolute',
                     top: 'calc(100% + 8px)',
-                    left: 0,
+                    left: window.innerWidth < 480 ? '50%' : 0,
+                    transform: window.innerWidth < 480 ? 'translateX(-50%)' : 'none',
                     zIndex: 100,
                     backgroundColor: 'var(--card-bg)',
                     border: '1px solid var(--border-color)',
                     borderRadius: '16px',
                     boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-                    padding: '20px',
-                    width: '400px',
+                    padding: window.innerWidth < 480 ? '16px' : '20px',
+                    width: window.innerWidth < 768 ? 'calc(100vw - 48px)' : '400px',
+                    maxWidth: '400px',
                     animation: 'slideInUp 0.2s ease-out'
                 }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
@@ -123,7 +125,7 @@ const DateRangePicker: React.FC<{
                                         console.warn('showPicker not supported', error);
                                     }
                                 }}
-                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', boxSizing: 'border-box' }}
                             />
                         </div>
                         <div>
@@ -139,7 +141,7 @@ const DateRangePicker: React.FC<{
                                         console.warn('showPicker not supported', error);
                                     }
                                 }}
-                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', boxSizing: 'border-box' }}
                             />
                         </div>
                     </div>
@@ -293,16 +295,21 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             {/* Header / Filter Bar */}
             <Card style={{ border: '1px solid var(--border-color)', padding: '24px', borderRadius: '16px' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'flex-end' }} className="dc-audit-filter-bar">
-                    <div style={{ flex: '1 1 240px' }}>
-                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Módulo</label>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: window.innerWidth < 1024 ? '1fr' : '1fr 1fr auto',
+                    gap: '20px',
+                    alignItems: 'end'
+                }}>
+                    <div style={{ width: '100%' }}>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Módulo</label>
                         <div style={{ position: 'relative' }}>
                             <select
                                 value={filters.entidad}
                                 onChange={(e) => setFilters(prev => ({ ...prev, entidad: e.target.value }))}
                                 style={{
                                     width: '100%',
-                                    padding: '12px 16px',
+                                    padding: '0 16px',
                                     paddingRight: '40px',
                                     backgroundColor: 'var(--bg-secondary)',
                                     border: '1.5px solid var(--border-color)',
@@ -312,7 +319,9 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
                                     outline: 'none',
                                     cursor: 'pointer',
                                     appearance: 'none',
-                                    height: '48px'
+                                    height: '48px',
+                                    boxSizing: 'border-box',
+                                    fontWeight: 500
                                 }}
                             >
                                 <option value="">Todos los Módulos</option>
@@ -326,16 +335,29 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
                         </div>
                     </div>
 
-                    <DateRangePicker
-                        value={{ start: filters.fechaInicio || '', end: filters.fechaFin || '' }}
-                        onChange={(range) => setFilters(prev => ({ ...prev, fechaInicio: range.start, fechaFin: range.end }))}
-                    />
+                    <div style={{ width: '100%' }}>
+                        <DateRangePicker
+                            value={{ start: filters.fechaInicio || '', end: filters.fechaFin || '' }}
+                            onChange={(range) => setFilters(prev => ({ ...prev, fechaInicio: range.start, fechaFin: range.end }))}
+                        />
+                    </div>
 
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{
+                        display: 'flex',
+                        gap: '10px',
+                        width: '100%'
+                    }}>
                         <Button
                             variant="primary"
                             onClick={() => fetchLogs()}
-                            style={{ height: '48px', borderRadius: '12px', padding: '0 24px' }}
+                            style={{
+                                height: '48px',
+                                borderRadius: '12px',
+                                padding: '0 24px',
+                                flex: 2,
+                                fontSize: '14px',
+                                fontWeight: 600
+                            }}
                         >
                             <Search size={18} style={{ marginRight: '8px' }} />
                             Filtrar
@@ -346,7 +368,19 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
                                 setFilters({ entidad: '', accion: undefined, fechaInicio: '', fechaFin: '', usuario_id: userId });
                                 setPage(1);
                             }}
-                            style={{ height: '48px', borderRadius: '12px', color: 'var(--text-secondary)' }}
+                            style={{
+                                height: '48px',
+                                borderRadius: '12px',
+                                color: 'var(--text-secondary)',
+                                backgroundColor: 'var(--bg-secondary)',
+                                width: '48px',
+                                padding: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: '1.5px solid var(--border-color)',
+                                flexShrink: 0
+                            }}
                         >
                             <RefreshCw size={18} />
                         </Button>
@@ -361,11 +395,11 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
-                                        <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recurso / Referencia</th>
-                                        <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Módulo</th>
-                                        <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Acción</th>
-                                        {!hideUser && <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hecho por</th>}
-                                        <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', minWidth: '150px' }}>Día y Hora</th>
+                                        <th style={tableHeaderStyle}>Recurso / Referencia</th>
+                                        <th style={tableHeaderStyle}>Módulo</th>
+                                        <th style={tableHeaderStyle}>Acción</th>
+                                        {!hideUser && <th style={tableHeaderStyle}>Hecho por</th>}
+                                        <th style={{ ...tableHeaderStyle, minWidth: '150px' }}>Día y Hora</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -456,11 +490,24 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
                     </Card>
 
                     {/* Pagination Bar */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 10px' }}>
-                        <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>Mostrando {logs.length} de {totalCount} eventos</span>
-                        <div style={{ display: 'flex', gap: '12px' }}>
-                            <Button variant="secondary" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)} style={{ borderRadius: '10px' }}><ChevronLeft size={18} /> Anterior</Button>
-                            <Button variant="secondary" size="sm" disabled={logs.length < 15} onClick={() => setPage(p => p + 1)} style={{ borderRadius: '10px' }}>Siguiente <ChevronRight size={18} /></Button>
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: window.innerWidth < 640 ? 'column' : 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '16px 10px',
+                        gap: '16px'
+                    }}>
+                        <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600, textAlign: window.innerWidth < 640 ? 'center' : 'left' }}>
+                            Mostrando {logs.length} de {totalCount} eventos
+                        </span>
+                        <div style={{
+                            display: 'flex',
+                            gap: '12px',
+                            width: window.innerWidth < 640 ? '100%' : 'auto'
+                        }}>
+                            <Button variant="secondary" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)} style={{ borderRadius: '10px', flex: 1 }}><ChevronLeft size={18} /> Anterior</Button>
+                            <Button variant="secondary" size="sm" disabled={logs.length < 15} onClick={() => setPage(p => p + 1)} style={{ borderRadius: '10px', flex: 1 }}>Siguiente <ChevronRight size={18} /></Button>
                         </div>
                     </div>
                 </div>
@@ -520,4 +567,15 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
             </div>
         </div>
     );
+};
+
+const tableHeaderStyle: React.CSSProperties = {
+    padding: '16px 24px',
+    textAlign: 'left',
+    fontSize: '11px',
+    fontWeight: 800,
+    color: 'var(--text-tertiary)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.1em',
+    borderBottom: '1px solid var(--border-color)'
 };

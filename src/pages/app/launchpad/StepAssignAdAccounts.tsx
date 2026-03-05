@@ -26,6 +26,13 @@ export function StepAssignAdAccounts({ tiendaId, onComplete }: StepAssignAdAccou
     const [error, setError] = useState<string | null>(null);
     const [fromCache, setFromCache] = useState(false);
     const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         if (accounts.length === 0) {
@@ -168,11 +175,13 @@ export function StepAssignAdAccounts({ tiendaId, onComplete }: StepAssignAdAccou
         });
 
     return (
-        <Card style={{ padding: '32px' }}>
+        <Card style={{ padding: isMobile ? '24px 20px' : '32px' }}>
             <div style={{
                 display: 'flex',
-                alignItems: 'center',
+                alignItems: isMobile ? 'flex-start' : 'center',
                 justifyContent: 'space-between',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '16px' : '0',
                 paddingBottom: '20px',
                 marginBottom: '20px',
                 borderBottom: '1px solid var(--border-color)'
@@ -181,10 +190,22 @@ export function StepAssignAdAccounts({ tiendaId, onComplete }: StepAssignAdAccou
                     <Facebook size={20} color="var(--color-primary)" />
                     <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700 }}>Perfil conectado</h3>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                    display: 'flex',
+                    alignItems: isMobile ? 'flex-start' : 'center',
+                    flexDirection: isMobile ? 'column-reverse' : 'row',
+                    gap: '12px',
+                    width: isMobile ? '100%' : 'auto'
+                }}>
                     {lastSyncedAt && (
-                        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '12px' }}>
-                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                        <div style={{
+                            textAlign: isMobile ? 'left' : 'right',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: isMobile ? 'flex-start' : 'flex-end',
+                            marginRight: isMobile ? '0' : '12px'
+                        }}>
+                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>
                                 Sincronizado: {new Date(lastSyncedAt).toLocaleString()}
                             </span>
                         </div>
@@ -194,6 +215,7 @@ export function StepAssignAdAccounts({ tiendaId, onComplete }: StepAssignAdAccou
                         size="sm"
                         onClick={() => fetchMetaAccounts(true)}
                         disabled={isSyncing || isLoading}
+                        fullWidth={isMobile}
                     >
                         {isSyncing ? <Spinner size="sm" /> : <RefreshCw size={14} style={{ marginRight: '6px' }} />}
                         Sincronizar
@@ -285,7 +307,7 @@ export function StepAssignAdAccounts({ tiendaId, onComplete }: StepAssignAdAccou
                                         key={account.id}
                                         onClick={() => handleToggleAccount(account.id)}
                                         style={{
-                                            padding: '16px',
+                                            padding: isMobile ? '12px' : '16px',
                                             borderRadius: '16px',
                                             backgroundColor: selectedIds.includes(account.id)
                                                 ? 'rgba(var(--color-primary-rgb), 0.08)'
@@ -298,39 +320,46 @@ export function StepAssignAdAccounts({ tiendaId, onComplete }: StepAssignAdAccou
                                             alignItems: 'center',
                                             justifyContent: 'space-between',
                                             transition: 'all 0.2s ease',
-                                            opacity: alreadyLinkedIds.includes(account.id) ? 0.7 : 1
+                                            opacity: alreadyLinkedIds.includes(account.id) ? 0.7 : 1,
+                                            gap: '12px',
+                                            minWidth: 0
                                         }}
                                     >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '10px' : '14px', minWidth: 0, flex: 1 }}>
                                             <div style={{
                                                 width: '40px', height: '40px', borderRadius: '10px',
                                                 backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                flexShrink: 0
                                             }}>
                                                 <Target size={20} />
                                             </div>
-                                            <div>
-                                                <p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{account.name}</p>
-                                                <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)' }}>
+                                            <div style={{ minWidth: 0, flex: 1 }}>
+                                                <p style={{ margin: 0, fontSize: isMobile ? '13px' : '14px', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{account.name}</p>
+                                                <p style={{ margin: 0, fontSize: isMobile ? '11px' : '12px', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                     {account.business_name} • ID: {account.account_id}
                                                 </p>
                                             </div>
                                         </div>
 
                                         {alreadyLinkedIds.includes(account.id) ? (
-                                            <Badge variant="success">YAVINCULADA</Badge>
+                                            <div style={{ flexShrink: 0 }}>
+                                                <Badge variant="success">VINCULADA</Badge>
+                                            </div>
                                         ) : selectedIds.includes(account.id) ? (
                                             <div style={{
                                                 width: '24px', height: '24px', borderRadius: '50%',
                                                 backgroundColor: 'var(--color-primary)', color: 'white',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                flexShrink: 0
                                             }}>
                                                 <CheckCircle2 size={16} />
                                             </div>
                                         ) : (
                                             <div style={{
                                                 width: '24px', height: '24px', borderRadius: '50%',
-                                                border: '2px solid var(--border-color)'
+                                                border: '2px solid var(--border-color)',
+                                                flexShrink: 0
                                             }} />
                                         )}
                                     </div>

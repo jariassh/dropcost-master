@@ -29,6 +29,13 @@ export function StepCreateStore({ onComplete }: StepCreateStoreProps) {
     const [moneda, setMoneda] = useState('COP');
     const [isLoading, setIsLoading] = useState(false);
 
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     useEffect(() => {
         fetchStores();
     }, []);
@@ -111,8 +118,15 @@ export function StepCreateStore({ onComplete }: StepCreateStoreProps) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
             <div style={{ padding: '0 8px', marginBottom: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                    <h2 style={{ fontSize: '24px', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
+                <div style={{
+                    display: 'flex',
+                    alignItems: isMobile ? 'flex-start' : 'center',
+                    justifyContent: 'space-between',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    gap: isMobile ? '12px' : '0',
+                    width: '100%'
+                }}>
+                    <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
                         {mode === 'select' ? 'Selecciona tu Tienda' : 'Configura tu Tienda'}
                     </h2>
                     {existingStores.length > 0 && (
@@ -207,7 +221,7 @@ export function StepCreateStore({ onComplete }: StepCreateStoreProps) {
                             onChange={(e) => setDescripcion(e.target.value)}
                         />
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>País</label>
                                 <select
@@ -244,7 +258,7 @@ export function StepCreateStore({ onComplete }: StepCreateStoreProps) {
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+                        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px', marginTop: '12px' }}>
                             <Button
                                 type="submit"
                                 variant="primary"

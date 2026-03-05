@@ -49,7 +49,7 @@
   --sidebar-active: #0066FF;
 
   /* Layout dinámico */
-  --main-padding: 32px;
+  --main-padding: 20px;
   --header-height: 64px;
 
   /* Tipografía (Valores por defecto óptimos) */
@@ -77,13 +77,13 @@
 
 @media (max-width: 1024px) {
   :root {
-    --main-padding: 24px;
+    --main-padding: 16px;
   }
 }
 
 @media (max-width: 768px) {
   :root {
-    --main-padding: 16px;
+    --main-padding: 12px;
   }
 }
 

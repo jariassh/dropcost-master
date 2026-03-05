@@ -36,6 +36,14 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
         addNotification
     } = useNotificationStore();
 
+    const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     useEffect(() => {
         fetchNotifications();
     }, [fetchNotifications]);
@@ -84,21 +92,24 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
 
             <div
                 style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: '100%',
+                    position: isMobile ? 'fixed' : 'absolute',
+                    right: isMobile ? 'auto' : '0',
+                    left: isMobile ? '50%' : 'auto',
+                    transform: isMobile ? 'translateX(-50%)' : 'none',
+                    top: isMobile ? '70px' : '100%',
                     marginTop: '10px',
-                    width: '360px',
+                    width: isMobile ? 'calc(100% - 24px)' : '360px',
+                    maxWidth: isMobile ? '360px' : 'none',
                     backgroundColor: 'var(--card-bg)',
                     border: '1px solid var(--card-border)',
                     borderRadius: '16px',
                     boxShadow: '0 12px 40px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.1)',
-                    zIndex: 50,
+                    zIndex: 200,
                     animation: 'slideDown 150ms ease-out',
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
-                    maxHeight: '520px',
+                    maxHeight: 'calc(100vh - 100px)',
                 }}
             >
                 {/* Header del Panel */}
@@ -109,9 +120,10 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     backgroundColor: 'rgba(var(--color-primary-rgb), 0.03)',
+                    gap: '12px'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                        <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                             Notificaciones
                         </span>
                         {unreadCount > 0 && (
@@ -119,11 +131,12 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
                                 backgroundColor: 'var(--color-primary)',
                                 color: '#fff',
                                 fontSize: '10px',
-                                fontWeight: 700,
+                                fontWeight: 800,
                                 padding: '2px 8px',
                                 borderRadius: '10px',
+                                flexShrink: 0
                             }}>
-                                {unreadCount} nuevas
+                                {unreadCount} {isMobile ? '' : 'nuevas'}
                             </span>
                         )}
                     </div>
@@ -135,15 +148,17 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
                                 border: 'none',
                                 color: 'var(--color-primary)',
                                 fontSize: '12px',
-                                fontWeight: 600,
+                                fontWeight: 700,
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '4px',
+                                flexShrink: 0,
+                                padding: '4px 0 4px 8px'
                             }}
                         >
                             <CheckCheck size={14} />
-                            Leer todas
+                            <span style={{ whiteSpace: 'nowrap' }}>Leer todas</span>
                         </button>
                     )}
                 </div>

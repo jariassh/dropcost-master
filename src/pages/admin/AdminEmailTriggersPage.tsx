@@ -144,13 +144,19 @@ function TriggerCard({ trigger }: { trigger: EmailTrigger }) {
                             <Badge variant="warning">Inactivo</Badge>
                         )}
                     </div>
-                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px', marginBottom: 0 }}>
+                    <p style={{
+                        fontSize: '12px',
+                        color: 'var(--text-secondary)',
+                        marginTop: '2px',
+                        marginBottom: 0,
+                        display: window.innerWidth < 640 ? 'none' : 'block' // Ocultar descripción larga en móviles muy pequeños para ahorrar espacio
+                    }}>
                         {trigger.descripcion}
                     </p>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                    {trigger.plantillas_count !== undefined && (
+                    {trigger.plantillas_count !== undefined && window.innerWidth >= 640 && (
                         <span style={{
                             fontSize: '12px', padding: '4px 10px', borderRadius: '20px',
                             backgroundColor: trigger.plantillas_count > 0 ? 'rgba(16,185,129,0.1)' : 'var(--bg-secondary)',
@@ -171,7 +177,11 @@ function TriggerCard({ trigger }: { trigger: EmailTrigger }) {
                     borderTop: '1px solid var(--border-color)',
                     paddingTop: '16px',
                 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: window.innerWidth < 768 ? '1fr' : '1fr 1fr',
+                        gap: '24px'
+                    }}>
                         {/* Variables */}
                         <div>
                             <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -390,7 +400,12 @@ export const AdminEmailTriggersPage: React.FC = () => {
                 </div>
 
                 {/* Stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: window.innerWidth < 480 ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '16px',
+                    marginBottom: '32px'
+                }}>
                     {[
                         { label: 'Total Triggers', value: stats.total, icon: Zap, color: '#3B82F6' },
                         { label: 'Con Plantilla', value: stats.conPlantilla, icon: Mail, color: '#10B981' },
@@ -400,14 +415,14 @@ export const AdminEmailTriggersPage: React.FC = () => {
                     ].map(s => {
                         const Icon = s.icon;
                         return (
-                            <Card key={s.label} style={{ padding: '16px' }}>
+                            <Card key={s.label} style={{ padding: '16px', minHeight: '80px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: `${s.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: `${s.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                         <Icon size={18} color={s.color} />
                                     </div>
-                                    <div>
-                                        <p style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{s.value}</p>
-                                        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>{s.label}</p>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <p style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.value}</p>
+                                        <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</p>
                                     </div>
                                 </div>
                             </Card>
@@ -495,8 +510,14 @@ export const AdminEmailTriggersPage: React.FC = () => {
                 {activeTab === 'historial' && (
                     <>
                         {/* Filtros */}
-                        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-                            <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: window.innerWidth < 768 ? 'column' : 'row',
+                            gap: '12px',
+                            marginBottom: '16px',
+                            alignItems: window.innerWidth < 768 ? 'stretch' : 'center'
+                        }}>
+                            <div style={{ position: 'relative', flex: 1 }}>
                                 <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
                                 <input
                                     type="text"
@@ -504,14 +525,21 @@ export const AdminEmailTriggersPage: React.FC = () => {
                                     value={historialSearch}
                                     onChange={e => setHistorialSearch(e.target.value)}
                                     style={{
-                                        width: '100%', padding: '10px 12px 10px 36px',
-                                        border: '1px solid var(--border-color)', borderRadius: '10px',
+                                        width: '100%', padding: '12px 12px 12px 36px',
+                                        border: '1px solid var(--border-color)', borderRadius: '12px',
                                         backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)',
                                         fontSize: '14px', boxSizing: 'border-box',
+                                        height: '46px'
                                     }}
                                 />
                             </div>
-                            <div style={{ display: 'flex', gap: '4px' }}>
+                            <div style={{
+                                display: 'flex',
+                                gap: '6px',
+                                flexWrap: 'nowrap',
+                                overflowX: 'auto',
+                                paddingBottom: window.innerWidth < 768 ? '4px' : 0
+                            }}>
                                 {[
                                     { key: 'todos', label: 'Todos' },
                                     { key: 'enviado', label: 'Enviados' },
@@ -522,10 +550,12 @@ export const AdminEmailTriggersPage: React.FC = () => {
                                         key={f.key}
                                         onClick={() => setHistorialFilter(f.key as any)}
                                         style={{
-                                            padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--border-color)',
+                                            padding: '8px 16px', borderRadius: '10px', border: '1px solid var(--border-color)',
                                             backgroundColor: historialFilter === f.key ? 'var(--primary)' : 'var(--bg-secondary)',
                                             color: historialFilter === f.key ? '#fff' : 'var(--text-secondary)',
-                                            cursor: 'pointer', fontSize: '13px', fontWeight: 500,
+                                            cursor: 'pointer', fontSize: '13px', fontWeight: 600,
+                                            whiteSpace: 'nowrap',
+                                            flex: window.innerWidth < 768 ? 1 : 'none'
                                         }}
                                     >
                                         {f.label}
@@ -536,12 +566,15 @@ export const AdminEmailTriggersPage: React.FC = () => {
                                 onClick={loadHistorial}
                                 disabled={loadingHistorial}
                                 style={{
-                                    padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--border-color)',
+                                    height: '46px',
+                                    padding: '0 16px', borderRadius: '12px', border: '1px solid var(--border-color)',
                                     backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)',
-                                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px',
+                                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px',
+                                    fontWeight: 600,
+                                    width: window.innerWidth < 768 ? '100%' : 'auto'
                                 }}
                             >
-                                <RefreshCw size={14} style={{ animation: loadingHistorial ? 'spin 1s linear infinite' : 'none' }} />
+                                <RefreshCw size={16} style={{ animation: loadingHistorial ? 'spin 1s linear infinite' : 'none' }} />
                                 Actualizar
                             </button>
                         </div>

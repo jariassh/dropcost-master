@@ -2209,15 +2209,71 @@ export function AdminEmailTemplatesPage() {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 0.4s ease-out' }}>
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 mb-2">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                        Plantillas de correo electrónico
+            <div style={{
+                display: 'flex',
+                flexDirection: window.innerWidth < 768 ? 'column' : 'row',
+                alignItems: window.innerWidth < 768 ? 'center' : 'flex-start',
+                justifyContent: 'space-between',
+                textAlign: window.innerWidth < 768 ? 'center' : 'left',
+                padding: '0 16px',
+                marginBottom: '8px'
+            }}>
+                <div style={{ flex: 1 }}>
+                    <h1 style={{
+                        fontSize: window.innerWidth < 768 ? '24px' : '30px',
+                        fontWeight: 800,
+                        color: 'var(--text-primary)',
+                        marginBottom: '8px'
+                    }}>
+                        Plantillas de Correo
                     </h1>
-                    <p className="mt-2 text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Cree y gestione plantillas para todos sus correos electrónicos transaccionales.
+                    <p style={{ fontSize: '15px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
+                        Cree y gestione plantillas para sus correos transaccionales.
                     </p>
                 </div>
+
+                {!selectedTemplate && (
+                    <div style={{
+                        display: 'flex',
+                        gap: '10px',
+                        marginTop: window.innerWidth < 768 ? '20px' : '0',
+                        width: window.innerWidth < 768 ? '100%' : 'auto'
+                    }}>
+                        <Button
+                            variant="secondary"
+                            onClick={() => {
+                                setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
+                                setIsFolderModalOpen(true);
+                            }}
+                            leftIcon={<Folder size={18} />}
+                            style={{
+                                height: '42px',
+                                borderRadius: '10px',
+                                flex: 1,
+                                padding: '0 16px',
+                                fontSize: '13px'
+                            }}
+                        >
+                            Carpeta
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
+                                setIsCreateModalOpen(true);
+                            }}
+                            leftIcon={<Plus size={18} />}
+                            style={{
+                                height: '42px',
+                                borderRadius: '10px',
+                                flex: 1,
+                                padding: '0 16px',
+                                fontSize: '13px'
+                            }}
+                        >
+                            Nuevo
+                        </Button>
+                    </div>
+                )}
 
                 {selectedTemplate && (
                     <div className="flex gap-3 mt-4 sm:mt-0">
@@ -2262,25 +2318,31 @@ export function AdminEmailTemplatesPage() {
                         flexWrap: 'wrap',
                         marginBottom: '8px'
                     }}>
-                        <div style={{ display: 'flex', gap: '16px', flex: 1, maxWidth: '700px' }}>
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: window.innerWidth < 640 ? 'column' : 'row',
+                            gap: '16px',
+                            flex: 1,
+                            width: '100%',
+                            maxWidth: window.innerWidth < 640 ? '100%' : '700px'
+                        }}>
                             <div style={{ position: 'relative', flex: 2 }}>
                                 <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
                                 <input
                                     type="text"
-                                    placeholder="Buscar por nombre, asunto o descripción..."
+                                    placeholder="Buscar plantillas..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     style={{
                                         width: '100%',
-                                        padding: '14px 14px 14px 48px',
+                                        padding: '12px 12px 12px 48px',
                                         backgroundColor: 'var(--bg-primary)',
                                         border: '1.5px solid var(--border-color)',
                                         borderRadius: '14px',
                                         fontSize: '14px',
                                         color: 'var(--text-primary)',
                                         outline: 'none',
-                                        transition: 'all 0.2s ease',
-                                        boxShadow: 'var(--shadow-sm)'
+                                        transition: 'all 0.2s ease'
                                     }}
                                 />
                             </div>
@@ -2288,7 +2350,7 @@ export function AdminEmailTemplatesPage() {
                             <select
                                 style={{
                                     padding: '0 16px',
-                                    height: '52px',
+                                    height: '46px',
                                     backgroundColor: 'var(--bg-primary)',
                                     border: '1.5px solid var(--border-color)',
                                     borderRadius: '14px',
@@ -2297,14 +2359,12 @@ export function AdminEmailTemplatesPage() {
                                     color: 'var(--text-primary)',
                                     cursor: 'pointer',
                                     outline: 'none',
-                                    flex: 1,
-                                    minWidth: '160px',
-                                    boxShadow: 'var(--shadow-sm)'
+                                    width: window.innerWidth < 640 ? '100%' : '180px'
                                 }}
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value as any)}
                             >
-                                <option value="all">Todos los Estados</option>
+                                <option value="all">Estados</option>
                                 <option value="activo">Activos</option>
                                 <option value="archivado">Archivados</option>
                             </select>
@@ -2352,29 +2412,6 @@ export function AdminEmailTemplatesPage() {
                                 >
                                     <ListIcon size={16} /> LISTADO
                                 </button>
-                            </div>
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <Button
-                                    variant="secondary"
-                                    onClick={() => {
-                                        setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
-                                        setIsFolderModalOpen(true);
-                                    }}
-                                    leftIcon={<Folder size={18} />}
-                                    style={{ height: '52px', borderRadius: '14px', padding: '0 24px' }}
-                                >
-                                    Carpeta
-                                </Button>
-                                <Button
-                                    onClick={() => {
-                                        setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
-                                        setIsCreateModalOpen(true);
-                                    }}
-                                    leftIcon={<Plus size={18} />}
-                                    style={{ height: '52px', borderRadius: '14px', padding: '0 24px' }}
-                                >
-                                    Nuevo
-                                </Button>
                             </div>
                         </div>
                     </div>

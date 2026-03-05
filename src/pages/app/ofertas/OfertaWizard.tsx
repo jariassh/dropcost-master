@@ -128,7 +128,8 @@ export function OfertaWizard({ isOpen, onClose }: OfertaWizardProps) {
                 bundleConfig: strategyType === 'bundle' ? bundleConfig : undefined,
                 giftConfig: strategyType === 'obsequio' ? giftConfig : undefined,
                 estimatedProfit: Math.round(estimatedProfit * 100) / 100,
-                estimatedMarginPercent: Math.round(estimatedMargin * 100) / 100
+                estimatedMarginPercent: Math.round(estimatedMargin * 100) / 100,
+                status: 'active'
             });
 
             toast.success('¡Oferta activada!', `${selectedCosteo.nombre_producto} con estrategia ${strategyType}`);
@@ -167,15 +168,16 @@ export function OfertaWizard({ isOpen, onClose }: OfertaWizardProps) {
 
                 <div
                     style={{
-                        padding: '20px 24px',
-                        borderRadius: '16px',
+                        padding: '24px',
+                        borderRadius: '20px',
                         backgroundColor: 'var(--bg-secondary)',
                         border: '1px solid var(--border-color)',
-                        marginTop: '20px',
+                        marginTop: '24px',
                         display: 'flex',
                         flexDirection: 'column',
-                        maxHeight: 'calc(80vh - 180px)', // Evita que se desborde del viewport
-                        overflow: 'hidden' // El scroll estará en el hijo flexible
+                        maxHeight: 'calc(90vh - 220px)',
+                        overflow: 'hidden',
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
                     }}
                 >
                     <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
@@ -215,7 +217,7 @@ export function OfertaWizard({ isOpen, onClose }: OfertaWizardProps) {
                         style={{
                             display: 'flex',
                             justifyContent: 'space-between',
-                            marginTop: '32px',
+                            marginTop: '24px',
                             paddingTop: '20px',
                             borderTop: '1px solid var(--border-color)'
                         }}
@@ -224,18 +226,22 @@ export function OfertaWizard({ isOpen, onClose }: OfertaWizardProps) {
                             onClick={handleBack}
                             disabled={step === 1}
                             style={{
-                                display: 'flex', alignItems: 'center', gap: '8px',
-                                padding: '10px 18px', fontSize: '13px', fontWeight: 700,
+                                flex: 1,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                padding: '12px 16px', fontSize: '14px', fontWeight: 700,
                                 color: step === 1 ? 'var(--text-tertiary)' : 'var(--text-primary)',
-                                backgroundColor: 'var(--bg-primary)',
+                                backgroundColor: 'var(--card-bg)',
                                 border: '1px solid var(--border-color)',
-                                borderRadius: '10px',
+                                borderRadius: '16px',
                                 cursor: step === 1 ? 'not-allowed' : 'pointer',
                                 opacity: step === 1 ? 0.4 : 1,
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                whiteSpace: 'nowrap'
                             }}
+                            onMouseEnter={(e) => { if (step !== 1) e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'; }}
+                            onMouseLeave={(e) => { if (step !== 1) e.currentTarget.style.backgroundColor = 'var(--card-bg)'; }}
                         >
-                            <ChevronLeft size={16} /> Anterior
+                            <ChevronLeft size={18} /> Anterior
                         </button>
 
                         {step < 4 ? (
@@ -243,32 +249,44 @@ export function OfertaWizard({ isOpen, onClose }: OfertaWizardProps) {
                                 onClick={handleNext}
                                 disabled={!canGoNext()}
                                 style={{
-                                    display: 'flex', alignItems: 'center', gap: '8px',
-                                    padding: '10px 24px', fontSize: '13px', fontWeight: 700,
+                                    flex: 1.5,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                    padding: '12px 20px', fontSize: '14px', fontWeight: 700,
                                     color: '#fff',
                                     backgroundColor: canGoNext() ? 'var(--color-primary)' : 'var(--text-tertiary)',
-                                    border: 'none', borderRadius: '10px',
+                                    border: 'none', borderRadius: '16px',
                                     cursor: canGoNext() ? 'pointer' : 'not-allowed',
-                                    transition: 'all 0.2s ease',
-                                    boxShadow: canGoNext() ? '0 4px 12px rgba(0, 102, 255, 0.2)' : 'none'
+                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    boxShadow: canGoNext() ? '0 4px 12px rgba(0, 102, 255, 0.25)' : 'none',
+                                    whiteSpace: 'nowrap'
                                 }}
+                                onMouseEnter={(e) => { if (canGoNext()) e.currentTarget.style.backgroundColor = 'var(--color-primary-dark)'; }}
+                                onMouseLeave={(e) => { if (canGoNext()) e.currentTarget.style.backgroundColor = 'var(--color-primary)'; }}
                             >
-                                Siguiente <ChevronRight size={16} />
+                                Siguiente <ChevronRight size={18} />
                             </button>
                         ) : (
                             <button
                                 onClick={handleActivate}
+                                disabled={isActivating}
                                 style={{
-                                    display: 'flex', alignItems: 'center', gap: '8px',
-                                    padding: '10px 24px', fontSize: '13px', fontWeight: 700,
+                                    flex: 1.5,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                    padding: '12px 20px', fontSize: '14px', fontWeight: 900,
                                     color: '#fff',
                                     background: 'var(--color-success)',
-                                    border: 'none', borderRadius: '10px',
-                                    cursor: 'pointer', transition: 'all 0.2s ease',
-                                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
+                                    border: 'none', borderRadius: '16px',
+                                    cursor: isActivating ? 'not-allowed' : 'pointer',
+                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+                                    opacity: isActivating ? 0.7 : 1,
+                                    whiteSpace: 'nowrap'
                                 }}
+                                onMouseEnter={(e) => { if (!isActivating) e.currentTarget.style.filter = 'brightness(0.9)'; }}
+                                onMouseLeave={(e) => { if (!isActivating) e.currentTarget.style.filter = 'none'; }}
                             >
-                                <Sparkles size={16} /> Activar Oferta
+                                {isActivating ? <Spinner size="sm" /> : <Sparkles size={18} />}
+                                {isActivating ? 'Activando...' : 'Activar Oferta'}
                             </button>
                         )}
                     </div>

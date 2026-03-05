@@ -36,9 +36,16 @@ export function StepConnectShopify({ tiendaId, onComplete }: StepConnectShopifyP
     const [siteUrl, setSiteUrl] = useState('');
     const [webhookShortId, setWebhookShortId] = useState('');
     const [copiedScopes, setCopiedScopes] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
     const SHOPIFY_SCOPES = ['read_orders', 'read_all_orders', 'read_products', 'read_inventory', 'read_analytics'];
     const scopesString = SHOPIFY_SCOPES.join(',');
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         checkExistingConnection();
@@ -237,20 +244,20 @@ export function StepConnectShopify({ tiendaId, onComplete }: StepConnectShopifyP
     // Ya no usamos el early return de isAlreadyConnected para mostrar siempre el formulario completo como en el modal
 
     return (
-        <Card style={{ padding: '32px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <Card style={{ padding: isMobile ? '16px' : '32px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
                 <div style={{
-                    width: '64px', height: '64px', borderRadius: '20px',
+                    width: isMobile ? '48px' : '64px', height: isMobile ? '48px' : '64px', borderRadius: '16px',
                     backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)', color: 'var(--color-primary)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 20px'
+                    margin: '0 auto 16px'
                 }}>
-                    <LinkIcon size={32} />
+                    <LinkIcon size={isMobile ? 24 : 32} />
                 </div>
-                <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                <h2 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     {isAlreadyConnected ? 'Shopify Conectado' : 'Configuración de Shopify'}
                 </h2>
-                <p style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>
+                <p style={{ color: 'var(--text-tertiary)', fontSize: isMobile ? '13px' : '14px' }}>
                     {isAlreadyConnected
                         ? 'Tu tienda Shopify está vinculada. Puedes actualizar la configuración si es necesario.'
                         : 'Conecta tus pedidos en tiempo real para optimizar tus cálculos automáticamente.'}
@@ -279,7 +286,11 @@ export function StepConnectShopify({ tiendaId, onComplete }: StepConnectShopifyP
                         <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                             Permisos (API Scopes) requeridos y su objetivo:
                         </p>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 20px' }}>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                            gap: isMobile ? '12px' : '8px 20px'
+                        }}>
                             <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', lineHeight: 1.4 }}>
                                 <strong style={{ color: 'var(--color-primary)' }}>read_orders:</strong> Ventas y órdenes del día.
                             </div>
@@ -298,29 +309,39 @@ export function StepConnectShopify({ tiendaId, onComplete }: StepConnectShopifyP
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '8px', position: 'relative' }}>
                         <input
                             type="text"
                             readOnly
                             value={scopesString}
                             style={{
-                                flex: 1, padding: '10px 12px',
+                                width: '100%', padding: '10px 44px 10px 12px',
                                 backgroundColor: 'var(--bg-primary)',
                                 border: '1px solid var(--border-color)',
                                 borderRadius: '8px',
                                 color: 'var(--text-secondary)',
-                                fontSize: '12px', outline: 'none',
-                                fontFamily: 'monospace'
+                                fontSize: '11px', outline: 'none',
+                                fontFamily: 'monospace',
+                                boxSizing: 'border-box'
                             }}
                         />
-                        <Button
-                            variant="secondary"
+                        <button
                             onClick={handleCopyScopes}
-                            style={{ padding: '0 12px', height: '38px', gap: '8px', fontSize: '11px', minWidth: '130px' }}
+                            style={{
+                                position: 'absolute',
+                                right: '4px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                padding: '8px',
+                                background: 'transparent',
+                                border: 'none',
+                                color: 'var(--color-primary)',
+                                cursor: 'pointer',
+                                display: 'flex'
+                            }}
                         >
-                            {copiedScopes ? <CheckCircle2 size={14} /> : <Copy size={14} />}
-                            {copiedScopes ? 'Copiados' : 'Copiar Scopes'}
-                        </Button>
+                            {copiedScopes ? <CheckCircle2 size={16} /> : <Copy size={16} />}
+                        </button>
                     </div>
                 </div>
 
@@ -329,26 +350,37 @@ export function StepConnectShopify({ tiendaId, onComplete }: StepConnectShopifyP
                         <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                             Dominio Shopify
                         </label>
-                        <div style={{ display: 'flex' }}>
+                        <div style={{ display: 'flex', width: '100%', boxSizing: 'border-box' }}>
                             <input
                                 type="text"
                                 value={shopifyDomain}
                                 onChange={(e) => setShopifyDomain(e.target.value)}
                                 placeholder="mi-tienda"
                                 style={{
-                                    flex: 1, padding: '10px 12px',
+                                    flex: 1,
+                                    minWidth: 0,
+                                    padding: '10px 12px',
                                     backgroundColor: 'var(--bg-primary)',
                                     border: '1px solid var(--border-color)',
                                     borderRight: 'none',
                                     borderRadius: '8px 0 0 8px',
                                     color: 'var(--text-primary)',
-                                    fontSize: '14px', outline: 'none'
+                                    fontSize: isMobile ? '13px' : '14px',
+                                    outline: 'none',
+                                    boxSizing: 'border-box'
                                 }}
                             />
                             <div style={{
-                                padding: '10px 12px', backgroundColor: 'var(--bg-tertiary)',
-                                border: '1px solid var(--border-color)', borderRadius: '0 8px 8px 0',
-                                color: 'var(--text-tertiary)', fontSize: '14px', display: 'flex', alignItems: 'center'
+                                padding: isMobile ? '10px 8px' : '10px 12px',
+                                backgroundColor: 'var(--bg-tertiary)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '0 8px 8px 0',
+                                color: 'var(--text-tertiary)',
+                                fontSize: isMobile ? '12px' : '14px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                whiteSpace: 'nowrap',
+                                flexShrink: 0
                             }}>
                                 .myshopify.com
                             </div>
@@ -417,7 +449,7 @@ export function StepConnectShopify({ tiendaId, onComplete }: StepConnectShopifyP
                                     </p>
                                 </div>
 
-                                <div style={{ display: 'flex', gap: '8px' }}>
+                                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '8px' }}>
                                     <input
                                         type="text"
                                         value={clientId}
@@ -480,22 +512,36 @@ export function StepConnectShopify({ tiendaId, onComplete }: StepConnectShopifyP
                         border: '1px solid var(--border-color)', marginTop: '8px'
                     }}>
                         <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>Enlace de Webhook para Shopify</p>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <div style={{ position: 'relative', width: '100%', boxSizing: 'border-box' }}>
                             <input
                                 type="text"
                                 readOnly
                                 value={webhookUrl}
                                 style={{
-                                    flex: 1, padding: '10px 12px', backgroundColor: 'var(--bg-tertiary)',
-                                    borderRadius: '8px', fontSize: '12px', color: 'var(--text-primary)',
-                                    border: '1px solid var(--border-color)', outline: 'none'
+                                    width: '100%',
+                                    padding: '10px 44px 10px 12px',
+                                    backgroundColor: 'var(--bg-tertiary)',
+                                    borderRadius: '8px',
+                                    fontSize: '11px',
+                                    color: 'var(--text-primary)',
+                                    border: '1px solid var(--border-color)',
+                                    outline: 'none',
+                                    boxSizing: 'border-box'
                                 }}
                             />
                             <button
                                 onClick={handleCopyWebhook}
                                 style={{
-                                    padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)',
-                                    backgroundColor: 'var(--bg-secondary)', cursor: 'pointer', color: 'var(--text-secondary)'
+                                    position: 'absolute',
+                                    right: '4px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    padding: '8px',
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'var(--color-primary)',
+                                    cursor: 'pointer',
+                                    display: 'flex'
                                 }}
                             >
                                 <Copy size={16} />

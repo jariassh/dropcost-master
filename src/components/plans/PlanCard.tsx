@@ -23,6 +23,13 @@ export const PlanCard: React.FC<PlanCardProps> = ({
     displayedPrice,
     period = 'monthly'
 }) => {
+    const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
+
+    React.useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Logic based on slug for styling
     const isEnterprise = plan.slug === 'plan_enterprise';
@@ -30,13 +37,13 @@ export const PlanCard: React.FC<PlanCardProps> = ({
 
     return (
         <div style={{
-            padding: '32px',
+            padding: isMobile ? '20px' : '32px',
             backgroundColor: 'var(--card-bg)',
             border: isCurrent ? '2px solid var(--color-primary)' : '1px solid var(--border-color)',
             borderRadius: '16px', // Standardized from 24px
             display: 'flex',
             flexDirection: 'column',
-            gap: '24px',
+            gap: isMobile ? '16px' : '24px',
             position: 'relative',
             boxShadow: isCurrent ? '0 10px 30px -10px rgba(0, 102, 255, 0.2)' : 'var(--shadow-sm)',
             transition: 'all 0.3s ease', // Smoother transition
@@ -44,7 +51,9 @@ export const PlanCard: React.FC<PlanCardProps> = ({
             flex: 1,
             pointerEvents: (isDisabled && !isCurrent) ? 'none' : 'auto',
             filter: (isDisabled && !isCurrent) ? 'grayscale(0.5) opacity(0.6)' : 'none',
-            cursor: (isDisabled && !isCurrent) ? 'not-allowed' : 'default'
+            cursor: (isDisabled && !isCurrent) ? 'not-allowed' : 'default',
+            width: '100%',
+            boxSizing: 'border-box'
         }}
             onMouseEnter={(e) => {
                 if (!isCurrent) {
@@ -69,16 +78,18 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                     transform: 'translateX(-50%)',
                     backgroundColor: 'var(--color-primary)',
                     color: 'white',
-                    padding: '4px 12px',
+                    padding: isMobile ? '3px 10px' : '4px 12px',
                     borderRadius: '20px',
-                    fontSize: '12px',
+                    fontSize: isMobile ? '10px' : '12px',
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    zIndex: 10
+                    zIndex: 10,
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 4px 12px rgba(var(--color-primary-rgb), 0.3)'
                 }}>
                     <CheckCircle2 size={14} /> Tu Plan Actual
                 </div>
@@ -90,9 +101,9 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                     transform: 'translateX(-50%)',
                     backgroundColor: 'var(--color-primary)',
                     color: 'white',
-                    padding: '4px 16px',
+                    padding: isMobile ? '3px 14px' : '4px 16px',
                     borderRadius: '20px',
-                    fontSize: '12px',
+                    fontSize: isMobile ? '10px' : '12px',
                     fontWeight: 800,
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em',
@@ -100,6 +111,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                     alignItems: 'center',
                     gap: '6px',
                     zIndex: 10,
+                    whiteSpace: 'nowrap',
                     boxShadow: '0 4px 12px rgba(0, 102, 255, 0.3)'
                 }}>
                     MÁS COMPRADO
@@ -117,8 +129,8 @@ export const PlanCard: React.FC<PlanCardProps> = ({
             </div>
 
             {/* Price */}
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                <span style={{ fontSize: '36px', fontWeight: 800, color: 'var(--text-primary)' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: isMobile ? '28px' : '36px', fontWeight: 800, color: 'var(--text-primary)' }}>
                     {displayedPrice || formatCurrency(plan.price_monthly)}
                 </span>
                 <span style={{ fontSize: '14px', color: 'var(--text-tertiary)', fontWeight: 500 }}>

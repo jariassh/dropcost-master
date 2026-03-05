@@ -116,6 +116,14 @@ export function AppLayout() {
         }
     }, [fetchNotifications, fetchStatus, user, tiendaActual?.id]);
 
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     // Redirección Launchpad si no está completo o si el usuario quiere verlo como inicio
     useEffect(() => {
         // No redirigir si el componente está cargando o no se ha inicializado el usuario
@@ -389,11 +397,11 @@ export function AppLayout() {
                     style={{
                         position: 'sticky',
                         top: 0,
-                        zIndex: 20,
+                        zIndex: 100,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: '0 28px',
+                        padding: isMobile ? '0 12px' : '0 28px',
                         height: '64px',
                         minHeight: '64px',
                         backgroundColor: 'var(--bg-primary)',
@@ -416,37 +424,43 @@ export function AppLayout() {
                             <div
                                 onClick={() => navigate('/launchpad')}
                                 style={{
-                                    display: 'flex', alignItems: 'center', gap: '16px',
-                                    backgroundColor: 'var(--bg-secondary)', padding: '6px 16px',
+                                    display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '16px',
+                                    backgroundColor: 'var(--bg-secondary)', padding: isMobile ? '4px 10px' : '6px 16px',
                                     borderRadius: '12px', border: '1px solid var(--border-color)',
                                     cursor: 'pointer', transition: 'all 0.2s',
-                                    marginLeft: '12px'
+                                    marginLeft: isMobile ? '4px' : '12px',
+                                    maxWidth: isMobile ? '160px' : 'none',
+                                    flexShrink: 1
                                 }}
                                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
                                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; }}
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flexShrink: 0 }}>
                                     {isComplete ? <CheckCircle2 size={16} color="var(--color-success)" /> : <Rocket size={16} color="var(--color-primary)" />}
                                     <span style={{ fontSize: '11px', fontWeight: 800, whiteSpace: 'nowrap' }}>
-                                        LAUNCHPAD: <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>{progress}%</span>
+                                        {isMobile ? '' : 'LAUNCHPAD: '}
+                                        <span style={{ color: isMobile ? 'var(--text-primary)' : 'var(--text-tertiary)', fontWeight: isMobile ? 800 : 400 }}>{progress}%</span>
                                     </span>
                                 </div>
-                                <div style={{
-                                    width: '80px', height: '6px', backgroundColor: 'var(--bg-tertiary)',
-                                    borderRadius: '3px', overflow: 'hidden', display: 'flex'
-                                }}>
+                                {!isMobile && (
                                     <div style={{
-                                        width: `${progress}%`, height: '100%',
-                                        backgroundColor: isComplete ? 'var(--color-success)' : 'var(--color-primary)',
-                                        transition: 'width 0.5s ease-out'
-                                    }} />
-                                </div>
+                                        width: '80px', height: '6px', backgroundColor: 'var(--bg-tertiary)',
+                                        borderRadius: '3px', overflow: 'hidden', display: 'flex', flexShrink: 0
+                                    }}>
+                                        <div style={{
+                                            width: `${progress}%`, height: '100%',
+                                            backgroundColor: isComplete ? 'var(--color-success)' : 'var(--color-primary)',
+                                            transition: 'width 0.5s ease-out'
+                                        }} />
+                                    </div>
+                                )}
                                 {!isComplete ? (
                                     <div style={{
                                         fontSize: '9px', fontWeight: 700, padding: '2px 8px',
                                         backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
                                         color: 'var(--color-primary)', borderRadius: '6px',
-                                        textTransform: 'uppercase'
+                                        textTransform: 'uppercase',
+                                        display: isMobile ? 'none' : 'block'
                                     }}>
                                         Continuar
                                     </div>
@@ -455,7 +469,8 @@ export function AppLayout() {
                                         fontSize: '9px', fontWeight: 700, padding: '2px 8px',
                                         backgroundColor: 'rgba(var(--color-success-rgb), 0.1)',
                                         color: 'var(--color-success)', borderRadius: '6px',
-                                        textTransform: 'uppercase'
+                                        textTransform: 'uppercase',
+                                        display: isMobile ? 'none' : 'block'
                                     }}>
                                         Completado
                                     </div>
@@ -478,7 +493,10 @@ export function AppLayout() {
                         {/* Notificaciones */}
                         <div style={{ position: 'relative' }}>
                             <HeaderButton
-                                onClick={() => setNotificationsOpen(v => !v)}
+                                onClick={() => {
+                                    setNotificationsOpen(!notificationsOpen);
+                                    if (userMenuOpen) setUserMenuOpen(false);
+                                }}
                                 label="Notificaciones"
                             >
                                 <Bell size={18} />
@@ -503,7 +521,10 @@ export function AppLayout() {
                         {/* Avatar / menú usuario */}
                         <div style={{ position: 'relative', marginLeft: '4px' }}>
                             <button
-                                onClick={() => setUserMenuOpen((v) => !v)}
+                                onClick={() => {
+                                    setUserMenuOpen(!userMenuOpen);
+                                    if (notificationsOpen) setNotificationsOpen(false);
+                                }}
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '8px',
                                     padding: '6px', borderRadius: '10px',

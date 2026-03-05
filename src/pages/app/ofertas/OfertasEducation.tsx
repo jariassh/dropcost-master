@@ -69,57 +69,118 @@ export function OfertasEducation({ onComplete, onSelectStrategy }: OfertasEducat
             style={{
                 maxWidth: '720px',
                 margin: '0 auto',
-                padding: '32px',
+                padding: 'clamp(12px, 4vw, 32px)',
                 animation: 'fadeIn 300ms ease',
             }}
         >
-            {/* Header */}
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                <Sparkles size={32} style={{ color: 'var(--color-primary)', margin: '0 auto 12px' }} />
-                <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>
-                    ¿Qué tipo de oferta te conviene?
-                </h2>
-                <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-                    Conoce las 3 estrategias disponibles y elige la que mejor se adapte a tu producto
-                </p>
+            {/* Header with Skip button */}
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                marginBottom: '24px'
+            }}>
+                <div style={{ flex: 1 }}>
+                    <Sparkles size={32} style={{ color: 'var(--color-primary)', marginBottom: '12px' }} />
+                    <h2 style={{ fontSize: '24px', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>
+                        ¿Qué tipo de oferta te conviene?
+                    </h2>
+                    <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', lineHeight: 1.5 }}>
+                        Conoce las 3 estrategias disponibles y elige la que mejor se adapte a tu producto
+                    </p>
+                </div>
+                <button
+                    onClick={onComplete}
+                    style={{
+                        padding: '8px 12px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        color: 'var(--text-tertiary)',
+                        background: 'var(--bg-secondary)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        marginTop: '4px'
+                    }}
+                >
+                    Saltar
+                </button>
             </div>
 
             {/* Slide card */}
             <div
                 key={slide.type}
                 style={{
-                    padding: '28px',
-                    borderRadius: '16px',
+                    padding: '24px',
+                    borderRadius: '24px',
                     backgroundColor: 'var(--card-bg)',
                     border: slide.recommended
                         ? '2px solid var(--color-primary)'
                         : '1px solid var(--card-border)',
-                    boxShadow: 'var(--shadow-md)',
-                    animation: 'slideUp 250ms ease-out',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+                    animation: 'slideUp 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    position: 'relative',
+                    overflow: 'hidden'
                 }}
             >
-                {/* Title row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                    <span style={{ fontSize: '36px' }}>{slide.icon}</span>
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <h3 style={{ fontSize: '20px', fontWeight: 700 }}>{slide.title}</h3>
-                            {slide.recommended && (
-                                <span
-                                    style={{
-                                        padding: '2px 10px',
-                                        borderRadius: '9999px',
-                                        fontSize: '11px',
-                                        fontWeight: 700,
-                                        backgroundColor: 'var(--color-primary)',
-                                        color: '#fff',
-                                    }}
-                                >
-                                    ⭐ Recomendado
-                                </span>
-                            )}
-                        </div>
-                        <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{slide.subtitle}</p>
+                {/* Recommended Badge - Positioned Absolute Top-Right */}
+                {slide.recommended && (
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: '20px',
+                            right: '20px',
+                            padding: '6px 14px',
+                            borderRadius: '12px',
+                            fontSize: '10px',
+                            fontWeight: 900,
+                            backgroundColor: 'var(--color-primary)',
+                            color: '#fff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            boxShadow: '0 4px 12px rgba(0, 102, 255, 0.3)',
+                            zIndex: 1,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em'
+                        }}
+                    >
+                        <Sparkles size={12} fill="white" /> Recomendado
+                    </div>
+                )}
+
+                {/* Centered Header Layout (Vertical Stack) */}
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    marginBottom: '32px',
+                    paddingTop: '16px' // Espacio extra para el badge
+                }}>
+                    <div style={{
+                        width: '72px',
+                        height: '72px',
+                        borderRadius: '20px',
+                        backgroundColor: 'var(--bg-secondary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '40px',
+                        marginTop: '12px', // Baja el icono un poco más
+                        marginBottom: '20px',
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)'
+                    }}>
+                        {slide.icon}
+                    </div>
+                    <div style={{ maxWidth: '400px' }}>
+                        <h3 style={{ fontSize: '22px', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-0.01em' }}>
+                            {slide.title}
+                        </h3>
+                        <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', fontWeight: 500, lineHeight: 1.5 }}>
+                            {slide.subtitle}
+                        </p>
                     </div>
                 </div>
 
@@ -129,26 +190,50 @@ export function OfertasEducation({ onComplete, onSelectStrategy }: OfertasEducat
                 </p>
 
                 {/* Advantages & Disadvantages */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-                    <div>
-                        <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-success)', marginBottom: '8px', textTransform: 'uppercase' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
+                    <div style={{
+                        padding: '16px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                        border: '1px solid rgba(16, 185, 129, 0.1)'
+                    }}>
+                        <p style={{ fontSize: '12px', fontWeight: 800, color: 'var(--color-success)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                             ✅ Ventajas
                         </p>
-                        {slide.advantages.map((a) => (
-                            <p key={a} style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                                • {a}
-                            </p>
-                        ))}
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr',
+                            gap: '12px'
+                        }}>
+                            {slide.advantages.map((a) => (
+                                <p key={a} style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                                    <span style={{ color: 'var(--color-success)', flexShrink: 0 }}>•</span>
+                                    <span>{a}</span>
+                                </p>
+                            ))}
+                        </div>
                     </div>
-                    <div>
-                        <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-error)', marginBottom: '8px', textTransform: 'uppercase' }}>
+                    <div style={{
+                        padding: '16px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                        border: '1px solid rgba(239, 68, 68, 0.1)'
+                    }}>
+                        <p style={{ fontSize: '12px', fontWeight: 800, color: 'var(--color-error)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                             ⚠️ Desventajas
                         </p>
-                        {slide.disadvantages.map((d) => (
-                            <p key={d} style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                                • {d}
-                            </p>
-                        ))}
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr',
+                            gap: '12px'
+                        }}>
+                            {slide.disadvantages.map((d) => (
+                                <p key={d} style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                                    <span style={{ color: 'var(--color-error)', flexShrink: 0 }}>•</span>
+                                    <span>{d}</span>
+                                </p>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
@@ -185,89 +270,86 @@ export function OfertasEducation({ onComplete, onSelectStrategy }: OfertasEducat
                 </div>
             </div>
 
-            {/* Navigation */}
+            {/* Navigation Refined */}
             <div
                 style={{
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginTop: '24px',
+                    gap: '20px',
+                    marginTop: '32px',
                 }}
             >
-                {/* Skip */}
-                <button
-                    onClick={onComplete}
-                    style={{
-                        fontSize: '13px',
-                        color: 'var(--text-tertiary)',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        textDecoration: 'underline',
-                    }}
-                >
-                    Saltar tutorial
-                </button>
-
-                {/* Dots */}
-                <div style={{ display: 'flex', gap: '8px' }}>
+                {/* Dots in center */}
+                <div style={{ display: 'flex', gap: '10px' }}>
                     {SLIDES.map((_, i) => (
                         <button
                             key={i}
                             onClick={() => setCurrent(i)}
                             style={{
-                                width: i === current ? '20px' : '8px',
+                                width: i === current ? '32px' : '10px',
                                 height: '8px',
-                                borderRadius: '9999px',
+                                borderRadius: '10px',
                                 border: 'none',
                                 backgroundColor: i === current ? 'var(--color-primary)' : 'var(--border-color)',
                                 cursor: 'pointer',
-                                transition: 'all 200ms ease',
+                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                boxShadow: i === current ? '0 2px 8px rgba(0, 102, 255, 0.2)' : 'none'
                             }}
                         />
                     ))}
                 </div>
 
-                {/* Actions */}
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    {current > 0 && (
+                {/* Actions Row */}
+                <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+                    {current > 0 ? (
                         <button
                             onClick={() => setCurrent(current - 1)}
                             style={{
+                                flex: 1,
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '4px',
-                                padding: '10px 16px',
-                                fontSize: '13px',
-                                fontWeight: 600,
+                                justifyContent: 'center',
+                                gap: '8px',
+                                padding: '14px 20px',
+                                fontSize: '14px',
+                                fontWeight: 800,
                                 color: 'var(--text-primary)',
                                 backgroundColor: 'var(--bg-secondary)',
                                 border: '1px solid var(--border-color)',
-                                borderRadius: '8px',
+                                borderRadius: '16px',
                                 cursor: 'pointer',
+                                transition: 'all 0.2s'
                             }}
                         >
-                            <ChevronLeft size={14} /> Anterior
+                            <ChevronLeft size={18} /> Anterior
                         </button>
+                    ) : (
+                        <div style={{ flex: 1 }} />
                     )}
+
                     {current < SLIDES.length - 1 ? (
                         <button
                             onClick={() => setCurrent(current + 1)}
                             style={{
+                                flex: 1,
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '4px',
-                                padding: '10px 16px',
-                                fontSize: '13px',
-                                fontWeight: 600,
+                                justifyContent: 'center',
+                                gap: '8px',
+                                padding: '14px 20px',
+                                fontSize: '14px',
+                                fontWeight: 800,
                                 color: '#fff',
                                 backgroundColor: 'var(--color-primary)',
                                 border: 'none',
-                                borderRadius: '8px',
+                                borderRadius: '16px',
                                 cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                boxShadow: '0 6px 16px rgba(0, 102, 255, 0.2)'
                             }}
                         >
-                            Siguiente <ChevronRight size={14} />
+                            Siguiente <ChevronRight size={18} />
                         </button>
                     ) : (
                         <button
@@ -276,20 +358,24 @@ export function OfertasEducation({ onComplete, onSelectStrategy }: OfertasEducat
                                 onComplete();
                             }}
                             style={{
+                                flex: 2,
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '4px',
-                                padding: '10px 20px',
-                                fontSize: '13px',
-                                fontWeight: 700,
+                                justifyContent: 'center',
+                                gap: '8px',
+                                padding: '14px 24px',
+                                fontSize: '15px',
+                                fontWeight: 900,
                                 color: '#fff',
                                 background: 'linear-gradient(135deg, #0066FF 0%, #003D99 100%)',
                                 border: 'none',
-                                borderRadius: '8px',
+                                borderRadius: '16px',
                                 cursor: 'pointer',
+                                boxShadow: '0 8px 20px rgba(0, 61, 153, 0.3)',
+                                transition: 'all 0.2s'
                             }}
                         >
-                            ¡Empezar! <Sparkles size={14} />
+                            ¡Empezar ahora! <Sparkles size={18} />
                         </button>
                     )}
                 </div>
