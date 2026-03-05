@@ -1,6 +1,7 @@
 import { Modal } from '@/components/common/Modal';
 import type { Oferta } from '@/types/ofertas';
 import { STRATEGIES } from '@/types/ofertas';
+import { formatSmartCurrency } from '@/utils/currencyUtils';
 import {
     ChevronLeft,
     Settings,
@@ -192,7 +193,7 @@ export function OfertaDetailPanel({ oferta, onClose, onDelete }: OfertaDetailPan
                                     {(oferta.bundleConfig?.priceTable || [1, 2, 3, 4, 5, 6, 7, 8]).map((item, idx, arr) => {
                                         const qty = typeof item === 'number' ? item : item.quantity;
                                         const price = typeof item === 'number' ? (89476 * qty) : item.totalPrice;
-                                        const savings = qty === 1 ? '---' : `-$${(35314 * (qty - 1)).toLocaleString()}/ud`;
+                                        const savings = qty === 1 ? '---' : `-${formatSmartCurrency(35314 * (qty - 1))}/ud`;
                                         const profit = typeof item === 'number' ? (17895 + (qty - 1) * 8948) : item.totalProfit;
 
                                         return (

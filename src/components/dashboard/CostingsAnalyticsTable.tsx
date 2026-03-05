@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Card, Input, Button } from '@/components/common';
 import { ArrowUpRight, ArrowDownRight, Minus, Package, ChevronLeft, ChevronRight, Activity, Search, Filter } from 'lucide-react';
 import { CosteoAnalytics } from '@/types/dashboard';
+import { formatSmartCurrency } from '@/utils/currencyUtils';
 
 interface Props {
     data: CosteoAnalytics[];
@@ -129,14 +130,14 @@ export const CostingsAnalyticsTable: React.FC<Props> = ({ data, isLoading }) => 
                                         </div>
                                     </td>
                                     <td style={cellStyle}>
-                                        <span style={{ fontWeight: 700 }}>${item.target_price.toLocaleString()}</span>
+                                        <span style={{ fontWeight: 700 }}>{formatSmartCurrency(item.target_price)}</span>
                                     </td>
                                     <td style={cellStyle}>
-                                        <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>${item.real_spend.toLocaleString()}</span>
+                                        <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{formatSmartCurrency(item.real_spend)}</span>
                                     </td>
                                     <td style={cellStyle}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontWeight: 700 }}>${item.real_cpa.toFixed(2)}</span>
+                                            <span style={{ fontWeight: 700 }}>{formatSmartCurrency(item.real_cpa)}</span>
                                             <MetricIndicator
                                                 real={item.real_cpa}
                                                 target={item.target_cpa}

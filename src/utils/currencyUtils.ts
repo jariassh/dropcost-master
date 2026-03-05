@@ -102,3 +102,50 @@ export const getDisplayCurrency = (countryCode: string, currencyCode: string): s
 
     return 'USD';
 };
+
+/**
+ * Formats a number as currency using smart compact notation.
+ * - < 1.000.000: Full number with thousands separators and 2 decimals.
+ * - >= 1.000.000 and < 1.000.000.000: Compact format with "M" and 2 decimals.
+ * - >= 1.000.000.000: Compact format with "B" and 2 decimals.
+ * @param value The amount to format
+ * @param currency The currency code (e.g. 'COP', 'USD')
+ * @param locale The locale (e.g. 'es-CO', 'en-US')
+ * @returns Formatted currency string
+ */
+export const formatSmartCurrency = (value: number, currency: string = 'COP', locale: string = 'es-CO'): string => {
+    const isNegative = value < 0;
+    const absValue = Math.abs(value);
+
+    const formatter = new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    if (absValue < 1000000) {
+        return formatter.format(value);
+    }
+
+    // Extract currency symbol manually since compact notation in simple Intl formatter might not use standard letters (M/B) in all locales
+    const parts = formatter.formatToParts(1);
+    let currencySymbol = '$';
+    parts.forEach(p => {
+        if (p.type === 'currency') currencySymbol = p.value;
+    });
+
+    const numFormatter = new Intl.NumberFormat(locale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    const signStr = isNegative ? '-' : '';
+
+    if (absValue >= 1000000000) {
+        return `${signStr}${currencySymbol}${numFormatter.format(absValue / 1000000000)}B`;
+    }
+
+    return `${signStr}${currencySymbol}${numFormatter.format(absValue / 1000000)}M`;
+};
+

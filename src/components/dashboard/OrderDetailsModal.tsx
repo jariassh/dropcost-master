@@ -2,6 +2,7 @@ import React from 'react';
 import { ShoppingBag, User, Phone, MapPin, FileText, Tag, Calendar, CreditCard, Truck } from 'lucide-react';
 import { Button, Badge } from '@/components/common';
 import { DashboardOrder } from '@/types/dashboard';
+import { formatSmartCurrency } from '@/utils/currencyUtils';
 
 interface OrderDetailsModalProps {
     isOpen: boolean;
@@ -168,7 +169,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ isOpen, on
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>Total de la Orden</span>
                             <span style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-primary)' }}>
-                                ${order.total.toLocaleString()}
+                                {formatSmartCurrency(order.total)}
                             </span>
                         </div>
                     </div>
