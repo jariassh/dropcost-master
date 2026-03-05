@@ -44,3 +44,8 @@ entrypoint = "./functions/webhook-shopify/index.ts"
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/integraciones/conectar-meta/index.ts"
+
+[functions.get-meta-accounts]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/integraciones/get-meta-accounts/index.ts"
