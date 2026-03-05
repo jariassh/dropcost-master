@@ -54,7 +54,7 @@ const adminNavItems = [
     { to: '/admin/settings', icon: Settings, label: 'Ajustes Globales', active: true },
     { to: '/admin/logs', icon: History, label: 'Logs de Auditoría', active: true },
 
-    // PRÓXIMAMENTE (Inactivos)
+    // Próximamente (Inactivos)
     { to: '/admin/traffic', icon: PieChart, label: 'Análisis de Tráfico', active: false },
     { to: '/admin/shortener', icon: Link2, label: 'Acortador de Enlaces', active: false },
     { to: '/admin/ads', icon: Megaphone, label: 'Ads & Creatividades', active: false },
@@ -103,7 +103,7 @@ export function AdminLayout() {
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-primary)', '--sidebar-width': `${sidebarWidth}px` } as any}>
-            {/* ÔöÇÔöÇÔöÇ Admin Sidebar ÔöÇÔöÇÔöÇ */}
+            {/* Admin Sidebar */}
             <aside
                 style={{
                     position: 'fixed',
@@ -159,7 +159,7 @@ export function AdminLayout() {
                                     >
                                         <ShieldCheck size={18} color="#fff" />
                                     </div>
-                                    <span style={{ color: '#fff', fontWeight: 800, fontSize: '15px', letterSpacing: '0.02em' }}>
+                                    <span style={{ color: '#fff', fontWeight: 600, fontSize: '15px', letterSpacing: '0.02em' }}>
                                         ADMIN<span style={{ color: 'var(--color-admin-sidebar-active, #EF4444)' }}>PANEL</span>
                                     </span>
                                 </div>
@@ -176,12 +176,26 @@ export function AdminLayout() {
                             }
                         }}
                         style={{
-                            padding: '8px', borderRadius: '8px', background: 'none', border: 'none',
-                            color: 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex'
+                            padding: '10px',
+                            borderRadius: '12px',
+                            background: 'none',
+                            border: 'none',
+                            color: 'rgba(255,255,255,0.6)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            transition: 'all 150ms ease',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.color = '#fff';
+                            e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.color = 'rgba(255,255,255,0.6)';
+                            e.currentTarget.style.backgroundColor = 'transparent';
                         }}
                         aria-label={effectivelyCollapsed ? 'Expandir' : 'Cerrar'}
                     >
-                        {window.innerWidth < 1024 ? <Menu size={24} /> : (effectivelyCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />)}
+                        <Menu size={24} />
                     </button>
                 </div>
 
@@ -245,7 +259,7 @@ export function AdminLayout() {
                     {/* Módulos Próximamente */}
                     <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {!effectivelyCollapsed && (
-                            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '14px', marginBottom: '8px' }}>
+                            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '14px', marginBottom: '8px' }}>
                                 Próximamente
                             </span>
                         )}
@@ -311,7 +325,7 @@ export function AdminLayout() {
                         </button>
                         <h2 style={{
                             fontSize: isMobile ? '16px' : '18px',
-                            fontWeight: 700,
+                            fontWeight: 600,
                             color: 'var(--text-primary)',
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
@@ -367,7 +381,7 @@ export function AdminLayout() {
                                     backgroundColor: user?.avatarUrl ? 'transparent' : 'var(--color-admin-sidebar-active, #EF4444)',
                                     borderRadius: '50%',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    color: '#fff', fontSize: '13px', fontWeight: 700,
+                                    color: '#fff', fontSize: '13px', fontWeight: 600,
                                     overflow: 'hidden'
                                 }}>
                                     {user?.avatarUrl ? (
