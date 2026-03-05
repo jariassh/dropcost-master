@@ -39,11 +39,11 @@ export function WizardStep4Preview({
 
             <div
                 style={{
-                    padding: '24px',
-                    borderRadius: '24px',
+                    padding: '16px',
+                    borderRadius: '16px',
                     backgroundColor: 'var(--card-bg)',
-                    border: '1px solid var(--border-color)',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
+                    border: '1px solid var(--card-border)',
+                    boxShadow: 'var(--shadow-md)',
                 }}
             >
                 {/* Header */}
@@ -128,15 +128,14 @@ export function WizardStep4Preview({
 
                     {/* Obsequio preview */}
                     {strategyType === 'obsequio' && (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '16px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                             <PreviewItem label="Tipo" value={giftConfig.giftType.replace('_', ' ')} />
                             <PreviewItem label="Costo regalo" value={formatCurrency(giftConfig.giftCost)} color="var(--color-error)" />
                             <PreviewItem label="Valor percibido" value={formatCurrency(giftConfig.perceivedValue)} color="var(--color-primary)" highlight />
                             <PreviewItem label="Ganancia final" value={formatCurrency(giftConfig.newProfit)} color={giftConfig.newProfit > 0 ? 'var(--color-success)' : 'var(--color-error)'} />
                             {giftConfig.description && (
-                                <div style={{ gridColumn: '1 / -1', padding: '12px', borderRadius: '12px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-                                    <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '4px' }}>Descripción</p>
-                                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>"{giftConfig.description}"</p>
+                                <div style={{ gridColumn: '1 / -1' }}>
+                                    <PreviewItem label="Descripción" value={giftConfig.description} />
                                 </div>
                             )}
                         </div>
@@ -180,15 +179,13 @@ function PreviewItem({ label, value, color, highlight }: { label: string; value:
     return (
         <div
             style={{
-                padding: '12px 16px',
-                borderRadius: '12px',
-                backgroundColor: highlight ? 'rgba(0,102,255,0.04)' : 'var(--bg-secondary)',
-                border: highlight ? '1px solid rgba(0,102,255,0.1)' : '1px solid transparent',
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                padding: '10px',
+                borderRadius: '8px',
+                backgroundColor: highlight ? 'rgba(0,102,255,0.05)' : 'transparent',
             }}
         >
-            <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>{label}</p>
-            <p style={{ fontSize: '18px', fontWeight: 800, color: color || 'var(--text-primary)' }}>{value}</p>
+            <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginBottom: '2px' }}>{label}</p>
+            <p style={{ fontSize: '16px', fontWeight: 700, color: color || 'var(--text-primary)' }}>{value}</p>
         </div>
     );
 }

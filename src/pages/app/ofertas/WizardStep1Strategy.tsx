@@ -4,7 +4,6 @@
  */
 import type { StrategyType } from '@/types/ofertas';
 import { STRATEGIES } from '@/types/ofertas';
-import { Sparkles } from 'lucide-react';
 
 interface WizardStep1Props {
     selected: StrategyType | null;
@@ -21,7 +20,7 @@ export function WizardStep1Strategy({ selected, onChange }: WizardStep1Props) {
                 Selecciona el tipo de oferta que quieres crear
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {STRATEGIES.map((s) => {
                     const isSelected = selected === s.type;
 
@@ -31,100 +30,70 @@ export function WizardStep1Strategy({ selected, onChange }: WizardStep1Props) {
                             onClick={() => onChange(s.type)}
                             style={{
                                 display: 'flex',
-                                flexDirection: 'column',
                                 alignItems: 'center',
-                                textAlign: 'center',
                                 gap: '16px',
-                                padding: '32px 24px',
-                                borderRadius: '28px',
+                                padding: '20px',
+                                borderRadius: '12px',
                                 border: isSelected
-                                    ? '2.5px solid var(--color-primary)'
+                                    ? '2px solid var(--color-primary)'
                                     : '1px solid var(--border-color)',
                                 backgroundColor: isSelected ? 'rgba(0,102,255,0.04)' : 'var(--card-bg)',
                                 cursor: 'pointer',
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                boxShadow: isSelected ? '0 12px 24px rgba(0,102,255,0.1)' : '0 2px 4px rgba(0,0,0,0.02)',
-                                position: 'relative',
-                                overflow: 'hidden'
+                                textAlign: 'left',
+                                transition: 'all 150ms ease',
+                                boxShadow: isSelected ? '0 0 0 3px rgba(0,102,255,0.1)' : 'none',
                             }}
                             onMouseEnter={(e) => {
                                 if (!isSelected) {
                                     e.currentTarget.style.borderColor = 'var(--color-primary)';
-                                    e.currentTarget.style.transform = 'translateY(-4px)';
-                                    e.currentTarget.style.boxShadow = '0 16px 32px rgba(0,0,0,0.08)';
+                                    e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
                                 }
                             }}
                             onMouseLeave={(e) => {
                                 if (!isSelected) {
                                     e.currentTarget.style.borderColor = 'var(--border-color)';
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)';
+                                    e.currentTarget.style.boxShadow = 'none';
                                 }
                             }}
                         >
-                            {/* Recommended Badge */}
-                            {s.recommended && (
-                                <div
-                                    style={{
-                                        position: 'absolute',
-                                        top: '16px',
-                                        right: '16px',
-                                        padding: '5px 12px',
-                                        borderRadius: '10px',
-                                        fontSize: '9px',
-                                        fontWeight: 900,
-                                        backgroundColor: 'var(--color-primary)',
-                                        color: '#fff',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.05em',
-                                        boxShadow: '0 4px 8px rgba(0, 102, 255, 0.2)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '4px'
-                                    }}
-                                >
-                                    <Sparkles size={10} fill="white" /> Recomendado
+                            <span style={{ fontSize: '32px', flexShrink: 0 }}>{s.icon}</span>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                    <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                        {s.label}
+                                    </span>
+                                    {s.recommended && (
+                                        <span
+                                            style={{
+                                                padding: '2px 8px',
+                                                borderRadius: '9999px',
+                                                fontSize: '10px',
+                                                fontWeight: 700,
+                                                backgroundColor: 'var(--color-primary)',
+                                                color: '#fff',
+                                            }}
+                                        >
+                                            ⭐ Recomendado
+                                        </span>
+                                    )}
                                 </div>
-                            )}
-
-                            {/* Selection indicator - More discrete */}
+                                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                    {s.description}
+                                </span>
+                            </div>
+                            {/* Radio indicator */}
                             <div
                                 style={{
-                                    position: 'absolute',
-                                    top: '20px',
-                                    left: '20px',
-                                    width: '18px',
-                                    height: '18px',
+                                    width: '20px',
+                                    height: '20px',
                                     borderRadius: '50%',
                                     border: isSelected
-                                        ? '5px solid var(--color-primary)'
+                                        ? '6px solid var(--color-primary)'
                                         : '2px solid var(--border-color)',
-                                    backgroundColor: 'var(--card-bg)',
-                                    transition: 'all 0.2s',
+                                    flexShrink: 0,
+                                    transition: 'border 150ms ease',
                                 }}
                             />
-
-                            <div style={{
-                                width: '80px', height: '80px',
-                                borderRadius: '24px',
-                                backgroundColor: isSelected ? 'rgba(0,102,255,0.1)' : 'var(--bg-secondary)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '44px',
-                                transition: 'all 0.3s',
-                                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.03)',
-                                marginTop: '12px' // Baja el icono para dar aire al badge
-                            }}>
-                                {s.icon}
-                            </div>
-
-                            <div style={{ flex: 1, width: '100%' }}>
-                                <h4 style={{ fontSize: '19px', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                                    {s.label}
-                                </h4>
-                                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5', maxWidth: '320px', margin: '0 auto' }}>
-                                    {s.description}
-                                </p>
-                            </div>
                         </button>
                     );
                 })}
