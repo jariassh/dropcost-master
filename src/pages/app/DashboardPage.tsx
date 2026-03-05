@@ -107,29 +107,29 @@ export function DashboardPage() {
                     flexDirection: isMobile ? 'column' : 'row',
                     justifyContent: 'space-between',
                     alignItems: isMobile ? 'flex-start' : 'flex-end',
-                    marginBottom: isMobile ? '24px' : '28px',
-                    gap: isMobile ? '16px' : '0'
+                    gap: isMobile ? '16px' : '0',
+                    marginBottom: isMobile ? '20px' : '28px'
                 }}
             >
                 <div>
-
                     <h1
                         style={{
-                            fontSize: isMobile ? '22px' : '28px',
+                            fontSize: isMobile ? '24px' : '28px',
                             fontWeight: 800,
                             color: 'var(--text-primary)',
                             margin: '0 0 4px',
                             letterSpacing: '-0.02em',
+                            lineHeight: 1.1
                         }}
                     >
                         Resumen de {tiendaActual?.nombre || 'Operaciones'}
                     </h1>
-                    <p style={{ fontSize: '15px', color: 'var(--text-secondary)', margin: 0 }}>
+                    <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-secondary)', margin: 0 }}>
                         {timeRange === 'today' ? 'Datos de hoy' : timeRange === 'week' ? 'Resumen semanal' : 'Resumen mensual'}
                     </p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '10px', width: isMobile ? '100%' : 'auto' }}>
+                <div style={{ display: 'flex', gap: '12px', width: isMobile ? '100%' : 'auto' }}>
                     <div
                         style={{
                             display: 'flex',
@@ -185,12 +185,12 @@ export function DashboardPage() {
             </div>
 
             {!tiendaActual?.id ? (
-                <div style={{ padding: '80px 40px', textAlign: 'center', backgroundColor: 'var(--bg-secondary)', borderRadius: '24px', border: '1px dashed var(--border-color)', maxWidth: '600px', margin: '40px auto' }}>
-                    <div style={{ width: '80px', height: '80px', borderRadius: '40px', backgroundColor: 'var(--color-primary)15', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-                        <Store size={40} color="var(--color-primary)" />
+                <div style={{ padding: isMobile ? '40px 20px' : '80px 40px', textAlign: 'center', backgroundColor: 'var(--bg-secondary)', borderRadius: '24px', border: '1px dashed var(--border-color)', maxWidth: '600px', margin: '40px auto' }}>
+                    <div style={{ width: isMobile ? '60px' : '80px', height: isMobile ? '60px' : '80px', borderRadius: '50%', backgroundColor: 'var(--color-primary)15', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                        <Store size={isMobile ? 32 : 40} color="var(--color-primary)" />
                     </div>
-                    <h3 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '12px' }}>Selecciona tu Tienda</h3>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: 1.6, marginBottom: '24px' }}>
+                    <h3 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '12px' }}>Selecciona tu Tienda</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: isMobile ? '14px' : '15px', lineHeight: 1.6, marginBottom: '24px' }}>
                         Para ver el rendimiento operacional, los KPIs avanzados y las alertas de campañas, primero debes elegir una tienda del menú lateral.
                     </p>
                 </div>
@@ -207,7 +207,7 @@ export function DashboardPage() {
                         style={{
                             display: 'grid',
                             gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(450px, 1fr))',
-                            gap: '24px',
+                            gap: isMobile ? '16px' : '24px',
                             marginBottom: '32px'
                         }}
                     >
