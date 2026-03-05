@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { BrowserRouter } from 'react-router-dom';
 import { Spinner } from '@/components/common/Spinner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +29,22 @@ export default function App() {
   // Inicializa sesión
   useEffect(() => {
     initialize();
+
+    // Sincronizar estado global con Supabase Auth si la sesión caduca o es borrada
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        // Si supabase por si mismo detecta logout (ej. token expira, revocado, otra pestaña), 
+        // forzamos limpieza en nuestro zustand.
+        const state = useAuthStore.getState();
+        if (state.isAuthenticated) {
+          state.logout();
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    }
   }, [initialize]);
 
   if (isInitializing) {
