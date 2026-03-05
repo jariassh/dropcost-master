@@ -11,13 +11,14 @@ import { getDashboardMetrics } from '@/services/dashboardService';
 import { useNotificationStore } from '@/store/notificationStore';
 import { DashboardMetrics, DashboardOrder } from '@/types/dashboard';
 import { useStoreStore } from '@/store/useStoreStore';
+import { formatSmartCurrency } from '@/utils/currencyUtils';
 import {
     ResponsiveContainer,
     AreaChart, Area,
     BarChart, Bar,
     LineChart, Line,
     XAxis, YAxis,
-    CartesianGrid, Tooltip, Legend
+    CartesianGrid, Tooltip, Legend, LabelList
 } from 'recharts';
 
 export function DashboardPage() {
@@ -284,24 +285,34 @@ export function DashboardPage() {
                             title="ROAS por Semana"
                             icon={<BarChart3 size={16} />}
                             headerAction={
-                                <select
-                                    value={roasPeriod}
-                                    onChange={(e) => setRoasPeriod(e.target.value as any)}
-                                    style={{
-                                        padding: '4px 8px',
-                                        fontSize: '12px',
-                                        borderRadius: '6px',
-                                        border: '1px solid var(--border-color)',
-                                        backgroundColor: 'var(--bg-secondary)',
-                                        color: 'var(--text-primary)',
-                                        cursor: 'pointer',
-                                        outline: 'none'
-                                    }}
-                                >
-                                    <option value="thisMonth">Este mes</option>
-                                    <option value="lastMonth">Mes pasado</option>
-                                    <option value="last3Months">Últimos 3 meses</option>
-                                </select>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <select
+                                        value={roasPeriod}
+                                        onChange={(e) => setRoasPeriod(e.target.value as any)}
+                                        style={{
+                                            padding: '4px 8px',
+                                            fontSize: '12px',
+                                            borderRadius: '6px',
+                                            border: '1px solid var(--border-color)',
+                                            backgroundColor: 'var(--bg-secondary)',
+                                            color: 'var(--text-primary)',
+                                            cursor: 'pointer',
+                                            outline: 'none'
+                                        }}
+                                    >
+                                        <option value="thisMonth">Este mes</option>
+                                        <option value="lastMonth">Mes pasado</option>
+                                        <option value="last3Months">Últimos 3 meses</option>
+                                    </select>
+                                    <DSTooltip
+                                        content="Este ROAS refleja un cálculo global: (Total de Ventas de la Semana) ÷ (Total de Gasto de la Semana en Meta) para dimensionar macro resultados, mientras que el KPI principal refleja el Promedio estadístico del rendimiento base."
+                                        position="left"
+                                    >
+                                        <div style={{ color: 'var(--text-tertiary)', cursor: 'help', display: 'flex' }}>
+                                            <Info size={16} />
+                                        </div>
+                                    </DSTooltip>
+                                </div>
                             }
                         >
                             <div style={{ height: '350px', width: '100%', padding: '10px 0' }}>
@@ -348,11 +359,14 @@ export function DashboardPage() {
                                                 tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
                                             />
                                             <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} />
-                                            <Tooltip
-                                                cursor={{ fill: 'var(--bg-secondary)', opacity: 0.4 }}
-                                                contentStyle={{ backgroundColor: 'var(--bg-primary)', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)' }}
-                                            />
-                                            <Bar name="ROAS Real" dataKey="roas" fill="url(#colorRoas)" radius={[4, 4, 0, 0]} barSize={40} />
+                                            <Bar name="ROAS Real" dataKey="roas" fill="url(#colorRoas)" radius={[4, 4, 0, 0]} barSize={40}>
+                                                <LabelList
+                                                    dataKey="roas"
+                                                    position="top"
+                                                    formatter={(val: any) => typeof val === 'number' && val > 0 ? `${val}x` : ''}
+                                                    style={{ fill: 'var(--text-primary)', fontSize: 11, fontWeight: 700 }}
+                                                />
+                                            </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
                                 ) : (
@@ -459,7 +473,7 @@ export function DashboardPage() {
                                         <div key={i} style={{ marginBottom: '20px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                                                 <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{campaign.name}</span>
-                                                <span style={{ fontSize: '12px', color: 'var(--color-success)', fontWeight: 700 }}>${campaign.spend.toLocaleString()} Gasto</span>
+                                                <span style={{ fontSize: '12px', color: 'var(--color-success)', fontWeight: 700 }}>{formatSmartCurrency(campaign.spend)} Gasto</span>
                                             </div>
                                             <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', overflow: 'hidden' }}>
                                                 <div style={{

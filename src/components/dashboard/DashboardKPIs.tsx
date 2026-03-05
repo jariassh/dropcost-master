@@ -7,6 +7,8 @@ import { Card } from '@/components/common';
 import { DollarSign, TrendingUp, TrendingDown, ShoppingBag, Info, Zap } from 'lucide-react';
 import { PeriodMetrics } from '@/types/dashboard';
 
+import { formatSmartCurrency } from '@/utils/currencyUtils';
+
 interface Props {
     metrics: PeriodMetrics | null;
     isLoading?: boolean;
@@ -29,27 +31,27 @@ export const DashboardKPIs: React.FC<Props> = ({ metrics, isLoading }) => {
     const mainKPIs = [
         {
             title: 'Ganancia Neta',
-            value: `$${displayMetrics.ganancia.toLocaleString()}`,
+            value: formatSmartCurrency(displayMetrics.ganancia),
             icon: TrendingUp,
             color: 'var(--color-success)',
             bg: 'var(--color-success)12'
         },
         {
             title: 'Ventas Totales',
-            value: `$${displayMetrics.ventas.toLocaleString()}`,
+            value: formatSmartCurrency(displayMetrics.ventas),
             icon: DollarSign,
             color: 'var(--color-primary)',
             bg: 'var(--color-primary)12'
         },
         {
             title: 'Gastos Totales',
-            value: `$${displayMetrics.gastos.toLocaleString()}`,
+            value: formatSmartCurrency(displayMetrics.gastos),
             icon: TrendingDown,
             color: 'var(--color-error)',
             bg: 'var(--color-error)12'
         },
         {
-            title: 'ROAS Real',
+            title: 'ROAS Promedio',
             value: `${displayMetrics.roas_promedio.toFixed(2)}x`,
             icon: TrendingUp,
             color: displayMetrics.roas_promedio >= 3 ? 'var(--color-success)' : 'var(--color-warning)',
@@ -61,14 +63,14 @@ export const DashboardKPIs: React.FC<Props> = ({ metrics, isLoading }) => {
     const secondaryKPIs = [
         {
             title: 'CPA Promedio',
-            value: `$${displayMetrics.cpa_promedio.toFixed(2)}`,
+            value: formatSmartCurrency(displayMetrics.cpa_promedio),
             icon: TrendingDown,
             color: 'var(--color-primary)',
             bg: 'var(--color-primary)12'
         },
         {
             title: 'Ticket Promedio',
-            value: `$${displayMetrics.aov_promedio.toFixed(2)}`,
+            value: formatSmartCurrency(displayMetrics.aov_promedio),
             icon: DollarSign,
             color: 'var(--color-primary)',
             bg: 'var(--color-primary)12'
@@ -81,7 +83,7 @@ export const DashboardKPIs: React.FC<Props> = ({ metrics, isLoading }) => {
             bg: 'var(--color-warning)12'
         },
         {
-            title: '% Conversion',
+            title: '% Conversión Promedio',
             value: displayMetrics.cvr_promedio > 0 ? `${displayMetrics.cvr_promedio.toFixed(2)}%` : 'Inactivo',
             icon: Zap,
             color: displayMetrics.cvr_promedio > 0 ? 'var(--color-success)' : 'var(--text-tertiary)',
