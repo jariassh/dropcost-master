@@ -68,7 +68,7 @@ const DateRangePicker: React.FC<{
 
     return (
         <div ref={containerRef} style={{ position: 'relative', flex: 1, minWidth: '280px' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rango de Fechas</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rango de Fechas</label>
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
@@ -116,7 +116,7 @@ const DateRangePicker: React.FC<{
                 >
                     <div className="dc-audit-date-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
                         <div>
-                            <p style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', marginBottom: '8px' }}>DESDE</p>
+                            <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: '8px' }}>DESDE</p>
                             <input
                                 type="date"
                                 value={value.start}
@@ -132,7 +132,7 @@ const DateRangePicker: React.FC<{
                             />
                         </div>
                         <div>
-                            <p style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', marginBottom: '8px' }}>HASTA</p>
+                            <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: '8px' }}>HASTA</p>
                             <input
                                 type="date"
                                 value={value.end}
@@ -300,7 +300,7 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
             <Card style={{ border: '1px solid var(--border-color)', padding: '24px', borderRadius: '16px' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'flex-end' }} className="dc-audit-filter-bar">
                     <div style={{ flex: '1 1 240px' }}>
-                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Módulo</label>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Módulo</label>
                         <div style={{ position: 'relative' }}>
                             <select
                                 value={filters.entidad}
@@ -533,7 +533,7 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
                         padding: '24px', borderRadius: '20px'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Detalles del Evento</h3>
+                            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Detalles del Evento</h3>
                             <Button variant="ghost" size="sm" onClick={() => setSelectedLog(null)} style={{ padding: 4, borderRadius: '50%' }}>
                                 <X size={24} style={{ color: 'var(--text-tertiary)' }} />
                             </Button>
@@ -541,13 +541,13 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             <div style={{ padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
-                                <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Objeto Afectado</p>
-                                <p style={{ margin: 0, fontSize: '16px', color: 'var(--color-primary)', fontWeight: 800 }}>{getFriendlyObjectName(selectedLog)}</p>
+                                <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Objeto Afectado</p>
+                                <p style={{ margin: 0, fontSize: '16px', color: 'var(--color-primary)', fontWeight: 600 }}>{getFriendlyObjectName(selectedLog)}</p>
                                 <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{selectedLog.entidad_id}</p>
                             </div>
 
                             <div style={{ padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
-                                <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Metadatos de la Acción</p>
+                                <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Metadatos de la Acción</p>
                                 <pre style={{
                                     margin: 0, fontSize: '13px', color: 'var(--text-primary)',
                                     backgroundColor: 'var(--bg-primary)', padding: '14px', borderRadius: '10px',
@@ -560,17 +560,17 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                 <div style={{ padding: '14px', backgroundColor: 'var(--bg-secondary)', borderRadius: '14px', textAlign: 'center', border: '1px solid var(--border-color)' }}>
-                                    <p style={{ margin: '0 0 4px 0', fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 900 }}>DIRECCIÓN IP</p>
-                                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>{selectedLog.ip_address || '127.0.0.1'}</p>
+                                    <p style={{ margin: '0 0 4px 0', fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600 }}>DIRECCIÓN IP</p>
+                                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{selectedLog.ip_address || '127.0.0.1'}</p>
                                 </div>
                                 <div style={{ padding: '14px', backgroundColor: 'var(--bg-secondary)', borderRadius: '14px', textAlign: 'center', border: '1px solid var(--border-color)' }}>
-                                    <p style={{ margin: '0 0 4px 0', fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 900 }}>ID EVENTO</p>
-                                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>{selectedLog.id.substring(0, 8).toUpperCase()}</p>
+                                    <p style={{ margin: '0 0 4px 0', fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600 }}>ID EVENTO</p>
+                                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{selectedLog.id.substring(0, 8).toUpperCase()}</p>
                                 </div>
                             </div>
 
                             <div style={{ padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
-                                <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>User Agent</p>
+                                <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>User Agent</p>
                                 <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.6', wordBreak: 'break-all' }}>{selectedLog.user_agent}</p>
                             </div>
                         </div>

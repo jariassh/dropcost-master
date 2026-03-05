@@ -81,7 +81,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                     padding: isMobile ? '3px 10px' : '4px 12px',
                     borderRadius: '20px',
                     fontSize: isMobile ? '10px' : '12px',
-                    fontWeight: 700,
+                    fontWeight: 600,
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em',
                     display: 'flex',
@@ -104,7 +104,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                     padding: isMobile ? '3px 14px' : '4px 16px',
                     borderRadius: '20px',
                     fontSize: isMobile ? '10px' : '12px',
-                    fontWeight: 800,
+                    fontWeight: 600,
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em',
                     display: 'flex',
@@ -120,7 +120,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
 
             {/* Header */}
             <div>
-                <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     {plan.name}
                 </h3>
                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
@@ -130,7 +130,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
 
             {/* Price */}
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: isMobile ? '28px' : '36px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                <span style={{ fontSize: isMobile ? '28px' : '36px', fontWeight: 600, color: 'var(--text-primary)' }}>
                     {displayedPrice || formatCurrency(plan.price_monthly)}
                 </span>
                 <span style={{ fontSize: '14px', color: 'var(--text-tertiary)', fontWeight: 500 }}>

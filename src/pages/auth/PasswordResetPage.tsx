@@ -54,7 +54,7 @@ export function PasswordResetPage() {
                 >
                     <Mail size={32} color="#10B981" />
                 </div>
-                <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     Instrucciones enviadas
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '15px', lineHeight: '1.6' }}>
@@ -95,7 +95,7 @@ export function PasswordResetPage() {
                 >
                     <KeyRound size={32} color="var(--color-primary)" />
                 </div>
-                <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     ¿Olvidaste tu contraseña?
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>

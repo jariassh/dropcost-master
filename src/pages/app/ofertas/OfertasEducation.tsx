@@ -76,7 +76,7 @@ export function OfertasEducation({ onComplete, onSelectStrategy }: OfertasEducat
             {/* Header */}
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                 <Sparkles size={32} style={{ color: 'var(--color-primary)', margin: '0 auto 12px' }} />
-                <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '8px' }}>
                     ¿Qué tipo de oferta te conviene?
                 </h2>
                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
@@ -103,14 +103,14 @@ export function OfertasEducation({ onComplete, onSelectStrategy }: OfertasEducat
                     <span style={{ fontSize: '36px' }}>{slide.icon}</span>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <h3 style={{ fontSize: '20px', fontWeight: 700 }}>{slide.title}</h3>
+                            <h3 style={{ fontSize: '20px', fontWeight: 600 }}>{slide.title}</h3>
                             {slide.recommended && (
                                 <span
                                     style={{
                                         padding: '2px 10px',
                                         borderRadius: '9999px',
                                         fontSize: '11px',
-                                        fontWeight: 700,
+                                        fontWeight: 600,
                                         backgroundColor: 'var(--color-primary)',
                                         color: '#fff',
                                     }}
@@ -131,7 +131,7 @@ export function OfertasEducation({ onComplete, onSelectStrategy }: OfertasEducat
                 {/* Advantages & Disadvantages */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }} className="dc-education-adv-grid">
                     <div>
-                        <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-success)', marginBottom: '8px', textTransform: 'uppercase' }}>
+                        <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-success)', marginBottom: '8px', textTransform: 'uppercase' }}>
                             ✅ Ventajas
                         </p>
                         {slide.advantages.map((a) => (
@@ -141,7 +141,7 @@ export function OfertasEducation({ onComplete, onSelectStrategy }: OfertasEducat
                         ))}
                     </div>
                     <div>
-                        <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-error)', marginBottom: '8px', textTransform: 'uppercase' }}>
+                        <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-error)', marginBottom: '8px', textTransform: 'uppercase' }}>
                             ⚠️ Desventajas
                         </p>
                         {slide.disadvantages.map((d) => (
@@ -282,7 +282,7 @@ export function OfertasEducation({ onComplete, onSelectStrategy }: OfertasEducat
                                 gap: '4px',
                                 padding: '10px 20px',
                                 fontSize: '13px',
-                                fontWeight: 700,
+                                fontWeight: 600,
                                 color: '#fff',
                                 background: 'linear-gradient(135deg, #0066FF 0%, #003D99 100%)',
                                 border: 'none',

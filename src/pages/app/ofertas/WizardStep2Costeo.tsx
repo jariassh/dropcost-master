@@ -44,7 +44,7 @@ export function WizardStep2Costeo({ selectedCosteoId, onSelect }: WizardStep2Pro
 
     return (
         <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>
                 Selecciona un costeo
             </h3>
             <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>

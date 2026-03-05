@@ -381,7 +381,7 @@ export const AdminEmailTriggersPage: React.FC = () => {
             <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', padding: '0 var(--main-padding)', display: 'flex', flexDirection: 'column', gap: '32px' }} className="dc-admin-container">
                 {/* Header */}
                 <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                    <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
                         Triggers de Email
                     </h1>
                     <p style={{ fontSize: '15px', color: 'var(--text-secondary)', margin: 0 }}>
@@ -406,7 +406,7 @@ export const AdminEmailTriggersPage: React.FC = () => {
                                         <Icon size={18} color={s.color} />
                                     </div>
                                     <div style={{ minWidth: 0 }}>
-                                        <p style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, lineHeight: 1.2 }}>{s.value}</p>
+                                        <p style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, lineHeight: 1.2 }}>{s.value}</p>
                                         <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: '2px 0 0 0', textTransform: 'uppercase', fontWeight: 600 }}>{s.label}</p>
                                     </div>
                                 </div>
@@ -436,7 +436,7 @@ export const AdminEmailTriggersPage: React.FC = () => {
                                     alignItems: 'center',
                                     gap: '8px',
                                     fontSize: '14px',
-                                    fontWeight: 700,
+                                    fontWeight: 600,
                                     color: isActive ? 'var(--color-primary)' : 'var(--text-tertiary)',
                                     borderBottom: isActive ? '3px solid var(--color-primary)' : '3px solid transparent',
                                     transition: 'all 0.2s',
@@ -472,7 +472,7 @@ export const AdminEmailTriggersPage: React.FC = () => {
                                                 <div style={{ width: '32px', height: '32px', borderRadius: '10px', backgroundColor: catConf.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                     <CatIcon size={16} color={catConf.color} />
                                                 </div>
-                                                <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                                                <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
                                                     {catConf.label}
                                                 </h2>
                                                 <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', backgroundColor: 'var(--bg-tertiary)', padding: '2px 10px', borderRadius: '20px', fontWeight: 600 }}>
@@ -599,35 +599,35 @@ export const AdminEmailTriggersPage: React.FC = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '8px' }}>
                         <div className="dc-email-detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                             <div>
-                                <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Destinatario</p>
+                                <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Destinatario</p>
                                 <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{selectedHistorialItem.usuario_email}</p>
                             </div>
                             <div>
-                                <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Remitente</p>
+                                <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Remitente</p>
                                 <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{selectedHistorialItem.from_name} &lt;{selectedHistorialItem.from_email}&gt;</p>
                             </div>
                             <div>
-                                <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Trigger</p>
+                                <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Trigger</p>
                                 <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
                                     {selectedHistorialItem.trigger?.codigo_evento || (selectedHistorialItem.tipo_envio === 'prueba' ? '🧪 Prueba manual' : '—')}
                                 </p>
                             </div>
                             <div>
-                                <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Fecha de Envío</p>
+                                <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '4px' }}>Fecha de Envío</p>
                                 <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{formatDate(selectedHistorialItem.fecha_envio)}</p>
                             </div>
                         </div>
 
                         <div style={{ padding: '16px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                            <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '6px' }}>Asunto</p>
-                            <p style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{selectedHistorialItem.asunto_enviado}</p>
+                            <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '6px' }}>Asunto</p>
+                            <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{selectedHistorialItem.asunto_enviado}</p>
                         </div>
 
                         {selectedHistorialItem.razon_error && (
                             <div style={{ padding: '16px', backgroundColor: 'rgba(239, 68, 68, 0.05)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#EF4444', marginBottom: '8px' }}>
                                     <AlertCircle size={18} />
-                                    <span style={{ fontWeight: 700, fontSize: '14px' }}>Error detectado</span>
+                                    <span style={{ fontWeight: 600, fontSize: '14px' }}>Error detectado</span>
                                 </div>
                                 <p style={{ fontSize: '14px', color: '#EF4444', margin: 0, lineHeight: 1.5 }}>{selectedHistorialItem.razon_error}</p>
                             </div>
@@ -635,7 +635,7 @@ export const AdminEmailTriggersPage: React.FC = () => {
 
                         {selectedHistorialItem.contenido_html_enviado && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', margin: 0 }}>Vista Previa del Contenido</p>
+                                <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', margin: 0 }}>Vista Previa del Contenido</p>
                                 <div style={{
                                     border: '1px solid var(--border-color)', borderRadius: '12px',
                                     overflow: 'hidden', maxHeight: '400px', overflowY: 'auto',
@@ -661,7 +661,7 @@ const tableHeaderStyle: React.CSSProperties = {
     padding: '12px 16px',
     textAlign: 'left',
     fontSize: '11px',
-    fontWeight: 700,
+    fontWeight: 600,
     color: 'var(--text-tertiary)',
     textTransform: 'uppercase',
     letterSpacing: '0.05em',

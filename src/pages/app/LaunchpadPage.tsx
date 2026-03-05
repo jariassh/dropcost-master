@@ -206,7 +206,7 @@ export function LaunchpadPage() {
                         justifyContent: isMobile ? 'center' : 'flex-start'
                     }}>
                         <Rocket size={isMobile ? 24 : 32} />
-                        <h1 style={{ fontFamily: 'var(--font-headings)', fontSize: isMobile ? '24px' : '32px', letterSpacing: 'var(--ls-h)', margin: 0, display: 'flex', alignItems: 'baseline', gap: '8px', fontWeight: 800 }}>
+                        <h1 style={{ fontFamily: 'var(--font-headings)', fontSize: isMobile ? '24px' : '32px', letterSpacing: 'var(--ls-h)', margin: 0, display: 'flex', alignItems: 'baseline', gap: '8px', fontWeight: 600 }}>
                             LAUNCHPAD
                             {!isMobile && (
                                 <span style={{ fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '14px', letterSpacing: '0', textTransform: 'none' }}>
@@ -240,7 +240,7 @@ export function LaunchpadPage() {
                                 padding: isMobile ? '0 24px' : '0 32px',
                                 height: '52px',
                                 borderRadius: '16px',
-                                fontWeight: 800,
+                                fontWeight: 600,
                                 boxShadow: '0 4px 12px rgba(var(--color-primary-rgb), 0.3)'
                             }}
                         >

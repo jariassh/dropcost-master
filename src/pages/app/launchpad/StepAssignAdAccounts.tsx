@@ -188,7 +188,7 @@ export function StepAssignAdAccounts({ tiendaId, onComplete }: StepAssignAdAccou
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <Facebook size={20} color="var(--color-primary)" />
-                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700 }}>Perfil conectado</h3>
+                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>Perfil conectado</h3>
                 </div>
                 <div style={{
                     display: 'flex',
@@ -233,7 +233,7 @@ export function StepAssignAdAccounts({ tiendaId, onComplete }: StepAssignAdAccou
                 }}>
                     {alreadyLinkedIds.length > 0 ? <CheckCircle2 size={32} /> : <Target size={32} />}
                 </div>
-                <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     {alreadyLinkedIds.length > 0 ? 'Cuentas publicitarias configuradas' : 'Selecciona tus cuentas publicitarias'}
                 </h2>
                 <p style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>
@@ -261,7 +261,7 @@ export function StepAssignAdAccounts({ tiendaId, onComplete }: StepAssignAdAccou
                         <div style={{ width: '48px', height: '48px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                             <AlertCircle size={24} />
                         </div>
-                        <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 8px' }}>No se pudieron cargar las cuentas</h3>
+                        <h3 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 8px' }}>No se pudieron cargar las cuentas</h3>
                         <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px', maxWidth: '300px', margin: '0 auto 24px' }}>
                             {error}
                         </p>
@@ -335,7 +335,7 @@ export function StepAssignAdAccounts({ tiendaId, onComplete }: StepAssignAdAccou
                                                 <Target size={20} />
                                             </div>
                                             <div style={{ minWidth: 0, flex: 1 }}>
-                                                <p style={{ margin: 0, fontSize: isMobile ? '13px' : '14px', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{account.name}</p>
+                                                <p style={{ margin: 0, fontSize: isMobile ? '13px' : '14px', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{account.name}</p>
                                                 <p style={{ margin: 0, fontSize: isMobile ? '11px' : '12px', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                     {account.business_name} • ID: {account.account_id}
                                                 </p>

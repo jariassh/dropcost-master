@@ -150,7 +150,7 @@ export function AdminReferralPage() {
             <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
                     <div style={{ flex: '1', minWidth: '280px' }}>
-                        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
+                        <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
                             Sistema de Referidos
                         </h1>
                         <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
@@ -339,7 +339,7 @@ export function AdminReferralPage() {
                                 style={{
                                     padding: '10px 24px', borderRadius: '10px', border: 'none',
                                     backgroundColor: 'var(--color-primary)', color: '#fff', cursor: 'pointer',
-                                    fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px',
+                                    fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px',
                                     justifyContent: 'center', flex: 1, maxWidth: '250px'
                                 }}
                             >
@@ -357,7 +357,7 @@ export function AdminReferralPage() {
                             <div style={{ padding: '16px', borderRadius: '12px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                                     <Settings size={16} color="var(--color-primary)" />
-                                    <span style={{ fontSize: '14px', fontWeight: 700 }}>Versión Actual</span>
+                                    <span style={{ fontSize: '14px', fontWeight: 600 }}>Versión Actual</span>
                                 </div>
                                 <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <span>Actualizado:
@@ -388,7 +388,7 @@ export function AdminReferralPage() {
                     <button
                         onClick={() => setActiveListTab('users')}
                         style={{
-                            padding: '12px 24px', fontSize: '15px', fontWeight: 700, cursor: 'pointer',
+                            padding: '12px 24px', fontSize: '15px', fontWeight: 600, cursor: 'pointer',
                             background: 'none', border: 'none', whiteSpace: 'nowrap',
                             color: activeListTab === 'users' ? 'var(--color-primary)' : 'var(--text-tertiary)',
                             borderBottom: activeListTab === 'users' ? '3px solid var(--color-primary)' : '3px solid transparent',
@@ -400,7 +400,7 @@ export function AdminReferralPage() {
                     <button
                         onClick={() => setActiveListTab('leaders')}
                         style={{
-                            padding: '12px 24px', fontSize: '15px', fontWeight: 700, cursor: 'pointer',
+                            padding: '12px 24px', fontSize: '15px', fontWeight: 600, cursor: 'pointer',
                             background: 'none', border: 'none', whiteSpace: 'nowrap',
                             color: activeListTab === 'leaders' ? 'var(--color-primary)' : 'var(--text-tertiary)',
                             borderBottom: activeListTab === 'leaders' ? '3px solid var(--color-primary)' : '3px solid transparent',
@@ -444,7 +444,7 @@ export function AdminReferralPage() {
                                                 <td style={{ padding: '16px 24px', fontSize: '13px' }}>
                                                     <div style={{ display: 'flex', gap: '6px' }}>
                                                         <span style={{
-                                                            padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700,
+                                                            padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
                                                             backgroundColor: r.planId === 'free' ? 'var(--bg-tertiary)' : 'rgba(16, 185, 129, 0.1)',
                                                             color: r.planId === 'free' ? 'var(--text-tertiary)' : 'var(--color-success)'
                                                         }}>
@@ -500,15 +500,15 @@ export function AdminReferralPage() {
                                                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                                     >
                                                         <td style={{ padding: '16px 24px' }}>
-                                                            <div style={{ fontWeight: 700 }}>{l.nombre}</div>
+                                                            <div style={{ fontWeight: 600 }}>{l.nombre}</div>
                                                             <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{l.email}</div>
                                                         </td>
-                                                        <td style={{ padding: '16px 24px', fontFamily: 'monospace', fontWeight: 700 }}>
+                                                        <td style={{ padding: '16px 24px', fontFamily: 'monospace', fontWeight: 600 }}>
                                                             {l.codigo}
                                                         </td>
                                                         <td style={{ padding: '16px 24px' }}>
                                                             <div style={{ fontSize: '13px' }}>
-                                                                <span style={{ fontWeight: 700 }}>{l.totalReferidos}</span> referidos
+                                                                <span style={{ fontWeight: 600 }}>{l.totalReferidos}</span> referidos
                                                             </div>
                                                             <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
                                                                 {convertValue(l.totalComisiones || 0)} generados
@@ -516,7 +516,7 @@ export function AdminReferralPage() {
                                                         </td>
                                                         <td style={{ padding: '16px 24px' }}>
                                                             <span style={{
-                                                                padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 800,
+                                                                padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
                                                                 backgroundColor: l.rol === 'lider' ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-tertiary)',
                                                                 color: l.rol === 'lider' ? 'var(--color-success)' : 'var(--text-tertiary)'
                                                             }}>
@@ -616,7 +616,7 @@ function StatBox({ label, value, icon, color, onClick }: { label: string, value:
                     <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', margin: 0 }}>
                         {label}
                     </p>
-                    <p style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0 0 0' }}>
+                    <p style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', margin: '4px 0 0 0' }}>
                         {value}
                     </p>
                 </div>

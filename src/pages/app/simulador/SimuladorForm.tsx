@@ -208,7 +208,7 @@ export function SimuladorForm({
                         marginBottom: volumeStrategy.enabled ? '16px' : '0',
                     }}
                 >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: '#10B981', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600, color: '#10B981', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         <TrendingUp size={16} />
                         Estrategia de Volumen
                     </div>
@@ -261,7 +261,7 @@ export function SimuladorForm({
                                     fontSize: '13px',
                                 }}
                             >
-                                <span style={{ fontWeight: 700 }}>{maxUnits} uds</span>
+                                <span style={{ fontWeight: 600 }}>{maxUnits} uds</span>
                                 <span style={{ color: 'var(--text-secondary)' }}>
                                     {formatCurrency(rowN.totalPrice)}
                                 </span>
@@ -269,7 +269,7 @@ export function SimuladorForm({
                                     <TrendingDown size={12} />
                                     {formatCurrency(rowN.savingsPerUnit * maxUnits)}
                                 </span>
-                                <span style={{ color: 'var(--color-success)', fontWeight: 700 }}>
+                                <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>
                                     {formatCurrency(rowN.totalProfit)}
                                 </span>
                             </div>
@@ -300,7 +300,7 @@ function FormSection({ icon, title, color, children }: {
 }) {
     return (
         <div style={{ padding: '20px', borderRadius: '12px', backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', fontSize: '13px', fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', fontSize: '13px', fontWeight: 600, color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 {icon}
                 {title}
             </div>

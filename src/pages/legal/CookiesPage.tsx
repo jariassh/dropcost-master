@@ -53,7 +53,7 @@ export default function CookiesPage() {
                     </Link>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Cookie size={20} color="var(--color-primary)" />
-                        <span style={{ fontSize: '16px', fontWeight: 700 }}>DropCost Master</span>
+                        <span style={{ fontSize: '16px', fontWeight: 600 }}>DropCost Master</span>
                     </div>
                 </div>
             </header>
@@ -66,7 +66,7 @@ export default function CookiesPage() {
             }}>
                 <h1 style={{
                     fontSize: '32px',
-                    fontWeight: 700,
+                    fontWeight: 600,
                     marginBottom: '8px',
                     lineHeight: 1.2,
                 }}>
@@ -106,10 +106,10 @@ export default function CookiesPage() {
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                             <thead>
                                 <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>
-                                    <th style={{ padding: '12px 8px', color: 'var(--text-primary)', fontWeight: 700 }}>Nombre / Clave</th>
-                                    <th style={{ padding: '12px 8px', color: 'var(--text-primary)', fontWeight: 700 }}>Propósito</th>
-                                    <th style={{ padding: '12px 8px', color: 'var(--text-primary)', fontWeight: 700 }}>Duración</th>
-                                    <th style={{ padding: '12px 8px', color: 'var(--text-primary)', fontWeight: 700 }}>Tipo</th>
+                                    <th style={{ padding: '12px 8px', color: 'var(--text-primary)', fontWeight: 600 }}>Nombre / Clave</th>
+                                    <th style={{ padding: '12px 8px', color: 'var(--text-primary)', fontWeight: 600 }}>Propósito</th>
+                                    <th style={{ padding: '12px 8px', color: 'var(--text-primary)', fontWeight: 600 }}>Duración</th>
+                                    <th style={{ padding: '12px 8px', color: 'var(--text-primary)', fontWeight: 600 }}>Tipo</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -217,7 +217,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
         <section style={{ marginBottom: '32px' }}>
             <h2 style={{
                 fontSize: '20px',
-                fontWeight: 700,
+                fontWeight: 600,
                 marginBottom: '12px',
                 color: 'var(--text-primary)',
             }}>

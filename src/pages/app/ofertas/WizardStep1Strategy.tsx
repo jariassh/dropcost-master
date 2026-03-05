@@ -13,7 +13,7 @@ interface WizardStep1Props {
 export function WizardStep1Strategy({ selected, onChange }: WizardStep1Props) {
     return (
         <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>
                 Elige tu estrategia
             </h3>
             <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
@@ -68,7 +68,7 @@ export function WizardStep1Strategy({ selected, onChange }: WizardStep1Props) {
                                                 padding: '2px 8px',
                                                 borderRadius: '9999px',
                                                 fontSize: '10px',
-                                                fontWeight: 700,
+                                                fontWeight: 600,
                                                 backgroundColor: 'var(--color-primary)',
                                                 color: '#fff',
                                             }}

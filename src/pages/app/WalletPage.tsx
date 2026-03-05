@@ -15,6 +15,7 @@ import { Badge } from '@/components/common/Badge';
 import { Spinner } from '@/components/common/Spinner';
 import { useToast } from '@/components/common/Toast';
 import { StatsCard } from '@/components/common/StatsCard';
+import { PageHeader } from '@/components/common/PageHeader';
 import { walletService, WalletBalance, WalletMovement, WithdrawalRequest } from '@/services/walletService';
 import { formatCurrency } from '@/lib/format';
 import { fetchExchangeRates, convertPrice } from '@/utils/currencyUtils';
@@ -37,7 +38,14 @@ export const WalletPage: React.FC = () => {
     const [isBankEditOpen, setIsBankEditOpen] = useState(false);
     const [minimumWithdrawal, setMinimumWithdrawal] = useState<number>(10);
     const [retentionDays, setRetentionDays] = useState<number>(30);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const toast = useToast();
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const loadData = async () => {
         try {
@@ -158,11 +166,13 @@ export const WalletPage: React.FC = () => {
             description="El sistema de comisiones y retiros es una funcionalidad exclusiva para planes superiores. ¡Mejora tu plan para empezar a ganar!"
         >
             <div className="dc-wallet-container" style={{ display: 'flex', flexDirection: 'column', gap: '32px', padding: '20px 0 60px 0' }}>
-                {/* Header section */}
-                <div className="dc-wallet-header">
-                    <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>Mi Billetera</h1>
-                    <p style={{ color: 'var(--text-tertiary)', fontSize: '15px' }}>Gestiona tus comisiones y solicita retiros de forma segura.</p>
-                </div>
+                <PageHeader
+                    title="Mi"
+                    highlight="Billetera"
+                    description="Gestiona tus comisiones y solicita retiros de forma segura."
+                    icon={Wallet}
+                    isMobile={isMobile}
+                />
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -206,7 +216,7 @@ export const WalletPage: React.FC = () => {
                     {/* Left: Movements Table */}
                     <div className="xl:col-span-2" style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
                         <div>
-                            <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>Movimientos Recientes</h3>
+                            <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '16px' }}>Movimientos Recientes</h3>
                             <Card noPadding style={{ boxShadow: 'var(--shadow-lg)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
                                 <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
                                     <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
@@ -249,7 +259,7 @@ export const WalletPage: React.FC = () => {
                                                         </td>
                                                         <td style={{ ...tableCellStyle, textAlign: 'right' }}>
                                                             <span style={{
-                                                                fontWeight: 700,
+                                                                fontWeight: 600,
                                                                 color: move.type === 'withdrawal' ? 'var(--color-error)' : 'var(--color-success)'
                                                             }}>
                                                                 {move.type === 'withdrawal' ? '-' : '+'}
@@ -266,7 +276,7 @@ export const WalletPage: React.FC = () => {
                         </div>
 
                         <div>
-                            <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>Estado de Retiros</h3>
+                            <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '16px' }}>Estado de Retiros</h3>
                             <Card noPadding style={{ boxShadow: 'var(--shadow-lg)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
                                 <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
                                     <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
@@ -373,7 +383,7 @@ export const WalletPage: React.FC = () => {
                                             {bankInfo.cuenta_tipo && (
                                                 <span style={{
                                                     fontSize: '11px',
-                                                    fontWeight: 700,
+                                                    fontWeight: 600,
                                                     padding: '3px 10px',
                                                     borderRadius: '6px',
                                                     backgroundColor: 'rgba(0, 102, 255, 0.1)',
@@ -555,7 +565,7 @@ const BankEditModal: React.FC<{
 
     const field = (label: string, key: keyof typeof form, placeholder: string) => (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
                 {label}
             </label>
             <input
@@ -608,7 +618,7 @@ const BankEditModal: React.FC<{
                         }}>
                             <Landmark size={20} />
                         </div>
-                        <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>
+                        <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>
                             {currentBankInfo?.banco_nombre ? 'Cambiar Cuenta Bancaria' : 'Vincular Cuenta Bancaria'}
                         </h2>
                     </div>
@@ -628,7 +638,7 @@ const BankEditModal: React.FC<{
 
                     {/* Documento con formato miles */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
                             Documento de Identidad
                         </label>
                         <input

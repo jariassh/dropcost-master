@@ -174,7 +174,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
                 <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }} className="dc-admin-header-container">
                         <div style={{ flex: '1', minWidth: '280px' }} className="dc-admin-header-text">
-                            <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
+                            <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
                                 Gestión de Retiros
                             </h1>
                             <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
@@ -296,7 +296,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
                                         padding: '10px 20px',
                                         borderRadius: '12px',
                                         fontSize: '13px',
-                                        fontWeight: 700,
+                                        fontWeight: 600,
                                         border: '1.5px solid transparent',
                                         cursor: 'pointer',
                                         transition: 'all 0.2s',
@@ -409,7 +409,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td style={{ ...tableCellStyle, fontWeight: 700 }}>
+                                            <td style={{ ...tableCellStyle, fontWeight: 600 }}>
                                                 {formatCurrency(w.monto_local, w.moneda_destino)}
                                             </td>
                                             <td style={{ ...tableCellStyle, color: 'var(--text-secondary)', fontWeight: 600 }}>
@@ -658,7 +658,7 @@ const RejectModal: React.FC<{
                         <XCircle size={20} />
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>Rechazar Retiro</h2>
+                        <h2 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>Rechazar Retiro</h2>
                         <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: 0 }}>
                             {(w as any).users?.nombres} {(w as any).users?.apellidos} · {formatCurrency(w.monto_local, w.moneda_destino)}
                         </p>
@@ -668,7 +668,7 @@ const RejectModal: React.FC<{
                 {/* Body */}
                 <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
                             Motivo del rechazo
                         </label>
                         <textarea
@@ -771,7 +771,7 @@ const WithdrawalDetailModal: React.FC<{
                             width: '44px', height: '44px', borderRadius: '12px',
                             background: (w as any).users?.avatar_url ? 'transparent' : 'linear-gradient(135deg, var(--color-primary), #6366f1)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: '#fff', fontSize: '16px', fontWeight: 700,
+                            color: '#fff', fontSize: '16px', fontWeight: 600,
                             overflow: 'hidden'
                         }}>
                             {(w as any).users?.avatar_url ? (
@@ -785,7 +785,7 @@ const WithdrawalDetailModal: React.FC<{
                             )}
                         </div>
                         <div>
-                            <h2 style={{ fontSize: '17px', fontWeight: 700, margin: 0 }}>
+                            <h2 style={{ fontSize: '17px', fontWeight: 600, margin: 0 }}>
                                 {(w as any).users?.nombres} {(w as any).users?.apellidos}
                             </h2>
                             <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: 0 }}>
@@ -795,7 +795,7 @@ const WithdrawalDetailModal: React.FC<{
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <span style={{
-                            padding: '5px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700,
+                            padding: '5px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
                             backgroundColor: sc.bg, color: sc.color, textTransform: 'uppercase'
                         }}>{sc.label}</span>
                         <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: '4px' }}>
@@ -809,7 +809,7 @@ const WithdrawalDetailModal: React.FC<{
 
                     {/* Montos */}
                     <div>
-                        <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px' }}>Montos</p>
+                        <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px' }}>Montos</p>
                         {row('Monto solicitado', formatCurrency(w.monto_local, w.moneda_destino))}
                         {row('Equivalente USD', `$${w.monto_usd?.toFixed(2)} USD`)}
                         {row('Tasa de cambio', `1 USD = ${w.tasa_cambio?.toFixed(2)} ${w.moneda_destino}`)}
@@ -817,7 +817,7 @@ const WithdrawalDetailModal: React.FC<{
 
                     {/* Banco */}
                     <div>
-                        <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px' }}>Información Bancaria</p>
+                        <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px' }}>Información Bancaria</p>
                         {row('Banco', w.banco_nombre)}
                         {row('Tipo de cuenta', w.cuenta_tipo)}
                         {row('Número de cuenta', w.cuenta_numero)}
@@ -827,7 +827,7 @@ const WithdrawalDetailModal: React.FC<{
 
                     {/* Fechas */}
                     <div>
-                        <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px' }}>Fechas</p>
+                        <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px' }}>Fechas</p>
                         {row('Fecha solicitud', w.fecha_solicitud ? (
                             <Tooltip content={`UTC: ${getDateTimeAuditInfo(w.fecha_solicitud).utc}`}>
                                 <span style={{ cursor: 'help', borderBottom: '1px dotted var(--text-tertiary)' }}>
@@ -847,7 +847,7 @@ const WithdrawalDetailModal: React.FC<{
                     {/* Nota admin */}
                     {(w as any).nota_admin && (
                         <div>
-                            <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px' }}>Nota del Administrador</p>
+                            <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px' }}>Nota del Administrador</p>
                             <div style={{
                                 padding: '12px 16px', borderRadius: '10px',
                                 backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',

@@ -113,7 +113,7 @@ export function UpdatePasswordPage() {
                 >
                     <CheckCircle2 size={32} color="#10B981" />
                 </div>
-                <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     ¡Contraseña actualizada!
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '15px' }}>
@@ -138,7 +138,7 @@ export function UpdatePasswordPage() {
                 >
                     <AlertCircle size={32} color="#EF4444" />
                 </div>
-                <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     Enlace inválido o expirado
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '15px', lineHeight: '1.6' }}>
@@ -183,7 +183,7 @@ export function UpdatePasswordPage() {
                 >
                     <ShieldCheck size={32} color="var(--color-primary)" />
                 </div>
-                <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     Nueva contraseña
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
@@ -257,7 +257,7 @@ export function UpdatePasswordPage() {
                                 }}>
                                     <Sparkles size={14} />
                                 </div>
-                                <p style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: 700, margin: 0 }}>
+                                <p style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: 600, margin: 0 }}>
                                     Contraseña Sugerida
                                 </p>
                             </div>
@@ -270,7 +270,7 @@ export function UpdatePasswordPage() {
                                     borderRadius: '8px',
                                     fontSize: '13px',
                                     color: 'var(--color-primary)',
-                                    fontWeight: 700,
+                                    fontWeight: 600,
                                     textAlign: 'center',
                                     border: '1px solid var(--border-color)',
                                     letterSpacing: '0.5px'

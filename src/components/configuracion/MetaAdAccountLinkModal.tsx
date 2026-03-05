@@ -139,7 +139,7 @@ export function MetaAdAccountLinkModal({ isOpen, onClose, account }: MetaAdAccou
                         <LinkIcon size={20} />
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
+                        <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
                             Vincular Cuenta
                         </h2>
                         <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500, margin: 0 }}>
@@ -163,8 +163,8 @@ export function MetaAdAccountLinkModal({ isOpen, onClose, account }: MetaAdAccou
                         <Briefcase size={22} />
                     </div>
                     <div>
-                        <p style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: 800, color: 'var(--color-primary)', textTransform: 'uppercase' }}>Cuenta Activa</p>
-                        <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>{account.name}</h4>
+                        <p style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: 600, color: 'var(--color-primary)', textTransform: 'uppercase' }}>Cuenta Activa</p>
+                        <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>{account.name}</h4>
                         <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'monospace' }}>{account.account_id}</p>
                     </div>
                 </div>
@@ -172,7 +172,7 @@ export function MetaAdAccountLinkModal({ isOpen, onClose, account }: MetaAdAccou
                 <div>
                     <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Zap size={18} style={{ color: 'var(--color-primary)' }} />
-                        <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>Tiendas Disponibles</h4>
+                        <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>Tiendas Disponibles</h4>
                     </div>
 
                     {isLoading ? (
@@ -209,7 +209,7 @@ export function MetaAdAccountLinkModal({ isOpen, onClose, account }: MetaAdAccou
                                                 </div>
                                             )}
                                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                <span style={{ fontWeight: 800, fontSize: '14px', color: 'var(--text-primary)' }}>{tienda.nombre}</span>
+                                                <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-primary)' }}>{tienda.nombre}</span>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                     <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{paisObj?.nombre_es || tienda.pais}</span>
                                                     <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', opacity: 0.5 }}>•</span>

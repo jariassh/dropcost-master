@@ -291,7 +291,7 @@ const containerStyle: React.CSSProperties = {
 
 const titleStyle: React.CSSProperties = {
     fontSize: '24px',
-    fontWeight: 800,
+    fontWeight: 600,
     color: 'var(--text-primary)',
     marginBottom: '16px',
     letterSpacing: '-0.02em',
@@ -309,7 +309,7 @@ const descriptionStyle: React.CSSProperties = {
 const buttonStyle: React.CSSProperties = {
     height: '52px',
     borderRadius: '14px',
-    fontWeight: 700,
+    fontWeight: 600,
     fontSize: '16px'
 };
 
@@ -325,7 +325,7 @@ const infoBoxStyle: React.CSSProperties = {
 
 const infoLabelStyle: React.CSSProperties = {
     fontSize: '10px',
-    fontWeight: 700,
+    fontWeight: 600,
     color: 'var(--text-tertiary)',
     textTransform: 'uppercase',
     letterSpacing: '0.05em',

@@ -33,7 +33,7 @@ const UserAuditLogsPage: React.FC = () => {
                         <History size={24} />
                     </div>
                     <div>
-                        <h1 style={{ fontSize: '32px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, lineHeight: '1.2' }}>Historial de Actividad</h1>
+                        <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, lineHeight: '1.2' }}>Historial de Actividad</h1>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px', lineHeight: '1.5' }}>
                             Revisa el registro cronológico de todas las acciones realizadas en tu cuenta.
                         </p>

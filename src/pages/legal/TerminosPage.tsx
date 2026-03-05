@@ -47,7 +47,7 @@ export function TerminosPage() {
                     </Link>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <FileText size={20} color="var(--color-primary)" />
-                        <span style={{ fontSize: '16px', fontWeight: 700 }}>DropCost Master</span>
+                        <span style={{ fontSize: '16px', fontWeight: 600 }}>DropCost Master</span>
                     </div>
                 </div>
             </header>
@@ -60,7 +60,7 @@ export function TerminosPage() {
             }}>
                 <h1 style={{
                     fontSize: '32px',
-                    fontWeight: 700,
+                    fontWeight: 600,
                     marginBottom: '8px',
                     lineHeight: 1.2,
                 }}>
@@ -244,7 +244,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
         <section style={{ marginBottom: '32px' }}>
             <h2 style={{
                 fontSize: '20px',
-                fontWeight: 700,
+                fontWeight: 600,
                 marginBottom: '12px',
                 color: 'var(--text-primary)',
             }}>

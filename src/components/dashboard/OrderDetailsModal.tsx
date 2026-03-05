@@ -8,9 +8,10 @@ interface OrderDetailsModalProps {
     isOpen: boolean;
     onClose: () => void;
     order: DashboardOrder | null;
+    isRestricted?: boolean;
 }
 
-export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ isOpen, onClose, order }) => {
+export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ isOpen, onClose, order, isRestricted }) => {
     const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
 
     React.useEffect(() => {
@@ -78,7 +79,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ isOpen, on
                             <ShoppingBag size={20} color="var(--color-primary)" />
                         </div>
                         <div>
-                            <h2 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                            <h2 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
                                 Orden {order.order_number}
                             </h2>
                             <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0 }}>
@@ -99,45 +100,53 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ isOpen, on
                 <div style={{ padding: '24px' }}>
                     {/* Información del Cliente */}
                     <Section title="Información del Cliente" icon={<User size={16} />}>
-                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
-                            <InfoField
-                                label="Nombre Completo"
-                                value={`${customer.first_name || ''} ${customer.last_name || ''}`.trim() || order.cliente_nombre || 'N/A'}
-                            />
-                            <InfoField
-                                label="Correo Electrónico"
-                                value={customer.email || order.cliente_email || 'N/A'}
-                            />
-                            <InfoField
-                                label="WhatsApp / Teléfono"
-                                value={customer.phone || order.cliente_telefono || 'N/A'}
-                                icon={<Phone size={12} />}
-                            />
-                            <InfoField
-                                label="Campañas Relacionadas"
-                                value={order.campaign_name || 'Atribución Directa'}
-                            />
-                        </div>
+                        {isRestricted ? (
+                            <RestrictedContentMessage />
+                        ) : (
+                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
+                                <InfoField
+                                    label="Nombre Completo"
+                                    value={`${customer.first_name || ''} ${customer.last_name || ''}`.trim() || order.cliente_nombre || 'N/A'}
+                                />
+                                <InfoField
+                                    label="Correo Electrónico"
+                                    value={customer.email || order.cliente_email || 'N/A'}
+                                />
+                                <InfoField
+                                    label="WhatsApp / Teléfono"
+                                    value={customer.phone || order.cliente_telefono || 'N/A'}
+                                    icon={<Phone size={12} />}
+                                />
+                                <InfoField
+                                    label="Campañas Relacionadas"
+                                    value={order.campaign_name || 'Atribución Directa'}
+                                />
+                            </div>
+                        )}
                     </Section>
 
                     {/* Dirección de Envío */}
                     <Section title="Dirección de Envío" icon={<MapPin size={16} />}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
-                            <InfoField
-                                label="Dirección / Referencia"
-                                value={address.address1 || order.cliente_direccion || 'Información en notas'}
-                            />
-                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
+                        {isRestricted ? (
+                            <RestrictedContentMessage />
+                        ) : (
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
                                 <InfoField
-                                    label="Ciudad"
-                                    value={address.city || order.cliente_ciudad || 'N/A'}
+                                    label="Dirección / Referencia"
+                                    value={address.address1 || order.cliente_direccion || 'Información en notas'}
                                 />
-                                <InfoField
-                                    label="Departamento"
-                                    value={address.province || order.cliente_departamento || 'N/A'}
-                                />
+                                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
+                                    <InfoField
+                                        label="Ciudad"
+                                        value={address.city || order.cliente_ciudad || 'N/A'}
+                                    />
+                                    <InfoField
+                                        label="Departamento"
+                                        value={address.province || order.cliente_departamento || 'N/A'}
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </Section>
 
                     {/* Notas de la Orden */}
@@ -176,7 +185,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ isOpen, on
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>Total de la Orden</span>
-                            <span style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-primary)' }}>
+                            <span style={{ fontSize: '24px', fontWeight: 600, color: 'var(--color-primary)' }}>
                                 {formatSmartCurrency(order.total)}
                             </span>
                         </div>
@@ -201,7 +210,7 @@ const Section = ({ title, icon, children }: { title: string, icon: React.ReactNo
     <div style={{ marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
             <span style={{ color: 'var(--color-primary)' }}>{icon}</span>
-            <h3 style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', margin: 0 }}>
+            <h3 style={{ fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', margin: 0 }}>
                 {title}
             </h3>
         </div>
@@ -218,5 +227,29 @@ const InfoField = ({ label, value, icon }: { label: string, value: string, icon?
             {icon && <span style={{ color: 'var(--text-secondary)' }}>{icon}</span>}
             {value}
         </div>
+    </div>
+);
+
+const RestrictedContentMessage = () => (
+    <div style={{
+        padding: '16px',
+        backgroundColor: 'var(--bg-secondary)',
+        borderRadius: '12px',
+        border: '1px dashed var(--border-color)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '8px',
+        textAlign: 'center'
+    }}>
+        <div style={{ color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, margin: 0 }}>
+            Información Reservada
+        </p>
+        <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: 0, maxWidth: '250px' }}>
+            Habilite el Módulo de Contactos para ver los datos personales de sus clientes.
+        </p>
     </div>
 );

@@ -74,7 +74,7 @@ export function LoginPage() {
     return (
         <div style={{ animation: 'fadeIn 400ms ease-out' }}>
 
-            <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px', textAlign: 'center' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px', textAlign: 'center' }}>
                 Bienvenido
             </h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '32px', textAlign: 'center', lineHeight: 1.5 }}>
@@ -170,7 +170,7 @@ export function LoginPage() {
                 ¿No tienes una cuenta?{' '}
                 <Link
                     to="/registro"
-                    style={{ color: 'var(--color-primary)', fontWeight: 700, textDecoration: 'none' }}
+                    style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}
                     onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
                     onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
                 >

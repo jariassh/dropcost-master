@@ -126,7 +126,7 @@ export function StepConnectMeta({ onComplete }: StepConnectMetaProps) {
                             <Facebook size={24} />
                         </div>
                         <div>
-                            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Meta Ads (Facebook)</h3>
+                            <h3 style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>Meta Ads (Facebook)</h3>
                             <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>
                                 Perfil conectado correctamente
                             </p>
@@ -144,7 +144,7 @@ export function StepConnectMeta({ onComplete }: StepConnectMetaProps) {
                     }}>
                         <div>
                             <p style={{ margin: '0 0 4px', fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Perfil Vinculado</p>
-                            <p style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <p style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 {integration.meta_user_name || 'Perfil de Meta'}
                                 <CheckCircle2 size={14} color="#10B981" />
                             </p>
@@ -174,7 +174,7 @@ export function StepConnectMeta({ onComplete }: StepConnectMetaProps) {
                 }}>
                     <Facebook size={32} />
                 </div>
-                <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     Conecta tu cuenta de Meta
                 </h2>
                 <p style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>

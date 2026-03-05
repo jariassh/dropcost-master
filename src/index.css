@@ -132,6 +132,7 @@ html {
 body {
   font-family: var(--font-body);
   font-size: var(--fs-base);
+  font-weight: 400;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   line-height: var(--lh-base);
@@ -154,7 +155,7 @@ h4 {
 
 h1 {
   font-size: var(--fs-h1);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 h2 {
@@ -408,7 +409,7 @@ blockquote {
   padding: 2px 8px;
   border-radius: 6px;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 600;
   margin-left: 8px;
   border: 1px solid rgba(16, 185, 129, 0.2);
 }
@@ -461,7 +462,7 @@ blockquote {
   display: block;
   padding: 16px;
   border-radius: 12px;
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: none;
   text-align: center;
   transition: all 0.3s ease;

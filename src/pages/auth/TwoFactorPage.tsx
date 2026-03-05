@@ -13,7 +13,7 @@ const codeInputStyle: React.CSSProperties = {
     height: '60px',
     textAlign: 'center',
     fontSize: '22px',
-    fontWeight: 700,
+    fontWeight: 600,
     borderRadius: '10px',
     backgroundColor: 'var(--bg-primary)',
     color: 'var(--text-primary)',
@@ -119,7 +119,7 @@ export function TwoFactorPage() {
                 >
                     <ShieldCheck size={32} color="var(--color-primary)" />
                 </div>
-                <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     Verificación en dos pasos
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>

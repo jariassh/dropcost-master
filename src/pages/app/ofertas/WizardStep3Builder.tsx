@@ -59,7 +59,7 @@ export function WizardStep3Builder({
 
         return (
             <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>
                     💰 Configura tu Descuento
                 </h3>
                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
@@ -117,7 +117,7 @@ export function WizardStep3Builder({
 
         return (
             <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>
                     📦 Configura tu Bundle
                 </h3>
                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
@@ -234,7 +234,7 @@ export function WizardStep3Builder({
 
     return (
         <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '4px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '4px' }}>
                 🎁 Configura tu Obsequio
             </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
@@ -327,7 +327,7 @@ function ResultBox({ label, value, color }: { label: string; value: string; colo
             }}
         >
             <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginBottom: '4px' }}>{label}</p>
-            <p style={{ fontSize: '16px', fontWeight: 700, color: color || 'var(--text-primary)' }}>{value}</p>
+            <p style={{ fontSize: '16px', fontWeight: 600, color: color || 'var(--text-primary)' }}>{value}</p>
         </div>
     );
 }

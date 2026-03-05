@@ -104,7 +104,7 @@ export function StepPlanSelection({ onComplete }: StepPlanSelectionProps) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
             <div style={{ padding: '0 8px' }}>
-                <h2 style={{ fontSize: '24px', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
                     Selecciona tu Plan
                 </h2>
             </div>

@@ -66,7 +66,7 @@ export function ConfirmDialog({
                 <h3
                     style={{
                         fontSize: '24px',
-                        fontWeight: 800,
+                        fontWeight: 600,
                         color: 'var(--text-primary)',
                         marginBottom: '16px',
                         letterSpacing: '-0.02em'
@@ -93,7 +93,7 @@ export function ConfirmDialog({
                         onClick={onCancel}
                         disabled={isLoading}
                         fullWidth
-                        style={{ height: '48px', borderRadius: '12px', fontWeight: 700 }}
+                        style={{ height: '48px', borderRadius: '12px', fontWeight: 600 }}
                     >
                         {cancelLabel}
                     </Button>
@@ -105,7 +105,7 @@ export function ConfirmDialog({
                         style={{
                             height: '48px',
                             borderRadius: '12px',
-                            fontWeight: 700,
+                            fontWeight: 600,
                             boxShadow: isDanger ? '0 4px 14px rgba(239, 68, 68, 0.4)' : undefined
                         }}
                     >

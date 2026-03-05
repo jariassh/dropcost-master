@@ -220,7 +220,7 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     backgroundColor: 'var(--bg-secondary)'
                 }}>
-                    <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)' }}>
                         Configuración de Webhook Shopify
                     </h2>
                     <button
@@ -258,7 +258,7 @@ export function ShopifyConfigModal({ isOpen, onClose }: ShopifyConfigModalProps)
                         gap: '12px'
                     }}>
                         <div>
-                            <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                 Permisos (API Scopes) requeridos y su objetivo:
                             </p>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 20px' }}>

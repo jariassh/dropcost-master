@@ -151,7 +151,7 @@ export function CreateStoreModal({ isOpen, onClose }: CreateStoreModalProps) {
                         </span>
                         <span style={{
                             fontSize: '13px',
-                            fontWeight: 700,
+                            fontWeight: 600,
                             color: (tiendas.length >= (user?.plan?.limits?.stores ?? 1)) ? 'var(--color-error)' : 'var(--color-primary)'
                         }}>
                             {tiendas.length} / {user?.plan?.limits?.stores === -1 ? '∞' : (user?.plan?.limits?.stores ?? 1)}

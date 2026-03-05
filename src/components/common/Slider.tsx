@@ -154,7 +154,7 @@ export function Slider({
                             outline: 'none',
                             background: 'transparent',
                             fontSize: '13px',
-                            fontWeight: 700,
+                            fontWeight: 600,
                             color: 'var(--text-primary)',
                             textAlign: 'right',
                             fontFamily: 'inherit',
@@ -165,7 +165,7 @@ export function Slider({
                     <span
                         style={{
                             fontSize: '13px',
-                            fontWeight: 700,
+                            fontWeight: 600,
                             color: 'var(--text-secondary)',
                             whiteSpace: 'nowrap',
                             pointerEvents: 'none',

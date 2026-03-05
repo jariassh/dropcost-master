@@ -91,7 +91,7 @@ export const AssignPlanModal: React.FC<AssignPlanModalProps> = ({ isOpen, onClos
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{plan.name}</h4>
                                         {!plan.is_public && (
-                                            <span style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: 'var(--color-warning)', color: '#fff', borderRadius: '4px', fontWeight: 700 }}>PRIVADO</span>
+                                            <span style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: 'var(--color-warning)', color: '#fff', borderRadius: '4px', fontWeight: 600 }}>PRIVADO</span>
                                         )}
                                     </div>
                                     <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>

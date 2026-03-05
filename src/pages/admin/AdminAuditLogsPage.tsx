@@ -8,7 +8,7 @@ export const AdminAuditLogsPage: React.FC = () => {
             <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }} className="dc-admin-header-container">
                     <div style={{ flex: '1', minWidth: '280px' }} className="dc-admin-header-text">
-                        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
+                        <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
                             Logs de Auditoría
                         </h1>
                         <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>

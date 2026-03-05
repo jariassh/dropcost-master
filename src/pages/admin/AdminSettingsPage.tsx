@@ -1,4 +1,4 @@
-ï»¿import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -52,11 +52,11 @@ export function AdminSettingsPage() {
         if (remoteConfig) {
             setConfig(prev => {
                 // Si ya tenemos un estado local y no es un "mount" inicial, 
-                // pero faltan campos crÃ­ticos (debido a actualizaciones de esquema), los fusionamos.
+                // pero faltan campos críticos (debido a actualizaciones de esquema), los fusionamos.
                 const base = prev || remoteConfig;
                 return {
                     ...base,
-                    // Asegurar que los nuevos campos de tipografÃ­a tengan valores si vienen nulos de la DB/cachÃ©
+                    // Asegurar que los nuevos campos de tipografía tengan valores si vienen nulos de la DB/caché
                     font_family_primary: base.font_family_primary || 'Poppins',
                     font_family_secondary: base.font_family_secondary || 'Inter',
                     font_family_accent: base.font_family_accent || 'Lora',
@@ -93,12 +93,12 @@ export function AdminSettingsPage() {
             const payload = { ...config };
             const updated = await configService.updateConfig(payload);
 
-            // Invalidar el cachÃ© para que toda la app vea los cambios
+            // Invalidar el caché para que toda la app vea los cambios
             queryClient.invalidateQueries({ queryKey: ['globalConfig'] });
 
             setConfig(updated);
             await applyConfig(updated);
-            toast.success('Â¡Guardado!', 'La configuraciÃ³n global se ha actualizado correctamente.');
+            toast.success('¡Guardado!', 'La configuración global se ha actualizado correctamente.');
         } catch (error: any) {
             console.error('Save error:', error);
             toast.error('Error de Guardado', error.message || 'Hubo un problema al guardar los cambios.');
@@ -108,14 +108,14 @@ export function AdminSettingsPage() {
     }
 
     async function handleReset() {
-        if (!window.confirm('Â¿EstÃ¡s seguro de que deseas restaurar los valores por defecto?')) return;
+        if (!window.confirm('¿Estás seguro de que deseas restaurar los valores por defecto?')) return;
         try {
             setIsSaving(true);
             await configService.resetToDefaults();
 
-            // Forzar recarga invalidando el cachÃ©
+            // Forzar recarga invalidando el caché
             queryClient.invalidateQueries({ queryKey: ['globalConfig'] });
-            setConfig(null); // Esto forzarÃ¡ la rincronizaciÃ³n con remoteConfig una vez recargado
+            setConfig(null); // Esto forzará la rincronización con remoteConfig una vez recargado
 
             toast.success('Restaurado', 'Se han restablecido los valores por defecto.');
         } catch (error) {
@@ -129,9 +129,9 @@ export function AdminSettingsPage() {
 
     const tabs = [
         { id: 'seo', label: 'SEO & Metadatos', icon: Search },
-        { id: 'branding', label: 'Branding & DiseÃ±o', icon: Palette },
+        { id: 'branding', label: 'Branding & Diseño', icon: Palette },
         { id: 'tracking', label: 'Tracking & Scripts', icon: Code },
-        { id: 'info', label: 'InformaciÃ³n Base', icon: Info },
+        { id: 'info', label: 'Información Base', icon: Info },
     ];
 
     return (
@@ -139,8 +139,8 @@ export function AdminSettingsPage() {
             <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }} className="dc-admin-header-container">
                     <div style={{ flex: '1', minWidth: '280px' }} className="dc-admin-header-text">
-                        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
-                            AdministraciÃ³n Global
+                        <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
+                            Administración Global
                         </h1>
                         <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                             Gestiona la identidad visual, SEO y scripts estructurales de la plataforma.
@@ -198,7 +198,7 @@ export function AdminSettingsPage() {
                                 borderBottom: `2px solid ${isActive ? 'var(--color-primary)' : 'transparent'}`,
                                 color: isActive ? 'var(--color-primary)' : 'var(--text-tertiary)',
                                 fontSize: '14px',
-                                fontWeight: 700,
+                                fontWeight: 600,
                                 transition: 'all 200ms ease',
                                 backgroundColor: 'transparent',
                                 borderTop: 'none',
@@ -309,7 +309,7 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                 <Card title="Meta Contenido">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <Input
-                            label="TÃ­tulo Meta"
+                            label="Título Meta"
                             value={config.meta_title}
                             onChange={(e) => setConfig((prev: any) => ({ ...prev, meta_title: e.target.value }))}
                             placeholder="DropCost Master..."
@@ -318,7 +318,7 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                         />
 
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-[var(--text-primary)]">DescripciÃ³n Meta</label>
+                            <label className="text-sm font-bold text-[var(--text-primary)]">Descripción Meta</label>
                             <textarea
                                 value={config.meta_description}
                                 onChange={(e) => setConfig((prev: any) => ({ ...prev, meta_description: e.target.value }))}
@@ -367,7 +367,7 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                 </Card>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <Card title="Vista Previa de BÃºsqueda">
+                    <Card title="Vista Previa de Búsqueda">
                         <div
                             style={{
                                 padding: '32px',
@@ -379,22 +379,22 @@ function SectionSEO({ config, setConfig, isDark }: any) {
                             className="shadow-sm"
                         >
                             <div className={`text-lg font-medium mb-2 truncate ${isDark ? 'text-[#8ab4f8]' : 'text-[#1a0dab]'}`}>
-                                {config.meta_title || 'TÃ­tulo de ejemplo'}
+                                {config.meta_title || 'Título de ejemplo'}
                             </div>
                             <div className={`text-xs mb-2 truncate ${isDark ? 'text-[#34a853]' : 'text-[#006621]'}`}>
                                 {config.site_url || 'https://dropcostmaster.com'}
                             </div>
                             <div className={`text-sm leading-relaxed ${isDark ? 'text-[#bdc1c6]' : 'text-[#4d5156]'} line-clamp-2`}>
-                                {config.meta_description || 'DescripciÃ³n ejemplo...'}
+                                {config.meta_description || 'Descripción ejemplo...'}
                             </div>
                         </div>
                     </Card>
 
-                    <Card title="ConfiguraciÃ³n de Robots">
+                    <Card title="Configuración de Robots">
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px' }}>
                             <div className="flex items-center justify-between p-2 rounded-xl hover:bg-[var(--bg-tertiary)] transition-all">
                                 <div>
-                                    <p className="text-sm font-bold text-[var(--text-primary)]">Permitir IndexaciÃ³n (Index)</p>
+                                    <p className="text-sm font-bold text-[var(--text-primary)]">Permitir Indexación (Index)</p>
                                     <p className="text-[11px] text-[var(--text-secondary)]">Indica a los buscadores si pueden mostrar tu sitio.</p>
                                 </div>
                                 <Toggle
@@ -444,7 +444,7 @@ function SectionSEO({ config, setConfig, isDark }: any) {
 }
 
 function SectionBranding({ config, setConfig }: any) {
-    // DefiniciÃ³n unificada de colores para la tabla
+    // Definición unificada de colores para la tabla
     const allColorGroups = [
         // MARCA & CORE
         {
@@ -457,16 +457,16 @@ function SectionBranding({ config, setConfig }: any) {
             ]
         },
         {
-            category: 'Estados y SemÃ¡ntica',
+            category: 'Estados y Semántica',
             colors: [
-                { key: 'color_success', label: 'Ã‰xito' },
+                { key: 'color_success', label: 'Éxito' },
                 { key: 'color_warning', label: 'Aviso' },
                 { key: 'color_error', label: 'Error' },
                 { key: 'color_neutral', label: 'Neutral' },
             ]
         },
         {
-            category: 'NavegaciÃ³n (Sidebar)',
+            category: 'Navegación (Sidebar)',
             colors: [
                 { key: 'color_sidebar_bg', label: 'Fondo Sidebar' },
                 { key: 'color_sidebar_text', label: 'Texto Sidebar' },
@@ -474,11 +474,11 @@ function SectionBranding({ config, setConfig }: any) {
             ]
         },
         {
-            category: 'AdministraciÃ³n',
+            category: 'Administración',
             colors: [
                 { key: 'color_admin_panel_link', label: 'Acceso Admin (App)' },
                 { key: 'color_admin_sidebar_active', label: 'Activo Admin' },
-                { key: 'color_admin_sidebar_return', label: 'BotÃ³n Retorno' },
+                { key: 'color_admin_sidebar_return', label: 'Botón Retorno' },
             ]
         },
         // TEMA CLARO
@@ -535,7 +535,7 @@ function SectionBranding({ config, setConfig }: any) {
         }
     ];
 
-    // Helpers para estilos de categorÃ­a
+    // Helpers para estilos de categoría
     const getCategoryBadgeStyle = (cat: string) => {
         if (cat.includes('Tema Claro')) return { bg: '#e0f2fe', text: '#0284c7', border: '#bae6fd' };
         if (cat.includes('Tema Oscuro')) return { bg: '#1e293b', text: '#cbd5e1', border: '#334155' };
@@ -588,7 +588,7 @@ function SectionBranding({ config, setConfig }: any) {
                         <div className="flex flex-col gap-3">
                             <span className="text-[10px] uppercase font-bold text-slate-400 text-center tracking-widest">Fondo Claro</span>
                             <div className="p-6 bg-white rounded-xl border border-slate-200 flex items-center justify-center min-h-[120px] shadow-sm">
-                                {config.logo_principal_url ? <img src={config.logo_principal_url} alt="Light" className="max-h-12 object-contain" /> : <div className="text-slate-200 uppercase font-black italic">Logo VacÃ­o</div>}
+                                {config.logo_principal_url ? <img src={config.logo_principal_url} alt="Light" className="max-h-12 object-contain" /> : <div className="text-slate-200 uppercase font-black italic">Logo Vacío</div>}
                             </div>
                         </div>
                         <div className="flex flex-col gap-3">
@@ -597,7 +597,7 @@ function SectionBranding({ config, setConfig }: any) {
                                 {config.logo_variante_url ? (
                                     <img src={config.logo_variante_url} alt="Dark" className="max-h-12 object-contain" />
                                 ) : (
-                                    <div className="text-slate-700 uppercase font-black italic">Logo VacÃ­o</div>
+                                    <div className="text-slate-700 uppercase font-black italic">Logo Vacío</div>
                                 )}
                             </div>
                         </div>
@@ -609,7 +609,7 @@ function SectionBranding({ config, setConfig }: any) {
 
             <div>
                 <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '16px', letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
-                    AdministraciÃ³n de Colores
+                    Administración de Colores
                 </h3>
                 <Card noPadding>
                     <div style={{ overflowX: 'auto' }}>
@@ -619,8 +619,8 @@ function SectionBranding({ config, setConfig }: any) {
                                     <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'capitalize', letterSpacing: '0.05em', width: '80px' }}>Color</th>
                                     <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'capitalize', letterSpacing: '0.05em' }}>Nombre</th>
                                     <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'capitalize', letterSpacing: '0.05em' }}>Variable (Key)</th>
-                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'capitalize', letterSpacing: '0.05em' }}>CÃ³digo</th>
-                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'capitalize', letterSpacing: '0.05em', textAlign: 'right' }}>CategorÃ­a</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'capitalize', letterSpacing: '0.05em' }}>Código</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'capitalize', letterSpacing: '0.05em', textAlign: 'right' }}>Categoría</th>
                                 </tr>
                             </thead>
                             <tbody style={{ backgroundColor: 'var(--card-bg)' }}>
@@ -711,7 +711,7 @@ function SectionBranding({ config, setConfig }: any) {
                     >
                         <AlertCircle size={16} className="text-[var(--text-tertiary)]" />
                         <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
-                            Estos valores se sincronizan automÃ¡ticamente con las variables CSS del sistema (<code>:root</code>). Los cambios se reflejarÃ¡n instantÃ¡neamente en la vista previa, pero requieren "Guardar" para persistir.
+                            Estos valores se sincronizan automáticamente con las variables CSS del sistema (<code>:root</code>). Los cambios se reflejarán instantáneamente en la vista previa, pero requieren "Guardar" para persistir.
                         </p>
                     </div>
                 </Card>
@@ -723,22 +723,22 @@ function SectionBranding({ config, setConfig }: any) {
 const GOOGLE_FONT_OPTIONS: SelectOption[] = [
     { value: 'Poppins', label: 'Poppins', details: 'Sans Serif - Moderno y limpio' },
     { value: 'Inter', label: 'Inter', details: 'Sans Serif - Optimizado para UI' },
-    { value: 'Lora', label: 'Lora', details: 'Serif - ContemporÃ¡neo' },
-    { value: 'JetBrains Mono', label: 'JetBrains Mono', details: 'Monospace - TÃ©cnico y legible' },
-    { value: 'Roboto', label: 'Roboto', details: 'Sans Serif - EstÃ¡ndar y legible' },
-    { value: 'Montserrat', label: 'Montserrat', details: 'Sans Serif - Elegante y geomÃ©trico' },
-    { value: 'Bebas Neue', label: 'Bebas Neue', details: 'Display - Impactante (MayÃºsculas)' },
+    { value: 'Lora', label: 'Lora', details: 'Serif - Contemporáneo' },
+    { value: 'JetBrains Mono', label: 'JetBrains Mono', details: 'Monospace - Técnico y legible' },
+    { value: 'Roboto', label: 'Roboto', details: 'Sans Serif - Estándar y legible' },
+    { value: 'Montserrat', label: 'Montserrat', details: 'Sans Serif - Elegante y geométrico' },
+    { value: 'Bebas Neue', label: 'Bebas Neue', details: 'Display - Impactante (Mayúsculas)' },
     { value: 'Oswald', label: 'Oswald', details: 'Sans Serif - Condensado y fuerte' },
     { value: 'Lato', label: 'Lato', details: 'Sans Serif - Amigable y equilibrado' },
-    { value: 'Open Sans', label: 'Open Sans', details: 'Sans Serif - VersÃ¡til' },
-    { value: 'Playfair Display', label: 'Playfair Display', details: 'Serif - ClÃ¡sico y lujoso' },
+    { value: 'Open Sans', label: 'Open Sans', details: 'Sans Serif - Versátil' },
+    { value: 'Playfair Display', label: 'Playfair Display', details: 'Serif - Clásico y lujoso' },
     { value: 'Merriweather', label: 'Merriweather', details: 'Serif - Alta legibilidad' },
     { value: 'Raleway', label: 'Raleway', details: 'Sans Serif - Estilizado' },
     { value: 'Nunito', label: 'Nunito', details: 'Sans Serif - Redondeado y suave' },
     { value: 'Ubuntu', label: 'Ubuntu', details: 'Sans Serif - Distintivo' },
     { value: 'Quicksand', label: 'Quicksand', details: 'Sans Serif - Muy redondeado' },
     { value: 'Work Sans', label: 'Work Sans', details: 'Sans Serif - Profesional' },
-    { value: 'Fira Sans', label: 'Fira Sans', details: 'Sans Serif - TÃ©cnico' },
+    { value: 'Fira Sans', label: 'Fira Sans', details: 'Sans Serif - Técnico' },
     { value: 'Kanit', label: 'Kanit', details: 'Sans Serif - Moderno Thai' },
     { value: 'Rubik', label: 'Rubik', details: 'Sans Serif - Amigable' },
     { value: 'Anton', label: 'Anton', details: 'Display - Muy grueso' }
@@ -746,7 +746,7 @@ const GOOGLE_FONT_OPTIONS: SelectOption[] = [
 
 function SectionTypography({ config, setConfig }: any) {
     return (
-        <Card title="TipografÃ­a y TamaÃ±os">
+        <Card title="Tipografía y Tamaños">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
                     <div className="space-y-6">
@@ -776,7 +776,7 @@ function SectionTypography({ config, setConfig }: any) {
                                 placeholder="Seleccionar fuente..."
                             />
                             <Select
-                                label="Fuente Mono (CÃ³digo/TÃ©cnico)"
+                                label="Fuente Mono (Código/Técnico)"
                                 options={GOOGLE_FONT_OPTIONS}
                                 value={config.font_family_mono}
                                 onChange={(val) => setConfig((prev: any) => ({ ...prev, font_family_mono: val }))}
@@ -787,7 +787,7 @@ function SectionTypography({ config, setConfig }: any) {
 
                     <div className="space-y-6">
                         <h4 className="text-sm font-bold flex items-center gap-2" style={{ fontFamily: 'var(--font-body)', textTransform: 'none' }}>
-                            <Layout size={16} className="text-[var(--color-primary)]" /> Escala de TamaÃ±os
+                            <Layout size={16} className="text-[var(--color-primary)]" /> Escala de Tamaños
                         </h4>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             <UnitInput
@@ -796,22 +796,22 @@ function SectionTypography({ config, setConfig }: any) {
                                 onChange={(val) => setConfig((prev: any) => ({ ...prev, font_size_base: val }))}
                             />
                             <UnitInput
-                                label="TÃ­tulo H1"
+                                label="Título H1"
                                 value={config.font_size_h1}
                                 onChange={(val) => setConfig((prev: any) => ({ ...prev, font_size_h1: val }))}
                             />
                             <UnitInput
-                                label="TÃ­tulo H2"
+                                label="Título H2"
                                 value={config.font_size_h2}
                                 onChange={(val) => setConfig((prev: any) => ({ ...prev, font_size_h2: val }))}
                             />
                             <UnitInput
-                                label="TÃ­tulo H3"
+                                label="Título H3"
                                 value={config.font_size_h3}
                                 onChange={(val) => setConfig((prev: any) => ({ ...prev, font_size_h3: val }))}
                             />
                             <UnitInput
-                                label="PequeÃ±o (Label)"
+                                label="Pequeño (Label)"
                                 value={config.font_size_small}
                                 onChange={(val) => setConfig((prev: any) => ({ ...prev, font_size_small: val }))}
                             />
@@ -835,7 +835,7 @@ function SectionTypography({ config, setConfig }: any) {
                                 label="Line Height (H)"
                                 value={config.font_line_height_headings}
                                 onChange={(val) => setConfig((prev: any) => ({ ...prev, font_line_height_headings: val }))}
-                                helperText="TÃ­tulos"
+                                helperText="Títulos"
                             />
                             <UnitInput
                                 label="Line Height (S)"
@@ -847,7 +847,7 @@ function SectionTypography({ config, setConfig }: any) {
                                 label="Line Height (M)"
                                 value={config.font_line_height_mono}
                                 onChange={(val) => setConfig((prev: any) => ({ ...prev, font_line_height_mono: val }))}
-                                helperText="CÃ³digo"
+                                helperText="Código"
                             />
                             <UnitInput
                                 label="Interletrado (L)"
@@ -881,12 +881,12 @@ function SectionTypography({ config, setConfig }: any) {
                                     fontFamily: 'var(--font-body)',
                                     fontSize: config.font_size_tiny,
                                     color: 'var(--color-primary)',
-                                    fontWeight: 700,
+                                    fontWeight: 600,
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.1em'
                                 }}
                             >
-                                CategorÃ­a Destacada
+                                Categoría Destacada
                             </span>
                             <h1
                                 style={{
@@ -895,12 +895,12 @@ function SectionTypography({ config, setConfig }: any) {
                                     margin: 0,
                                     lineHeight: config.font_line_height_headings || '1.25',
                                     color: 'var(--text-primary)',
-                                    fontWeight: 700,
+                                    fontWeight: 600,
                                     textTransform: (config.font_family_secondary === 'Bebas Neue' || config.font_family_secondary === 'Anton') ? 'uppercase' : 'none',
                                     letterSpacing: config.font_letter_spacing_h
                                 }}
                             >
-                                Domina tu Costeo con PrecisiÃ³n
+                                Domina tu Costeo con Precisión
                             </h1>
                             <h3
                                 style={{
@@ -927,8 +927,8 @@ function SectionTypography({ config, setConfig }: any) {
                                 maxWidth: '90%'
                             }}
                         >
-                            Optimiza tus mÃ¡rgenes y escala tu negocio con datos reales en tiempo real.
-                            DropCost Master te permite visualizar cada centavo de tu operaciÃ³n.
+                            Optimiza tus márgenes y escala tu negocio con datos reales en tiempo real.
+                            DropCost Master te permite visualizar cada centavo de tu operación.
                         </p>
 
 
@@ -941,7 +941,7 @@ function SectionTypography({ config, setConfig }: any) {
                             borderLeft: '4px solid var(--color-primary)',
                             paddingLeft: '16px',
                         }}>
-                            "Este sistema ha transformado la rentabilidad de mi tienda desde el primer dÃ­a."
+                            "Este sistema ha transformado la rentabilidad de mi tienda desde el primer día."
                         </div>
 
                         {/* Mono Block */}
@@ -986,11 +986,11 @@ function SectionTypography({ config, setConfig }: any) {
 
                         <div className="flex justify-between items-center pt-8 border-t border-[var(--border-color)] opacity-60">
                             <span style={{ fontFamily: 'var(--font-body)', fontSize: config.font_size_tiny, color: 'var(--text-tertiary)' }}>
-                                Â© 2026 DropCost Master
+                                © 2026 DropCost Master
                             </span>
                             <div className="flex gap-4">
                                 <span style={{ fontFamily: 'var(--font-body)', fontSize: config.font_size_tiny, color: 'var(--text-tertiary)' }}>Privacidad</span>
-                                <span style={{ fontFamily: 'var(--font-body)', fontSize: config.font_size_tiny, color: 'var(--text-tertiary)' }}>TÃ©rminos</span>
+                                <span style={{ fontFamily: 'var(--font-body)', fontSize: config.font_size_tiny, color: 'var(--text-tertiary)' }}>Términos</span>
                             </div>
                         </div>
                     </div>
@@ -1004,7 +1004,7 @@ function SectionTracking({ config, setConfig }: any) {
     const toast = useToast();
 
     /**
-     * Formatea el cÃ³digo (HTML/JS) con indentaciÃ³n simple
+     * Formatea el código (HTML/JS) con indentación simple
      */
     const formatCode = (key: 'codigo_head' | 'codigo_footer') => {
         const code = config[key];
@@ -1014,7 +1014,7 @@ function SectionTracking({ config, setConfig }: any) {
             let formatted = '';
             let pad = 0;
             const lines = code
-                .replace(/>\s*</g, '>\n<') // Romper lÃ­neas entre etiquetas
+                .replace(/>\s*</g, '>\n<') // Romper líneas entre etiquetas
                 .split('\n');
 
             lines.forEach((line: string) => {
@@ -1022,14 +1022,14 @@ function SectionTracking({ config, setConfig }: any) {
                 const trimmed = line.trim();
                 if (!trimmed) return;
 
-                // Disminuir indentaciÃ³n si es etiqueta de cierre
+                // Disminuir indentación si es etiqueta de cierre
                 if (trimmed.match(/^<\//)) {
                     pad = Math.max(0, pad - 1);
                 }
 
                 indent = pad;
 
-                // Aumentar indentaciÃ³n si es etiqueta de apertura pero no autocierre
+                // Aumentar indentación si es etiqueta de apertura pero no autocierre
                 if (trimmed.match(/^<[^/].*[^/]>|(?=<!)/) && !trimmed.match(/\/>$/) && !trimmed.match(/^<.*>.*<\/.*>$/)) {
                     pad += 1;
                 }
@@ -1038,10 +1038,10 @@ function SectionTracking({ config, setConfig }: any) {
             });
 
             setConfig((prev: any) => ({ ...prev, [key]: formatted.trim() }));
-            toast.success('Formato aplicado', 'El cÃ³digo se ha reordenado correctamente.');
+            toast.success('Formato aplicado', 'El código se ha reordenado correctamente.');
         } catch (error) {
             console.error('Error formatting code:', error);
-            toast.error('Error', 'No se pudo formatear el cÃ³digo.');
+            toast.error('Error', 'No se pudo formatear el código.');
         }
     };
 
@@ -1069,7 +1069,7 @@ function SectionTracking({ config, setConfig }: any) {
                 e.currentTarget.style.borderColor = 'var(--border-color)';
                 e.currentTarget.style.color = 'var(--text-tertiary)';
             }}
-            title="Auto-formatear cÃ³digo"
+            title="Auto-formatear código"
         >
             <AlignLeft size={16} />
         </button>
@@ -1078,8 +1078,8 @@ function SectionTracking({ config, setConfig }: any) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <Card
-                title="InyecciÃ³n en HEAD"
-                description="Ideal para PÃ­xeles, Tag Manager y Analytics."
+                title="Inyección en HEAD"
+                description="Ideal para Píxeles, Tag Manager y Analytics."
                 headerAction={<FormatButton onClick={() => formatCode('codigo_head')} />}
             >
                 <div className="space-y-4">
@@ -1094,7 +1094,7 @@ function SectionTracking({ config, setConfig }: any) {
             </Card>
 
             <Card
-                title="InyecciÃ³n en FOOTER"
+                title="Inyección en FOOTER"
                 description="Ideal para Widgets de Chat y scripts de carga diferida."
                 headerAction={<FormatButton onClick={() => formatCode('codigo_footer')} />}
             >
@@ -1133,7 +1133,7 @@ function SectionInfo({ config, setConfig }: any) {
                             rightElement={config.email_contacto ? <ClearButton onClick={() => setConfig((prev: any) => ({ ...prev, email_contacto: '' }))} /> : null}
                         />
                         <Input
-                            label="LÃ­nea TelÃ©fono/Whatsapp"
+                            label="Línea Teléfono/Whatsapp"
                             value={config.telefono}
                             onChange={(e) => setConfig((prev: any) => ({ ...prev, telefono: e.target.value }))}
                             leftIcon={<Phone size={16} />}
@@ -1175,7 +1175,7 @@ function SectionInfo({ config, setConfig }: any) {
             <Card title="Recursos Legales">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <Input
-                        label="TÃ©rminos y Condiciones"
+                        label="Términos y Condiciones"
                         value={config.terminos_condiciones_url}
                         onChange={(e) => setConfig((prev: any) => ({ ...prev, terminos_condiciones_url: e.target.value }))}
                         placeholder="https://..."
@@ -1183,7 +1183,7 @@ function SectionInfo({ config, setConfig }: any) {
                         rightElement={config.terminos_condiciones_url ? <ClearButton onClick={() => setConfig((prev: any) => ({ ...prev, terminos_condiciones_url: '' }))} /> : null}
                     />
                     <Input
-                        label="PolÃ­tica de Privacidad"
+                        label="Política de Privacidad"
                         value={config.politica_privacidad_url}
                         onChange={(e) => setConfig((prev: any) => ({ ...prev, politica_privacidad_url: e.target.value }))}
                         placeholder="https://..."
@@ -1217,9 +1217,9 @@ function AssetUploader({
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validar tamaÃ±o (ej. 2MB)
+        // Validar tamaño (ej. 2MB)
         if (file.size > 2 * 1024 * 1024) {
-            toast.error('Archivo muy grande', 'El tamaÃ±o mÃ¡ximo permitido es 2MB.');
+            toast.error('Archivo muy grande', 'El tamaño máximo permitido es 2MB.');
             if (fileInputRef.current) fileInputRef.current.value = '';
             return;
         }
@@ -1228,10 +1228,10 @@ function AssetUploader({
             setIsUploading(true);
             const url = await storageService.uploadBrandingFile(file, path);
             onUpload(url);
-            toast.success('Â¡Completado!', 'El archivo se ha subido correctamente.');
+            toast.success('¡Completado!', 'El archivo se ha subido correctamente.');
         } catch (error: any) {
             console.error('Upload error:', error);
-            toast.error('Error de subida', 'No se pudo subir el archivo. AsegÃºrate de que el bucket "branding" existe y es pÃºblico en Supabase.');
+            toast.error('Error de subida', 'No se pudo subir el archivo. Asegúrate de que el bucket "branding" existe y es público en Supabase.');
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';

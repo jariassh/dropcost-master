@@ -85,7 +85,7 @@ export function Card({
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <h3 style={{
                                 fontSize: isMobile ? '16px' : 'var(--fs-card-title)',
-                                fontWeight: 800,
+                                fontWeight: 600,
                                 color: 'var(--text-primary)',
                                 margin: 0,
                                 letterSpacing: 'var(--ls-h)',

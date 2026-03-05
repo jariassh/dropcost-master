@@ -276,7 +276,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
                     padding: '20px 24px', borderBottom: '1px solid var(--border-color)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>
                         {initialData ? 'Editar Plan' : 'Nuevo Plan'}
                     </h3>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)' }}>
@@ -344,7 +344,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
 
                         {/* Pricing */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                            <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)' }}>Configuración de Precios</h4>
+                            <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: 'var(--color-primary)' }}>Configuración de Precios</h4>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Moneda Base del Plan</label>
@@ -393,7 +393,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
 
                         {/* Limits details */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                            <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)' }}>Configuración Técnica</h4>
+                            <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: 'var(--color-primary)' }}>Configuración Técnica</h4>
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '12px' }}>
                                 {/* Stores */}

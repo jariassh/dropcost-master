@@ -176,7 +176,7 @@ export function MetaCallbackPage() {
                             <Facebook size={40} />
                         </div>
 
-                        <h1 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '16px' }}>
+                        <h1 style={{ fontSize: '22px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '16px' }}>
                             Vinculando cuenta Meta
                         </h1>
 
@@ -265,7 +265,7 @@ export function MetaCallbackPage() {
                             <CheckCircle2 size={40} />
                         </div>
 
-                        <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '12px' }}>
+                        <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '12px' }}>
                             ¡Conexión Exitosa!
                         </h1>
 
@@ -289,7 +289,7 @@ export function MetaCallbackPage() {
                             </div>
                             <div style={{ textAlign: 'left' }}>
                                 <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 600 }}>PERFIL CONECTADO</p>
-                                <p style={{ margin: 0, fontSize: '13px', fontWeight: 700 }}>Meta Ads Business</p>
+                                <p style={{ margin: 0, fontSize: '13px', fontWeight: 600 }}>Meta Ads Business</p>
                             </div>
                         </div>
 
@@ -354,7 +354,7 @@ export function MetaCallbackPage() {
                     <XCircle size={40} />
                 </div>
 
-                <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '12px' }}>
+                <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '12px' }}>
                     Error de Conexión
                 </h1>
 
@@ -380,7 +380,7 @@ export function MetaCallbackPage() {
                             color: 'white',
                             borderRadius: '12px',
                             border: 'none',
-                            fontWeight: 700,
+                            fontWeight: 600,
                             fontSize: '15px',
                             cursor: 'pointer',
                             display: 'flex',
