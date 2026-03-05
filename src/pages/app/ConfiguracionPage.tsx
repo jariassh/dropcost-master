@@ -20,13 +20,6 @@ export function ConfiguracionPage() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Redirect to profile if exactly on /configuracion
-    useEffect(() => {
-        if (location.pathname === '/configuracion' || location.pathname === '/configuracion/') {
-            navigate('/configuracion/perfil', { replace: true });
-        }
-    }, [location.pathname, navigate]);
-
     return (
         <div style={{ maxWidth: '1440px', margin: '0 auto', padding: isMobile ? '12px' : '20px', boxSizing: 'border-box' }}>
             <div style={{ marginBottom: isMobile ? '20px' : '32px' }}>
