@@ -1,43 +1,47 @@
-﻿import { Routes, Route, Navigate } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
-import { AuthLayout } from '@/layouts/AuthLayout';
-import { AppLayout } from '@/layouts/AppLayout';
-import { LandingLayout } from '@/layouts/LandingLayout';
-import { AdminLayout } from '@/layouts/AdminLayout';
+import React, { lazy, Suspense } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { AppLayout } from '@/layouts/AppLayout';
+import { AdminLayout } from '@/layouts/AdminLayout';
+import { AuthLayout } from '@/layouts/AuthLayout';
+import { LandingLayout } from '@/layouts/LandingLayout';
 import { Spinner } from '@/components/common/Spinner';
 import { SubscriptionGuard } from '@/components/common/SubscriptionGuard';
-import { AffiliateTracker } from '@/components/common/AffiliateTracker';
+import { AffiliateTracker } from '@/components/marketing/AffiliateTracker';
 
-// Lazy load de páginas de Autenticación
+// Lazy loading de páginas para mejor performance
+const DashboardPage = lazy(() => import('@/pages/app/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const SimuladorPage = lazy(() => import('@/pages/app/simulador/SimuladorPage').then(m => ({ default: m.SimuladorPage })));
+const MisCosteos = lazy(() => import('@/pages/app/simulador/MisCosteos').then(m => ({ default: m.MisCosteos })));
+const ReferidosPage = lazy(() => import('@/pages/app/ReferidosPage').then(m => ({ default: m.ReferidosPage })));
+const WalletPage = lazy(() => import('@/pages/app/WalletPage').then(m => ({ default: m.WalletPage })));
+const SincronizarPage = lazy(() => import('@/pages/app/SincronizarPage').then(m => ({ default: m.SincronizarPage })));
+const OfertasPage = lazy(() => import('@/pages/app/ofertas/OfertasPage').then(m => ({ default: m.OfertasPage })));
+const ContactosPage = lazy(() => import('@/pages/app/ContactosPage').then(m => ({ default: m.ContactosPage })));
+const LaunchpadPage = lazy(() => import('@/pages/app/LaunchpadPage').then(m => ({ default: m.LaunchpadPage })));
+
+// Configuración
+const ConfiguracionPage = lazy(() => import('@/pages/app/configuracion/ConfiguracionPage').then(m => ({ default: m.ConfiguracionPage })));
+const PerfilPage = lazy(() => import('@/pages/app/configuracion/PerfilPage').then(m => ({ default: m.PerfilPage })));
+const SeguridadPage = lazy(() => import('@/pages/app/configuracion/SeguridadPage').then(m => ({ default: m.SeguridadPage })));
+const IntegracionesPage = lazy(() => import('@/pages/app/configuracion/IntegracionesPage').then(m => ({ default: m.IntegracionesPage })));
+const TiendasPage = lazy(() => import('@/pages/app/configuracion/TiendasPage').then(m => ({ default: m.TiendasPage })));
+const StoreManagementPage = lazy(() => import('@/pages/app/StoreManagementPage').then(m => ({ default: m.StoreManagementPage })));
+
+// Autenticación
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then(m => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const VerifyEmailPage = lazy(() => import('@/pages/auth/VerifyEmailPage').then(m => ({ default: m.VerifyEmailPage })));
 const TwoFactorPage = lazy(() => import('@/pages/auth/TwoFactorPage').then(m => ({ default: m.TwoFactorPage })));
 const PasswordResetPage = lazy(() => import('@/pages/auth/PasswordResetPage').then(m => ({ default: m.PasswordResetPage })));
 const UpdatePasswordPage = lazy(() => import('@/pages/auth/UpdatePasswordPage').then(m => ({ default: m.UpdatePasswordPage })));
-const MetaCallbackPage = lazy(() => import('@/pages/auth/MetaCallbackPage').then(m => ({ default: m.MetaCallbackPage })));
 
-// Lazy load de páginas de la App
-const DashboardPage = lazy(() => import('@/pages/app/DashboardPage').then(m => ({ default: m.DashboardPage })));
-const SimuladorPage = lazy(() => import('@/pages/app/simulador/SimuladorPage').then(m => ({ default: m.SimuladorPage })));
-const MisCosteos = lazy(() => import('@/pages/app/simulador/MisCosteos').then(m => ({ default: m.MisCosteos })));
-const OfertasPage = lazy(() => import('@/pages/app/ofertas/OfertasPage').then(m => ({ default: m.OfertasPage })));
-const OfertaWizard = lazy(() => import('@/pages/app/ofertas/OfertaWizard').then(m => ({ default: m.OfertaWizard })));
-const ConfiguracionPage = lazy(() => import('@/pages/app/ConfiguracionPage').then(m => ({ default: m.ConfiguracionPage })));
-const PerfilPage = lazy(() => import('@/pages/app/configuracion/PerfilPage').then(m => ({ default: m.PerfilPage })));
-const SeguridadPage = lazy(() => import('@/pages/app/configuracion/SeguridadPage').then(m => ({ default: m.SeguridadPage })));
-const IntegracionesPage = lazy(() => import('@/pages/app/configuracion/IntegracionesPage').then(m => ({ default: m.IntegracionesPage })));
-const TiendasPage = lazy(() => import('@/pages/app/configuracion/TiendasPage').then(m => ({ default: m.TiendasPage })));
-const ReferidosPage = lazy(() => import('@/pages/app/ReferidosPage').then(m => ({ default: m.ReferidosPage })));
-const WalletPage = lazy(() => import('@/pages/app/WalletPage').then(m => ({ default: m.WalletPage })));
-const StoreManagementPage = lazy(() => import('@/pages/app/StoreManagementPage').then(m => ({ default: m.StoreManagementPage })));
-const SincronizarPage = lazy(() => import('@/pages/app/SincronizarPage').then(m => ({ default: m.SincronizarPage })));
+// Callbacks & Feedback
 const PaymentStatusPage = lazy(() => import('@/pages/app/PaymentStatusPage').then(m => ({ default: m.PaymentStatusPage })));
-const UserAuditLogsPage = lazy(() => import('@/pages/UserAuditLogsPage'));
-const LaunchpadPage = lazy(() => import('@/pages/app/LaunchpadPage').then(m => ({ default: m.LaunchpadPage })));
+const MetaCallbackPage = lazy(() => import('@/pages/app/MetaCallbackPage').then(m => ({ default: m.MetaCallbackPage })));
+const UserAuditLogsPage = lazy(() => import('@/pages/app/UserAuditLogsPage').then(m => ({ default: m.UserAuditLogsPage })));
 
-// Lazy load de páginas Administrativas
+// Admin
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })));
 const AdminPlansPage = lazy(() => import('@/pages/admin/AdminPlansPage').then(m => ({ default: m.AdminPlansPage })));
@@ -91,12 +95,14 @@ export function AppRouter() {
             <AffiliateTracker />
             <Suspense fallback={<ChargingPage />}>
                 <Routes>
-                    {/* Landing Page Route */}
-                    <Route element={<LandingLayout />}>
-                        <Route path="/" element={
-                            isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />
-                        } />
-                    </Route>
+                    {/* Landing Page Route - Redirección inmediata si está autenticado para evitar flash de Layout */}
+                    <Route path="/" element={
+                        isAuthenticated ? <Navigate to="/dashboard" replace /> : (
+                            <LandingLayout>
+                                <LandingPage />
+                            </LandingLayout>
+                        )
+                    } />
 
                     {/* Rutas de autenticación */}
                     <Route
@@ -140,6 +146,7 @@ export function AppRouter() {
                         <Route path="/ofertas" element={<SubscriptionGuard><OfertasPage /></SubscriptionGuard>} />
                         <Route path="/analisis-regional" element={<SubscriptionGuard><DashboardPage /></SubscriptionGuard>} />
                         <Route path="/sincronizar" element={<SubscriptionGuard><SincronizarPage /></SubscriptionGuard>} />
+                        <Route path="/contactos" element={<SubscriptionGuard><ContactosPage /></SubscriptionGuard>} />
 
                         <Route path="/configuracion" element={<ConfiguracionPage />}>
                             <Route path="perfil" element={<PerfilPage />} />
