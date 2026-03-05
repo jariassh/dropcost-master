@@ -22,7 +22,7 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import { useStoreStore } from '@/store/useStoreStore';
 import { costeoService } from '@/services/costeoService';
-import { useToast, Card, Button, Input, Modal, Badge, Spinner, ConfirmDialog, EmptyState, Tooltip } from '@/components/common';
+import { useToast, Card, Button, Input, Modal, Badge, Spinner, ConfirmDialog, EmptyState, Tooltip, PageHeader } from '@/components/common';
 import { formatDisplayDate } from '@/utils/dateUtils';
 import type { SavedCosteo } from '@/types/simulator';
 import { CreateStoreModal } from '@/components/layout/CreateStoreModal';
@@ -253,7 +253,7 @@ export function MisCosteos() {
                 }}>
                     <Store size={48} />
                 </div>
-                <h2 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '16px', color: 'var(--text-primary)' }}>
+                <h2 style={{ fontSize: '28px', fontWeight: 600, marginBottom: '16px', color: 'var(--text-primary)' }}>
                     ¡Crea tu primera tienda!
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '36px', lineHeight: 1.7, fontSize: '16px' }}>
@@ -263,7 +263,7 @@ export function MisCosteos() {
                     onClick={() => setCreateStoreOpen(true)}
                     style={{
                         display: 'inline-flex', alignItems: 'center', gap: '10px',
-                        padding: '14px 32px', fontSize: '16px', fontWeight: 700,
+                        padding: '14px 32px', fontSize: '16px', fontWeight: 600,
                         color: '#ffffff', background: 'linear-gradient(135deg, #0066FF 0%, #003D99 100%)',
                         border: 'none', borderRadius: '12px', cursor: 'pointer',
                         boxShadow: '0 10px 15px -3px rgba(0, 102, 255, 0.3)',
@@ -283,86 +283,52 @@ export function MisCosteos() {
 
     return (
         <div>
-            {/* Header */}
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '40px',
-                flexWrap: 'wrap',
-                gap: '24px',
-                padding: '0 4px'
-            }}>
-                <div style={{ flex: 1, minWidth: isMobile ? 0 : '300px' }}>
-                    <h1 style={{
-                        fontSize: '34px',
-                        fontWeight: 900,
-                        color: 'var(--text-primary)',
-                        letterSpacing: '-0.03em',
-                        marginBottom: '8px'
-                    }}>
-                        Mis Costeos
-                    </h1>
-                    <p style={{ fontSize: '16px', color: 'var(--text-tertiary)', lineHeight: 1.5 }}>
-                        Analiza la rentabilidad real de tus productos y toma decisiones basadas en datos.
-                    </p>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', gap: '20px', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
+            <PageHeader
+                title="Mis Costeos"
+                description="Analiza la rentabilidad real de tus productos y toma decisiones basadas en datos."
+                icon={Calculator}
+                actions={
                     <div style={{
-                        padding: '16px 24px',
-                        backgroundColor: 'var(--card-bg)',
-                        borderRadius: '20px',
-                        border: '1px solid var(--border-color)',
                         display: 'flex',
-                        flexDirection: 'column',
-                        gap: '10px',
-                        minWidth: isMobile ? 0 : '220px',
-                        flex: isMobile ? '1 1 100%' : 'unset',
-                        boxShadow: 'var(--shadow-sm)'
+                        alignItems: isMobile ? 'stretch' : 'center',
+                        gap: '20px',
+                        flexWrap: 'wrap',
+                        width: isMobile ? '100%' : 'auto'
                     }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cuota de Uso</span>
-                            <span style={{ fontSize: '13px', fontWeight: 800, color: quota.used >= quota.limit ? 'var(--color-error)' : 'var(--color-primary)' }}>
-                                {quota.used} / {quota.limit === -1 ? '∞' : quota.limit}
-                            </span>
+                        {/* Indicador de Cuota Estandarizado */}
+                        <div style={{
+                            padding: '8px 16px', backgroundColor: 'var(--bg-secondary)',
+                            borderRadius: '12px', border: '1px solid var(--border-color)',
+                            display: 'flex', alignItems: 'center', gap: '8px',
+                            flex: isMobile ? 1 : 'none',
+                            justifyContent: isMobile ? 'space-between' : 'flex-start'
+                        }}>
+                            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                Cuota: <span style={{ color: (quota.limit !== -1 && quota.used >= quota.limit) ? 'var(--color-error)' : 'var(--color-primary)' }}>
+                                    {quota.used}/{quota.limit === -1 ? '∞' : quota.limit} Costeos
+                                </span>
+                            </div>
+                            <div style={{ width: isMobile ? '40%' : '60px', height: '6px', backgroundColor: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div style={{
+                                    width: `${quota.limit === -1 ? 0 : Math.min((quota.used / Math.max(1, quota.limit)) * 100, 100)}%`,
+                                    height: '100%',
+                                    backgroundColor: (quota.limit !== -1 && quota.used >= quota.limit) ? 'var(--color-error)' : 'var(--color-primary)'
+                                }} />
+                            </div>
                         </div>
-                        <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--bg-secondary)', borderRadius: '10px', overflow: 'hidden' }}>
-                            <div style={{
-                                width: `${Math.min((quota.used / Math.max(1, quota.limit)) * 100, 100)}%`,
-                                height: '100%',
-                                background: quota.used >= quota.limit
-                                    ? 'linear-gradient(90deg, #ef4444 0%, #b91c1c 100%)'
-                                    : 'linear-gradient(90deg, #0066FF 0%, #6366f1 100%)',
-                                borderRadius: '10px',
-                                transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)'
-                            }} />
-                        </div>
-                    </div>
 
-                    <button
-                        onClick={() => setShowNuevoModal(true)}
-                        disabled={quota.used >= quota.limit && user?.rol !== 'admin' && user?.rol !== 'superadmin'}
-                        style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                            padding: '0 32px', height: '60px', fontSize: '15px', fontWeight: 800,
-                            color: '#fff',
-                            background: quota.used >= quota.limit && user?.rol !== 'admin' && user?.rol !== 'superadmin'
-                                ? 'var(--text-tertiary)'
-                                : 'linear-gradient(135deg, #0066FF 0%, #003D99 100%)',
-                            border: 'none', borderRadius: '16px', cursor: 'pointer',
-                            boxShadow: '0 8px 20px rgba(0,102,255,0.25)',
-                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                            width: isMobile ? '100%' : 'auto',
-                            flex: isMobile ? '1 1 100%' : 'unset'
-                        }}
-                        onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
-                    >
-                        <Plus size={20} strokeWidth={3} /> Nuevo Costeo
-                    </button>
-                </div>
-            </div>
+                        <Button
+                            variant="primary"
+                            onClick={() => setShowNuevoModal(true)}
+                            disabled={quota.used >= quota.limit && user?.rol !== 'admin' && user?.rol !== 'superadmin'}
+                            leftIcon={<Plus size={16} />}
+                            fullWidth={isMobile}
+                        >
+                            Nuevo Costeo
+                        </Button>
+                    </div>
+                }
+            />
 
             {quota.limit - quota.used > 0 && quota.limit - quota.used < 10 && (
                 <div style={{
@@ -435,7 +401,7 @@ export function MisCosteos() {
                             boxShadow: '0 2px 4px rgba(0,0,0,0.01)',
                             height: '42px'
                         }}>
-                            <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--color-primary)', textTransform: 'uppercase', minWidth: '22px' }}>De</span>
+                            <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--color-primary)', textTransform: 'uppercase', minWidth: '22px' }}>De</span>
                             <input
                                 type="date"
                                 value={dateFilter.start}
@@ -451,7 +417,7 @@ export function MisCosteos() {
                                     outline: 'none',
                                     cursor: 'pointer',
                                     flex: 1,
-                                    fontWeight: 700,
+                                    fontWeight: 600,
                                     minWidth: 0
                                 }}
                             />
@@ -473,7 +439,7 @@ export function MisCosteos() {
                             boxShadow: '0 2px 4px rgba(0,0,0,0.01)',
                             height: '42px'
                         }}>
-                            <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--color-primary)', textTransform: 'uppercase', minWidth: '22px' }}>Al</span>
+                            <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--color-primary)', textTransform: 'uppercase', minWidth: '22px' }}>Al</span>
                             <input
                                 type="date"
                                 value={dateFilter.end}
@@ -489,7 +455,7 @@ export function MisCosteos() {
                                     outline: 'none',
                                     cursor: 'pointer',
                                     flex: 1,
-                                    fontWeight: 700,
+                                    fontWeight: 600,
                                     minWidth: 0
                                 }}
                             />
@@ -513,7 +479,7 @@ export function MisCosteos() {
                                 color: 'var(--text-primary)',
                                 outline: 'none',
                                 cursor: 'pointer',
-                                fontWeight: 700,
+                                fontWeight: 600,
                             }}
                         >
                             <option value={10}>10</option>
@@ -560,7 +526,7 @@ export function MisCosteos() {
                                                 style={{
                                                     padding: '16px 24px',
                                                     textAlign: col.textAlign as any || 'left',
-                                                    fontWeight: 700,
+                                                    fontWeight: 600,
                                                     color: 'var(--text-tertiary)',
                                                     fontSize: '11px',
                                                     textTransform: 'uppercase',
@@ -585,20 +551,20 @@ export function MisCosteos() {
                                         <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.2s' }}>
                                             <td style={{ padding: '20px 24px', minWidth: '280px' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                    <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '15px', letterSpacing: '-0.01em' }}>{c.nombre_producto}</span>
+                                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '15px', letterSpacing: '-0.01em' }}>{c.nombre_producto}</span>
                                                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--bg-secondary)', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
                                                         <Package size={10} color="var(--text-tertiary)" />
-                                                        <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>ID {c.id.slice(0, 8)}</span>
+                                                        <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 400, textTransform: 'uppercase' }}>ID {c.id.slice(0, 8)}</span>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td style={{ padding: '20px 24px', fontWeight: 800, color: c.estado === 'vacio' ? 'var(--text-tertiary)' : 'var(--text-primary)', fontSize: '15px', width: '140px' }}>
+                                            <td style={{ padding: '20px 24px', fontWeight: 600, color: c.estado === 'vacio' ? 'var(--text-tertiary)' : 'var(--text-primary)', fontSize: '15px', width: '140px' }}>
                                                 {c.estado === 'vacio' ? '---' : formatCurrency(c.precio_final)}
                                             </td>
                                             <td style={{ padding: '20px 24px', width: '160px' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                     <span style={{
-                                                        fontWeight: 900, fontSize: '15px',
+                                                        fontWeight: 600, fontSize: '15px',
                                                         color: c.estado === 'vacio' ? 'var(--text-tertiary)' : ((c.utilidad_neta || 0) > 0 ? 'var(--color-success)' : 'var(--color-error)')
                                                     }}>
                                                         {c.estado === 'vacio' ? '---' : formatCurrency(c.utilidad_neta)}
@@ -606,7 +572,7 @@ export function MisCosteos() {
                                                     {c.estado !== 'vacio' && c.margen && (
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                             {(c.margen || 0) > 30 ? <TrendingUp size={12} color="var(--color-success)" /> : <TrendingDown size={12} color="var(--color-warning)" />}
-                                                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 800 }}>
+                                                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 400 }}>
                                                                 MARGEN {c.margen}%
                                                             </span>
                                                         </div>
@@ -621,7 +587,7 @@ export function MisCosteos() {
                                                         padding: '10px 16px', border: '1px solid var(--border-color)',
                                                         borderRadius: '12px', backgroundColor: (c.product_id_shopify || c.meta_campaign_id) ? 'rgba(0, 102, 255, 0.08)' : 'var(--card-bg)',
                                                         color: (c.product_id_shopify || c.meta_campaign_id) ? 'var(--color-primary)' : 'var(--text-secondary)',
-                                                        fontSize: '12px', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s',
+                                                        fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
                                                         boxShadow: 'var(--shadow-sm)',
                                                         whiteSpace: 'nowrap'
                                                     }}
@@ -648,7 +614,7 @@ export function MisCosteos() {
                                             </td>
                                             <td style={{ padding: '20px 24px', width: '140px' }}>
                                                 <span style={{
-                                                    padding: '8px 12px', borderRadius: '10px', fontSize: '10px', fontWeight: 900,
+                                                    padding: '8px 12px', borderRadius: '10px', fontSize: '10px', fontWeight: 600,
                                                     backgroundColor: c.estado === 'guardado' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
                                                     color: c.estado === 'guardado' ? 'var(--color-success)' : 'var(--color-warning)',
                                                     textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', letterSpacing: '0.05em'
@@ -659,7 +625,7 @@ export function MisCosteos() {
                                             </td>
                                             <td style={{ padding: '20px 24px' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                    <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 700 }}>{formatDate(c.created_at).split(' ')[0]} {formatDate(c.created_at).split(' ')[1]} {formatDate(c.created_at).split(' ')[2]}</span>
+                                                    <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>{formatDate(c.created_at).split(' ')[0]} {formatDate(c.created_at).split(' ')[1]} {formatDate(c.created_at).split(' ')[2]}</span>
                                                     <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500 }}>{formatDate(c.created_at).split(' ').slice(3).join(' ')}</span>
                                                 </div>
                                             </td>
