@@ -25,4 +25,6 @@ export { CodePreview } from './CodePreview';
 export { CompactEmptyState } from './CompactEmptyState';
 export { CodeEditor } from './CodeEditor';
 export { UnitInput } from './UnitInput';
+export { PageHeader } from './PageHeader';
+export { StatsCard } from './StatsCard';
 
