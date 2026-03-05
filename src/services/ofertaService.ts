@@ -85,6 +85,7 @@ export const ofertaService = {
             giftConfig: dbRow.configuracion_json?.giftConfig,
             estimatedProfit: dbRow.ganancia_estimada,
             estimatedMarginPercent: dbRow.margen_estimado_porcentaje,
+            status: dbRow.status || 'active',
             createdAt: dbRow.created_at
         };
     }
