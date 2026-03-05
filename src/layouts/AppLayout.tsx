@@ -55,10 +55,12 @@ const navItems = [
     { to: '/launchpad', icon: Rocket, label: 'Launchpad (Inicio)', active: true, isLaunchpad: true },
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', active: true },
     { to: '/mis-costeos', icon: Calculator, label: 'Mis Costeos', active: true },
-    { to: '/ofertas', icon: Gift, label: 'Ofertas Irresistibles', active: true },
+    { to: '/ofertas', icon: Gift, label: 'Creador de Ofertas', active: true },
+    { to: '/contactos', icon: Users, label: 'Contactos', active: true },
     { to: '/referidos', icon: Share2, label: 'Sistema de Referidos', active: true },
     { to: '/billetera', icon: Wallet, label: 'Billetera / Wallet', active: true },
     { to: '/sincronizar', icon: UploadCloud, label: 'Sincronizar Envíos', active: true },
+
     {
         label: 'Configuraciones',
         icon: Settings,
@@ -71,7 +73,6 @@ const navItems = [
         ]
     },
     { to: '/analisis-regional', icon: Map, label: 'Análisis Regional', active: false },
-    { to: '/contactos', icon: Users, label: 'Contactos', active: false },
     { to: '/capacitacion', icon: GraduationCap, label: 'Capacitación', active: false },
     { to: '/historial', icon: HistoryIcon, label: 'Historial Actividad', active: true },
 ];
@@ -216,7 +217,7 @@ export function AppLayout() {
                                     >
                                         <BarChart3 size={16} color="#fff" />
                                     </div>
-                                    <span style={{ color: '#fff', fontWeight: 700, fontSize: '16px', whiteSpace: 'nowrap' }}>
+                                    <span style={{ color: '#fff', fontWeight: 600, fontSize: '16px', whiteSpace: 'nowrap' }}>
                                         DropCost<span style={{ color: 'var(--color-primary)' }}>Master</span>
                                     </span>
                                 </>
@@ -334,7 +335,7 @@ export function AppLayout() {
                     {/* Módulos Próximamente */}
                     <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {!effectivelyCollapsed && (
-                            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '14px', marginBottom: '8px' }}>
+                            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '14px', marginBottom: '8px' }}>
                                 Próximamente
                             </span>
                         )}
@@ -437,7 +438,7 @@ export function AppLayout() {
                             >
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flexShrink: 0 }}>
                                     {isComplete ? <CheckCircle2 size={16} color="var(--color-success)" /> : <Rocket size={16} color="var(--color-primary)" />}
-                                    <span style={{ fontSize: '11px', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                                    <span style={{ fontSize: '11px', fontWeight: 600, whiteSpace: 'nowrap' }}>
                                         {isMobile ? '' : 'LAUNCHPAD: '}
                                         <span style={{ color: isMobile ? 'var(--text-primary)' : 'var(--text-tertiary)', fontWeight: isMobile ? 800 : 400 }}>{progress}%</span>
                                     </span>
@@ -456,7 +457,7 @@ export function AppLayout() {
                                 )}
                                 {!isComplete ? (
                                     <div style={{
-                                        fontSize: '9px', fontWeight: 700, padding: '2px 8px',
+                                        fontSize: '9px', fontWeight: 600, padding: '2px 8px',
                                         backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
                                         color: 'var(--color-primary)', borderRadius: '6px',
                                         textTransform: 'uppercase',
@@ -466,7 +467,7 @@ export function AppLayout() {
                                     </div>
                                 ) : (
                                     <div style={{
-                                        fontSize: '9px', fontWeight: 700, padding: '2px 8px',
+                                        fontSize: '9px', fontWeight: 600, padding: '2px 8px',
                                         backgroundColor: 'rgba(var(--color-success-rgb), 0.1)',
                                         color: 'var(--color-success)', borderRadius: '6px',
                                         textTransform: 'uppercase',
@@ -540,7 +541,7 @@ export function AppLayout() {
                                         backgroundColor: user?.avatarUrl ? 'transparent' : 'var(--color-primary)',
                                         borderRadius: '50%',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        color: '#fff', fontSize: '13px', fontWeight: 700,
+                                        color: '#fff', fontSize: '13px', fontWeight: 600,
                                         overflow: 'hidden'
                                     }}
                                 >
@@ -593,7 +594,7 @@ export function AppLayout() {
                                                     background: user?.avatarUrl ? 'transparent' : 'linear-gradient(135deg, #0066FF, #003D99)',
                                                     borderRadius: '50%',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    color: '#fff', fontSize: '20px', fontWeight: 700,
+                                                    color: '#fff', fontSize: '20px', fontWeight: 600,
                                                     margin: '0 auto 12px',
                                                     boxShadow: '0 4px 12px rgba(0,102,255,0.3)',
                                                     overflow: 'hidden'
@@ -613,7 +614,7 @@ export function AppLayout() {
                                                 style={{
                                                     display: 'inline-block',
                                                     fontSize: '11px',
-                                                    fontWeight: 700,
+                                                    fontWeight: 600,
                                                     color: '#fff',
                                                     background: user?.rol === 'superadmin'
                                                         ? 'linear-gradient(135deg, #4338CA, #312E81)'
