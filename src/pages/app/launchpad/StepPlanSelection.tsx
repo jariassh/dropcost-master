@@ -18,6 +18,13 @@ export function StepPlanSelection({ onComplete }: StepPlanSelectionProps) {
     const [isLoading, setIsLoading] = useState(true);
     const [targetCurrency, setTargetCurrency] = useState('COP');
     const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const currentPlanId = user?.planId || 'plan_free';
     const hasActivePlan = user?.estadoSuscripcion === 'activa' || (currentPlanId !== 'plan_free');
@@ -104,8 +111,8 @@ export function StepPlanSelection({ onComplete }: StepPlanSelectionProps) {
 
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                gap: '32px',
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: isMobile ? '16px' : '24px',
                 alignItems: 'stretch',
                 opacity: hasActivePlan ? 0.7 : 1,
                 pointerEvents: hasActivePlan ? 'none' : 'auto'

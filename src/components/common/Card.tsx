@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ReactNode } from 'react';
+import React, { type HTMLAttributes, ReactNode } from 'react';
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
     hoverable?: boolean;
@@ -21,6 +21,13 @@ export function Card({
     style,
     ...props
 }: CardProps) {
+    const [isMobile, setIsMobile] = React.useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+
+    React.useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
     return (
         <div
             className={className}
@@ -30,7 +37,7 @@ export function Card({
                 borderRadius: '16px',
                 boxShadow: 'var(--shadow-sm)',
                 transition: 'all 300ms ease',
-                padding: noPadding ? 0 : '24px',
+                padding: noPadding ? 0 : isMobile ? '20px 16px' : '24px',
                 cursor: hoverable ? 'pointer' : 'default',
                 display: 'flex',
                 flexDirection: 'column',
@@ -55,9 +62,10 @@ export function Card({
                     paddingBottom: '16px',
                     marginBottom: noPadding ? '16px' : '0',
                     display: 'flex',
-                    alignItems: 'center',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'flex-start' : 'center',
                     justifyContent: 'space-between',
-                    gap: '12px'
+                    gap: isMobile ? '16px' : '12px'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         {icon && (
@@ -76,11 +84,12 @@ export function Card({
                         )}
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <h3 style={{
-                                fontSize: 'var(--fs-card-title)',
-                                fontWeight: 600,
+                                fontSize: isMobile ? '16px' : 'var(--fs-card-title)',
+                                fontWeight: 800,
                                 color: 'var(--text-primary)',
                                 margin: 0,
-                                letterSpacing: 'var(--ls-h)'
+                                letterSpacing: 'var(--ls-h)',
+                                lineHeight: 1.3
                             }}>
                                 {title}
                             </h3>
@@ -98,7 +107,7 @@ export function Card({
                         </div>
                     </div>
                     {headerAction && (
-                        <div>
+                        <div style={{ width: isMobile ? '100%' : 'auto' }}>
                             {headerAction}
                         </div>
                     )}

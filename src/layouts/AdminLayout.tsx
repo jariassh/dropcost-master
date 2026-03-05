@@ -30,6 +30,8 @@ import {
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
 import { useGlobalConfig } from '@/hooks/useGlobalConfig';
+import { NotificationPanel } from '@/components/layout/NotificationPanel';
+import { useNotificationStore } from '@/store/notificationStore';
 
 const SIDEBAR_OPEN = 260;
 const SIDEBAR_COLLAPSED = 72;
@@ -63,6 +65,8 @@ export function AdminLayout() {
     const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [notificationsOpen, setNotificationsOpen] = useState(false);
+    const { unreadCount } = useNotificationStore();
     const { isDark, toggleTheme } = useTheme();
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
@@ -79,6 +83,14 @@ export function AdminLayout() {
 
     // Apply global configuration (SEO, Colors, Tracking)
     useGlobalConfig();
+
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_OPEN;
     // En móvil (drawer abierto), siempre mostramos el contenido completo
@@ -169,7 +181,7 @@ export function AdminLayout() {
                         }}
                         aria-label={effectivelyCollapsed ? 'Expandir' : 'Cerrar'}
                     >
-                        {window.innerWidth < 1024 ? <X size={18} /> : (effectivelyCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />)}
+                        {window.innerWidth < 1024 ? <Menu size={24} /> : (effectivelyCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />)}
                     </button>
                 </div>
 
@@ -278,37 +290,76 @@ export function AdminLayout() {
                     style={{
                         position: 'sticky',
                         top: 0,
-                        zIndex: 20,
+                        zIndex: 100,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: '0 28px',
+                        padding: isMobile ? '0 12px' : '0 28px',
                         height: '64px',
                         backgroundColor: 'var(--bg-primary)',
                         borderBottom: '1px solid var(--border-color)',
+                        boxSizing: 'border-box',
+                        width: '100%',
                     }}
                 >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <button
-                            onClick={() => setMobileOpen(true)}
+                            onClick={() => setMobileOpen((v) => !v)}
                             className="flex lg:hidden items-center justify-center dc-hamburger-button"
                         >
-                            <Menu size={20} />
+                            <Menu size={24} />
                         </button>
-                        <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>Panel de Administración</h2>
+                        <h2 style={{
+                            fontSize: isMobile ? '16px' : '18px',
+                            fontWeight: 700,
+                            color: 'var(--text-primary)',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: isMobile ? '140px' : 'none'
+                        }}>
+                            {isMobile ? 'Admin Panel' : 'Panel de Administración'}
+                        </h2>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <HeaderButton onClick={toggleTheme} label={isDark ? 'Modo claro' : 'Modo oscuro'}>
                             {isDark ? <Sun size={18} /> : <Moon size={18} />}
                         </HeaderButton>
-                        <HeaderButton label="Notificaciones">
-                            <Bell size={18} />
-                        </HeaderButton>
+                        <div style={{ position: 'relative' }}>
+                            <HeaderButton
+                                onClick={() => {
+                                    setNotificationsOpen(!notificationsOpen);
+                                    if (userMenuOpen) setUserMenuOpen(false);
+                                }}
+                                active={notificationsOpen}
+                                title="Notificaciones"
+                            >
+                                <Bell size={18} />
+                                {unreadCount > 0 && (
+                                    <span style={{
+                                        position: 'absolute',
+                                        top: '6px',
+                                        right: '6px',
+                                        width: '8px',
+                                        height: '8px',
+                                        backgroundColor: 'var(--color-error, #EF4444)',
+                                        borderRadius: '50%',
+                                        border: '2px solid var(--bg-primary)'
+                                    }} />
+                                )}
+                            </HeaderButton>
+                            {notificationsOpen && (
+                                <NotificationPanel onClose={() => setNotificationsOpen(false)} />
+                            )}
+                        </div>
 
                         <div style={{ position: 'relative', marginLeft: '4px' }}>
                             <button
-                                onClick={() => setUserMenuOpen((v) => !v)}
+                                onClick={() => {
+                                    setUserMenuOpen(!userMenuOpen);
+                                    if (notificationsOpen) setNotificationsOpen(false);
+                                }}
                                 style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px', background: 'none', border: 'none', cursor: 'pointer' }}
                             >
                                 <div style={{

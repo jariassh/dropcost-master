@@ -13,6 +13,13 @@ export const CostingsAnalyticsTable: React.FC<Props> = ({ data, isLoading }) => 
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    React.useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Mostrar todos los costeos, tengan o no ID de campaña
     const linkedData = data;
@@ -44,15 +51,15 @@ export const CostingsAnalyticsTable: React.FC<Props> = ({ data, isLoading }) => 
     }
 
     const HeaderControls = (
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <div style={{ position: 'relative', width: '260px' }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px', alignItems: isMobile ? 'flex-start' : 'center', width: isMobile ? '100%' : 'auto' }}>
+            <div style={{ position: 'relative', width: isMobile ? '100%' : '260px' }}>
                 <Search
                     size={14}
                     style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }}
                 />
                 <input
                     type="text"
-                    placeholder="Buscar producto o campaña..."
+                    placeholder="Buscar producto..."
                     value={searchTerm}
                     onChange={(e) => {
                         setSearchTerm(e.target.value);
@@ -84,7 +91,8 @@ export const CostingsAnalyticsTable: React.FC<Props> = ({ data, isLoading }) => 
                     backgroundColor: 'var(--bg-secondary)',
                     color: 'var(--text-primary)',
                     outline: 'none',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    width: isMobile ? '100%' : 'auto'
                 }}
             >
                 <option value={10}>10 filas</option>

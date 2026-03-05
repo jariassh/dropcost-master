@@ -171,10 +171,23 @@ export const AdminWithdrawalsPage: React.FC = () => {
         <>
             <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 20px' }}>
                 {/* Header */}
-                <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{
+                    marginBottom: '32px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexDirection: window.innerWidth < 768 ? 'column' : 'row',
+                    textAlign: window.innerWidth < 768 ? 'center' : 'left',
+                    gap: '20px'
+                }}>
                     <div>
-                        <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                            Gestión de Retiros
+                        <h1 style={{
+                            fontSize: window.innerWidth < 768 ? '24px' : '28px',
+                            fontWeight: 800,
+                            color: 'var(--text-primary)',
+                            marginBottom: '8px'
+                        }}>
+                            Administración de Retiros
                         </h1>
                         <p style={{ fontSize: '15px', color: 'var(--text-tertiary)' }}>
                             Supervisa y procesa las solicitudes de pago de los usuarios.
@@ -195,7 +208,9 @@ export const AdminWithdrawalsPage: React.FC = () => {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '8px',
-                            transition: 'all 0.2s'
+                            transition: 'all 0.2s',
+                            width: window.innerWidth < 768 ? '100%' : 'auto',
+                            justifyContent: 'center'
                         }}
                     >
                         <RefreshCw size={16} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
@@ -204,7 +219,12 @@ export const AdminWithdrawalsPage: React.FC = () => {
                 </div>
 
                 {/* Stats Cards */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: window.innerWidth < 480 ? '1fr' : 'repeat(auto-fit, minmax(240px, 1fr))',
+                    gap: '20px',
+                    marginBottom: '32px'
+                }}>
                     <StatsCard
                         title="Solicitudes Pendientes"
                         value={stats.pending}
@@ -243,7 +263,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
                         gap: '16px'
                     }}>
                         {/* Search */}
-                        <div style={{ position: 'relative', maxWidth: '400px' }}>
+                        <div style={{ position: 'relative', maxWidth: window.innerWidth < 768 ? '100%' : '400px' }}>
                             <Search
                                 size={18}
                                 style={{
@@ -274,26 +294,40 @@ export const AdminWithdrawalsPage: React.FC = () => {
                         </div>
 
                         {/* Filter Tabs */}
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            {(['todos', 'pendiente', 'completado', 'rechazado'] as const).map((s) => (
-                                <button
-                                    key={s}
-                                    onClick={() => setFilter(s)}
-                                    style={{
-                                        padding: '10px 20px',
-                                        borderRadius: '12px',
-                                        fontSize: '14px',
-                                        fontWeight: 600,
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s',
-                                        backgroundColor: filter === s ? 'var(--color-primary)' : 'var(--bg-secondary)',
-                                        color: filter === s ? '#fff' : 'var(--text-secondary)'
-                                    }}
-                                >
-                                    {s.charAt(0).toUpperCase() + s.slice(1)}
-                                </button>
-                            ))}
+                        <div style={{
+                            display: 'flex',
+                            gap: '8px',
+                            flexWrap: 'nowrap',
+                            width: '100%',
+                            overflowX: 'auto',
+                            paddingBottom: '8px',
+                            msOverflowStyle: 'none',
+                            scrollbarWidth: 'none'
+                        }} className="hide-scrollbar">
+                            {(['todos', 'pendientes', 'completados', 'rechazados'] as const).map((s) => {
+                                const filterValue = s === 'todos' ? 'todos' : s.slice(0, -1); // 'pendientes' -> 'pendiente'
+                                return (
+                                    <button
+                                        key={s}
+                                        onClick={() => setFilter(filterValue as any)}
+                                        style={{
+                                            padding: '10px 20px',
+                                            borderRadius: '12px',
+                                            fontSize: '13px',
+                                            fontWeight: 700,
+                                            border: filter === filterValue ? 'none' : '1px solid var(--border-color)',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                            backgroundColor: filter === filterValue ? 'var(--color-primary)' : 'var(--bg-secondary)',
+                                            color: filter === filterValue ? '#fff' : 'var(--text-secondary)',
+                                            whiteSpace: 'nowrap',
+                                            flexShrink: 0
+                                        }}
+                                    >
+                                        {s.charAt(0).toUpperCase() + s.slice(1)}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -536,11 +570,12 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
 const tableHeaderStyle: React.CSSProperties = {
     padding: '16px 24px',
     textAlign: 'left',
-    fontSize: '12px',
-    fontWeight: 500,
-    color: 'var(--text-secondary)',
+    fontSize: '11px',
+    fontWeight: 800,
+    color: 'var(--text-tertiary)',
     textTransform: 'uppercase',
-    letterSpacing: '0.05em'
+    letterSpacing: '0.1em',
+    borderBottom: '1px solid var(--border-color)'
 };
 
 const tableCellStyle: React.CSSProperties = {
@@ -630,13 +665,19 @@ const RejectModal: React.FC<{
                         {error && <span style={{ fontSize: '12px', color: '#EF4444' }}>⚠ {error}</span>}
                     </div>
 
-                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                    <div style={{
+                        display: 'flex',
+                        gap: '12px',
+                        justifyContent: 'flex-end',
+                        flexDirection: window.innerWidth < 480 ? 'column' : 'row'
+                    }}>
                         <button
                             onClick={onClose}
                             style={{
                                 padding: '10px 20px', borderRadius: '10px', fontSize: '14px', fontWeight: 600,
                                 backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
-                                color: 'var(--text-primary)', cursor: 'pointer'
+                                color: 'var(--text-primary)', cursor: 'pointer',
+                                width: window.innerWidth < 480 ? '100%' : 'auto'
                             }}
                         >
                             Cancelar
@@ -646,7 +687,8 @@ const RejectModal: React.FC<{
                             style={{
                                 padding: '10px 20px', borderRadius: '10px', fontSize: '14px', fontWeight: 600,
                                 backgroundColor: '#EF4444', border: 'none',
-                                color: '#fff', cursor: 'pointer'
+                                color: '#fff', cursor: 'pointer',
+                                width: window.innerWidth < 480 ? '100%' : 'auto'
                             }}
                         >
                             Rechazar Retiro

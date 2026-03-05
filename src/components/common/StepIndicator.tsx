@@ -15,7 +15,7 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '0',
+                width: '100%',
                 padding: '16px 0',
             }}
         >
@@ -26,19 +26,23 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
                 const isLast = index === steps.length - 1;
 
                 return (
-                    <div key={stepLabel} style={{ display: 'flex', alignItems: 'center' }}>
+                    <div key={stepLabel} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        flex: isLast ? 'none' : 1,
+                    }}>
                         {/* Step circle + label */}
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                             <div
                                 style={{
-                                    width: '32px',
-                                    height: '32px',
+                                    width: '30px',
+                                    height: '30px',
                                     borderRadius: '50%',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    fontSize: '13px',
-                                    fontWeight: 700,
+                                    fontSize: '12px',
+                                    fontWeight: 800,
                                     transition: 'all 250ms ease',
                                     backgroundColor: isCompleted
                                         ? 'var(--color-success)'
@@ -57,14 +61,17 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
                             </div>
                             <span
                                 style={{
-                                    fontSize: '11px',
-                                    fontWeight: isActive ? 600 : 400,
+                                    fontSize: '9px',
+                                    fontWeight: isActive ? 900 : 500,
                                     color: isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                                    whiteSpace: 'nowrap',
-                                    maxWidth: '80px',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
                                     textAlign: 'center',
+                                    marginTop: '4px',
+                                    lineHeight: '1',
+                                    maxWidth: '60px',
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
                                 }}
                             >
                                 {stepLabel}
@@ -75,11 +82,11 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
                         {!isLast && (
                             <div
                                 style={{
-                                    width: '48px',
+                                    flex: 1,
                                     height: '2px',
                                     backgroundColor: isCompleted ? 'var(--color-success)' : 'var(--border-color)',
-                                    margin: '0 8px',
-                                    marginBottom: '22px',
+                                    margin: '0 4px',
+                                    marginBottom: '16px',
                                     transition: 'background-color 250ms ease',
                                 }}
                             />

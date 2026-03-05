@@ -17,6 +17,13 @@ export function TiendasPage() {
     const [deleteTiendaConfirm, setDeleteTiendaConfirm] = useState<string | null>(null);
     const [storeToDeleteData, setStoreToDeleteData] = useState<{ hasData: boolean; costeoCount: number } | null>(null);
     const [allCountries, setAllCountries] = useState<Pais[]>([]);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         fetchTiendas();
@@ -65,24 +72,32 @@ export function TiendasPage() {
             {user?.estadoSuscripcion === 'activa' || user?.rol === 'admin' || user?.rol === 'superadmin' ? (
                 <>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-                        <div>
-                            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Gestión de Tiendas</h3>
+                        <div style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}>
+                            <h3 style={{ fontSize: isMobile ? '18px' : '18px', fontWeight: 700, margin: 0 }}>Gestión de Tiendas</h3>
                             <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>
                                 Administra tus puntos de venta y sus configuraciones
                             </p>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: isMobile ? 'stretch' : 'center',
+                            flexDirection: isMobile ? 'column' : 'row',
+                            gap: '12px',
+                            width: isMobile ? '100%' : 'auto'
+                        }}>
                             <div style={{
                                 padding: '8px 16px', backgroundColor: 'var(--bg-secondary)',
                                 borderRadius: '12px', border: '1px solid var(--border-color)',
-                                display: 'flex', alignItems: 'center', gap: '8px'
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                flex: isMobile ? 1 : 'unset',
+                                justifyContent: isMobile ? 'space-between' : 'flex-start'
                             }}>
                                 <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                                     Cuota: <span style={{ color: (tiendas.length >= (user?.plan?.limits?.stores ?? 1) && user?.plan?.limits?.stores !== -1) ? 'var(--color-error)' : 'var(--color-primary)' }}>
                                         {tiendas.length}/{user?.plan?.limits?.stores === -1 ? '∞' : (user?.plan?.limits?.stores ?? 1)} Tiendas
                                     </span>
                                 </div>
-                                <div style={{ width: '60px', height: '6px', backgroundColor: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div style={{ width: isMobile ? '40%' : '60px', height: '6px', backgroundColor: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
                                     <div style={{
                                         width: `${user?.plan?.limits?.stores === -1 ? 0 : Math.min((tiendas.length / (user?.plan?.limits?.stores ?? 1)) * 100, 100)}%`,
                                         height: '100%',
@@ -90,16 +105,16 @@ export function TiendasPage() {
                                     }} />
                                 </div>
                             </div>
-                            <Button variant="primary" onClick={handleOpenCreateStore} style={{ gap: '8px' }}>
+                            <Button variant="primary" onClick={handleOpenCreateStore} style={{ gap: '8px' }} fullWidth={isMobile}>
                                 <Plus size={16} />
                                 Nueva Tienda
                             </Button>
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
                         {tiendas.map((tienda) => (
-                            <div key={tienda.id} style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                            <div key={tienda.id} style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: isMobile ? '20px' : '24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                                         <div style={{ width: '48px', height: '48px', borderRadius: '10px', backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>

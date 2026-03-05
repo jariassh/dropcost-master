@@ -15,6 +15,14 @@ interface Props {
 }
 
 export const DashboardKPIs: React.FC<Props> = ({ metrics, isLoading }) => {
+    const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+
+    React.useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     // Si no hay métricas, usamos valores por defecto (evita errores de renderizado)
     const displayMetrics = metrics || {
         ganancia: 0,
@@ -104,12 +112,12 @@ export const DashboardKPIs: React.FC<Props> = ({ metrics, isLoading }) => {
                     className="kpis-grid-main"
                     style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                        gap: '16px'
+                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(240px, 1fr))',
+                        gap: isMobile ? '12px' : '16px'
                     }}
                 >
                     {mainKPIs.map((card, index) => (
-                        <KPICard key={card.title} card={card} index={index} isLoading={isLoading} />
+                        <KPICard key={card.title} card={card} index={index} isLoading={isLoading} isMobile={isMobile} />
                     ))}
                 </div>
             </div>
@@ -123,12 +131,12 @@ export const DashboardKPIs: React.FC<Props> = ({ metrics, isLoading }) => {
                     className="kpis-grid-secondary"
                     style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                        gap: '16px'
+                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))',
+                        gap: isMobile ? '12px' : '16px'
                     }}
                 >
                     {secondaryKPIs.map((card, index) => (
-                        <KPICard key={card.title} card={card} index={index + 4} isLoading={isLoading} />
+                        <KPICard key={card.title} card={card} index={index + 4} isLoading={isLoading} isMobile={isMobile} />
                     ))}
                 </div>
             </div>
@@ -192,7 +200,7 @@ export const DashboardKPIs: React.FC<Props> = ({ metrics, isLoading }) => {
     );
 };
 
-function KPICard({ card, index, isLoading }: { card: any; index: number; isLoading?: boolean }) {
+function KPICard({ card, index, isLoading, isMobile }: { card: any; index: number; isLoading?: boolean; isMobile?: boolean }) {
     return (
         <div
             style={{
@@ -211,37 +219,56 @@ function KPICard({ card, index, isLoading }: { card: any; index: number; isLoadi
                 border: card.isInactive ? '1px dashed var(--border-color)' : '1px solid var(--border-color)',
                 backgroundColor: 'var(--card-bg)'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                            <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: isMobile ? 'row' : 'row', // Keep row for KPI but adjust spacing
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px'
+                }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <p style={{
+                                fontSize: '10px',
+                                fontWeight: 700,
+                                color: 'var(--text-tertiary)',
+                                margin: 0,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                            }}>
                                 {card.title}
                             </p>
-                            {card.badge && !isLoading && (
-                                <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', backgroundColor: card.bg, color: card.color }}>
+                            {card.badge && !isLoading && !isMobile && (
+                                <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '20px', backgroundColor: card.bg, color: card.color }}>
                                     {card.badge}
                                 </span>
                             )}
                         </div>
 
                         {isLoading ? (
-                            <div className="skeleton-shimmer" style={{ width: '80%', height: '32px' }}></div>
+                            <div className="skeleton-shimmer" style={{ width: '80%', height: '28px' }}></div>
                         ) : (
                             <h3 style={{
-                                fontSize: card.isInactive ? '20px' : '26px',
+                                fontSize: isMobile ? '20px' : card.isInactive ? '20px' : '26px',
                                 fontWeight: 800,
                                 color: card.isInactive ? 'var(--text-tertiary)' : 'var(--text-primary)',
                                 margin: 0,
-                                letterSpacing: '-0.03em'
+                                letterSpacing: '-0.02em',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
                             }}>
                                 {card.value}
                             </h3>
                         )}
                     </div>
                     <div style={{
-                        width: '52px',
-                        height: '52px',
-                        borderRadius: '14px',
+                        width: isMobile ? '40px' : '52px',
+                        height: isMobile ? '40px' : '52px',
+                        borderRadius: isMobile ? '12px' : '14px',
                         backgroundColor: isLoading ? 'var(--bg-secondary)' : card.bg,
                         display: 'flex',
                         alignItems: 'center',
@@ -251,9 +278,9 @@ function KPICard({ card, index, isLoading }: { card: any; index: number; isLoadi
                         opacity: isLoading ? 0.5 : 1
                     }}>
                         {!isLoading ? (
-                            <card.icon size={26} style={{ color: card.color }} />
+                            <card.icon size={isMobile ? 20 : 26} style={{ color: card.color }} />
                         ) : (
-                            <Zap size={20} color="var(--text-tertiary)" />
+                            <Zap size={isMobile ? 16 : 20} color="var(--text-tertiary)" />
                         )}
                     </div>
                 </div>

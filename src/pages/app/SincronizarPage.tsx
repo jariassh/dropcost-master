@@ -164,13 +164,22 @@ export function SincronizarPage() {
         <div style={{ padding: '32px', maxWidth: '1200px', margin: '0 auto', animation: 'fadeIn 0.3s' }}>
             {/* Header del Wizard */}
             <div style={{ marginBottom: '40px', textAlign: 'center' }}>
-                <h1 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '8px', color: 'var(--text-primary)' }}>
-                    Sincronizador de Pedidos
+                <h1 style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontWeight: 900, marginBottom: '12px', color: 'var(--text-primary)', letterSpacing: '-0.05em', lineHeight: 1.1 }}>
+                    Sincronización <span style={{ color: 'var(--color-primary)' }}>Inteligente</span>
                 </h1>
-                <p style={{ fontSize: '15px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
-                    Vincula los reportes de Dropi con tus órdenes de Shopify para automatizar el seguimiento.
+                <p style={{ fontSize: '16px', color: 'var(--text-tertiary)', marginBottom: '32px', maxWidth: '600px', margin: '0 auto 32px', lineHeight: 1.6 }}>
+                    Vincula automáticamente tus reportes de Dropi con Shopify para mantener el control total del estatus de tus paquetes.
                 </p>
-                <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+                <div style={{
+                    maxWidth: '700px',
+                    margin: '0 auto',
+                    backgroundColor: 'var(--card-bg)',
+                    padding: '12px 24px',
+                    borderRadius: '24px',
+                    border: '1px solid var(--border-color)',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.04)',
+                    overflowX: 'auto'
+                }}>
                     <StepIndicator steps={steps} currentStep={step} />
                 </div>
             </div>
@@ -179,8 +188,14 @@ export function SincronizarPage() {
 
                 {/* ─── STEP 1: SUBIR ─── */}
                 {step === 1 && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '32px' }}>
-                        <Card style={{ padding: '48px', textAlign: 'center' }}>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 580px))',
+                        gap: '32px',
+                        alignItems: 'start',
+                        justifyContent: 'center'
+                    }}>
+                        <Card style={{ padding: '0', overflow: 'hidden', border: '1px solid var(--border-color)', borderRadius: '32px', boxShadow: 'var(--shadow-xl)', position: 'relative' }}>
                             <div
                                 onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}
                                 onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
@@ -188,51 +203,133 @@ export function SincronizarPage() {
                                 onDrop={(e) => { e.preventDefault(); setDragActive(false); if (e.dataTransfer.files?.[0]) handleFile(e.dataTransfer.files[0]); }}
                                 onClick={() => inputRef.current?.click()}
                                 style={{
-                                    border: `2px dashed ${dragActive ? 'var(--color-primary)' : 'var(--border-color)'}`,
-                                    backgroundColor: dragActive ? 'rgba(0,102,255,0.05)' : 'rgba(0,0,0,0.02)',
-                                    borderRadius: '20px', padding: '64px 32px', cursor: 'pointer', transition: 'all 0.2s',
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px'
+                                    padding: '80px 48px',
+                                    textAlign: 'center',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    backgroundColor: dragActive ? 'rgba(0,102,255,0.03)' : 'var(--card-bg)',
+                                    backgroundImage: dragActive ? 'none' : 'radial-gradient(circle at 50% 50%, rgba(0, 102, 255, 0.02) 0%, transparent 100%)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    gap: '24px',
+                                    position: 'relative',
+                                    border: dragActive ? '2px solid var(--color-primary)' : '2px dashed var(--border-color)',
+                                    margin: '12px',
+                                    borderRadius: '24px'
                                 }}
                             >
                                 <input ref={inputRef} type="file" accept=".xlsx, .xls, .csv" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} style={{ display: 'none' }} />
-                                <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'rgba(0,102,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
-                                    {selectedFile ? <FileSpreadsheet size={40} /> : <UploadCloud size={40} />}
+
+                                <div style={{
+                                    width: '100px',
+                                    height: '100px',
+                                    borderRadius: '32px',
+                                    backgroundColor: selectedFile ? 'rgba(16, 185, 129, 0.1)' : 'rgba(0,102,255,0.08)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: selectedFile ? 'var(--color-success)' : 'var(--color-primary)',
+                                    transition: 'transform 0.3s',
+                                    boxShadow: '0 8px 16px rgba(0,0,0,0.05)',
+                                    marginBottom: '8px'
+                                }}>
+                                    {selectedFile ? <Check size={48} strokeWidth={2.5} /> : <UploadCloud size={48} strokeWidth={1.5} />}
                                 </div>
+
                                 {selectedFile ? (
-                                    <div>
-                                        <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '4px' }}>{selectedFile.name}</h3>
-                                        <p style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>{(selectedFile.size / 1024).toFixed(2)} KB • Archivo listo</p>
+                                    <div style={{ animation: 'scaleIn 0.3s' }}>
+                                        <h3 style={{ fontSize: '24px', fontWeight: 900, marginBottom: '8px', color: 'var(--text-primary)' }}>{selectedFile.name}</h3>
+                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: 'var(--bg-secondary)', padding: '6px 14px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                                            <FileSpreadsheet size={16} color="var(--color-success)" />
+                                            <span style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 700 }}>{(selectedFile.size / 1024).toFixed(2)} KB • Listo para procesar</span>
+                                        </div>
                                     </div>
                                 ) : (
-                                    <div>
-                                        <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '4px' }}>Carga el reporte de Dropi</h3>
-                                        <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>Arrastra tu archivo Excel o haz clic para buscarlo</p>
+                                    <div style={{ maxWidth: '380px' }}>
+                                        <h3 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '12px', color: 'var(--text-primary)' }}>Carga tu reporte de Dropi</h3>
+                                        <p style={{ color: 'var(--text-tertiary)', fontSize: '15px', lineHeight: 1.5 }}>
+                                            Arrastra tu archivo <strong>.xlsx</strong> aquí o selecciona uno de tu equipo para comenzar.
+                                        </p>
+                                    </div>
+                                )}
+
+                                {!selectedFile && (
+                                    <div style={{
+                                        padding: '12px 32px',
+                                        borderRadius: '16px',
+                                        backgroundColor: 'var(--color-primary)',
+                                        color: '#fff',
+                                        fontWeight: 800,
+                                        fontSize: '15px',
+                                        marginTop: '8px',
+                                        boxShadow: '0 10px 25px rgba(0, 102, 255, 0.3)',
+                                        transition: 'all 0.3s'
+                                    }}>
+                                        Explorar Archivos
                                     </div>
                                 )}
                             </div>
+
                             {selectedFile && (
-                                <Button
-                                    variant="primary"
-                                    size="lg"
-                                    style={{ marginTop: '32px', width: '240px' }}
-                                    onClick={() => setStep(2)}
-                                    rightIcon={<ChevronRight size={18} />}
-                                >
-                                    Siguiente paso
-                                </Button>
+                                <div style={{ padding: '32px', backgroundColor: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)', textAlign: 'center' }}>
+                                    <Button
+                                        variant="primary"
+                                        size="lg"
+                                        style={{ width: '280px', height: '56px', borderRadius: '16px', fontSize: '16px', fontWeight: 800 }}
+                                        onClick={() => setStep(2)}
+                                        rightIcon={<ChevronRight size={20} />}
+                                    >
+                                        Continuar Mapeo
+                                    </Button>
+                                </div>
                             )}
                         </Card>
-                        <aside style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px' }}>
-                                <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', fontSize: '14px', fontWeight: 700 }}>
-                                    <Settings2 size={16} color="var(--color-primary)" />
-                                    Instrucciones
+
+                        <aside style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                            <div style={{
+                                backgroundColor: 'var(--card-bg)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '32px',
+                                padding: '32px',
+                                boxShadow: 'var(--shadow-xl)',
+                                position: 'relative',
+                                overflow: 'hidden'
+                            }}>
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 0, right: 0,
+                                    width: '120px', height: '120px',
+                                    background: 'linear-gradient(135deg, transparent 50%, rgba(0,102,255,0.03) 100%)',
+                                    borderRadius: '0 0 0 100%'
+                                }} />
+
+                                <h4 style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', fontSize: '18px', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+                                    <ShieldCheck size={24} color="var(--color-primary)" strokeWidth={2.5} />
+                                    Guía de Éxito
                                 </h4>
-                                <ul style={{ paddingLeft: '18px', margin: 0, color: 'var(--text-secondary)', fontSize: '13px', lineHeight: 1.8 }}>
-                                    <li>Exporta el reporte de "Mis Pedidos" desde Dropi en formato XLSX.</li>
-                                    <li>Asegúrate de incluir la columna de ID de orden de Shopify.</li>
-                                    <li>No es necesario que las columnas tengan nombres específicos, las mapearemos en el siguiente paso.</li>
-                                </ul>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                    <InstructionItem step="1" text="Exporta 'Mis Pedidos' de Dropi en XLSX." />
+                                    <InstructionItem step="2" text="Verifica que el ID de Shopify sea visible." />
+                                    <InstructionItem step="3" text="Carga el archivo y asigna las columnas." />
+                                </div>
+                                <div style={{
+                                    marginTop: '32px',
+                                    padding: '20px',
+                                    backgroundColor: 'var(--bg-secondary)',
+                                    borderRadius: '20px',
+                                    border: '1px solid var(--border-color)',
+                                    display: 'flex',
+                                    gap: '12px',
+                                    alignItems: 'center'
+                                }}>
+                                    <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <Info size={20} color="var(--color-warning)" />
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, lineHeight: 1.5 }}>
+                                        Procesa tus archivos diariamente para mantener tus KPIs actualizados.
+                                    </p>
+                                </div>
                             </div>
                         </aside>
                     </div>
@@ -240,83 +337,121 @@ export function SincronizarPage() {
 
                 {/* ─── STEP 2: ASIGNAR ─── */}
                 {step === 2 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        <Card style={{ padding: '0', overflow: 'visible' }}>
-                            <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'rgba(0,0,0,0.02)' }}>
-                                <h3 style={{ fontSize: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <TableIcon size={18} color="var(--color-primary)" />
-                                    Mapeo de Columnas
-                                </h3>
-                                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                                    Vincula los encabezados de tu archivo con los campos de DropCost.
-                                </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                        <Card noPadding style={{ overflow: 'hidden', borderRadius: '24px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-xl)' }}>
+                            <div style={{ padding: '32px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '12px', margin: 0 }}>
+                                        <TableIcon size={22} color="var(--color-primary)" />
+                                        Mapeo de Datos
+                                    </h3>
+                                    <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                                        Asocia las columnas de tu Excel con los campos del sistema.
+                                    </p>
+                                </div>
+                                <Badge>{headers.length} columnas detectadas</Badge>
                             </div>
 
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-                                <thead style={{ backgroundColor: 'transparent', borderBottom: '1px solid var(--border-color)' }}>
-                                    <tr>
-                                        <th style={{ padding: '16px 24px', textAlign: 'left', color: 'var(--text-tertiary)', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase' }}>Campo Destino</th>
-                                        <th style={{ padding: '16px 24px', textAlign: 'left', color: 'var(--text-tertiary)', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase' }}>Previsualización</th>
-                                        <th style={{ padding: '16px 24px', textAlign: 'left', color: 'var(--text-tertiary)', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase' }}>Estado</th>
-                                        <th style={{ padding: '16px 24px', textAlign: 'left', color: 'var(--text-tertiary)', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase' }}>Columna en Excel</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {MAPPABLE_FIELDS.map((f) => {
-                                        const mappedHeader = mapping[f.key];
-                                        const headerIndex = headers.indexOf(mappedHeader);
-                                        const dataPreview = headerIndex !== -1 ? previewData.map(row => row[headerIndex]).filter(v => v !== undefined).slice(0, 3) : [];
+                            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                                <table style={{ width: '100%', minWidth: '900px', borderCollapse: 'collapse', fontSize: '14px', tableLayout: 'fixed' }}>
+                                    <thead>
+                                        <tr style={{ textAlign: 'left', backgroundColor: 'var(--bg-primary)', borderBottom: '2px solid var(--border-color)' }}>
+                                            <th style={{ padding: '20px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '280px' }}>Campo en Sistema</th>
+                                            <th style={{ padding: '20px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '250px' }}>Muestra de Datos</th>
+                                            <th style={{ padding: '20px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '120px' }}>Estado</th>
+                                            <th style={{ padding: '20px 24px', fontSize: '11px', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '250px' }}>Columna Excel</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {MAPPABLE_FIELDS.map((f, idx) => {
+                                            const mappedHeader = mapping[f.key];
+                                            const headerIndex = headers.indexOf(mappedHeader);
+                                            const dataPreview = headerIndex !== -1 ? previewData.map(row => row[headerIndex]).filter(v => v !== undefined).slice(0, 3) : [];
 
-                                        return (
-                                            <tr key={f.key} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.2s' }}>
-                                                <td style={{ padding: '20px 24px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{f.label}</span>
-                                                        {f.mandatory && <span style={{ color: '#EF4444', fontSize: '12px', fontWeight: 800 }}>*</span>}
-                                                        <Tooltip content={f.tooltip}>
-                                                            <Info size={14} style={{ opacity: 0.5, cursor: 'help' }} />
-                                                        </Tooltip>
-                                                    </div>
-                                                </td>
-                                                <td style={{ padding: '20px 24px' }}>
-                                                    {mappedHeader ? (
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                            {dataPreview.length > 0 ? dataPreview.map((val, i) => (
-                                                                <span key={i} style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                                                                    {String(val || '---').substring(0, 30)}
-                                                                </span>
-                                                            )) : <span style={{ color: 'var(--text-tertiary)', fontStyle: 'italic' }}>Sin datos...</span>}
+                                            return (
+                                                <tr
+                                                    key={f.key}
+                                                    style={{
+                                                        borderBottom: idx === MAPPABLE_FIELDS.length - 1 ? 'none' : '1px solid var(--border-color)',
+                                                        backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.01)',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,102,255,0.02)'}
+                                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.01)'}
+                                                >
+                                                    <td style={{ padding: '16px 24px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                            <div style={{
+                                                                width: '32px',
+                                                                height: '32px',
+                                                                borderRadius: '8px',
+                                                                backgroundColor: mappedHeader ? 'rgba(0,102,255,0.08)' : 'var(--bg-secondary)',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                color: mappedHeader ? 'var(--color-primary)' : 'var(--text-tertiary)',
+                                                                fontSize: '12px',
+                                                                fontWeight: 800
+                                                            }}>
+                                                                {idx + 1}
+                                                            </div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{f.label}</span>
+                                                                {f.mandatory && <span style={{ color: 'var(--color-error)', fontSize: '16px', fontWeight: 900 }}>•</span>}
+                                                                <Tooltip content={f.tooltip}>
+                                                                    <Info size={14} style={{ opacity: 0.4, cursor: 'help' }} />
+                                                                </Tooltip>
+                                                            </div>
                                                         </div>
-                                                    ) : (
-                                                        <span style={{ color: 'var(--text-tertiary)' }}>Selecciona una columna</span>
-                                                    )}
-                                                </td>
-                                                <td style={{ padding: '20px 24px' }}>
-                                                    {mappedHeader ? (
-                                                        <Badge variant="success">Asignado</Badge>
-                                                    ) : (
-                                                        <Badge variant={f.mandatory ? "error" : "pill-secondary"}>
-                                                            {f.mandatory ? 'Pendiente' : 'Omitido'}
-                                                        </Badge>
-                                                    )}
-                                                </td>
-                                                <td style={{ padding: '20px 24px' }}>
-                                                    <div style={{ width: '220px' }}>
-                                                        <Select
-                                                            options={[
-                                                                { value: '', label: '-- Ignorar columna --' },
-                                                                ...headers.map(h => ({ value: h, label: h }))
-                                                            ]}
-                                                            value={mappedHeader || ''}
-                                                            onChange={(val) => handleMappingChange(f.key, val)}
-                                                        />
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
+                                                    </td>
+                                                    <td style={{ padding: '16px 24px' }}>
+                                                        {mappedHeader ? (
+                                                            <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '4px' }}>
+                                                                {dataPreview.length > 0 ? dataPreview.map((val, i) => (
+                                                                    <span key={i} style={{
+                                                                        fontSize: '11px',
+                                                                        color: 'var(--text-secondary)',
+                                                                        padding: '4px 10px',
+                                                                        borderRadius: '6px',
+                                                                        backgroundColor: 'var(--bg-secondary)',
+                                                                        whiteSpace: 'nowrap',
+                                                                        border: '1px solid var(--border-color)'
+                                                                    }}>
+                                                                        {String(val || '---').substring(0, 20)}
+                                                                    </span>
+                                                                )) : <span style={{ color: 'var(--text-tertiary)', fontStyle: 'italic', fontSize: '12px' }}>Vacío</span>}
+                                                            </div>
+                                                        ) : (
+                                                            <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>N/A</span>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ padding: '16px 24px' }}>
+                                                        {mappedHeader ? (
+                                                            <Badge variant="success">OK</Badge>
+                                                        ) : (
+                                                            <Badge variant={f.mandatory ? "error" : "pill-secondary"}>
+                                                                {f.mandatory ? 'REQUERIDO' : 'OMITIDO'}
+                                                            </Badge>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ padding: '16px 24px' }}>
+                                                        <div style={{ width: '240px' }}>
+                                                            <Select
+                                                                options={[
+                                                                    { value: '', label: '-- No mapear --' },
+                                                                    ...headers.map(h => ({ value: h, label: h }))
+                                                                ]}
+                                                                value={mappedHeader || ''}
+                                                                onChange={(val) => handleMappingChange(f.key, val)}
+                                                            />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
                         </Card>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
@@ -353,7 +488,7 @@ export function SincronizarPage() {
                 {/* ─── STEP 3: VERIFICAR ─── */}
                 {step === 3 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                        <div className="summary-grid" style={{ marginBottom: '20px' }}>
                             <Card style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
                                 <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(0, 102, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
                                     <Database size={24} />
@@ -417,7 +552,7 @@ export function SincronizarPage() {
                 {/* ─── STEP 4: RESULTADOS ─── */}
                 {step === 4 && syncResult && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+                        <div className="results-grid" style={{ marginBottom: '20px' }}>
                             <Card style={{ padding: '24px', textAlign: 'center' }}>
                                 <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Filas Procesadas</p>
                                 <p style={{ margin: '8px 0 0', fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)' }}>{syncResult.total_rows}</p>
@@ -481,9 +616,52 @@ export function SincronizarPage() {
             </div>
 
             <style>{`
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-                tr:hover { background-color: rgba(0,0,0,0.01); }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+                
+                .summary-grid {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 20px;
+                }
+                .results-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 20px;
+                }
+                
+                @media (max-width: 900px) {
+                    .results-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+                
+                @media (max-width: 768px) {
+                    .summary-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+                
+                @media (max-width: 480px) {
+                    .results-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
             `}</style>
+        </div>
+    );
+}
+
+function InstructionItem({ step, text }: { step: string; text: string }) {
+    return (
+        <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+            <div style={{
+                width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'rgba(0,102,255,0.08)', color: 'var(--color-primary)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 900, flexShrink: 0, marginTop: '2px'
+            }}>
+                {step}
+            </div>
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{text}</p>
         </div>
     );
 }

@@ -86,96 +86,115 @@ export function OfertasPage() {
                 <div
                     style={{
                         display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: '24px',
                         flexWrap: 'wrap',
-                        gap: '12px',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        marginBottom: '40px',
+                        gap: '24px',
                     }}
                 >
-                    <div>
-                        <h1 style={{
-                            fontSize: '24px',
-                            fontWeight: 700,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                        }}>
-                            <Gift size={24} style={{ color: 'var(--color-primary)' }} />
-                            Ofertas Irresistibles
-                        </h1>
-                        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                            Crea ofertas estratégicas para aumentar conversión y ticket promedio
+                    <div style={{ flex: '1 1 300px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <h1 style={{
+                                fontSize: 'clamp(22px, 5vw, 28px)',
+                                fontWeight: 900,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px',
+                                color: 'var(--text-primary)',
+                                letterSpacing: '-0.04em'
+                            }}>
+                                <Gift size={32} style={{ color: 'var(--color-primary)' }} strokeWidth={2.5} />
+                                Ofertas Irresistibles
+                            </h1>
+                        </div>
+                        <p style={{ fontSize: '15px', color: 'var(--text-tertiary)', marginTop: '8px', maxWidth: '500px', lineHeight: 1.5 }}>
+                            Configura estrategias de venta para maximizar tu rentabilidad y escala tu negocio rápidamente.
                         </p>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        {/* Indicador de Cuota */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        flexWrap: 'wrap',
+                        flex: '1 1 auto',
+                        justifyContent: 'flex-end'
+                    }}>
+                        {/* Indicador de Cuota Refinado */}
                         <div style={{
-                            padding: '8px 16px', backgroundColor: 'var(--bg-secondary)',
-                            borderRadius: '12px', border: '1px solid var(--border-color)',
-                            display: 'flex', alignItems: 'center', gap: '8px'
+                            padding: '12px 18px',
+                            backgroundColor: 'var(--card-bg)',
+                            borderRadius: '20px',
+                            border: '1px solid var(--border-color)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px',
+                            minWidth: '160px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                            flex: '1 1 160px'
                         }}>
-                            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                                Cuota: <span style={{ color: quota.limit !== -1 && quota.used >= quota.limit ? 'var(--color-error)' : 'var(--color-primary)' }}>
-                                    {quota.used}/{quota.limit === -1 ? '∞' : quota.limit} Ofertas
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 900, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Cuota de Plan</span>
+                                <span style={{ fontSize: '13px', fontWeight: 900, color: quota.limit !== -1 && quota.used >= quota.limit ? 'var(--color-error)' : 'var(--color-primary)' }}>
+                                    {quota.used} / {quota.limit === -1 ? '∞' : quota.limit}
                                 </span>
                             </div>
-                            <div style={{ width: '60px', height: '6px', backgroundColor: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
+                            <div style={{ width: '100%', height: '6px', backgroundColor: 'var(--bg-secondary)', borderRadius: '10px', overflow: 'hidden' }}>
                                 <div style={{
                                     width: `${quota.limit === -1 ? 0 : Math.min((quota.used / quota.limit) * 100, 100)}%`,
                                     height: '100%',
-                                    backgroundColor: quota.limit !== -1 && quota.used >= quota.limit ? 'var(--color-error)' : 'var(--color-primary)'
+                                    backgroundColor: quota.limit !== -1 && quota.used >= quota.limit ? 'var(--color-error)' : 'var(--color-primary)',
+                                    borderRadius: '10px'
                                 }} />
                             </div>
                         </div>
 
-                        <button
-                            onClick={() => setShowEducation(true)}
-                            title="Ver tutorial"
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '8px',
-                                border: '1px solid var(--border-color)',
-                                backgroundColor: 'var(--card-bg)',
-                                cursor: 'pointer',
-                                color: 'var(--text-secondary)',
-                            }}
-                        >
-                            <HelpCircle size={18} />
-                        </button>
+                        <div style={{ display: 'flex', gap: '8px', flex: '1 1 auto' }}>
+                            <button
+                                onClick={() => setShowEducation(true)}
+                                title="Ver tutorial"
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: '50px',
+                                    height: '50px',
+                                    borderRadius: '18px',
+                                    border: '1px solid var(--border-color)',
+                                    backgroundColor: 'var(--card-bg)',
+                                    cursor: 'pointer',
+                                    color: 'var(--text-secondary)',
+                                    transition: 'all 0.2s',
+                                    flexShrink: 0
+                                }}
+                            >
+                                <HelpCircle size={22} />
+                            </button>
 
-                        <button
-                            onClick={handleCreateNew}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                padding: '10px 20px',
-                                fontSize: '14px',
-                                fontWeight: 600,
-                                color: '#fff',
-                                backgroundColor: 'var(--color-primary)',
-                                border: 'none',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                transition: 'all 150ms ease',
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'var(--color-primary-dark, #003D99)';
-                                e.currentTarget.style.transform = 'translateY(-1px)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-                                e.currentTarget.style.transform = 'none';
-                            }}
-                        >
-                            <Plus size={16} /> Crear Oferta
-                        </button>
+                            <button
+                                onClick={handleCreateNew}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '12px',
+                                    padding: '12px 28px',
+                                    fontSize: '16px',
+                                    fontWeight: 800,
+                                    color: '#fff',
+                                    backgroundColor: 'var(--color-primary)',
+                                    border: 'none',
+                                    borderRadius: '20px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    boxShadow: '0 10px 25px rgba(0, 102, 255, 0.25)',
+                                    flex: 1
+                                }}
+                            >
+                                <Plus size={22} strokeWidth={3} /> Crear Oferta
+                            </button>
+                        </div>
                     </div>
                 </div>
 

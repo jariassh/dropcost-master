@@ -29,6 +29,13 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
     const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
     const [integrationToDisconnect, setIntegrationToDisconnect] = useState<string | null>(null);
     const [showNewProfileWarning, setShowNewProfileWarning] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const canConnect = subscriptionService.canConnectMetaAds();
 
@@ -116,9 +123,9 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
 
     if (isLoading && integrations.length === 0) {
         return (
-            <Card style={{ padding: '40px', textAlign: 'center' }}>
+            <Card style={{ padding: isMobile ? '24px 16px' : '40px', textAlign: 'center' }}>
                 <Spinner />
-                <p style={{ marginTop: '16px', color: 'var(--text-tertiary)' }}>Cargando integraciones...</p>
+                <p style={{ marginTop: '16px', color: 'var(--text-tertiary)', fontSize: isMobile ? '12px' : '14px' }}>Cargando integraciones...</p>
             </Card>
         );
     }
@@ -127,35 +134,35 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
 
     return (
         <div style={{ animation: 'fadeIn 0.3s' }}>
-            <Card>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <Card style={{ padding: isMobile ? '20px 16px' : '24px' }}>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', marginBottom: '24px', gap: isMobile ? '16px' : '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '16px' }}>
                         <div style={{
-                            width: '48px', height: '48px', borderRadius: '12px',
+                            width: isMobile ? '40px' : '48px', height: isMobile ? '40px' : '48px', borderRadius: '12px',
                             backgroundColor: 'rgba(24, 119, 242, 0.1)', color: '#1877F2',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                         }}>
-                            <Facebook size={24} />
+                            <Facebook size={isMobile ? 20 : 24} />
                         </div>
                         <div>
-                            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Meta Ads (Facebook)</h3>
-                            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                                {isConnected ? 'Gestiona tus perfiles conectados' : 'Conecta tu cuenta publicitaria para ver el CPA real'}
+                            <h3 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 700, margin: 0 }}>Meta Ads (Facebook)</h3>
+                            <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-tertiary)', lineHeight: 1.4 }}>
+                                {isConnected ? (isMobile ? 'Perfiles conectados' : 'Gestiona tus perfiles conectados') : 'Conecta tu cuenta para ver el CPA real'}
                             </p>
                         </div>
                     </div>
                     {isConnected && (
-                        <div style={{ display: 'flex', gap: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-end' }}>
                             <Button
                                 variant="secondary"
                                 size="sm"
                                 onClick={() => setShowNewProfileWarning(true)}
-                                style={{ gap: '8px' }}
+                                style={{ gap: '6px', fontSize: '11px', flex: isMobile ? 1 : 'none' }}
                             >
-                                <RefreshCw size={14} />
+                                <RefreshCw size={12} />
                                 Agregar nuevo perfil
                             </Button>
-                            <Badge variant="success">CONECTADO</Badge>
+                            <Badge variant="success" style={{ fontSize: '10px' }}>CONECTADO</Badge>
                         </div>
                     )}
                 </div>
@@ -170,31 +177,31 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
                                 onClick={() => onSelectIntegration?.(item.id)}
                                 style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                    padding: '16px 20px', borderRadius: '16px',
+                                    padding: isMobile ? '12px 14px' : '16px 20px', borderRadius: '16px',
                                     backgroundColor: selectedId === item.id ? 'rgba(var(--color-primary-rgb), 0.05)' : 'var(--bg-secondary)',
                                     border: `1px solid ${selectedId === item.id ? 'var(--color-primary)' : 'var(--border-color)'}`,
-                                    cursor: 'pointer', transition: 'all 0.2s'
+                                    cursor: 'pointer', transition: 'all 0.2s', gap: '12px'
                                 }}
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '10px' : '16px', flex: 1, overflow: 'hidden' }}>
                                     <input
                                         type="radio"
                                         checked={selectedId === item.id}
                                         onChange={() => { }} // Manage by onClick of row
-                                        style={{ accentColor: 'var(--color-primary)', width: '18px', height: '18px' }}
+                                        style={{ accentColor: 'var(--color-primary)', width: '16px', height: '16px', flexShrink: 0 }}
                                     />
-                                    <div>
-                                        <p style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            {item.meta_user_name}
-                                            <CheckCircle2 size={14} color="#10B981" />
+                                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                                        <p style={{ margin: 0, fontSize: isMobile ? '13px' : '15px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+                                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.meta_user_name}</span>
+                                            <CheckCircle2 size={12} color="#10B981" style={{ flexShrink: 0 }} />
                                         </p>
-                                        <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--text-tertiary)' }}>
-                                            Sincronizado: {item.ultima_sincronizacion ? new Date(item.ultima_sincronizacion).toLocaleString() : 'Pendiente'}
+                                        <p style={{ margin: '2px 0 0', fontSize: '10px', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {isMobile ? 'Sinc: ' : 'Sincronizado: '}{item.ultima_sincronizacion ? new Date(item.ultima_sincronizacion).toLocaleDateString() : 'Pendiente'}
                                         </p>
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', gap: '8px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -203,12 +210,12 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
                                             setIntegrationToDisconnect(item.id);
                                             setShowDisconnectConfirm(true);
                                         }}
-                                        style={{ color: 'var(--color-error)', padding: '8px' }}
+                                        style={{ color: 'var(--color-error)', padding: '6px' }}
                                     >
-                                        <Trash2 size={16} />
+                                        <Trash2 size={14} />
                                     </Button>
                                     {selectedId === item.id && (
-                                        <Badge variant="pill-purple" style={{ fontSize: '10px' }}>ACTIVO</Badge>
+                                        <Badge variant="pill-purple" style={{ fontSize: '9px', padding: '2px 6px' }}>{isMobile ? 'ACT' : 'ACTIVO'}</Badge>
                                     )}
                                 </div>
                             </div>

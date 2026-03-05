@@ -11,6 +11,14 @@ interface OrderDetailsModalProps {
 }
 
 export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ isOpen, onClose, order }) => {
+    const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+
+    React.useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     if (!isOpen || !order) return null;
 
     const customer = order.customer_details || {};
@@ -34,10 +42,10 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ isOpen, on
             <div
                 style={{
                     backgroundColor: 'var(--bg-primary)',
-                    borderRadius: '20px',
+                    borderRadius: isMobile ? '12px' : '20px',
                     width: '100%',
                     maxWidth: '600px',
-                    maxHeight: '90vh',
+                    maxHeight: isMobile ? '95vh' : '90vh',
                     overflowY: 'auto',
                     boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
                     border: '1px solid var(--border-color)',
@@ -47,7 +55,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ isOpen, on
             >
                 {/* Header */}
                 <div style={{
-                    padding: '24px',
+                    padding: isMobile ? '16px 20px' : '24px',
                     borderBottom: '1px solid var(--border-color)',
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -55,7 +63,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ isOpen, on
                     position: 'sticky',
                     top: 0,
                     backgroundColor: 'var(--bg-primary)',
-                    zIndex: 1
+                    zIndex: 2
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{
@@ -70,11 +78,11 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ isOpen, on
                             <ShoppingBag size={20} color="var(--color-primary)" />
                         </div>
                         <div>
-                            <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                            <h2 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
                                 Orden {order.order_number}
                             </h2>
-                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
-                                Recibida el {new Date(order.date).toLocaleString()}
+                            <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0 }}>
+                                {isMobile ? new Date(order.date).toLocaleDateString() : `Recibida el ${new Date(order.date).toLocaleString()}`}
                             </p>
                         </div>
                     </div>
@@ -91,7 +99,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ isOpen, on
                 <div style={{ padding: '24px' }}>
                     {/* Información del Cliente */}
                     <Section title="Información del Cliente" icon={<User size={16} />}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
                             <InfoField
                                 label="Nombre Completo"
                                 value={`${customer.first_name || ''} ${customer.last_name || ''}`.trim() || order.cliente_nombre || 'N/A'}
@@ -106,7 +114,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ isOpen, on
                                 icon={<Phone size={12} />}
                             />
                             <InfoField
-                                label="ID de Campaña"
+                                label="Campañas Relacionadas"
                                 value={order.campaign_name || 'Atribución Directa'}
                             />
                         </div>
@@ -119,7 +127,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ isOpen, on
                                 label="Dirección / Referencia"
                                 value={address.address1 || order.cliente_direccion || 'Información en notas'}
                             />
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
                                 <InfoField
                                     label="Ciudad"
                                     value={address.city || order.cliente_ciudad || 'N/A'}

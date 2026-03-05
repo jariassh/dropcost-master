@@ -146,12 +146,24 @@ export function AdminSettingsPage() {
                         Gestiona la identidad visual, SEO y scripts estructurales de la plataforma.
                     </p>
                 </div>
-                <div className="flex gap-3">
+                <div style={{
+                    display: 'flex',
+                    gap: '12px',
+                    width: window.innerWidth < 768 ? '100%' : 'auto',
+                    flexDirection: window.innerWidth < 480 ? 'column' : 'row'
+                }}>
                     <Button
                         variant="secondary"
                         onClick={handleReset}
                         disabled={isSaving}
-                        leftIcon={<RotateCcw size={16} />}
+                        leftIcon={<RotateCcw size={14} />}
+                        style={{
+                            height: '42px',
+                            padding: '0 16px',
+                            borderRadius: '12px',
+                            fontSize: '13px',
+                            flex: 1
+                        }}
                     >
                         Restaurar
                     </Button>
@@ -159,7 +171,14 @@ export function AdminSettingsPage() {
                         onClick={handleSave}
                         disabled={isSaving}
                         isLoading={isSaving}
-                        leftIcon={<Save size={16} />}
+                        leftIcon={<Save size={14} />}
+                        style={{
+                            height: '42px',
+                            padding: '0 16px',
+                            borderRadius: '12px',
+                            fontSize: '13px',
+                            flex: 1
+                        }}
                     >
                         Guardar Cambios
                     </Button>

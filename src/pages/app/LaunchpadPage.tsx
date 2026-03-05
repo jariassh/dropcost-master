@@ -157,6 +157,14 @@ export function LaunchpadPage() {
         }
     };
 
+    // Responsive logic (simple window width detection for inline styles)
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     if (isLoading) {
         return (
             <div style={{
@@ -172,7 +180,7 @@ export function LaunchpadPage() {
         <div style={{
             minHeight: '100vh',
             backgroundColor: 'var(--bg-primary)',
-            padding: '40px 20px',
+            padding: isMobile ? '24px 16px' : '40px 20px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center'
@@ -182,26 +190,45 @@ export function LaunchpadPage() {
                 width: '100%',
                 maxWidth: '1200px',
                 position: 'relative',
-                marginBottom: '48px',
+                marginBottom: isMobile ? '32px' : '48px',
                 display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
                 justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                padding: '0 24px'
+                alignItems: isMobile ? 'flex-start' : 'flex-start',
+                gap: isMobile ? '24px' : '0',
+                padding: isMobile ? '0' : '0 24px'
             }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
                     <div style={{
                         display: 'flex', alignItems: 'center', gap: '12px',
                         color: 'var(--color-primary)'
                     }}>
-                        <Rocket size={32} />
-                        <h1 style={{ fontFamily: 'var(--font-headings)', fontSize: '32px', letterSpacing: 'var(--ls-h)', margin: 0, display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                        <Rocket size={isMobile ? 24 : 32} />
+                        <h1 style={{
+                            fontFamily: 'var(--font-headings)',
+                            fontSize: isMobile ? '24px' : '32px',
+                            letterSpacing: 'var(--ls-h)',
+                            margin: 0,
+                            display: 'flex',
+                            flexDirection: isMobile ? 'column' : 'row',
+                            alignItems: isMobile ? 'flex-start' : 'baseline',
+                            gap: isMobile ? '2px' : '8px'
+                        }}>
                             LAUNCHPAD
-                            <span style={{ fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '14px', letterSpacing: '0', textTransform: 'none' }}>
+                            <span style={{
+                                fontFamily: 'var(--font-body)',
+                                color: 'var(--text-secondary)',
+                                fontWeight: 600,
+                                fontSize: isMobile ? '12px' : '14px',
+                                letterSpacing: '0',
+                                textTransform: 'none',
+                                opacity: 0.7
+                            }}>
                                 | ONBOARDING
                             </span>
                         </h1>
                     </div>
-                    <p style={{ color: 'var(--text-tertiary)', fontSize: '14px', margin: 0 }}>
+                    <p style={{ color: 'var(--text-tertiary)', fontSize: isMobile ? '13px' : '14px', margin: 0, maxWidth: '500px' }}>
                         Configura tu negocio de dropshipping en minutos con nuestra guía paso a paso.
                     </p>
                 </div>
@@ -219,11 +246,12 @@ export function LaunchpadPage() {
                         <Button
                             onClick={handleContinueClick}
                             variant="primary"
-                            size="lg"
+                            size={isMobile ? "md" : "lg"}
+                            fullWidth={isMobile}
                             style={{
                                 gap: '12px',
-                                padding: '0 32px',
-                                height: '52px',
+                                padding: isMobile ? '0 24px' : '0 32px',
+                                height: isMobile ? '48px' : '52px',
                                 borderRadius: '16px',
                                 fontWeight: 800,
                                 boxShadow: '0 4px 12px rgba(var(--color-primary-rgb), 0.3)'
@@ -235,13 +263,19 @@ export function LaunchpadPage() {
                 })()}
             </div>
 
-            {/* Progress Stepper - Columnas alternadas: [ÍCONO] [CONECTOR] [ÍCONO] ... */}
             <div style={{
-                width: '100%', maxWidth: '800px', marginBottom: '40px',
-                padding: '24px 32px', backgroundColor: 'var(--bg-secondary)', borderRadius: '24px',
+                width: '100%', maxWidth: '800px', marginBottom: isMobile ? '32px' : '40px',
+                padding: isMobile ? '16px 12px' : '24px 32px',
+                backgroundColor: 'var(--bg-secondary)', borderRadius: '24px',
                 border: '1px solid var(--border-color)',
-                display: 'flex', alignItems: 'center'
-            }}>
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: isMobile ? 'flex-start' : 'center',
+                overflowX: isMobile ? 'auto' : 'visible',
+                gap: isMobile ? '16px' : '0',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+            }} className="no-scrollbar">
                 {steps.map((step, idx) => {
                     const Icon = step.icon;
                     const isCompleted = currentStep > idx || (idx === 4 && isComplete);
@@ -259,7 +293,7 @@ export function LaunchpadPage() {
                     }
 
                     // Conector ANTES de este ícono (entre el anterior y este)
-                    const connectorBefore = idx > 0 ? (() => {
+                    const connectorBefore = (idx > 0 && !isMobile) ? (() => {
                         const prevCompleted = currentStep > (idx - 1) || (idx - 1 === 4 && isComplete);
                         const connectorAhead = prevCompleted && (idx - 1) >= viewingStep;
                         const lineColor = prevCompleted ? 'var(--color-success)' : 'var(--border-color)';
@@ -295,17 +329,22 @@ export function LaunchpadPage() {
                         <React.Fragment key={step.id}>
                             {connectorBefore}
                             <div style={{
-                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '6px',
                                 flexShrink: 0,
                                 opacity: isAheadOfViewing ? 0.5 : 1,
                                 transition: 'opacity 0.3s ease'
                             }}>
                                 <div style={{
-                                    width: '42px', height: '42px', borderRadius: '12px',
+                                    width: isMobile ? '36px' : '42px',
+                                    height: isMobile ? '36px' : '42px',
+                                    borderRadius: isMobile ? '10px' : '12px',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     backgroundColor: bgColor,
                                     color: iconColor,
-                                    border: isActive ? '4px solid rgba(var(--color-primary-rgb), 0.3)' : 'none',
+                                    border: isActive ? `3px solid rgba(var(--color-primary-rgb), 0.3)` : 'none',
                                     transition: 'all 0.3s ease',
                                     cursor: (isCompleted || idx <= currentStep) ? 'pointer' : 'default'
                                 }} onClick={() => {
@@ -313,10 +352,13 @@ export function LaunchpadPage() {
                                         setViewingStep(idx);
                                     }
                                 }}>
-                                    {isCompleted && !isActive ? <CheckCircle2 size={20} /> : <Icon size={20} />}
+                                    {isCompleted && !isActive ? <CheckCircle2 size={isMobile ? 18 : 20} /> : <Icon size={isMobile ? 18 : 20} />}
                                 </div>
                                 <span style={{
-                                    fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
+                                    fontSize: isMobile ? '9px' : '11px',
+                                    fontWeight: isActive ? 800 : 700,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em',
                                     color: isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
                                     whiteSpace: 'nowrap'
                                 }}>

@@ -18,6 +18,13 @@ export function PerfilPage() {
     const { isComplete, progress } = useLaunchpadStore();
     const navigate = useNavigate();
     const toast = useToast();
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Profile State
     const [profileData, setProfileData] = useState({
@@ -105,22 +112,22 @@ export function PerfilPage() {
     const isActive = user?.estadoSuscripcion === 'activa';
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', animation: 'fadeIn 0.3s' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '20px' : '32px', animation: 'fadeIn 0.3s', boxSizing: 'border-box' }}>
 
             {/* Top Section: Profile & Multi-stack Right side */}
-            <div className="perfil-top-grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px', alignItems: 'stretch' }}>
+            <div className="perfil-top-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1fr', gap: isMobile ? '16px' : '24px', alignItems: 'stretch' }}>
 
                 {/* Personal Info Card (Vertical Layout for more height) */}
-                <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 28px' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <User size={20} color="var(--color-primary)" />
+                <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: isMobile ? '20px 16px' : '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: isMobile ? '0 0 20px' : '0 0 28px', gap: '12px', width: '100%', boxSizing: 'border-box' }}>
+                        <h3 style={{ fontSize: isMobile ? '17px' : '18px', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)' }}>
+                            <User size={18} color="var(--color-primary)" />
                             Información Personal
                         </h3>
                         {user?.emailVerificado && (
-                            <div style={{ display: 'inline-flex', padding: '4px 12px', backgroundColor: 'rgba(16, 185, 129, 0.1)', borderRadius: '20px', alignItems: 'center', gap: '6px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                                <CheckCircle2 size={12} color="#10B981" />
-                                <span style={{ fontSize: '11px', color: '#10B981', fontWeight: 700 }}>VERIFICADO</span>
+                            <div style={{ display: 'inline-flex', padding: '4px 10px', backgroundColor: 'rgba(16, 185, 129, 0.1)', borderRadius: '20px', alignItems: 'center', gap: '4px', border: '1px solid rgba(16, 185, 129, 0.2)', flexShrink: 0 }}>
+                                <CheckCircle2 size={11} color="#10B981" />
+                                <span style={{ fontSize: '9px', color: '#10B981', fontWeight: 800 }}>VERIFICADO</span>
                             </div>
                         )}
                     </div>
@@ -163,14 +170,14 @@ export function PerfilPage() {
 
                         {/* Text fields below */}
                         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
                                 <Input label="Nombres" value={profileData.nombres} onChange={e => setProfileData({ ...profileData, nombres: e.target.value })} />
                                 <Input label="Apellidos" value={profileData.apellidos} onChange={e => setProfileData({ ...profileData, apellidos: e.target.value })} />
                             </div>
                             <SmartPhoneInput label="Teléfono Personal" value={profileData.telefono} onChange={(fullValue, iso) => setProfileData({ ...profileData, telefono: fullValue, pais: iso })} />
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
                                 <SelectPais label="País de Residencia" value={profileData.pais} onChange={(iso) => setProfileData({ ...profileData, pais: iso })} showMoneda={false} disabled={!!user?.pais} />
-                                <Input label="Código de Referido (Inamovible)" value={profileData.codigoReferido ?? user?.codigoReferido ?? ''} disabled={!!user?.codigoReferido} placeholder="Ingresa un código" helperText={!user?.codigoReferido ? "Una vez guardado no se puede cambiar." : undefined} />
+                                <Input label="Código Referido" value={profileData.codigoReferido ?? user?.codigoReferido ?? ''} disabled={!!user?.codigoReferido} placeholder="Ingresa un código" helperText={!user?.codigoReferido ? "Inamovible al guardar." : undefined} />
                             </div>
 
                             <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'center' }}>
@@ -182,44 +189,41 @@ export function PerfilPage() {
                     </div>
                 </div>
 
-                {/* Right Stack: Membership & Help */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-
+                {/* Right Column: Membership & Help (Stacked) */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '16px' : '24px', flex: 1 }}>
                     {/* Membership Card */}
-                    <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', flex: 2, display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', flex: 1, boxSizing: 'border-box' }}>
                         {isActive ? (
                             <>
-                                <div style={{ padding: '24px', background: 'linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.1) 0%, rgba(var(--color-primary-rgb), 0.02) 100%)', borderBottom: '1px solid var(--border-color)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
-                                        <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                                            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, var(--color-primary), rgba(var(--color-primary-rgb), 0.7))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 4px 12px rgba(var(--color-primary-rgb), 0.2)' }}>
-                                                <Zap size={22} />
-                                            </div>
-                                            <div>
-                                                <h3 style={{ fontSize: '18px', fontWeight: 800, margin: 0, letterSpacing: '0.02em' }}>
-                                                    {user?.plan?.name?.toUpperCase() || 'PLAN PRO'}
-                                                </h3>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                                                    <Badge variant="success">ACTIVA</Badge>
-                                                    <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 500 }}>Vence {user?.fechaVencimiento ? new Date(user.fechaVencimiento).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }) : '—'}</span>
-                                                </div>
+                                <div style={{ padding: isMobile ? '20px 16px' : '24px', background: 'linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.1) 0%, rgba(var(--color-primary-rgb), 0.02) 100%)', borderBottom: '1px solid var(--border-color)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '14px', marginBottom: '18px' }}>
+                                        <div style={{ width: isMobile ? '40px' : '48px', height: isMobile ? '40px' : '48px', borderRadius: '12px', background: 'linear-gradient(135deg, var(--color-primary), rgba(var(--color-primary-rgb), 0.7))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 4px 12px rgba(var(--color-primary-rgb), 0.2)', flexShrink: 0 }}>
+                                            <Zap size={isMobile ? 18 : 21} />
+                                        </div>
+                                        <div style={{ minWidth: 0 }}>
+                                            <h3 style={{ fontSize: isMobile ? '17px' : '18px', fontWeight: 800, margin: '0 0 2px', letterSpacing: '0.02em', color: 'var(--text-primary)' }}>
+                                                {user?.plan?.name?.toUpperCase() || 'PLAN PRO'}
+                                            </h3>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <Badge variant="success" style={{ fontSize: '9px', padding: '2px 6px' }}>ACTIVA</Badge>
+                                                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Vence {user?.fechaVencimiento ? new Date(user.fechaVencimiento).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }) : '—'}</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div style={{ display: 'flex', gap: '10px' }}>
-                                        <Button variant="primary" fullWidth onClick={() => navigate('/pricing')} style={{ gap: '8px', fontSize: '14px' }}>
+                                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '10px' }}>
+                                        <Button variant="primary" fullWidth onClick={() => navigate('/pricing')} style={{ gap: '8px', fontSize: '14px', height: isMobile ? '42px' : 'auto' }}>
                                             <ArrowUpCircle size={16} /> Mejorar Plan
                                         </Button>
-                                        <Button variant="secondary" fullWidth onClick={handleRenew} isLoading={isRenewing} style={{ gap: '8px', fontSize: '14px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+                                        <Button variant="secondary" fullWidth onClick={handleRenew} isLoading={isRenewing} style={{ gap: '8px', fontSize: '14px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', height: isMobile ? '42px' : 'auto' }}>
                                             <CreditCard size={16} /> Renovar
                                         </Button>
                                     </div>
                                 </div>
 
-                                <div style={{ padding: '24px', flex: 1 }}>
+                                <div style={{ padding: isMobile ? '16px' : '24px', flex: 1, boxSizing: 'border-box' }}>
                                     <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '16px' }}>Beneficios del Plan</p>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
                                         <FeatureItem label={`${user?.plan?.limits?.stores === -1 ? 'Multi' : user?.plan?.limits?.stores ?? '1'} Tiendas`} active />
                                         <FeatureItem label={`${user?.plan?.limits?.costeos_limit || 'Ilimitados'} Costeos`} active />
                                         <FeatureItem label="Soporte VIP" active={user?.planId !== 'plan_free'} />
@@ -244,34 +248,36 @@ export function PerfilPage() {
                     </div>
 
                     {/* Help & Support Card (Smaller buttons) */}
-                    <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                            <HelpCircle size={18} color="var(--color-primary)" />
-                            <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0 }}>¿Necesitas ayuda?</h3>
+                    <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: isMobile ? '20px 16px' : '20px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                            <div style={{ padding: '8px', backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)', borderRadius: '10px', color: 'var(--color-primary)' }}>
+                                <HelpCircle size={18} />
+                            </div>
+                            <h3 style={{ fontSize: isMobile ? '17px' : '17px', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>¿Necesitas ayuda?</h3>
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '10px' : '12px' }}>
                             <button
                                 onClick={() => window.open(`https://wa.me/${globalConfig?.telefono?.replace(/[^0-9]/g, '')}`, '_blank')}
                                 style={{
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                                    display: 'flex', flexDirection: isMobile ? 'row' : 'column', alignItems: 'center', justifyContent: isMobile ? 'flex-start' : 'center', gap: '10px',
                                     padding: '16px', borderRadius: '12px', backgroundColor: 'var(--bg-secondary)',
-                                    border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'all 0.2s'
+                                    border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'all 0.2s', width: '100%', boxSizing: 'border-box'
                                 }}
                                 className="hover-lift"
                             >
-                                <MessageCircle size={24} color="#25D366" />
+                                <MessageCircle size={24} color="#25D366" style={{ flexShrink: 0 }} />
                                 <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>WhatsApp</span>
                             </button>
                             <button
                                 onClick={() => window.open(`mailto:${globalConfig?.email_contacto}`, '_blank')}
                                 style={{
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                                    display: 'flex', flexDirection: isMobile ? 'row' : 'column', alignItems: 'center', justifyContent: isMobile ? 'flex-start' : 'center', gap: '10px',
                                     padding: '16px', borderRadius: '12px', backgroundColor: 'var(--bg-secondary)',
-                                    border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'all 0.2s'
+                                    border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'all 0.2s', width: '100%', boxSizing: 'border-box'
                                 }}
                                 className="hover-lift"
                             >
-                                <FileText size={24} color="var(--color-primary)" />
+                                <FileText size={24} color="var(--color-primary)" style={{ flexShrink: 0 }} />
                                 <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>Facturación</span>
                             </button>
                         </div>
@@ -280,24 +286,25 @@ export function PerfilPage() {
             </div>
 
             {/* Bottom Row: Notifications (Full Width) */}
-            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-                    <div>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: isMobile ? '20px 16px' : '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: '16px', marginBottom: '24px' }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                        <h3 style={{ fontSize: isMobile ? '17px' : '18px', fontWeight: 800, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)' }}>
                             <Bell size={20} color="var(--color-primary)" />
                             Personalizar Notificaciones
                         </h3>
-                        <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-tertiary)' }}>Selecciona los canales y alertas que prefieres recibir directamente.</p>
+                        <p style={{ margin: 0, fontSize: isMobile ? '12px' : '14px', color: 'var(--text-tertiary)', lineHeight: 1.5 }}>Selecciona los canales y alertas que prefieres recibir directamente.</p>
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
                     <NotificationItem
                         icon={<Share2 size={20} />}
                         title="Programa de Referidos"
                         description="Mantente al día con nuevos registros, activaciones y comisiones listas para cobrar."
                         checked={notifPreferences.referrals}
                         onChange={() => setNotifPreferences({ ...notifPreferences, referrals: !notifPreferences.referrals })}
+                        isMobile={isMobile}
                     />
                     <NotificationItem
                         icon={<Shield size={20} />}
@@ -305,6 +312,7 @@ export function PerfilPage() {
                         description="Notificaciones críticas sobre accesos sospechosos y cambios en tu configuración de seguridad."
                         checked={notifPreferences.security}
                         onChange={() => setNotifPreferences({ ...notifPreferences, security: !notifPreferences.security })}
+                        isMobile={isMobile}
                     />
                     <NotificationItem
                         icon={<Zap size={20} />}
@@ -312,19 +320,20 @@ export function PerfilPage() {
                         description="Sé el primero en probar nuevas funciones, guías maestras y actualizaciones importantes."
                         checked={notifPreferences.marketing}
                         onChange={() => setNotifPreferences({ ...notifPreferences, marketing: !notifPreferences.marketing })}
+                        isMobile={isMobile}
                     />
                 </div>
             </div>
 
             {/* Launchpad Preferences */}
-            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', marginTop: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-                    <div>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: isMobile ? '20px 16px' : '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', marginTop: '24px', boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: '16px', marginBottom: '24px' }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                        <h3 style={{ fontSize: isMobile ? '17px' : '18px', fontWeight: 800, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)' }}>
                             <Rocket size={20} color="var(--color-primary)" />
                             Launchpad (Onboarding)
                         </h3>
-                        <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-tertiary)' }}>Controla si deseas ver el Launchpad como página de inicio o saltar directamente al Dashboard.</p>
+                        <p style={{ margin: 0, fontSize: isMobile ? '12px' : '14px', color: 'var(--text-tertiary)', lineHeight: 1.5 }}>Controla si deseas ver el Launchpad como página de inicio o saltar directamente al Dashboard.</p>
                     </div>
                 </div>
 
@@ -374,6 +383,7 @@ export function PerfilPage() {
                             }
                         }}
                         disabled={!isComplete}
+                        isMobile={isMobile}
                     />
                 </div>
             </div>
@@ -390,39 +400,72 @@ export function PerfilPage() {
 
 function FeatureItem({ label, active }: { label: string, active: boolean }) {
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
             <div style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: active ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: active ? '#10B981' : '#6B7280', flexShrink: 0 }}>
                 <CheckCircle2 size={11} />
             </div>
-            <span style={{ fontSize: '13px', color: active ? 'var(--text-secondary)' : 'var(--text-tertiary)', fontWeight: active ? 600 : 400 }}>{label}</span>
+            <span style={{ fontSize: '13px', color: active ? 'var(--text-secondary)' : 'var(--text-tertiary)', fontWeight: active ? 600 : 400, whiteSpace: 'normal', lineBreak: 'anywhere', wordBreak: 'break-word', flex: 1 }}>{label}</span>
         </div>
     );
 }
 
-function NotificationItem({ icon, title, description, checked, onChange, disabled }: any) {
+function NotificationItem({ icon, title, description, checked, onChange, disabled, isMobile }: any) {
+    if (isMobile) {
+        return (
+            <div style={{
+                padding: '16px',
+                borderRadius: '16px',
+                backgroundColor: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)',
+                opacity: disabled ? 0.6 : 1,
+                pointerEvents: disabled ? 'none' : 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                width: '100%',
+                boxSizing: 'border-box'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', flexShrink: 0 }}>
+                            {React.cloneElement(icon, { size: 18 })}
+                        </div>
+                        <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', wordBreak: 'break-word' }}>{title}</h4>
+                    </div>
+                    <div onClick={onChange} style={{ width: '40px', height: '20px', borderRadius: '10px', backgroundColor: checked ? 'var(--color-primary)' : 'var(--card-border)', position: 'relative', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', flexShrink: 0 }}>
+                        <div style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: '#fff', position: 'absolute', top: '3px', left: checked ? '23px' : '3px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                    </div>
+                </div>
+                <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-tertiary)', lineHeight: 1.5, wordBreak: 'break-word' }}>{description}</p>
+            </div>
+        );
+    }
+
     return (
         <div style={{
             display: 'flex',
-            alignItems: 'flex-start',
+            alignItems: 'center',
             justifyContent: 'space-between',
             padding: '24px',
             borderRadius: '16px',
             backgroundColor: 'var(--bg-secondary)',
             border: '1px solid var(--border-color)',
-            height: '100%',
             transition: 'all 0.2s',
             opacity: disabled ? 0.6 : 1,
-            pointerEvents: disabled ? 'none' : 'auto'
+            pointerEvents: disabled ? 'none' : 'auto',
+            gap: '18px',
+            boxSizing: 'border-box',
+            width: '100%'
         }}>
-            <div style={{ display: 'flex', gap: '18px', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', gap: '18px', alignItems: 'center', minWidth: 0, flex: 1 }}>
                 <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', flexShrink: 0, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>{icon}</div>
-                <div>
-                    <h4 style={{ margin: '0 0 6px', fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>{title}</h4>
-                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)', lineHeight: 1.5 }}>{description}</p>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                    <h4 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>{title}</h4>
+                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-tertiary)', lineHeight: 1.4 }}>{description}</p>
                 </div>
             </div>
-            <div onClick={onChange} style={{ width: '48px', height: '26px', borderRadius: '13px', backgroundColor: checked ? 'var(--color-primary)' : 'var(--card-border)', position: 'relative', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', flexShrink: 0, marginLeft: '16px', marginTop: '4px' }}>
-                <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#fff', position: 'absolute', top: '3px', left: checked ? '25px' : '3px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 2px 6px rgba(0,0,0,0.25)' }} />
+            <div onClick={onChange} style={{ width: '48px', height: '24px', borderRadius: '12px', backgroundColor: checked ? 'var(--color-primary)' : 'var(--card-border)', position: 'relative', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', flexShrink: 0 }}>
+                <div style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: '#fff', position: 'absolute', top: '3px', left: checked ? '27px' : '3px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 2px 6px rgba(0,0,0,0.2)' }} />
             </div>
         </div>
     );

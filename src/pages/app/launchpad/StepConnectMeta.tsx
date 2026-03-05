@@ -23,6 +23,13 @@ export function StepConnectMeta({ onComplete }: StepConnectMetaProps) {
     const [isConnecting, setIsConnecting] = useState(false);
     const [isFetching, setIsFetching] = useState(true);
     const [integration, setIntegration] = useState<MetaIntegration | null>(null);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         checkExistingConnection();
@@ -82,11 +89,11 @@ export function StepConnectMeta({ onComplete }: StepConnectMetaProps) {
 
     if (isFetching) {
         return (
-            <div style={{ 
-                padding: '100px 60px', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
+            <div style={{
+                padding: '100px 60px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
                 justifyContent: 'center',
                 width: '100%'
             }}>
@@ -102,7 +109,14 @@ export function StepConnectMeta({ onComplete }: StepConnectMetaProps) {
         return (
             <Card style={{ padding: '0' }}>
                 {/* Header igual al de MetaAdsIntegrationCard */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '24px' }}>
+                <div style={{
+                    display: 'flex',
+                    alignItems: isMobile ? 'flex-start' : 'center',
+                    justifyContent: 'space-between',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    gap: isMobile ? '12px' : '0',
+                    padding: '24px'
+                }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                         <div style={{
                             width: '48px', height: '48px', borderRadius: '12px',
@@ -150,7 +164,7 @@ export function StepConnectMeta({ onComplete }: StepConnectMetaProps) {
     }
 
     return (
-        <Card style={{ padding: '32px' }}>
+        <Card style={{ padding: isMobile ? '24px 20px' : '32px' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                 <div style={{
                     width: '64px', height: '64px', borderRadius: '20px',

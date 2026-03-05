@@ -208,14 +208,14 @@ export const WalletPage: React.FC = () => {
                         <div>
                             <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>Movimientos Recientes</h3>
                             <Card noPadding style={{ boxShadow: 'var(--shadow-lg)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-                                <div className="overflow-x-auto">
-                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+                                    <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                                         <thead>
                                             <tr style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
-                                                <th style={tableHeaderStyle}>Concepto</th>
-                                                <th style={tableHeaderStyle}>Tipo</th>
-                                                <th style={tableHeaderStyle}>Fecha</th>
-                                                <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>Monto</th>
+                                                <th style={{ ...tableHeaderStyle, width: '300px' }}>Concepto</th>
+                                                <th style={{ ...tableHeaderStyle, width: '120px' }}>Tipo</th>
+                                                <th style={{ ...tableHeaderStyle, width: '160px' }}>Fecha</th>
+                                                <th style={{ ...tableHeaderStyle, textAlign: 'right', width: '120px' }}>Monto</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -268,15 +268,15 @@ export const WalletPage: React.FC = () => {
                         <div>
                             <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>Estado de Retiros</h3>
                             <Card noPadding style={{ boxShadow: 'var(--shadow-lg)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-                                <div className="overflow-x-auto">
-                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+                                    <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                                         <thead>
                                             <tr style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
-                                                <th style={tableHeaderStyle}>ID</th>
-                                                <th style={tableHeaderStyle}>Monto Local</th>
-                                                <th style={tableHeaderStyle}>Estado</th>
-                                                <th style={tableHeaderStyle}>Banco</th>
-                                                <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>Fecha</th>
+                                                <th style={{ ...tableHeaderStyle, width: '100px' }}>ID</th>
+                                                <th style={{ ...tableHeaderStyle, width: '160px' }}>Monto Local</th>
+                                                <th style={{ ...tableHeaderStyle, width: '160px' }}>Estado</th>
+                                                <th style={{ ...tableHeaderStyle, width: '180px' }}>Banco</th>
+                                                <th style={{ ...tableHeaderStyle, textAlign: 'right', width: '160px' }}>Fecha</th>
                                             </tr>
                                         </thead>
                                         <tbody>

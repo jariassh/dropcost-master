@@ -80,6 +80,9 @@ export interface Oferta {
     /** Estimated margin percentage */
     estimatedMarginPercent: number;
 
+    /** Status of the offer */
+    status: 'active' | 'paused';
+
     createdAt: string;
 }
 

@@ -30,6 +30,13 @@ export function MetaAdAccountsTable({ integrationId }: { integrationId?: string 
     // Modal state
     const [selectedAccount, setSelectedAccount] = useState<AdAccount | null>(null);
     const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const activeAccountsCount = accounts.filter(a =>
         dbLinks.some(link => link.meta_ad_account_id === a.id)
@@ -146,33 +153,33 @@ export function MetaAdAccountsTable({ integrationId }: { integrationId?: string 
 
     return (
         <Card noPadding style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--border-color)', animation: 'fadeIn 0.4s' }}>
-            <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-primary)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <div style={{ padding: isMobile ? '16px' : '24px', borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', backgroundColor: 'var(--bg-primary)', gap: isMobile ? '16px' : '20px' }}>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '12px' : '20px' }}>
                     <div>
-                        <h3 style={{ fontSize: '18px', fontWeight: 800, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <h3 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 800, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <Zap size={18} style={{ color: 'var(--color-primary)' }} />
                             Cuentas de Meta Ads
                         </h3>
-                        <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-tertiary)' }}>Gestiona la vinculación de cuentas con tus tiendas</p>
+                        {!isMobile && <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-tertiary)' }}>Gestiona la vinculación de cuentas con tus tiendas</p>}
                     </div>
 
-                    <div style={{ height: '32px', width: '1px', backgroundColor: 'var(--border-color)' }}></div>
+                    {!isMobile && <div style={{ height: '32px', width: '1px', backgroundColor: 'var(--border-color)' }}></div>}
 
-                    <div>
+                    <div style={{ width: isMobile ? '100%' : 'auto' }}>
                         <p style={{ margin: '0 0 4px', fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cuota de Plan</p>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Badge variant={activeAccountsCount >= totalQuota ? 'pill-warning' : 'pill-info'} style={{ fontSize: '11px', padding: '4px 12px' }}>
-                                {activeAccountsCount} / {totalQuota} Cuentas vinculadas
+                            <Badge variant={activeAccountsCount >= totalQuota ? 'pill-warning' : 'pill-info'} style={{ fontSize: '10px', padding: '4px 10px', width: isMobile ? '100%' : 'auto', justifyContent: 'center' }}>
+                                {activeAccountsCount} / {totalQuota} {isMobile ? 'Vinculadas' : 'Cuentas vinculadas'}
                             </Badge>
                         </div>
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'row', alignItems: 'center', justifyContent: isMobile ? 'space-between' : 'flex-end', gap: '12px' }}>
                     {lastSyncedAt && (
-                        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '12px' }}>
-                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                                Sincronizado: {new Date(lastSyncedAt).toLocaleString()}
+                        <div style={{ textAlign: isMobile ? 'left' : 'right', display: 'flex', flexDirection: 'column', alignItems: isMobile ? 'flex-start' : 'flex-end', marginRight: isMobile ? 0 : '12px' }}>
+                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                                {isMobile ? 'Sinc: ' : 'Sincronizado: '}{new Date(lastSyncedAt).toLocaleDateString()}
                             </span>
                         </div>
                     )}
@@ -181,14 +188,14 @@ export function MetaAdAccountsTable({ integrationId }: { integrationId?: string 
                         size="sm"
                         onClick={handleSync}
                         isLoading={isSyncing}
-                        style={{ border: '1px solid var(--border-color)', gap: '8px' }}
+                        style={{ border: '1px solid var(--border-color)', gap: '6px', fontSize: '12px', flex: isMobile ? 1 : 'none' }}
                     >
-                        <RefreshCw size={14} /> Sincronizar
+                        <RefreshCw size={14} /> {isMobile ? 'Sync' : 'Sincronizar'}
                     </Button>
                 </div>
             </div>
 
-            <div style={{ overflowX: 'auto', flex: 1, minHeight: '300px' }}>
+            <div style={{ overflowX: 'auto', flex: 1, minHeight: '300px', WebkitOverflowScrolling: 'touch' }}>
                 {accounts.length === 0 ? (
                     <div style={{ padding: '80px 40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <div style={{ color: 'var(--text-tertiary)', marginBottom: '16px' }}>
@@ -200,13 +207,13 @@ export function MetaAdAccountsTable({ integrationId }: { integrationId?: string 
                         </p>
                     </div>
                 ) : (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                    <table style={{ width: '100%', minWidth: '800px', borderCollapse: 'collapse', fontSize: '14px', tableLayout: 'fixed' }}>
                         <thead>
                             <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
-                                <th style={tableHeaderStyle}>Cuenta Publicitaria</th>
-                                <th style={tableHeaderStyle}>Business Manager (BM)</th>
-                                <th style={tableHeaderStyle}>Estado</th>
-                                <th style={tableHeaderStyle}>Acciones</th>
+                                <th style={{ ...tableHeaderStyle, width: '300px' }}>Cuenta Publicitaria</th>
+                                <th style={{ ...tableHeaderStyle, width: '200px' }}>Business Manager (BM)</th>
+                                <th style={{ ...tableHeaderStyle, width: '120px' }}>Estado</th>
+                                <th style={{ ...tableHeaderStyle, width: '180px' }}>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
