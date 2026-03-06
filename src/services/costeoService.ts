@@ -181,7 +181,7 @@ export const costeoService = {
      * Obtiene los presets del simulador (CPA promedio, tasa cancelación) desde métricas reales.
      */
     async getSimulatorPresets(tiendaId: string): Promise<{ average_cpa: number; cancellation_rate: number }> {
-        const { data, error } = await supabase.rpc('get_simulator_presets', {
+        const { data, error } = await (supabase as any).rpc('get_simulator_presets', {
             p_tienda_id: tiendaId
         });
 
