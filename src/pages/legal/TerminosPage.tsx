@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
 
 export function TerminosPage() {
-    const lastUpdate = '28 de febrero de 2026';
+    const lastUpdate = '06 de marzo de 2026';
 
     return (
         <div style={{
@@ -198,10 +198,42 @@ export function TerminosPage() {
                     </p>
                 </Section>
 
-                <Section title="13. Contacto">
+                <Section title="13. Módulo de Contactos y CRM">
+                    <p>
+                        La Plataforma incluye un módulo de gestión de contactos que permite al usuario importar y organizar información de sus clientes.
+                    </p>
+                    <ul>
+                        <li>El usuario es el único responsable de la legalidad de la obtención de los datos de sus clientes.</li>
+                        <li>DropCost Master actúa como encargado del tratamiento de dicha información exclusivamente para proveer el servicio de CRM.</li>
+                        <li>El acceso a este módulo está condicionado al plan de suscripción activo del usuario.</li>
+                    </ul>
+                </Section>
+
+                <Section title="14. Contacto">
                     <p>
                         Si tiene preguntas sobre estos Términos, contáctenos directamente al correo electrónico: <strong>legal@dropcost.jariash.com</strong>
                     </p>
+                </Section>
+
+                <Section title="15. Historial de Cambios (Changelog)">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <ChangelogItem
+                            date="06 de marzo de 2026"
+                            version="1.1.0"
+                            changes={[
+                                "Inclusión del Módulo de Gestión de Contactos (CRM).",
+                                "Actualización de las responsabilidades del usuario respecto a datos de terceros.",
+                                "Aclaración sobre limitaciones de funcionalidades por plan de suscripción."
+                            ]}
+                        />
+                        <ChangelogItem
+                            date="28 de febrero de 2026"
+                            version="1.0.0"
+                            changes={[
+                                "Lanzamiento oficial de los Términos y Condiciones."
+                            ]}
+                        />
+                    </div>
                 </Section>
 
                 {/* Footer Links */}
@@ -235,6 +267,27 @@ export function TerminosPage() {
                     </Link>
                 </div>
             </main>
+        </div>
+    );
+}
+
+function ChangelogItem({ date, version, changes }: { date: string; version: string; changes: string[] }) {
+    return (
+        <div style={{
+            padding: '16px',
+            backgroundColor: 'var(--bg-primary)',
+            borderRadius: '12px',
+            border: '1px solid var(--border-color)',
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Versión {version}</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{date}</span>
+            </div>
+            <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                {changes.map((change, i) => (
+                    <li key={i}>{change}</li>
+                ))}
+            </ul>
         </div>
     );
 }
