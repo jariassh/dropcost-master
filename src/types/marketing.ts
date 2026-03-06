@@ -4,6 +4,8 @@
 
 export interface EmailSegment {
     id: string;
+    tienda_id: string;
+    usuario_id: string;
     name: string;
     description: string;
     filters: SegmentFilters;
@@ -24,6 +26,8 @@ export interface FilterCondition {
 
 export interface EmailCampaign {
     id: string;
+    tienda_id: string;
+    usuario_id: string;
     name: string;
     subject: string;
     template_id: string;

@@ -2,7 +2,7 @@
  * SegmentBuilderPage.
  * UI para crear e informar "Listas Inteligentes" mediante filtros JSON.
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Card,
@@ -10,30 +10,70 @@ import {
     Input,
     Select,
     PageHeader,
-    CodePreview
+    CodePreview,
+    Badge,
+    SelectPais
 } from '@/components/common';
+import { plansService } from '@/services/plansService';
+import { Plan } from '@/types/plans.types';
 import {
     Plus,
     Trash2,
     Search,
     Users,
-    ChevronRight,
     Filter,
-    Database
+    Database,
+    ChevronLeft,
+    Save
 } from 'lucide-react';
-import { saveSegment } from '@/services/marketingService';
+import { saveSegment, estimateAudience } from '@/services/marketingService';
 import { FilterCondition, SegmentFilters } from '@/types/marketing';
+import { useAuthStore } from '@/store/authStore';
+import { useStoreStore } from '@/store/useStoreStore';
 
 export default function SegmentBuilderPage() {
     const navigate = useNavigate();
-    const [name, setName] = useState('');
+    const { user } = useAuthStore();
+    const { tiendaActual } = useStoreStore();
+
+    const [name, setName] = useState('Mi Nueva Lista');
     const [description, setDescription] = useState('');
+    const [estimatedSize, setEstimatedSize] = useState<number | null>(null);
+    const [isEstimating, setIsEstimating] = useState(false);
+    const [plans, setPlans] = useState<Plan[]>([]);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [filters, setFilters] = useState<SegmentFilters>({
         operator: 'AND',
         conditions: [
             { field: 'country', operator: 'equals', value: 'Colombia' }
         ]
     });
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+
+        // Cargar datos iniciales para selectores
+        const loadMetadata = async () => {
+            try {
+                const planList = await plansService.getPlans();
+                setPlans(planList);
+            } catch (err) {
+                console.error('Error cargando metadata segmentador:', err);
+            }
+        };
+        loadMetadata();
+
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Estimación automática con debounce (500ms) para no saturar la BD mientras se escribe
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            refreshEstimation();
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [filters]);
 
     const addCondition = () => {
         setFilters({
@@ -55,23 +95,57 @@ export default function SegmentBuilderPage() {
         });
     };
 
+    const refreshEstimation = async () => {
+        setIsEstimating(true);
+        try {
+            const count = await estimateAudience(filters);
+            setEstimatedSize(count);
+        } catch (error) {
+            console.error('Error estimando audiencia:', error);
+        } finally {
+            setIsEstimating(false);
+        }
+    };
+
     const handleSave = async () => {
-        await saveSegment({ name, description, filters });
-        navigate('/admin/marketing');
+        if (!user || !tiendaActual || !name) return;
+
+        try {
+            await saveSegment({
+                name,
+                description,
+                filters,
+                tienda_id: tiendaActual.id,
+                usuario_id: user.id
+            });
+            navigate('/admin/marketing');
+        } catch (error) {
+            console.error('Error al guardar segmento:', error);
+        }
     };
 
     return (
-        <div style={{ animation: 'fadeIn 300ms ease-out' }}>
+        <div style={{ animation: 'fadeIn 300ms ease-out', paddingBottom: '80px' }}>
             <PageHeader
                 title="Nueva Lista Inteligente"
-                subtitle="Crea segmentos de usuarios basados en filtros de comportamiento"
-                onBack={() => navigate('/admin/marketing')}
+                description="Crea segmentos de usuarios basados en filtros de comportamiento"
+                icon={Filter}
+                actions={
+                    <Button
+                        variant="secondary"
+                        onClick={() => navigate('/admin/marketing')}
+                        leftIcon={<ChevronLeft size={18} />}
+                        fullWidth={isMobile}
+                    >
+                        Volver
+                    </Button>
+                }
             />
 
             <div
                 style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(400px, 1fr))',
                     gap: '24px',
                     marginBottom: '40px'
                 }}
@@ -100,15 +174,16 @@ export default function SegmentBuilderPage() {
                                 Reglas de Segmentación
                             </h4>
                         </div>
-                        <Select
-                            value={filters.operator}
-                            onChange={(e) => setFilters({ ...filters, operator: e.target.value as any })}
-                            options={[
-                                { value: 'AND', label: 'Cumplir TODAS' },
-                                { value: 'OR', label: 'Cumplir ALGUNA' }
-                            ]}
-                            style={{ width: '160px' }}
-                        />
+                        <div style={{ width: '160px' }}>
+                            <Select
+                                value={filters.operator}
+                                onChange={(val: string) => setFilters({ ...filters, operator: val as any })}
+                                options={[
+                                    { value: 'AND', label: 'Cumplir TODAS' },
+                                    { value: 'OR', label: 'Cumplir ALGUNA' }
+                                ]}
+                            />
+                        </div>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
@@ -129,11 +204,12 @@ export default function SegmentBuilderPage() {
                                     <Select
                                         label="Campo"
                                         value={condition.field}
-                                        onChange={(e) => updateCondition(idx, { field: e.target.value })}
+                                        onChange={(val: string) => updateCondition(idx, { field: val })}
                                         options={[
                                             { value: 'country', label: 'País' },
                                             { value: 'status', label: 'Estado Suscripción' },
-                                            { value: 'orders_count', label: 'Número de Costeos' },
+                                            { value: 'rol', label: 'Rol de Usuario' },
+                                            { value: 'plan', label: 'Plan de Suscripción' },
                                             { value: 'last_login', label: 'Última Actividad' }
                                         ]}
                                     />
@@ -142,7 +218,7 @@ export default function SegmentBuilderPage() {
                                     <Select
                                         label="Operador"
                                         value={condition.operator}
-                                        onChange={(e) => updateCondition(idx, { operator: e.target.value })}
+                                        onChange={(val: string) => updateCondition(idx, { operator: val })}
                                         options={[
                                             { value: 'equals', label: 'Es igual a' },
                                             { value: 'not_equals', label: 'No es igual a' },
@@ -153,22 +229,61 @@ export default function SegmentBuilderPage() {
                                     />
                                 </div>
                                 <div style={{ flex: 1.5 }}>
-                                    <Input
-                                        label="Valor"
-                                        value={condition.value}
-                                        onChange={(e) => updateCondition(idx, { value: e.target.value })}
-                                    />
+                                    {condition.field === 'country' ? (
+                                        <SelectPais
+                                            label="Valor"
+                                            value={condition.value}
+                                            onChange={(val: string) => updateCondition(idx, { value: val })}
+                                        />
+                                    ) : condition.field === 'plan' ? (
+                                        <Select
+                                            label="Valor"
+                                            value={condition.value}
+                                            onChange={(val: string) => updateCondition(idx, { value: val })}
+                                            options={plans.map(p => ({ value: p.id, label: p.name }))}
+                                        />
+                                    ) : condition.field === 'status' ? (
+                                        <Select
+                                            label="Valor"
+                                            value={condition.value}
+                                            onChange={(val: string) => updateCondition(idx, { value: val })}
+                                            options={[
+                                                { value: 'activa', label: 'Activa' },
+                                                { value: 'pendiente', label: 'Pendiente' },
+                                                { value: 'vencida', label: 'Vencida' },
+                                                { value: 'cancelada', label: 'Cancelada' }
+                                            ]}
+                                        />
+                                    ) : condition.field === 'rol' ? (
+                                        <Select
+                                            label="Valor"
+                                            value={condition.value}
+                                            onChange={(val) => updateCondition(idx, { value: val })}
+                                            options={[
+                                                { value: 'admin', label: 'Administrador' },
+                                                { value: 'master', label: 'Master' },
+                                                { value: 'user', label: 'Usuario Estándar' }
+                                            ]}
+                                        />
+                                    ) : (
+                                        <Input
+                                            label="Valor"
+                                            value={condition.value}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateCondition(idx, { value: e.target.value })}
+                                            placeholder="Ej: valor..."
+                                        />
+                                    )}
                                 </div>
                                 <Button
                                     variant="danger"
                                     onClick={() => removeCondition(idx)}
-                                    icon={Trash2}
+                                    leftIcon={<Trash2 size={16} />}
                                 />
                             </div>
                         ))}
                     </div>
 
-                    <Button variant="secondary" onClick={addCondition} fullWidth icon={Plus}>
+                    <Button variant="secondary" onClick={addCondition} fullWidth leftIcon={<Plus size={18} />}>
                         Agregar Filtro
                     </Button>
                 </Card>
@@ -183,11 +298,17 @@ export default function SegmentBuilderPage() {
                             <div>
                                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>Tamaño estimado</p>
                                 <h3 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                                    1,250 <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-tertiary)' }}>usuarios</span>
+                                    {(estimatedSize || 0).toLocaleString()} <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-tertiary)' }}>usuarios</span>
                                 </h3>
                             </div>
                         </div>
-                        <Button variant="secondary" fullWidth icon={Search}>
+                        <Button
+                            variant="secondary"
+                            fullWidth
+                            leftIcon={<Search size={18} />}
+                            isLoading={isEstimating}
+                            onClick={refreshEstimation}
+                        >
                             Refrescar Estimación
                         </Button>
                     </Card>
@@ -195,7 +316,6 @@ export default function SegmentBuilderPage() {
                     <Card title="Estructura JSON (Filtros)">
                         <CodePreview
                             code={JSON.stringify(filters, null, 2)}
-                            language="json"
                         />
                     </Card>
                 </div>
@@ -213,7 +333,7 @@ export default function SegmentBuilderPage() {
                     margin: '0 -24px'
                 }}
             >
-                <Button variant="primary" size="lg" onClick={handleSave} icon={Database}>
+                <Button variant="primary" size="lg" onClick={handleSave} leftIcon={<Database size={18} />}>
                     Guardar Lista Inteligente
                 </Button>
             </div>
