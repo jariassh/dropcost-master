@@ -304,7 +304,22 @@ function Section({ title, children }: { title: string; children: React.ReactNode
                 lineHeight: 1.7,
                 color: 'var(--text-secondary)',
             }}>
-                {children}
+                <style>{`
+                    .legal-content-wrapper ul {
+                        list-style-type: disc;
+                        padding-left: 24px;
+                        margin: 16px 0;
+                    }
+                    .legal-content-wrapper li {
+                        margin-bottom: 12px;
+                    }
+                    .legal-content-wrapper p {
+                        margin-bottom: 16px;
+                    }
+                `}</style>
+                <div className="legal-content-wrapper">
+                    {children}
+                </div>
             </div>
         </section>
     );
