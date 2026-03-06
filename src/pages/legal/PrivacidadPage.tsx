@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Shield } from 'lucide-react';
 
 export function PrivacidadPage() {
-    const lastUpdate = '05 de marzo de 2026';
+    const lastUpdate = '06 de marzo de 2026';
 
     return (
         <div style={{
@@ -203,6 +203,34 @@ export function PrivacidadPage() {
                         contáctenos directamente al correo electrónico: <strong>privacidad@dropcost.jariash.com</strong>
                     </p>
                 </Section>
+                <Section title="12. Historial de Cambios (Changelog)">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <ChangelogItem
+                            date="06 de marzo de 2026"
+                            version="1.2.0"
+                            changes={[
+                                "Inclusión del Módulo de Gestión de Contactos (CRM).",
+                                "Especificación del tratamiento de datos de terceros (clientes del usuario).",
+                                "Aclaración sobre el aislamiento de datos de contactos mediante RLS."
+                            ]}
+                        />
+                        <ChangelogItem
+                            date="05 de marzo de 2026"
+                            version="1.1.0"
+                            changes={[
+                                "Actualización de medidas de seguridad SOC 2.",
+                                "Aclaración sobre la retención de logs de auditoría."
+                            ]}
+                        />
+                        <ChangelogItem
+                            date="28 de febrero de 2026"
+                            version="1.0.0"
+                            changes={[
+                                "Lanzamiento oficial de la Política de Privacidad."
+                            ]}
+                        />
+                    </div>
+                </Section>
 
                 {/* Footer Links */}
                 <div style={{
@@ -235,6 +263,27 @@ export function PrivacidadPage() {
                     </Link>
                 </div>
             </main>
+        </div>
+    );
+}
+
+function ChangelogItem({ date, version, changes }: { date: string; version: string; changes: string[] }) {
+    return (
+        <div style={{
+            padding: '16px',
+            backgroundColor: 'var(--bg-primary)',
+            borderRadius: '12px',
+            border: '1px solid var(--border-color)',
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Versión {version}</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{date}</span>
+            </div>
+            <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                {changes.map((change, i) => (
+                    <li key={i}>{change}</li>
+                ))}
+            </ul>
         </div>
     );
 }
