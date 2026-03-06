@@ -58,7 +58,9 @@ async function main() {
             subject: t.subject,
             content_mjml: t.mjml_content || t.content_mjml || null,
             content_html: t.html_content || t.content_html || null,
-            created_at: t.created_at
+            created_at: t.created_at,
+            sender_name: t.sender_name || 'DropCost Notification',
+            sender_prefix: t.sender_prefix || 'support'
         };
 
         const { data, error } = await stagingSupabase

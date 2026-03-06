@@ -13,6 +13,7 @@ Antes de mover datos, el "contenedor" debe ser idéntico.
     - [ ] **Ventas e Integraciones**: Verificar `data_shopify_orders`, `data_meta_ads` y `dashboard_metrics`.
     - [ ] **Sincronización Dropi**: Verificar campos de Dropi en `data_shopify_orders` (ej: `dropi_order_id`, `dropi_status`).
     - [ ] **Configuración**: Verificar nuevas columnas en `costeos` y `ofertas` (ej: `meta_campaign_id`).
+    - [ ] **Correos y Remitentes**: Verificar que TODAS las plantillas en `email_templates` conserven sus campos `sender_name` y `sender_prefix` (no dejarlos en null o en valores por defecto).
     - [ ] **Historial**: Verificar `configuracion_global_historial` y `audit_logs`.
 - [ ] **Constraints y Relaciones**:
     - [ ] `UNIQUE(usuario_id)` en `referidos_usuarios`.
