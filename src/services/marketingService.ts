@@ -258,10 +258,10 @@ export const getEmailTriggers = async () => {
 
         if (error) throw error;
 
-        // Obtener conteo de plantillas para cada trigger
-        const { data: templatesCount, error: countError } = await supabase
-            .from('email_templates' as any)
-            .select('id, trigger_id');
+        // Obtener conteo de plantillas para cada trigger usando la tabla intermedia Correcta
+        const { data: associations, error: countError } = await supabase
+            .from('email_plantillas_triggers' as any)
+            .select('trigger_id');
 
         if (countError) throw countError;
 
@@ -270,7 +270,7 @@ export const getEmailTriggers = async () => {
             variables_disponibles: Array.isArray(trigger.variables_disponibles) 
                 ? trigger.variables_disponibles 
                 : JSON.parse(trigger.variables_disponibles || '[]'),
-            plantillas_count: (templatesCount as any[] || []).filter((t: any) => t.trigger_id === trigger.id).length
+            plantillas_count: (associations as any[] || []).filter((t: any) => t.trigger_id === trigger.id).length
         }));
 
         return processedTriggers;
