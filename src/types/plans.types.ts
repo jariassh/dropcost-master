@@ -10,6 +10,7 @@ export interface PlanLimits {
     can_delete_stores?: boolean;
     can_duplicate_offers?: boolean;
     view_activity_history?: boolean;
+    access_contacts?: boolean;
     
     // Meta Ads & Sync limits
     meta_ads_enabled?: boolean;

@@ -39,6 +39,15 @@ export const subscriptionService = {
     },
 
     /**
+     * Verifica si el usuario tiene acceso al Módulo de Contactos.
+     */
+    isContactsEnabled(): boolean {
+        const limits = this.getLimits();
+        if (!limits) return false;
+        return !!limits.access_contacts;
+    },
+
+    /**
      * Verifica si el usuario puede añadir una cuenta publicitaria más a una tienda específica.
      * @param tiendaId ID de la tienda
      * @param currentStoreAccountsCount Número actual de cuentas vinculadas a la tienda

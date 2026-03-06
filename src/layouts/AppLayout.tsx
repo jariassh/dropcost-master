@@ -302,7 +302,8 @@ export function AppLayout() {
                                 const isRestrictedByStore = !tiendaActual && (item.to === '/mis-costeos' || item.to === '/ofertas');
                                 const isRestrictedByFeature =
                                     (item.to === '/dashboard' && !subscriptionService.isDashboardEnabled()) ||
-                                    (item.to === '/sincronizar' && !subscriptionService.isDropiSyncEnabled());
+                                    (item.to === '/sincronizar' && !subscriptionService.isDropiSyncEnabled()) ||
+                                    (item.to === '/contactos' && !subscriptionService.isContactsEnabled());
 
                                 const isRestrictedBySubscription = user?.estadoSuscripcion !== 'activa' && item.to !== '/launchpad' && item.to !== '/configuracion' && item.to?.startsWith('/configuracion') === false && user?.rol !== 'admin' && user?.rol !== 'superadmin';
 
