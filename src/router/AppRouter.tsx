@@ -49,8 +49,9 @@ const AdminAuditLogsPage = lazy(() => import('@/pages/admin/AdminAuditLogsPage')
 const AdminReferralPage = lazy(() => import('@/pages/admin/AdminReferralPage').then(m => ({ default: m.AdminReferralPage })));
 const AdminWithdrawalsPage = lazy(() => import('@/pages/admin/AdminWithdrawalsPage').then(m => ({ default: m.AdminWithdrawalsPage })));
 const AdminSettingsPage = lazy(() => import('@/pages/admin/AdminSettingsPage').then(m => ({ default: m.AdminSettingsPage })));
-const AdminEmailTemplatesPage = lazy(() => import('@/pages/admin/AdminEmailTemplatesPage').then(m => ({ default: m.AdminEmailTemplatesPage })));
-const AdminEmailTriggersPage = lazy(() => import('@/pages/admin/AdminEmailTriggersPage').then(m => ({ default: m.AdminEmailTriggersPage })));
+const MarketingDashboardPage = lazy(() => import('@/pages/admin/marketing/MarketingDashboardPage'));
+const SegmentBuilderPage = lazy(() => import('@/pages/admin/marketing/SegmentBuilderPage'));
+const CampaignWizardPage = lazy(() => import('@/pages/admin/marketing/CampaignWizardPage'));
 
 // Otras páginas
 const LandingPage = lazy(() => import('@/pages/LandingPage').then(m => ({ default: m.LandingPage })));
@@ -178,8 +179,10 @@ export function AppRouter() {
                         <Route path="promo-codes" element={<AdminDashboard />} />
                         <Route path="logs" element={<AdminAuditLogsPage />} />
                         <Route path="settings" element={<AdminSettingsPage />} />
-                        <Route path="email-templates" element={<AdminEmailTemplatesPage />} />
-                        <Route path="email-triggers" element={<AdminEmailTriggersPage />} />
+                        <Route path="marketing" element={<MarketingDashboardPage />} />
+                        <Route path="marketing/new-list" element={<SegmentBuilderPage />} />
+                        <Route path="marketing/list/:id" element={<SegmentBuilderPage />} />
+                        <Route path="marketing/new-campaign" element={<CampaignWizardPage />} />
                     </Route>
 
                     {/* Rutas Públicas (sin layout, accesibles por cualquier persona) */}

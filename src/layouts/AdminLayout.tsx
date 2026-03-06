@@ -42,8 +42,7 @@ const adminNavItems = [
 
     // GESTIÓN DE USUARIOS
     { to: '/admin/users', icon: Users, label: 'Gestión Usuarios', active: true },
-    { to: '/admin/email-templates', icon: Mail, label: 'Plantillas de Email', active: true },
-    { to: '/admin/email-triggers', icon: Zap, label: 'Triggers de Email', active: true },
+    { to: '/admin/marketing', icon: Megaphone, label: 'Email Marketing', active: true },
 
     // FINANCIERO & CRECIMIENTO
     { to: '/admin/plans', icon: CreditCard, label: 'Planes y Membresías', active: true },
