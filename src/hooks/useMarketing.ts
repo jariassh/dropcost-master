@@ -7,9 +7,44 @@ import {
     getGlobalEmailHistory,
     getTemplates,
     deleteSegment,
-    saveSegment
+    saveSegment,
+    updateEmailTriggerMapping,
+    deleteCampaign,
+    getCampaignById,
+    getCampaignLogs,
+    createCampaign,
+    launchCampaign
 } from '@/services/marketingService';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+/**
+ * Hook para lanzar una campaña
+ */
+export function useLaunchCampaign() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => launchCampaign(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['marketing-campaigns'] });
+            queryClient.invalidateQueries({ queryKey: ['marketing-stats'] });
+            queryClient.invalidateQueries({ queryKey: ['marketing-history'] });
+        },
+    });
+}
+
+/**
+ * Hook para crear una campaña
+ */
+export function useCreateCampaign() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (campaign: any) => createCampaign(campaign),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['marketing-campaigns'] });
+            queryClient.invalidateQueries({ queryKey: ['marketing-stats'] });
+        },
+    });
+}
 
 /**
  * Hook para obtener las estadísticas generales de marketing
@@ -105,5 +140,55 @@ export function useSaveSegment() {
             queryClient.invalidateQueries({ queryKey: ['marketing-segments'] });
             queryClient.invalidateQueries({ queryKey: ['marketing-stats'] });
         },
+    });
+}
+
+/**
+ * Hook para actualizar el mapeo de un evento
+ */
+export function useUpdateEmailTrigger() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ event_type, template_id, enabled }: { event_type: string, template_id: string, enabled: boolean }) => 
+            updateEmailTriggerMapping(event_type, template_id, enabled),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['marketing-triggers'] });
+        },
+    });
+}
+
+/**
+ * Hook para eliminar una campaña
+ */
+export function useDeleteCampaign() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => deleteCampaign(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['marketing-campaigns'] });
+            queryClient.invalidateQueries({ queryKey: ['marketing-stats'] });
+        },
+    });
+}
+
+/**
+ * Hook para obtener los detalles de una campaña por ID
+ */
+export function useCampaignDetails(id: string) {
+    return useQuery({
+        queryKey: ['marketing-campaign', id],
+        queryFn: () => getCampaignById(id),
+        enabled: !!id,
+    });
+}
+
+/**
+ * Hook para obtener los logs de envío de una campaña
+ */
+export function useCampaignLogs(id: string) {
+    return useQuery({
+        queryKey: ['marketing-campaign-logs', id],
+        queryFn: () => getCampaignLogs(id),
+        enabled: !!id,
     });
 }
