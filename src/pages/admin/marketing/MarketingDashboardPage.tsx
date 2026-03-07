@@ -14,7 +14,9 @@ import {
     CheckCircle2,
     XCircle,
     Send,
-    Megaphone
+    Megaphone,
+    Trash2,
+    AlertCircle
 } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
@@ -22,13 +24,15 @@ import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { StatsCard } from '@/components/common/StatsCard';
 import { EmptyState } from '@/components/common/EmptyState';
-import { useMarketingStats, useMarketingCampaigns, useMarketingSegments } from '@/hooks/useMarketing';
+import { useMarketingStats, useMarketingCampaigns, useMarketingSegments, useDeleteSegment } from '@/hooks/useMarketing';
+import { ConfirmDialog, useToast } from '@/components/common';
 import { EmailCampaign, EmailSegment } from '@/types/marketing';
 import { useAuthStore } from '@/store/authStore';
 import { useStoreStore } from '@/store/useStoreStore';
 import { EmailTemplatesManager } from '@/components/marketing/EmailTemplatesManager';
 import { EmailTriggersManager } from '@/components/marketing/EmailTriggersManager';
 import { GlobalEmailHistory } from '@/components/marketing/GlobalEmailHistory';
+import { launchCampaign } from '@/services/marketingService';
 
 export default function MarketingDashboardPage() {
     const navigate = useNavigate();
@@ -37,6 +41,28 @@ export default function MarketingDashboardPage() {
 
     const [activeTab, setActiveTab] = useState('campaigns');
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    const toast = useToast();
+
+    // Estados para lanzamiento de campaña
+    const [campaignToLaunch, setCampaignToLaunch] = useState<EmailCampaign | null>(null);
+    const [isLaunching, setIsLaunching] = useState(false);
+
+    const handleLaunchCampaign = async () => {
+        if (!campaignToLaunch) return;
+
+        setIsLaunching(true);
+        try {
+            await launchCampaign(campaignToLaunch.id);
+            toast.success('Campaña enviada', 'La campaña se ha puesto en cola de procesamiento correctamente');
+            refetchCampaigns();
+            setCampaignToLaunch(null);
+        } catch (error: any) {
+            console.error('Error launching campaign:', error);
+            toast.error('Error al lanzar', error.message || 'Error al lanzar la campaña');
+        } finally {
+            setIsLaunching(false);
+        }
+    };
 
     // Queries con React Query para Caché
     const { data: stats = {
@@ -48,8 +74,15 @@ export default function MarketingDashboardPage() {
         failedEmails: 0
     }, isLoading: isStatsLoading } = useMarketingStats(tiendaActual?.id || '', user?.id || '');
 
-    const { data: campaigns = [], isLoading: isCampaignsLoading } = useMarketingCampaigns(tiendaActual?.id || '', user?.id || '');
-    const { data: segments = [], isLoading: isSegmentsLoading } = useMarketingSegments(tiendaActual?.id || '', user?.id || '');
+    const { data: campaigns = [], isLoading: isCampaignsLoading, refetch: refetchCampaigns } = useMarketingCampaigns(tiendaActual?.id || '', user?.id || '');
+    const { data: segments = [], isLoading: isSegmentsLoading, refetch: refetchSegments } = useMarketingSegments(tiendaActual?.id || '', user?.id || '');
+    const deleteSegmentMutation = useDeleteSegment();
+
+    const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; name: string }>({
+        isOpen: false,
+        id: '',
+        name: ''
+    });
 
     const isLoading = isStatsLoading || isCampaignsLoading || isSegmentsLoading;
 
@@ -78,7 +111,6 @@ export default function MarketingDashboardPage() {
             default: return status;
         }
     };
-
     const segmentsByTab = segments.reduce((acc: Record<string, EmailSegment[]>, s: EmailSegment) => {
         const tab = s.filters ? 'Smart List' : 'Static';
         if (!acc[tab]) acc[tab] = [];
@@ -86,6 +118,17 @@ export default function MarketingDashboardPage() {
         return acc;
     }, {} as Record<string, EmailSegment[]>);
 
+    const handleDeleteSegment = async () => {
+        try {
+            await deleteSegmentMutation.mutateAsync(deleteModal.id);
+            toast.success('Lista eliminada', `La lista "${deleteModal.name}" ha sido eliminada correctamente.`);
+            refetchSegments();
+            setDeleteModal({ ...deleteModal, isOpen: false });
+        } catch (error) {
+            console.error('Error al eliminar segmento:', error);
+            toast.error('Error', 'No se pudo eliminar la lista. Inténtalo de nuevo.');
+        }
+    };
     const tabs = [
         { id: 'campaigns', label: 'Campañas', icon: Mail },
         { id: 'segments', label: 'Smart Lists', icon: Users },
@@ -202,7 +245,7 @@ export default function MarketingDashboardPage() {
                                             </div>
                                         </div>
 
-                                        {campaign.stats && (
+                                        {campaign.stats ? (
                                             <div style={{ display: 'flex', gap: '20px', textAlign: isMobile ? 'left' : 'right' }}>
                                                 <div>
                                                     <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Total</p>
@@ -218,6 +261,25 @@ export default function MarketingDashboardPage() {
                                                 </div>
                                                 <Button variant="ghost" size="sm" leftIcon={<ChevronRight size={18} />} onClick={() => navigate(`/admin/marketing/${campaign.id}`)} />
                                             </div>
+                                        ) : (
+                                            <div style={{ display: 'flex', gap: '12px' }}>
+                                                {campaign.status === 'draft' && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="primary"
+                                                        leftIcon={<Send size={16} />}
+                                                        onClick={() => setCampaignToLaunch(campaign)}
+                                                    >
+                                                        Enviar Ahora
+                                                    </Button>
+                                                )}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    leftIcon={<ChevronRight size={18} />}
+                                                    onClick={() => navigate(`/admin/marketing/${campaign.id}`)}
+                                                />
+                                            </div>
                                         )}
                                     </div>
                                 </Card>
@@ -227,7 +289,12 @@ export default function MarketingDashboardPage() {
                 )}
 
                 {activeTab === 'segments' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 400px))',
+                        gap: '24px',
+                        justifyContent: 'start'
+                    }}>
                         {segments.length === 0 ? (
                             <EmptyState
                                 title="No hay listas"
@@ -235,23 +302,70 @@ export default function MarketingDashboardPage() {
                                 icon={<Users size={48} />}
                             />
                         ) : (
-                            segments.map((segment: EmailSegment) => (
-                                <Card key={segment.id} hoverable>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: 'rgba(0,102,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <Users size={20} color="var(--color-primary)" />
+                            segments.map((segment: any) => (
+                                <Card key={segment.id} hoverable style={{ padding: '20px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                                        <div style={{ display: 'flex', gap: '12px' }}>
+                                            <div style={{
+                                                width: '44px',
+                                                height: '44px',
+                                                borderRadius: '12px',
+                                                backgroundColor: 'var(--color-primary-light)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                border: '1px solid var(--color-primary-shabow)'
+                                            }}>
+                                                <Users size={22} color="var(--color-primary)" />
+                                            </div>
+                                            <div>
+                                                <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                                    {segment.name}
+                                                </h4>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                                                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>
+                                                        Refresco: {new Date(segment.updated_at).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <Badge variant="pill-secondary">{segment.count || 0} Miembros</Badge>
+                                        <Badge variant="pill-info" style={{ fontSize: '12px', fontWeight: 800 }}>
+                                            {segment.count || 0} USUARIOS
+                                        </Badge>
                                     </div>
-                                    <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                                        {segment.name}
-                                    </h4>
-                                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.4' }}>
-                                        {segment.description}
+
+                                    <p style={{
+                                        fontSize: '13px',
+                                        color: 'var(--text-secondary)',
+                                        marginBottom: '20px',
+                                        lineHeight: '1.5',
+                                        height: '40px',
+                                        overflow: 'hidden',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical'
+                                    }}>
+                                        {segment.description || 'Sin descripción detallada.'}
                                     </p>
-                                    <Button variant="secondary" size="sm" fullWidth onClick={() => navigate(`/admin/marketing/list/${segment.id}`)}>
-                                        Editar Filtros
-                                    </Button>
+
+                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            style={{ flex: 1, height: '36px', borderRadius: '10px' }}
+                                            onClick={() => navigate(`/admin/marketing/list/${segment.id}`)}
+                                        >
+                                            Configurar Filtros
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setDeleteModal({ isOpen: true, id: segment.id, name: segment.name })}
+                                            style={{ color: 'var(--color-error)', height: '36px', width: '36px', padding: 0 }}
+                                        >
+                                            <Trash2 size={16} />
+                                        </Button>
+                                    </div>
                                 </Card>
                             ))
                         )}
@@ -270,6 +384,28 @@ export default function MarketingDashboardPage() {
                     <GlobalEmailHistory />
                 )}
             </div>
+
+            <ConfirmDialog
+                isOpen={deleteModal.isOpen}
+                title="Eliminar Lista"
+                description={`¿Estás seguro de que deseas eliminar la lista "${deleteModal.name}"? Esta acción no se puede deshacer.`}
+                confirmLabel="Eliminar"
+                onConfirm={handleDeleteSegment}
+                onCancel={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+                isLoading={deleteSegmentMutation.isPending}
+            />
+            {/* Modal de Confirmación de Lanzamiento */}
+            <ConfirmDialog
+                isOpen={!!campaignToLaunch}
+                onCancel={() => setCampaignToLaunch(null)}
+                onConfirm={handleLaunchCampaign}
+                title="Lanzar Campaña"
+                description={`¿Estás seguro de que deseas enviar la campaña "${campaignToLaunch?.name}" ahora? Se enviará a todos los contactos del segmento seleccionado.`}
+                confirmLabel={isLaunching ? "Lanzando..." : "Sí, Enviar Ahora"}
+                cancelLabel="Cancelar"
+                variant="info"
+                isLoading={isLaunching}
+            />
         </div>
     );
 }
