@@ -63,7 +63,7 @@ CREATE TABLE marketing_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   
   -- Identificación evento
-  event_type VARCHAR(100) NOT NULL, -- 'user_registered', 'password_reset', 'promo', etc
+  event_type VARCHAR(100) NOT NULL, -- 'user_registered', 'password_reset', 'promo', 'template_test', etc
   
   -- Destinatario
   user_id UUID NOT NULL REFERENCES auth.users(id),
@@ -76,7 +76,10 @@ CREATE TABLE marketing_events (
   variables JSONB DEFAULT '{}'::jsonb,
   
   -- Estado
-  status VARCHAR(50) DEFAULT 'pending', -- 'pending' | 'sent' | 'failed' | 'skipped'
+  status VARCHAR(50) DEFAULT 'pending', -- 'pending' | 'sent' | 'failed' | 'test' | 'skipped'
+  
+  -- Tipo de envío
+  is_test_email BOOLEAN DEFAULT false, -- true si es email de prueba
   
   -- Respuesta email service
   email_service_id VARCHAR(255), -- ID de Resend/SendGrid
@@ -86,12 +89,13 @@ CREATE TABLE marketing_events (
   created_at TIMESTAMP DEFAULT NOW(),
   sent_at TIMESTAMP,
   
-  CONSTRAINT valid_status CHECK (status IN ('pending', 'sent', 'failed', 'skipped'))
+  CONSTRAINT valid_status CHECK (status IN ('pending', 'sent', 'failed', 'test', 'skipped'))
 );
 
 CREATE INDEX idx_marketing_events_type ON marketing_events(event_type);
 CREATE INDEX idx_marketing_events_user ON marketing_events(user_id);
 CREATE INDEX idx_marketing_events_status ON marketing_events(status);
+CREATE INDEX idx_marketing_events_is_test ON marketing_events(is_test_email);
 CREATE INDEX idx_marketing_events_created ON marketing_events(created_at);
 ```
 
@@ -147,29 +151,37 @@ export default async function handler(req: Request) {
       user_id,
       email,
       template_id,
-      variables = {}
+      variables = {},
+      is_test_email = false  // ⭐ NUEVO: indicador de test
     } = await req.json();
 
     // 1. Validar event_type (existe en mappings)
-    const { data: mapping } = await supabase
-      .from('marketing_event_mappings')
-      .select('template_id')
-      .eq('event_type', event_type)
-      .eq('enabled', true)
-      .single();
+    // NOTA: 'template_test' no necesita estar en mappings (evento especial)
+    let mapping = null;
+    
+    if (event_type !== 'template_test') {
+      const { data } = await supabase
+        .from('marketing_event_mappings')
+        .select('template_id')
+        .eq('event_type', event_type)
+        .eq('enabled', true)
+        .single();
 
-    if (!mapping) {
-      return new Response(
-        JSON.stringify({ error: `Event type ${event_type} not found` }),
-        { status: 400 }
-      );
+      mapping = data;
+
+      if (!mapping) {
+        return new Response(
+          JSON.stringify({ error: `Event type ${event_type} not found` }),
+          { status: 400 }
+        );
+      }
     }
 
     // 2. Obtener plantilla
     const { data: template } = await supabase
       .from('email_templates')
       .select('subject, body_html')
-      .eq('id', template_id || mapping.template_id)
+      .eq('id', template_id || (mapping?.template_id))
       .single();
 
     if (!template) {
@@ -183,6 +195,11 @@ export default async function handler(req: Request) {
     let subject = template.subject;
     let bodyHtml = template.body_html;
 
+    // Agregar marca de TEST si es test email
+    if (is_test_email) {
+      subject = `[TEST] ${subject}`;
+    }
+
     // Reemplazar {{ variable }} con valores reales
     Object.entries(variables).forEach(([key, value]) => {
       const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
@@ -190,16 +207,19 @@ export default async function handler(req: Request) {
       bodyHtml = bodyHtml.replace(regex, String(value));
     });
 
-    // 4. Guardar evento en BD (estado: pending)
+    // 4. Guardar evento en BD (estado: pending o test)
+    const initialStatus = is_test_email ? 'test' : 'pending';
+    
     const { data: event, error: insertError } = await supabase
       .from('marketing_events')
       .insert({
         event_type,
         user_id,
         email,
-        template_id: template_id || mapping.template_id,
+        template_id: template_id || (mapping?.template_id),
         variables,
-        status: 'pending'
+        status: initialStatus,
+        is_test_email  // ⭐ NUEVO: marcar como test
       })
       .select()
       .single();
@@ -213,7 +233,9 @@ export default async function handler(req: Request) {
         from: 'noreply@dropcost.jariash.com',
         to: email,
         subject,
-        html: bodyHtml
+        html: bodyHtml,
+        // ⭐ OPCIONAL: agregar tags para tracking en Resend
+        tags: is_test_email ? ['test'] : [event_type]
       });
 
       // 6. Actualizar estado a 'sent'
@@ -226,13 +248,21 @@ export default async function handler(req: Request) {
         })
         .eq('id', event.id);
 
-      console.log(`✅ Email sent for ${event_type}:`, emailResponse.id);
+      const logMessage = is_test_email 
+        ? `✅ TEST email sent to ${email}`
+        : `✅ Email sent for ${event_type}`;
+      
+      console.log(logMessage, emailResponse.id);
 
       return new Response(
         JSON.stringify({
           success: true,
           event_id: event.id,
-          email_id: emailResponse.id
+          email_id: emailResponse.id,
+          is_test: is_test_email,
+          message: is_test_email 
+            ? `Test email sent to ${email}` 
+            : `Email queued for ${event_type}`
         }),
         { status: 200 }
       );
@@ -246,7 +276,11 @@ export default async function handler(req: Request) {
         })
         .eq('id', event.id);
 
-      console.error(`❌ Failed to send email:`, emailError);
+      const errorMessage = is_test_email
+        ? `❌ Failed to send test email`
+        : `❌ Failed to send email`;
+      
+      console.error(errorMessage, emailError);
       throw emailError;
     }
   } catch (error) {
@@ -391,7 +425,138 @@ two_fa_enabled(async (user_id, secret) => {
 
 ---
 
-## VI. FASE 3: NUEVAS CAMPAÑAS (Sin código)
+## VI. TEST EMAIL FLOW (Nuevo)
+
+### 6.1 Comportamiento Test Email
+
+```
+DIFERENCIAS:
+
+Email Normal (Producción):
+├─ event_type: 'user_registered', 'password_reset', etc
+├─ is_test_email: false
+├─ status: 'pending' → 'sent'
+├─ email_service_id: asignado
+└─ Se registra como evento real
+
+Test Email (Desarrollo/QA):
+├─ event_type: 'template_test' (evento especial)
+├─ is_test_email: true ⭐
+├─ status: 'test' (no 'pending')
+├─ Asunto: [TEST] {{ original_subject }}
+├─ Se registra para auditoría
+└─ NO afecta métricas de producción
+```
+
+### 6.2 Enviar Test Email (Sin código)
+
+**Desde admin/marketing:**
+
+```typescript
+// Función auxiliar: Send Template Test
+async function sendTemplateTest(
+  templateId: string,
+  testEmail: string,
+  testVariables: Record<string, any>
+) {
+  const response = await fetch('/functions/dispatch-marketing-event', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event_type: 'template_test',        // ⭐ Evento especial
+      user_id: currentAdminUserId,
+      email: testEmail,                   // Email de admin (no cliente)
+      template_id: templateId,
+      variables: testVariables,
+      is_test_email: true                 // ⭐ Marcar como test
+    })
+  });
+
+  const result = await response.json();
+  return result;
+}
+
+// Uso en UI:
+async function handleSendTestEmail() {
+  const result = await sendTemplateTest(
+    templateId = 'uuid-template-123',
+    testEmail = 'admin@dropcost.jariash.com',
+    testVariables = {
+      name: 'Juan (TEST)',
+      email: 'admin@dropcost.jariash.com',
+      code: '123456'
+    }
+  );
+
+  if (result.success) {
+    showNotification(`✅ Test email sent to ${testEmail}`);
+  }
+}
+```
+
+### 6.3 Comportamiento en BD
+
+```
+Registro en marketing_events:
+
+{
+  id: 'uuid-abc123',
+  event_type: 'template_test',
+  user_id: 'admin-uuid',
+  email: 'admin@dropcost.jariash.com',
+  template_id: 'uuid-template',
+  variables: { name: 'Juan (TEST)', ... },
+  status: 'sent',
+  is_test_email: true,        ⭐ Indicador de test
+  email_service_id: 'resend-id',
+  created_at: '2026-02-26T10:30:00Z',
+  sent_at: '2026-02-26T10:30:05Z'
+}
+
+FILTRAR TEST EMAILS:
+SELECT * FROM marketing_events 
+WHERE is_test_email = false  -- Solo emails reales
+AND status = 'sent';
+```
+
+### 6.4 Test Email Flow Completo
+
+```
+FLUJO:
+
+Admin abre plantilla template_welcome
+  ↓
+Click "Enviar test"
+  ↓
+Input email: admin@dropcost.jariash.com
+  ↓
+Input variables: { name: "Admin Test", ... }
+  ↓
+Click "Enviar"
+  ↓
+dispatch_marketing_event({
+  event_type: 'template_test',
+  is_test_email: true,
+  variables: { ... }
+})
+  ↓
+Edge Function:
+├─ Reemplaza variables
+├─ Asunto: [TEST] Bienvenido a DropCost
+├─ Envía a admin@...
+├─ Guarda en marketing_events (is_test_email=true)
+└─ Status: 'test' → 'sent'
+  ↓
+Email llega a admin
+  ↓
+Admin verifica formato, variables, diseño
+  ↓
+Si OK: publica plantilla
+├─ Event actual usa esta template
+└─ Próximos usuarios reciben email productivo
+```
+
+
 
 ### 6.1 Agregar Event Type (BD, sin código)
 
@@ -468,10 +633,12 @@ async function launchPromoCampaign(promoName: string) {
 |------|-------|---------|
 | **Triggers** | 5 específicos | 1 central genérico |
 | **Código para nuevo evento** | Nuevo trigger (dev) | Solo SQL insert (no-code) |
+| **Test Email** | Función separada (compleja) | dispatch_marketing_event con is_test_email=true |
 | **Escalabilidad** | Baja | Alta |
-| **Dowtime** | Mínimo (30 min) | 0 downtime |
+| **Downtime** | Mínimo (30 min) | 0 downtime |
 | **Variables dinámicas** | Hardcoded | JSON flexible |
-| **Auditoría** | Limitada | Completa (marketing_events log) |
+| **Auditoría** | Limitada | Completa (marketing_events log + is_test_email flag) |
+| **Status DB** | pending, sent, failed | pending, sent, failed, test, skipped |
 
 ---
 
@@ -483,23 +650,49 @@ PROCEDIMIENTO:
 1. Registrar usuario de prueba
    ├─ Usuario recibe email welcome
    ├─ Verificar tabla marketing_events
+   ├─ is_test_email: false
    └─ Status: 'sent' ✅
 
-2. Reset password
+2. Enviar TEST EMAIL ⭐
+   ├─ Click "Enviar test" en template
+   ├─ Input: admin email + variables
+   ├─ Email llega con asunto [TEST] ...
+   ├─ Verificar marketing_events (is_test_email=true)
+   ├─ Status: 'test' (no 'sent')
+   └─ Variables reemplazadas correctamente ✅
+
+3. Reset password
    ├─ Usuario recibe email reset
    ├─ Verificar variables reemplazadas
+   ├─ is_test_email: false
    └─ Status: 'sent' ✅
 
-3. 2FA code
+4. 2FA code
    ├─ Usuario recibe email 2FA
    ├─ Código debe estar en email
+   ├─ is_test_email: false
    └─ Status: 'sent' ✅
 
-4. Crear usuario referido
+5. Crear usuario referido
    ├─ Verificar que dispara correctamente
-   └─ Email llega con variables ✅
+   ├─ Email llega con variables
+   ├─ is_test_email: false
+   └─ Status: 'sent' ✅
 
-5. Crear promo (nueva)
+6. Enviar múltiples TEST EMAILS ⭐
+   ├─ Enviar mismo test 3 veces
+   ├─ 3 registros en marketing_events
+   ├─ Todos con is_test_email=true
+   ├─ Todos con status='test'
+   └─ Auditoría completa ✅
+
+7. Filtrar en BD
+   ├─ SELECT * WHERE is_test_email=false → solo emails reales
+   ├─ SELECT * WHERE is_test_email=true → solo tests
+   ├─ SELECT * WHERE status='test' → todos los tests
+   └─ Separación clara ✅
+
+8. Crear promo (nueva)
    ├─ Insertar en marketing_event_mappings (SQL)
    ├─ Disparar evento
    ├─ Email llega
@@ -512,19 +705,28 @@ PROCEDIMIENTO:
 
 ```
 ✅ MANTIENE FUNCIONALIDAD:
-└─ Los usuarios reciben emails igual que antes
-└─ Las plantillas siguen siendo las mismas
+├─ Los usuarios reciben emails igual que antes
+├─ Las plantillas siguen siendo las mismas
 └─ SIN cambios para usuarios finales
 
+✅ TEST EMAIL INTEGRADO:
+├─ Usa el MISMO dispatcher que producción
+├─ is_test_email=true → status='test' (no afecta métricas)
+├─ Asunto marcado como [TEST]
+├─ Separación clara en BD (is_test_email flag)
+├─ Auditoría completa de tests
+└─ Múltiples tests sin contaminar datos
+
 ✅ MEJORA ESCALABILIDAD:
-└─ Marketing puede crear campañas sin dev
-└─ Variables dinámicas en JSON
+├─ Marketing puede crear campañas sin dev
+├─ Variables dinámicas en JSON
+├─ Test email desde UI (sin código)
 └─ Auditoría completa
 
 ⚠️ SIN DOWNTIME:
-└─ Refactorizar en Staging
-└─ Test completo
-└─ Deploy a Prod (rápido)
+├─ Refactorizar en Staging
+├─ Test completo (incluye test emails)
+├─ Deploy a Prod (rápido)
 └─ Rollback posible si algo falla
 ```
 
