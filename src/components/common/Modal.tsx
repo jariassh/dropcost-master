@@ -17,6 +17,7 @@ const sizeStyles: Record<ModalSize, string> = {
     sm: 'max-w-md',
     md: 'max-w-2xl',
     lg: 'max-w-4xl',
+    xl: 'max-w-6xl',
 };
 
 export function Modal({
@@ -51,7 +52,7 @@ export function Modal({
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
             style={{ animation: 'fadeIn 200ms ease-out' }}
         >
             {/* Overlay */}

@@ -150,5 +150,22 @@ export const userService = {
         }
 
         return true;
+    },
+
+    /**
+     * Obtiene los roles únicos de los usuarios registrados
+     */
+    async getUniqueRoles(): Promise<string[]> {
+        const { data, error } = await supabase
+            .from('users')
+            .select('rol');
+
+        if (error) {
+            console.error('Error fetching unique roles:', error);
+            return [];
+        }
+
+        const roles = data.map((u: any) => u.rol).filter(Boolean);
+        return [...new Set(roles)] as string[];
     }
 };

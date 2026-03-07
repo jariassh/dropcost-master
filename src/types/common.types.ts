@@ -5,7 +5,7 @@ export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 export type AlertType = 'success' | 'error' | 'warning' | 'info';
 export type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'modern-success' | 'modern-warning' | 'modern-error' | 'modern-info' | 'pill-success' | 'pill-error' | 'pill-warning' | 'pill-info' | 'pill-purple' | 'pill-secondary';
 export type SpinnerSize = 'sm' | 'md' | 'lg';
-export type ModalSize = 'sm' | 'md' | 'lg';
+export type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
 
 export interface ToastMessage {
     id: string;

@@ -50,7 +50,7 @@ export const paymentService = {
 
         if (!data.init_point) {
             // console.error('Missing init_point in response:', data);
-            throw new Error('No se recibiÃ³ el link de pago de Mercado Pago.');
+            throw new Error('No se recibió el link de pago de Mercado Pago.');
         }
 
         // console.log('Redirecting to Checkout:', data.init_point);

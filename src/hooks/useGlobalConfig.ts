@@ -25,7 +25,7 @@ export function useGlobalConfig() {
         try {
             if (!config) return;
 
-            // 1. Cargar Fuentes DinÃ¡micamente
+            // 1. Cargar Fuentes Dinámicamente
             loadGoogleFont(config.font_family_primary); // RF Secondary -> Body
             loadGoogleFont(config.font_family_secondary); // RF Primary -> Headings
             loadGoogleFont(config.font_family_accent); // RF Accent -> Lora
@@ -45,7 +45,7 @@ export function useGlobalConfig() {
             setProp('--color-primary-dark', config.color_primary_dark);
             setProp('--color-primary-light', config.color_primary_light);
 
-            // SemÃ¡nticos
+            // Semánticos
             setProp('--color-success', config.color_success);
             setProp('--color-error', config.color_error);
             setProp('--color-warning', config.color_warning);
@@ -79,17 +79,17 @@ export function useGlobalConfig() {
             // Texto Inverso
             setProp('--text-inverse', config.color_text_inverse);
 
-            // Sidebar / NavegaciÃ³n
+            // Sidebar / Navegación
             setProp('--sidebar-bg', config.color_sidebar_bg);
             setProp('--sidebar-text', config.color_sidebar_text);
             setProp('--sidebar-active', config.color_sidebar_active);
 
-            // AdministraciÃ³n
+            // Administración
             setProp('--color-admin-panel-link', config.color_admin_panel_link);
             setProp('--color-admin-sidebar-active', config.color_admin_sidebar_active);
             setProp('--color-admin-sidebar-return', config.color_admin_sidebar_return);
 
-            // 2. Aplicar TipografÃ­a (Variables CSS)
+            // 2. Aplicar Tipografía (Variables CSS)
             setProp('--font-body', config.font_family_primary || 'Poppins');
             setProp('--font-headings', config.font_family_secondary || 'Inter');
             setProp('--font-accent', config.font_family_accent || 'Lora');
@@ -198,7 +198,7 @@ export function useGlobalConfig() {
         }
     }, [theme]);
 
-    // React Query para obtener la configuraciÃ³n (cachÃ© de 30 min)
+    // React Query para obtener la configuración (caché de 30 min)
     const { data: config, isLoading } = useQuery({
         queryKey: ['globalConfig'],
         queryFn: () => configService.getConfig(),
