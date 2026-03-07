@@ -49,11 +49,11 @@ export function useCreateCampaign() {
 /**
  * Hook para obtener las estadísticas generales de marketing
  */
-export function useMarketingStats(tiendaId: string, userId: string) {
+export function useMarketingStats(tiendaId?: string, userId?: string) {
     return useQuery({
         queryKey: ['marketing-stats', tiendaId, userId],
         queryFn: () => getMarketingStats(tiendaId, userId),
-        enabled: !!tiendaId && !!userId,
+        enabled: !!userId, // Siempre necesitamos el userId para verificar el rol
         staleTime: 1000 * 60 * 5, 
     });
 }
@@ -61,11 +61,11 @@ export function useMarketingStats(tiendaId: string, userId: string) {
 /**
  * Hook para obtener las campañas de email
  */
-export function useMarketingCampaigns(tiendaId: string, userId: string) {
+export function useMarketingCampaigns(tiendaId?: string, userId?: string) {
     return useQuery({
         queryKey: ['marketing-campaigns', tiendaId, userId],
         queryFn: () => getCampaigns(tiendaId, userId),
-        enabled: !!tiendaId && !!userId,
+        enabled: !!userId,
         staleTime: 1000 * 60 * 2, 
     });
 }
@@ -73,11 +73,11 @@ export function useMarketingCampaigns(tiendaId: string, userId: string) {
 /**
  * Hook para obtener los segmentos (Smart Lists)
  */
-export function useMarketingSegments(tiendaId: string, userId: string) {
+export function useMarketingSegments(tiendaId?: string, userId?: string) {
     return useQuery({
         queryKey: ['marketing-segments', tiendaId, userId],
         queryFn: () => getSegments(tiendaId, userId),
-        enabled: !!tiendaId && !!userId,
+        enabled: !!userId,
         staleTime: 1000 * 60 * 10, 
     });
 }

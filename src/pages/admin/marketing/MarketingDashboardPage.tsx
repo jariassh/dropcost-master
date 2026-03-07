@@ -45,7 +45,7 @@ export default function MarketingDashboardPage() {
     // Estados para lanzamiento de campaña
     const [campaignToLaunch, setCampaignToLaunch] = useState<EmailCampaign | null>(null);
 
-    // Queries con React Query para Caché
+    // Queries con React Query para Caché (Globales para Admin)
     const { data: stats = {
         totalCampaigns: 0,
         totalEmailsSent: 0,
@@ -53,10 +53,10 @@ export default function MarketingDashboardPage() {
         activeSegments: 0,
         activeTriggers: 0,
         failedEmails: 0
-    }, isLoading: isStatsLoading } = useMarketingStats(tiendaActual?.id || '', user?.id || '');
+    }, isLoading: isStatsLoading } = useMarketingStats(undefined, user?.id || '');
 
-    const { data: campaigns = [], isLoading: isCampaignsLoading } = useMarketingCampaigns(tiendaActual?.id || '', user?.id || '');
-    const { data: segments = [], isLoading: isSegmentsLoading } = useMarketingSegments(tiendaActual?.id || '', user?.id || '');
+    const { data: campaigns = [], isLoading: isCampaignsLoading } = useMarketingCampaigns(undefined, user?.id || '');
+    const { data: segments = [], isLoading: isSegmentsLoading } = useMarketingSegments(undefined, user?.id || '');
     const deleteSegmentMutation = useDeleteSegment();
     const deleteCampaignMutation = useDeleteCampaign();
     const launchCampaignMutation = useLaunchCampaign();

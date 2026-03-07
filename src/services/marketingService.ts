@@ -8,19 +8,29 @@ import { EmailSegment, EmailCampaign, EmailTemplate, SegmentFilters, FilterCondi
 /**
  * Obtiene el resumen del dashboard de marketing para una tienda específica.
  */
-export const getMarketingStats = async (tiendaId: string, userId: string) => {
-    // 1. Campañas y Segmentos (Legacy/Manual)
-    const { count: totalCampaigns } = await supabase
-        .from('email_campaigns' as any)
-        .select('*', { count: 'exact', head: true })
-        .eq('tienda_id', tiendaId)
-        .eq('usuario_id', userId);
+export const getMarketingStats = async (tiendaId?: string, userId?: string) => {
+    // Verificamos si es admin para decidir si filtramos
+    const { data: userData } = await supabase.from('users').select('rol').eq('id', userId || '').maybeSingle();
+    const isAdmin = userData?.rol === 'admin' || userData?.rol === 'superadmin';
 
-    const { count: activeSegments } = await supabase
+    // 1. Campañas y Segmentos
+    let campaignsQuery = supabase
+        .from('email_campaigns' as any)
+        .select('*', { count: 'exact', head: true });
+    
+    if (!isAdmin && tiendaId) campaignsQuery = campaignsQuery.eq('tienda_id', tiendaId);
+    if (!isAdmin && userId) campaignsQuery = campaignsQuery.eq('usuario_id', userId);
+    
+    const { count: totalCampaigns } = await campaignsQuery;
+
+    let segmentsQuery = supabase
         .from('email_segments' as any)
-        .select('*', { count: 'exact', head: true })
-        .eq('tienda_id', tiendaId)
-        .eq('usuario_id', userId);
+        .select('*', { count: 'exact', head: true });
+        
+    if (!isAdmin && tiendaId) segmentsQuery = segmentsQuery.eq('tienda_id', tiendaId);
+    if (!isAdmin && userId) segmentsQuery = segmentsQuery.eq('usuario_id', userId);
+
+    const { count: activeSegments } = await segmentsQuery;
 
     // 2. Automation (Nuevo Trigger Central: marketing_events)
     // Obtenemos estadísticas globales de la nueva tabla centralizada
@@ -55,16 +65,22 @@ export const getMarketingStats = async (tiendaId: string, userId: string) => {
 /**
  * Obtiene todas las campañas de email de una tienda.
  */
-export const getCampaigns = async (tiendaId: string, userId: string): Promise<EmailCampaign[]> => {
-    const { data, error } = await supabase
+export const getCampaigns = async (tiendaId?: string, userId?: string): Promise<EmailCampaign[]> => {
+    // Verificamos si es admin
+    const { data: userData } = await supabase.from('users').select('rol').eq('id', userId || '').maybeSingle();
+    const isAdmin = userData?.rol === 'admin' || userData?.rol === 'superadmin';
+
+    let query = supabase
         .from('email_campaigns' as any)
         .select(`
             *,
             stats:email_campaign_logs(status)
-        `)
-        .eq('tienda_id', tiendaId)
-        .eq('usuario_id', userId)
-        .order('created_at', { ascending: false });
+        `);
+    
+    if (!isAdmin && tiendaId) query = query.eq('tienda_id', tiendaId);
+    if (!isAdmin && userId) query = query.eq('usuario_id', userId);
+    
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) throw error;
 
@@ -86,13 +102,19 @@ export const getCampaigns = async (tiendaId: string, userId: string): Promise<Em
 /**
  * Obtiene todas las listas/segmentos inteligentes de una tienda.
  */
-export const getSegments = async (tiendaId: string, userId: string): Promise<EmailSegment[]> => {
-    const { data, error } = await supabase
+export const getSegments = async (tiendaId?: string, userId?: string): Promise<EmailSegment[]> => {
+    // Verificamos si es admin
+    const { data: userData } = await supabase.from('users').select('rol').eq('id', userId || '').maybeSingle();
+    const isAdmin = userData?.rol === 'admin' || userData?.rol === 'superadmin';
+
+    let query = supabase
         .from('email_segments' as any)
-        .select('*')
-        .eq('tienda_id', tiendaId)
-        .eq('usuario_id', userId)
-        .order('created_at', { ascending: false });
+        .select('*');
+        
+    if (!isAdmin && tiendaId) query = query.eq('tienda_id', tiendaId);
+    if (!isAdmin && userId) query = query.eq('usuario_id', userId);
+
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) throw error;
 

@@ -44,8 +44,8 @@ export default function CampaignWizardPage() {
     const { tiendaActual } = useStoreStore();
     const toast = useToast();
 
-    // Data fetching
-    const { data: segments = [], isLoading: isLoadingSegments } = useMarketingSegments(tiendaActual?.id || '', user?.id || '');
+    // Data fetching (Global para Admin)
+    const { data: segments = [], isLoading: isLoadingSegments } = useMarketingSegments(undefined, user?.id || '');
     const { data: templates = [], isLoading: isLoadingTemplates } = useMarketingTemplates();
 
     // State
@@ -85,7 +85,8 @@ export default function CampaignWizardPage() {
     };
 
     const handleFinish = async () => {
-        if (!user || !tiendaActual) return;
+        const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+        if (!user || (!isAdmin && !tiendaActual)) return;
 
         try {
             // Limpiamos los campos vacíos antes de enviar
@@ -96,7 +97,7 @@ export default function CampaignWizardPage() {
                 template_id: campaignData.template_id as string,
                 sender_name: campaignData.sender_name,
                 sender_prefix: campaignData.sender_prefix,
-                tienda_id: tiendaActual.id,
+                tienda_id: tiendaActual?.id || null,
                 usuario_id: user.id,
                 created_by: user.id,
                 status: 'draft' as const

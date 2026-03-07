@@ -129,7 +129,8 @@ export default function SegmentBuilderPage() {
     };
 
     const handleSave = async () => {
-        if (!user || !tiendaActual || !name) {
+        const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
+        if (!user || (!isAdmin && !tiendaActual) || !name) {
             toast.warning('Campo requerido', 'Por favor completa el nombre de la lista');
             return;
         }
@@ -141,7 +142,7 @@ export default function SegmentBuilderPage() {
                 name,
                 description,
                 filters,
-                tienda_id: tiendaActual.id,
+                tienda_id: tiendaActual?.id || null,
                 usuario_id: user.id
             });
 
