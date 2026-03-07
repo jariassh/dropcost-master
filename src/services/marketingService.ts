@@ -110,11 +110,51 @@ export const getSegments = async (tiendaId: string, userId: string): Promise<Ema
 
     if (error) throw error;
 
-    // NOTA: Por ahora el conteo de miembros es simulado o requiere una query pesada.
-    return (data || []).map((seg: any) => ({
-        ...seg,
-        count: seg.count || 0
-    })) as unknown as EmailSegment[];
+    // Calcular el conteo real de miembros para cada segmento
+    const segmentsWithCount = await Promise.all((data || []).map(async (seg: any) => {
+        try {
+            const count = await estimateAudience(seg.filters);
+            return {
+                ...seg,
+                count
+            };
+        } catch (e) {
+            console.error(`Error calculating count for segment ${seg.id}:`, e);
+            return {
+                ...seg,
+                count: 0
+            };
+        }
+    }));
+
+    return segmentsWithCount as unknown as EmailSegment[];
+};
+
+/**
+ * Obtiene un segmento por su ID.
+ */
+export const getSegmentById = async (id: string): Promise<EmailSegment> => {
+    const { data, error } = await supabase
+        .from('email_segments' as any)
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error) throw error;
+    return data as unknown as EmailSegment;
+};
+
+/**
+ * Elimina un segmento inteligente.
+ */
+export const deleteSegment = async (segmentId: string) => {
+    const { error } = await supabase
+        .from('email_segments' as any)
+        .delete()
+        .eq('id', segmentId);
+
+    if (error) throw error;
+    return true;
 };
 
 /**
@@ -123,8 +163,9 @@ export const getSegments = async (tiendaId: string, userId: string): Promise<Ema
 export const getTemplates = async (): Promise<EmailTemplate[]> => {
     const { data, error } = await supabase
         .from('email_templates' as any)
-        .select('id, name')
+        .select('*')
         .eq('status', 'activo')
+        .eq('is_folder', false)
         .order('name');
 
     if (error) throw error;
@@ -143,6 +184,86 @@ export const createCampaign = async (campaign: Partial<EmailCampaign>) => {
 
     if (error) throw error;
     return data as unknown as EmailCampaign;
+};
+
+/**
+ * Lanza una campaña: procesa el segmento, genera logs y marca como procesada.
+ */
+export const launchCampaign = async (campaignId: string) => {
+    // 1. Obtener datos de la campaña
+    const { data: campaign, error: campaignError } = await supabase
+        .from('email_campaigns' as any)
+        .select('*, segment:segment_id(*)')
+        .eq('id', campaignId)
+        .single();
+
+    if (campaignError) throw campaignError;
+    const realCampaign = campaign as any;
+
+    // 2. Obtener usuarios filtrados
+    const filters = realCampaign.segment?.filters;
+    if (!filters) throw new Error('Campaña sin segmento o filtros configurados');
+
+    // Reutilizamos la lógica de estimateAudience pero obteniendo los datos
+    let query = supabase.from('users').select('id, email, nombres, apellidos');
+    
+    const { conditions, operator } = filters as SegmentFilters;
+    if (conditions?.length > 0) {
+        if (operator === 'OR') {
+            const orString = conditions.map((c: FilterCondition) => {
+                const field = c.field === 'country' ? 'pais' : 
+                             c.field === 'status' ? 'estado_suscripcion' : 
+                             c.field === 'plan' ? 'plan_id' :
+                             c.field === 'rol' ? 'rol' :
+                             c.field === 'last_login' ? 'ultima_actividad' : c.field;
+                if (c.operator === 'equals') return `${field}.ilike.${c.value}`;
+                if (c.operator === 'not_equals') return `${field}.neq.${c.value}`;
+                if (c.operator === 'contains') return `${field}.ilike.%${c.value}%`;
+                return '';
+            }).filter(Boolean).join(',');
+            if (orString) query = query.or(orString);
+        } else {
+            conditions.forEach((c: FilterCondition) => {
+                const field = c.field === 'country' ? 'pais' : 
+                             c.field === 'status' ? 'estado_suscripcion' : 
+                             c.field === 'plan' ? 'plan_id' :
+                             c.field === 'rol' ? 'rol' :
+                             c.field === 'last_login' ? 'ultima_actividad' : c.field;
+                if (c.operator === 'equals') query = query.ilike(field, c.value);
+                if (c.operator === 'not_equals') query = query.neq(field, c.value);
+                if (c.operator === 'contains') query = query.ilike(field, `%${c.value}%`);
+            });
+        }
+    }
+
+    const { data: users, error: usersError } = await query;
+    if (usersError) throw usersError;
+    if (!users || users.length === 0) throw new Error('No hay usuarios que coincidan con el segmento');
+
+    // 3. Crear registros de log masivos
+    const logs = users.map(u => ({
+        campaign_id: campaignId,
+        tienda_id: realCampaign.tienda_id,
+        user_id: u.id,
+        email: u.email,
+        status: 'pending' // En un entorno real, un worker procesaría esto
+    }));
+
+    const { error: logError } = await supabase
+        .from('email_campaign_logs' as any)
+        .insert(logs);
+
+    if (logError) throw logError;
+
+    // 4. Actualizar estado de la campaña
+    const { error: updateError } = await supabase
+        .from('email_campaigns' as any)
+        .update({ status: 'completed' }) // Marcamos como completed porque "ya se mandó a cola"
+        .eq('id', campaignId);
+
+    if (updateError) throw updateError;
+
+    return { success: true, count: users.length };
 };
 
 /**
