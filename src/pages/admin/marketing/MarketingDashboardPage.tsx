@@ -24,7 +24,7 @@ import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { StatsCard } from '@/components/common/StatsCard';
 import { EmptyState } from '@/components/common/EmptyState';
-import { useMarketingStats, useMarketingCampaigns, useMarketingSegments, useDeleteSegment } from '@/hooks/useMarketing';
+import { useMarketingStats, useMarketingCampaigns, useMarketingSegments, useDeleteSegment, useDeleteCampaign, useLaunchCampaign } from '@/hooks/useMarketing';
 import { ConfirmDialog, useToast } from '@/components/common';
 import { EmailCampaign, EmailSegment } from '@/types/marketing';
 import { useAuthStore } from '@/store/authStore';
@@ -32,7 +32,6 @@ import { useStoreStore } from '@/store/useStoreStore';
 import { EmailTemplatesManager } from '@/components/marketing/EmailTemplatesManager';
 import { EmailTriggersManager } from '@/components/marketing/EmailTriggersManager';
 import { GlobalEmailHistory } from '@/components/marketing/GlobalEmailHistory';
-import { launchCampaign } from '@/services/marketingService';
 
 export default function MarketingDashboardPage() {
     const navigate = useNavigate();
@@ -45,24 +44,6 @@ export default function MarketingDashboardPage() {
 
     // Estados para lanzamiento de campaña
     const [campaignToLaunch, setCampaignToLaunch] = useState<EmailCampaign | null>(null);
-    const [isLaunching, setIsLaunching] = useState(false);
-
-    const handleLaunchCampaign = async () => {
-        if (!campaignToLaunch) return;
-
-        setIsLaunching(true);
-        try {
-            await launchCampaign(campaignToLaunch.id);
-            toast.success('Campaña enviada', 'La campaña se ha puesto en cola de procesamiento correctamente');
-            refetchCampaigns();
-            setCampaignToLaunch(null);
-        } catch (error: any) {
-            console.error('Error launching campaign:', error);
-            toast.error('Error al lanzar', error.message || 'Error al lanzar la campaña');
-        } finally {
-            setIsLaunching(false);
-        }
-    };
 
     // Queries con React Query para Caché
     const { data: stats = {
@@ -74,17 +55,51 @@ export default function MarketingDashboardPage() {
         failedEmails: 0
     }, isLoading: isStatsLoading } = useMarketingStats(tiendaActual?.id || '', user?.id || '');
 
-    const { data: campaigns = [], isLoading: isCampaignsLoading, refetch: refetchCampaigns } = useMarketingCampaigns(tiendaActual?.id || '', user?.id || '');
-    const { data: segments = [], isLoading: isSegmentsLoading, refetch: refetchSegments } = useMarketingSegments(tiendaActual?.id || '', user?.id || '');
+    const { data: campaigns = [], isLoading: isCampaignsLoading } = useMarketingCampaigns(tiendaActual?.id || '', user?.id || '');
+    const { data: segments = [], isLoading: isSegmentsLoading } = useMarketingSegments(tiendaActual?.id || '', user?.id || '');
     const deleteSegmentMutation = useDeleteSegment();
+    const deleteCampaignMutation = useDeleteCampaign();
+    const launchCampaignMutation = useLaunchCampaign();
 
-    const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; name: string }>({
+    const handleLaunchCampaign = async () => {
+        if (!campaignToLaunch) return;
+
+        try {
+            await launchCampaignMutation.mutateAsync(campaignToLaunch.id);
+            toast.success('Campaña enviada', 'La campaña se ha puesto en cola de procesamiento correctamente');
+            setCampaignToLaunch(null);
+        } catch (error: any) {
+            console.error('Error launching campaign:', error);
+            toast.error('Error al lanzar', error.message || 'Error al lanzar la campaña');
+        }
+    };
+
+    const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; name: string; type: 'segment' | 'campaign' }>({
         isOpen: false,
         id: '',
-        name: ''
+        name: '',
+        type: 'segment'
     });
 
     const isLoading = isStatsLoading || isCampaignsLoading || isSegmentsLoading;
+
+    const handleDeleteConfirm = async () => {
+        if (!deleteModal.id) return;
+
+        try {
+            if (deleteModal.type === 'segment') {
+                await deleteSegmentMutation.mutateAsync(deleteModal.id);
+                toast.success('Lista eliminada', 'La lista inteligente se ha eliminado correctamente');
+            } else {
+                await deleteCampaignMutation.mutateAsync(deleteModal.id);
+                toast.success('Campaña eliminada', 'La campaña se ha eliminado correctamente');
+            }
+            setDeleteModal({ isOpen: false, id: '', name: '', type: 'segment' });
+        } catch (error: any) {
+            console.error('Error deleting:', error);
+            toast.error('Error al eliminar', error.message || 'Hubo un error al intentar eliminar');
+        }
+    };
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -122,7 +137,7 @@ export default function MarketingDashboardPage() {
         try {
             await deleteSegmentMutation.mutateAsync(deleteModal.id);
             toast.success('Lista eliminada', `La lista "${deleteModal.name}" ha sido eliminada correctamente.`);
-            refetchSegments();
+            // refetchSegments(); // This was commented out, keeping it that way.
             setDeleteModal({ ...deleteModal, isOpen: false });
         } catch (error) {
             console.error('Error al eliminar segmento:', error);
@@ -274,6 +289,13 @@ export default function MarketingDashboardPage() {
                                                     </Button>
                                                 )}
                                                 <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    style={{ color: 'var(--color-error)' }}
+                                                    onClick={() => setDeleteModal({ isOpen: true, id: campaign.id, name: campaign.name, type: 'campaign' })}
+                                                    leftIcon={<Trash2 size={16} />}
+                                                />
+                                                <Button
                                                     variant="ghost"
                                                     size="sm"
                                                     leftIcon={<ChevronRight size={18} />}
@@ -360,7 +382,7 @@ export default function MarketingDashboardPage() {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => setDeleteModal({ isOpen: true, id: segment.id, name: segment.name })}
+                                            onClick={() => setDeleteModal({ isOpen: true, id: segment.id, name: segment.name, type: 'segment' })}
                                             style={{ color: 'var(--color-error)', height: '36px', width: '36px', padding: 0 }}
                                         >
                                             <Trash2 size={16} />
@@ -387,12 +409,13 @@ export default function MarketingDashboardPage() {
 
             <ConfirmDialog
                 isOpen={deleteModal.isOpen}
-                title="Eliminar Lista"
-                description={`¿Estás seguro de que deseas eliminar la lista "${deleteModal.name}"? Esta acción no se puede deshacer.`}
-                confirmLabel="Eliminar"
-                onConfirm={handleDeleteSegment}
                 onCancel={() => setDeleteModal({ ...deleteModal, isOpen: false })}
-                isLoading={deleteSegmentMutation.isPending}
+                onConfirm={handleDeleteConfirm}
+                title={`Eliminar ${deleteModal.type === 'segment' ? 'Lista' : 'Campaña'}`}
+                description={`¿Estás seguro de que deseas eliminar "${deleteModal.name}"? Esta acción no se puede deshacer.`}
+                confirmLabel="Eliminar"
+                variant="danger"
+                isLoading={deleteSegmentMutation.isPending || deleteCampaignMutation.isPending}
             />
             {/* Modal de Confirmación de Lanzamiento */}
             <ConfirmDialog
@@ -401,10 +424,10 @@ export default function MarketingDashboardPage() {
                 onConfirm={handleLaunchCampaign}
                 title="Lanzar Campaña"
                 description={`¿Estás seguro de que deseas enviar la campaña "${campaignToLaunch?.name}" ahora? Se enviará a todos los contactos del segmento seleccionado.`}
-                confirmLabel={isLaunching ? "Lanzando..." : "Sí, Enviar Ahora"}
+                confirmLabel={launchCampaignMutation.isPending ? "Lanzando..." : "Sí, Enviar Ahora"}
                 cancelLabel="Cancelar"
                 variant="info"
-                isLoading={isLaunching}
+                isLoading={launchCampaignMutation.isPending}
             />
         </div>
     );

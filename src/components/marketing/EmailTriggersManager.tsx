@@ -7,45 +7,37 @@ import {
     ChevronDown,
     ChevronRight,
     Search,
+    X,
+    Save
 } from 'lucide-react';
 import { Badge } from '@/components/common/Badge';
 import { Spinner } from '@/components/common/Spinner';
-import { useEmailTriggers } from '@/hooks/useMarketing';
+import { useEmailTriggers, useMarketingTemplates, useUpdateEmailTrigger } from '@/hooks/useMarketing';
 
-// ============================================================
-// TIPOS
-// ============================================================
-interface EmailTrigger {
-    id: string;
-    nombre_trigger: string;
-    descripcion: string;
-    codigo_evento: string;
-    categoria: 'usuario' | 'referido' | 'pago';
-    variables_disponibles: string[];
-    tipo_disparador: 'automatico' | 'cron';
-    tabla_origen: string;
-    evento_tipo: string;
-    condicion: string;
-    activo: boolean;
-    plantillas_count?: number;
-}
+import { MarketingEventMapping, EmailTemplate } from '@/types/marketing';
 
 // ============================================================
 // HELPERS
 // ============================================================
-const CATEGORIA_CONFIG = {
-    usuario: { label: 'Usuario', icon: Users, color: '#3B82F6', bg: 'rgba(59,130,246,0.1)' },
-    referido: { label: 'Referidos', icon: UserCheck, color: '#10B981', bg: 'rgba(16,185,129,0.1)' },
-    pago: { label: 'Pagos', icon: CreditCard, color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)' },
+const EVENT_ICON_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
+    user_registered: { icon: Users, color: '#3B82F6', bg: 'rgba(59,130,246,0.1)' },
+    referral_registered: { icon: UserCheck, color: '#10B981', bg: 'rgba(16,185,129,0.1)' },
+    password_reset: { icon: Zap, color: '#F59E0B', bg: 'rgba(245,158,11,0.1)' },
+    password_changed: { icon: UserCheck, color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)' },
+    email_changed: { icon: Zap, color: '#EAB308', bg: 'rgba(234,179,8,0.1)' },
+    profile_updated: { icon: Users, color: '#EC4899', bg: 'rgba(236,72,153,0.1)' },
+    commission_approved: { icon: CreditCard, color: '#14B8A6', bg: 'rgba(20,184,166,0.1)' },
+    verification_code: { icon: Zap, color: '#A855F7', bg: 'rgba(168,85,247,0.1)' },
+    '2fa_enabled': { icon: UserCheck, color: '#06B6D4', bg: 'rgba(6,182,212,0.1)' },
+    default: { icon: Zap, color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)' },
 };
 
 // ============================================================
 // COMPONENTE: TriggerCard
 // ============================================================
-function TriggerCard({ trigger }: { trigger: EmailTrigger }) {
-    const [expanded, setExpanded] = useState(false);
-    const cat = CATEGORIA_CONFIG[trigger.categoria];
-    const CatIcon = cat.icon;
+function TriggerCard({ mapping, onConfig }: { mapping: MarketingEventMapping, onConfig: (m: MarketingEventMapping) => void }) {
+    const config = EVENT_ICON_CONFIG[mapping.event_type] || EVENT_ICON_CONFIG.default;
+    const Icon = config.icon;
 
     return (
         <div style={{
@@ -53,64 +45,53 @@ function TriggerCard({ trigger }: { trigger: EmailTrigger }) {
             borderRadius: '12px',
             overflow: 'hidden',
             backgroundColor: 'var(--bg-primary)',
-            transition: 'box-shadow 0.2s',
+            transition: 'all 0.2s',
+            opacity: mapping.enabled ? 1 : 0.6
         }}>
-            <button
-                onClick={() => setExpanded(e => !e)}
-                style={{
-                    width: '100%', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left',
-                }}
-            >
+            <div style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <div style={{
                         width: '40px', height: '40px', borderRadius: '10px',
-                        backgroundColor: cat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        backgroundColor: config.bg, display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
-                        <CatIcon size={20} color={cat.color} />
+                        <Icon size={20} color={config.color} />
                     </div>
                     <div>
-                        <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>{trigger.nombre_trigger}</h4>
-                        <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--text-tertiary)' }}>{trigger.descripcion}</p>
+                        <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                            {mapping.event_type.replace(/_/g, ' ').toUpperCase()}
+                        </h4>
+                        <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--text-tertiary)' }}>
+                            Plantilla: <strong>{mapping.template_name}</strong>
+                        </p>
                     </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                    {trigger.plantillas_count !== undefined && (
-                        <span style={{
-                            fontSize: '12px', padding: '4px 10px', borderRadius: '20px',
-                            backgroundColor: trigger.plantillas_count > 0 ? 'rgba(16,185,129,0.1)' : 'var(--bg-secondary)',
-                            color: trigger.plantillas_count > 0 ? '#10B981' : 'var(--text-secondary)',
-                            fontWeight: 600,
-                        }}>
-                            {trigger.plantillas_count} plantilla{trigger.plantillas_count !== 1 ? 's' : ''}
-                        </span>
-                    )}
-                    {expanded ? <ChevronDown size={16} color="var(--text-secondary)" /> : <ChevronRight size={16} color="var(--text-secondary)" />}
+                    <Badge variant={mapping.enabled ? 'success' : 'pill-secondary'}>
+                        {mapping.enabled ? 'Activo' : 'Inactivo'}
+                    </Badge>
                 </div>
-            </button>
+            </div>
 
-            {expanded && (
-                <div style={{ padding: '0 16px 16px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                        <div>
-                            <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase' }}>Variables disponibles</p>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                {(Array.isArray(trigger.variables_disponibles) ? trigger.variables_disponibles : []).map(v => (
-                                    <code key={v} style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', backgroundColor: 'rgba(59,130,246,0.08)', color: '#3B82F6' }}>{v}</code>
-                                ))}
-                            </div>
-                        </div>
-                        <div>
-                            <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase' }}>Configuración</p>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}><strong>Tabla:</strong> {trigger.tabla_origen}</span>
-                                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}><strong>Evento:</strong> {trigger.evento_tipo}</span>
-                                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}><strong>Condición:</strong> {trigger.condicion}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <div style={{
+                padding: '12px 16px',
+                backgroundColor: 'var(--bg-secondary)',
+                borderTop: '1px solid var(--border-color)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+            }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                    Actualizado: {new Date(mapping.updated_at).toLocaleDateString()}
+                </span>
+                <button
+                    style={{
+                        fontSize: '11px', color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600
+                    }}
+                    onClick={() => onConfig(mapping)}
+                >
+                    Configurar
+                </button>
+            </div>
         </div>
     );
 }
@@ -119,19 +100,37 @@ function TriggerCard({ trigger }: { trigger: EmailTrigger }) {
 // COMPONENTE PRINCIPAL
 // ============================================================
 export function EmailTriggersManager() {
-    const { data: triggers = [], isLoading: loading } = useEmailTriggers();
-    const [search, setSearch] = useState('');
+    const { data: mappings = [], isLoading: loading } = useEmailTriggers();
+    const { data: templates = [] } = useMarketingTemplates();
+    const saveMutation = useUpdateEmailTrigger();
 
-    const filtered = (triggers as EmailTrigger[]).filter(t =>
-        t.nombre_trigger.toLowerCase().includes(search.toLowerCase()) ||
-        t.descripcion.toLowerCase().includes(search.toLowerCase())
+    const [search, setSearch] = useState('');
+    const [selectedMapping, setSelectedMapping] = useState<MarketingEventMapping | null>(null);
+    const [editTemplateId, setEditTemplateId] = useState<string>('');
+    const [editEnabled, setEditEnabled] = useState<boolean>(true);
+
+    const filtered = (mappings as MarketingEventMapping[]).filter(m =>
+        m.event_type.toLowerCase().includes(search.toLowerCase()) ||
+        m.template_name?.toLowerCase().includes(search.toLowerCase())
     );
 
-    const triggersByCategory = filtered.reduce((acc, t) => {
-        if (!acc[t.categoria]) acc[t.categoria] = [];
-        acc[t.categoria].push(t);
-        return acc;
-    }, {} as Record<string, EmailTrigger[]>);
+    const handleConfigClick = (mapping: MarketingEventMapping) => {
+        setSelectedMapping(mapping);
+        setEditTemplateId(mapping.template_id || '');
+        setEditEnabled(mapping.enabled);
+    };
+
+    const handleSave = () => {
+        if (!selectedMapping) return;
+        saveMutation.mutate(
+            { event_type: selectedMapping.event_type, template_id: editTemplateId, enabled: editEnabled },
+            {
+                onSuccess: () => {
+                    setSelectedMapping(null);
+                }
+            }
+        );
+    };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 300ms ease-out' }}>
@@ -140,7 +139,7 @@ export function EmailTriggersManager() {
                     <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
                     <input
                         type="text"
-                        placeholder="Buscar trigger por nombre..."
+                        placeholder="Buscar por nombre de evento o plantilla..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         style={{
@@ -151,28 +150,96 @@ export function EmailTriggersManager() {
                         }}
                     />
                 </div>
-                <Badge variant="info">{triggers.length} Triggers definidos</Badge>
+                <Badge variant="info">{mappings.length} Eventos Mapeados</Badge>
             </div>
 
             {loading ? (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}><Spinner /></div>
+            ) : filtered.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '48px', color: 'var(--text-tertiary)' }}>
+                    No se encontraron mapeos de eventos.
+                </div>
             ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                    {(Object.keys(CATEGORIA_CONFIG) as Array<keyof typeof CATEGORIA_CONFIG>).map(cat => {
-                        const items = triggersByCategory[cat] || [];
-                        if (items.length === 0) return null;
-                        return (
-                            <div key={cat}>
-                                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    {CATEGORIA_CONFIG[cat].label}
-                                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>({items.length})</span>
-                                </h3>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '16px' }}>
-                                    {items.map(t => <TriggerCard key={t.id} trigger={t} />)}
-                                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '16px' }}>
+                    {filtered.map(m => (
+                        <TriggerCard key={m.id} mapping={m} onConfig={handleConfigClick} />
+                    ))}
+                </div>
+            )}
+
+            {/* MODAL DE CONFIGURACIÓN */}
+            {selectedMapping && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backdropFilter: 'blur(4px)', animation: 'fadeIn 0.2s'
+                }}>
+                    <div style={{
+                        backgroundColor: 'var(--bg-primary)', padding: '24px', borderRadius: '16px',
+                        width: '100%', maxWidth: '480px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+                        border: '1px solid var(--border-color)', animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>Configurar Evento</h3>
+                                <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-tertiary)' }}>{selectedMapping.event_type.replace(/_/g, ' ').toUpperCase()}</p>
                             </div>
-                        );
-                    })}
+                            <button onClick={() => setSelectedMapping(null)} style={{ background: 'var(--bg-secondary)', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', borderRadius: '8px', padding: '8px' }}>
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            {/* Plantilla */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)' }}>Plantilla a Enviar</label>
+                                <select
+                                    value={editTemplateId}
+                                    onChange={(e) => setEditTemplateId(e.target.value)}
+                                    style={{
+                                        width: '100%', padding: '12px',
+                                        backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+                                        borderRadius: '8px', fontSize: '14px', color: 'var(--text-primary)',
+                                        outline: 'none', appearance: 'none'
+                                    }}
+                                >
+                                    <option value="" disabled>Selecciona una plantilla...</option>
+                                    {(templates as EmailTemplate[]).map(t => (
+                                        <option key={t.id} value={t.id}>{t.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Estado (Activo/Inactivo) */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                                <div>
+                                    <p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Activación</p>
+                                    <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--text-tertiary)' }}>¿Disparar email cuando suceda este evento?</p>
+                                </div>
+                                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
+                                    <input type="checkbox" style={{ opacity: 0, width: 0, height: 0 }} checked={editEnabled} onChange={(e) => setEditEnabled(e.target.checked)} />
+                                    <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: editEnabled ? 'var(--color-primary)' : 'var(--bg-tertiary)', transition: '.4s', borderRadius: '34px' }}></span>
+                                    <span style={{ position: 'absolute', content: '""', height: '18px', width: '18px', left: editEnabled ? '22px' : '3px', bottom: '3px', backgroundColor: 'white', transition: '.4s', borderRadius: '50%' }}></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
+                            <button
+                                onClick={() => setSelectedMapping(null)}
+                                style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px', fontWeight: 500, cursor: 'pointer', transition: 'all 0.2s' }}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                disabled={saveMutation.isPending || !editTemplateId}
+                                style={{ flex: 1, padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'var(--color-primary)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', opacity: (saveMutation.isPending || !editTemplateId) ? 0.7 : 1 }}
+                            >
+                                {saveMutation.isPending ? <Spinner size="sm" /> : <><Save size={18} /> Guardar Cambios</>}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

@@ -31,9 +31,9 @@ import { useAuthStore } from '@/store/authStore';
 import { useStoreStore } from '@/store/useStoreStore';
 import {
     useMarketingSegments,
-    useMarketingTemplates
+    useMarketingTemplates,
+    useCreateCampaign
 } from '@/hooks/useMarketing';
-import { createCampaign } from '@/services/marketingService';
 import { EmailCampaign, EmailTemplate } from '@/types/marketing';
 
 type WizardStep = 'content' | 'setup' | 'review';
@@ -50,9 +50,9 @@ export default function CampaignWizardPage() {
 
     // State
     const [step, setStep] = useState<WizardStep>('content');
-    const [isSaving, setIsSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [previewTemplate, setPreviewTemplate] = useState<EmailTemplate | null>(null);
+    const createCampaignMutation = useCreateCampaign();
 
     const [campaignData, setCampaignData] = useState<Partial<EmailCampaign>>({
         name: '',
@@ -87,7 +87,6 @@ export default function CampaignWizardPage() {
     const handleFinish = async () => {
         if (!user || !tiendaActual) return;
 
-        setIsSaving(true);
         try {
             // Limpiamos los campos vacíos antes de enviar
             const dataToSave = {
@@ -103,14 +102,12 @@ export default function CampaignWizardPage() {
                 status: 'draft' as const
             };
 
-            await createCampaign(dataToSave);
+            await createCampaignMutation.mutateAsync(dataToSave);
             toast.success('Campaña creada', 'La campaña se ha creado correctamente como borrador.');
             navigate('/admin/marketing');
         } catch (error) {
             console.error('Error creating campaign:', error);
             toast.error('Error', 'No se pudo crear la campaña. Inténtalo de nuevo.');
-        } finally {
-            setIsSaving(false);
         }
     };
 
@@ -409,7 +406,7 @@ export default function CampaignWizardPage() {
                         variant="secondary"
                         leftIcon={<ChevronLeft size={18} />}
                         onClick={step === 'content' ? () => navigate('/admin/marketing') : handleBack}
-                        disabled={isSaving}
+                        disabled={createCampaignMutation.isPending}
                     >
                         {step === 'content' ? 'Cancelar' : 'Atrás'}
                     </Button>
@@ -420,7 +417,7 @@ export default function CampaignWizardPage() {
                                 variant="primary"
                                 leftIcon={<Send size={18} />}
                                 onClick={handleFinish}
-                                isLoading={isSaving}
+                                isLoading={createCampaignMutation.isPending}
                             >
                                 Crear Borrador de Campaña
                             </Button>

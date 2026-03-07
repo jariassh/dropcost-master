@@ -13,28 +13,18 @@ import { Spinner } from '@/components/common/Spinner';
 import { Modal } from '@/components/common/Modal';
 import { useEmailHistory } from '@/hooks/useMarketing';
 
-interface EmailHistorial {
-    id: string;
-    usuario_email: string;
-    asunto_enviado: string;
-    contenido_html_enviado?: string;
-    from_email: string;
-    from_name: string;
-    estado: 'enviado' | 'fallido' | 'rebote';
-    tipo_envio: 'automatico' | 'prueba';
-    razon_error: string | null;
-    fecha_envio: string;
-    plantilla?: { name: string };
-    trigger?: { nombre_trigger: string; codigo_evento: string };
-}
+import { MarketingEvent } from '@/types/marketing';
 
-const ESTADO_CONFIG = {
-    enviado: { label: 'Enviado', color: 'success', icon: CheckCircle },
-    fallido: { label: 'Fallido', color: 'danger', icon: XCircle },
-    rebote: { label: 'Rebote', color: 'warning', icon: AlertCircle },
+const ESTADO_CONFIG: Record<string, { label: string; color: any; icon: React.ElementType }> = {
+    sent: { label: 'Enviado', color: 'success', icon: CheckCircle },
+    failed: { label: 'Fallido', color: 'error', icon: XCircle },
+    pending: { label: 'Pendiente', color: 'warning', icon: RefreshCw },
+    test: { label: 'Prueba', color: 'pill-purple', icon: Eye },
+    skipped: { label: 'Omitido', color: 'pill-secondary', icon: AlertCircle },
 };
 
 function formatDate(iso: string) {
+    if (!iso) return '-';
     return new Date(iso).toLocaleString('es-CO', {
         day: '2-digit', month: '2-digit', year: 'numeric',
         hour: '2-digit', minute: '2-digit'
@@ -43,21 +33,21 @@ function formatDate(iso: string) {
 
 export function GlobalEmailHistory() {
     const { data: historial = [], isLoading: loading, refetch } = useEmailHistory();
-    const [filter, setFilter] = useState<'todos' | 'enviado' | 'fallido' | 'prueba'>('todos');
+    const [filter, setFilter] = useState<'todos' | 'sent' | 'failed' | 'test'>('todos');
     const [search, setSearch] = useState('');
-    const [selectedItem, setSelectedItem] = useState<EmailHistorial | null>(null);
+    const [selectedItem, setSelectedItem] = useState<MarketingEvent | null>(null);
 
     const loadData = async () => {
         refetch();
     };
 
-    const filtered = (historial as EmailHistorial[]).filter(item => {
+    const filtered = (historial as unknown as MarketingEvent[]).filter(item => {
         const matchesFilter = filter === 'todos'
-            || (filter === 'prueba' && item.tipo_envio === 'prueba')
-            || (filter !== 'prueba' && item.estado === filter);
+            || (filter === 'test' && (item.is_test_email || item.status === 'test'))
+            || (filter !== 'test' && item.status === filter);
         const matchesSearch = !search
-            || item.usuario_email.toLowerCase().includes(search.toLowerCase())
-            || item.asunto_enviado?.toLowerCase().includes(search.toLowerCase());
+            || item.email.toLowerCase().includes(search.toLowerCase())
+            || item.event_type.toLowerCase().includes(search.toLowerCase());
         return matchesFilter && matchesSearch;
     });
 
@@ -69,7 +59,7 @@ export function GlobalEmailHistory() {
                     <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
                     <input
                         type="text"
-                        placeholder="Buscar por email o asunto..."
+                        placeholder="Buscar por email o evento..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         style={{
@@ -82,18 +72,23 @@ export function GlobalEmailHistory() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {(['todos', 'enviado', 'fallido', 'prueba'] as const).map(f => (
+                    {([
+                        { id: 'todos', label: 'Todos' },
+                        { id: 'sent', label: 'Enviados' },
+                        { id: 'failed', label: 'Fallidos' },
+                        { id: 'test', label: 'Pruebas' }
+                    ] as const).map(f => (
                         <button
-                            key={f}
-                            onClick={() => setFilter(f)}
+                            key={f.id}
+                            onClick={() => setFilter(f.id as typeof filter)}
                             style={{
                                 padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
                                 border: 'none', cursor: 'pointer', transition: 'all 0.2s',
-                                backgroundColor: filter === f ? 'var(--color-primary)' : 'var(--bg-secondary)',
-                                color: filter === f ? '#fff' : 'var(--text-secondary)',
+                                backgroundColor: filter === f.id ? 'var(--color-primary)' : 'var(--bg-secondary)',
+                                color: filter === f.id ? '#fff' : 'var(--text-secondary)',
                             }}
                         >
-                            {f.charAt(0).toUpperCase() + f.slice(1)}s
+                            {f.label}
                         </button>
                     ))}
                     <button
@@ -120,8 +115,8 @@ export function GlobalEmailHistory() {
                         <thead>
                             <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
                                 <th style={tableHeaderStyle}>Destinatario</th>
-                                <th style={tableHeaderStyle}>Asunto</th>
-                                <th style={tableHeaderStyle}>Origen / Trigger</th>
+                                <th style={tableHeaderStyle}>Evento</th>
+                                <th style={tableHeaderStyle}>Plantilla</th>
                                 <th style={tableHeaderStyle}>Estado</th>
                                 <th style={tableHeaderStyle}>Fecha</th>
                                 <th style={tableHeaderStyle}>Acciones</th>
@@ -138,24 +133,26 @@ export function GlobalEmailHistory() {
                                 </tr>
                             ) : (
                                 filtered.map(item => {
-                                    const estadoConf = ESTADO_CONFIG[item.estado];
+                                    const estadoConf = ESTADO_CONFIG[item.status] || { label: item.status, color: 'secondary', icon: AlertCircle };
                                     const EstadoIcon = estadoConf.icon;
                                     return (
                                         <tr key={item.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                            <td style={tdStyle}>{item.usuario_email}</td>
-                                            <td style={{ ...tdStyle, maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                {item.asunto_enviado}
+                                            <td style={tdStyle}>{item.email}</td>
+                                            <td style={tdStyle}>
+                                                <code style={{ fontSize: '11px', backgroundColor: 'var(--bg-primary)', padding: '2px 6px', borderRadius: '4px' }}>
+                                                    {item.event_type}
+                                                </code>
                                             </td>
                                             <td style={tdStyle}>
-                                                {item.trigger?.nombre_trigger || (item.tipo_envio === 'prueba' ? '🧪 Prueba' : 'Manual / Campaña')}
+                                                {item.template?.name || 'Sistema'}
                                             </td>
                                             <td style={tdStyle}>
-                                                <Badge variant={estadoConf.color as any} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                <Badge variant={estadoConf.color} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                                     <EstadoIcon size={12} />
                                                     {estadoConf.label}
                                                 </Badge>
                                             </td>
-                                            <td style={tdStyle}>{formatDate(item.fecha_envio)}</td>
+                                            <td style={tdStyle}>{formatDate(item.created_at)}</td>
                                             <td style={tdStyle}>
                                                 <button
                                                     onClick={() => setSelectedItem(item)}
@@ -165,7 +162,7 @@ export function GlobalEmailHistory() {
                                                         cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px'
                                                     }}
                                                 >
-                                                    <Eye size={14} /> Ver
+                                                    <Eye size={14} /> Detalle
                                                 </button>
                                             </td>
                                         </tr>
@@ -181,38 +178,36 @@ export function GlobalEmailHistory() {
             <Modal
                 isOpen={!!selectedItem}
                 onClose={() => setSelectedItem(null)}
-                title="Detalle del Envío"
+                title="Detalle del Evento de Marketing"
                 size="lg"
             >
                 {selectedItem && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div className="dc-email-detail-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
-                            <DetailField label="Destinatario" value={selectedItem.usuario_email} />
-                            <DetailField label="Asunto" value={selectedItem.asunto_enviado} />
-                            <DetailField label="Remitente" value={`${selectedItem.from_name} <${selectedItem.from_email}>`} />
-                            <DetailField label="Fecha" value={formatDate(selectedItem.fecha_envio)} />
-                            <DetailField label="ID Seguimiento" value={selectedItem.id} />
-                            <DetailField label="Tipo" value={selectedItem.tipo_envio === 'prueba' ? 'Manual (Prueba)' : 'Automático / Trigger'} />
+                            <DetailField label="Destinatario" value={selectedItem.email} />
+                            <DetailField label="Tipo de Evento" value={selectedItem.event_type} />
+                            <DetailField label="Plantilla" value={selectedItem.template?.name || 'N/A'} />
+                            <DetailField label="Fecha Creación" value={formatDate(selectedItem.created_at)} />
+                            <DetailField label="ID Evento" value={selectedItem.id} />
+                            <DetailField label="Es Prueba" value={selectedItem.is_test_email ? 'Si' : 'No'} />
                         </div>
 
-                        {selectedItem.razon_error && (
+                        {selectedItem.error_message && (
                             <div style={{ padding: '16px', borderRadius: '8px', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid #EF4444' }}>
-                                <p style={{ margin: 0, fontSize: '13px', color: '#EF4444', fontWeight: 600 }}>Error de envío:</p>
-                                <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#EF4444' }}>{selectedItem.razon_error}</p>
+                                <p style={{ margin: 0, fontSize: '13px', color: '#EF4444', fontWeight: 600 }}>Error:</p>
+                                <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#EF4444' }}>{selectedItem.error_message}</p>
                             </div>
                         )}
 
                         <div>
-                            <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px' }}>Vista previa del contenido</p>
+                            <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px' }}>Variables del Evento (JSON)</p>
                             <div style={{
-                                width: '100%', height: '400px', backgroundColor: '#fff', borderRadius: '12px',
-                                border: '1px solid var(--border-color)', overflow: 'hidden'
+                                width: '100%', maxHeight: '200px', backgroundColor: 'var(--bg-primary)', borderRadius: '12px',
+                                border: '1px solid var(--border-color)', padding: '12px', overflow: 'auto'
                             }}>
-                                <iframe
-                                    srcDoc={selectedItem.contenido_html_enviado}
-                                    style={{ width: '100%', height: '100%', border: 'none' }}
-                                    title="Email Preview"
-                                />
+                                <pre style={{ fontSize: '12px', margin: 0 }}>
+                                    {JSON.stringify(selectedItem.variables, null, 2)}
+                                </pre>
                             </div>
                         </div>
                     </div>
