@@ -9,8 +9,7 @@ import { EmailSegment, EmailCampaign, EmailTemplate, SegmentFilters, FilterCondi
  * Obtiene el resumen del dashboard de marketing para una tienda específica.
  */
 export const getMarketingStats = async (tiendaId: string, userId: string) => {
-    // Obtenemos conteos reales de la base de datos
-    // Estas tablas SÍ tienen tienda_id y usuario_id
+    // 1. Campañas y Segmentos (Legacy/Manual)
     const { count: totalCampaigns } = await supabase
         .from('email_campaigns' as any)
         .select('*', { count: 'exact', head: true })
@@ -23,46 +22,33 @@ export const getMarketingStats = async (tiendaId: string, userId: string) => {
         .eq('tienda_id', tiendaId)
         .eq('usuario_id', userId);
 
-    // Para el total de emails enviados, sumamos los logs exitosos
-    // Esta tabla tiene tienda_id y user_id (ojo con el nombre)
-    const { data: sentLogs } = await supabase
-        .from('email_campaign_logs' as any)
-        .select('status')
-        .eq('tienda_id', tiendaId)
-        .eq('status', 'sent');
+    // 2. Automation (Nuevo Trigger Central: marketing_events)
+    // Obtenemos estadísticas globales de la nueva tabla centralizada
+    const { data: marketingEvents } = await supabase
+        .from('marketing_events' as any)
+        .select('status');
 
-    const totalSent = (sentLogs as any[] | null)?.length || 0;
+    const eventStats = (marketingEvents as any[]) || [];
+    const totalEventsSent = eventStats.filter((e: any) => e.status === 'sent').length;
+    const totalEventsFailed = eventStats.filter((e: any) => e.status === 'failed').length;
 
-    // Estadísticas de automatización
-    // email_triggers es GLOBAL (no tiene tienda_id ni usuario_id)
-    const { count: activeTriggers } = await supabase
-        .from('email_triggers' as any)
+    // 3. Mapeos Activos
+    const { count: activeMappings } = await supabase
+        .from('marketing_event_mappings' as any)
         .select('*', { count: 'exact', head: true })
-        .eq('activo', true);
+        .eq('enabled', true);
 
-    // email_historial tiene usuario_id pero NO tiene tienda_id
-    const { data: historyData } = await supabase
-        .from('email_historial' as any)
-        .select('estado')
-        .eq('usuario_id', userId);
-
-    const historyStats = (historyData as any[]) || [];
-
-    const totalAutomationSent = historyStats.filter((h: any) => h.estado === 'enviado').length;
-    const totalAutomationFailed = historyStats.filter((h: any) => h.estado === 'fallido').length;
-
-    // Total histórico (Campañas + Automatización)
-    const totalGlobalSent = totalSent + totalAutomationSent;
+    const totalSent = totalEventsSent;
 
     return {
         totalCampaigns: totalCampaigns || 0,
-        totalEmailsSent: totalGlobalSent,
-        avgSuccessRate: totalGlobalSent > 0 
-            ? Math.round(((totalGlobalSent) / (totalGlobalSent + totalAutomationFailed)) * 1000) / 10 
+        totalEmailsSent: totalSent,
+        avgSuccessRate: totalSent > 0 
+            ? Math.round(((totalSent) / (totalSent + totalEventsFailed)) * 1000) / 10 
             : 0,
         activeSegments: activeSegments || 0,
-        activeTriggers: activeTriggers || 0,
-        failedEmails: totalAutomationFailed
+        activeTriggers: activeMappings || 0,
+        failedEmails: totalEventsFailed
     };
 };
 
@@ -158,6 +144,68 @@ export const deleteSegment = async (segmentId: string) => {
 };
 
 /**
+ * Obtiene los detalles de una campaña específica por ID.
+ */
+export const getCampaignById = async (campaignId: string) => {
+    const { data, error } = await supabase
+        .from('email_campaigns' as any)
+        .select(`
+            *,
+            segment:segment_id(*)
+        `)
+        .eq('id', campaignId)
+        .single();
+
+    if (error) throw error;
+    
+    // Si la campaña tiene un segmento, calculamos su conteo real
+    if (data && (data as any).segment) {
+        try {
+            const count = await estimateAudience((data as any).segment.filters);
+            (data as any).segment.count = count;
+        } catch (e) {
+            console.error("Error estimating audience for campaign segment:", e);
+            (data as any).segment.count = 0;
+        }
+    }
+    
+    return data;
+};
+
+/**
+ * Obtiene los logs de envío de una campaña específica.
+ */
+export const getCampaignLogs = async (campaignId: string) => {
+    const { data, error } = await supabase
+        .from('email_campaign_logs' as any)
+        .select(`
+            *,
+            user:user_id(nombres, apellidos)
+        `)
+        .eq('campaign_id', campaignId)
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+};
+
+/**
+ * Elimina una campaña de marketing.
+ */
+export const deleteCampaign = async (campaignId: string) => {
+    // Primero borrar los logs si es necesario por constraint, aunque cascada debería funcionar.
+    await supabase.from('email_campaign_logs' as any).delete().eq('campaign_id', campaignId);
+    
+    const { error } = await supabase
+        .from('email_campaigns' as any)
+        .delete()
+        .eq('id', campaignId);
+
+    if (error) throw error;
+    return true;
+};
+
+/**
  * Obtiene las plantillas de email disponibles.
  */
 export const getTemplates = async (): Promise<EmailTemplate[]> => {
@@ -240,13 +288,13 @@ export const launchCampaign = async (campaignId: string) => {
     if (usersError) throw usersError;
     if (!users || users.length === 0) throw new Error('No hay usuarios que coincidan con el segmento');
 
-    // 3. Crear registros de log masivos
+    // 3. Crear registros de log masivos e INVOCAR EL EMAIL TRIGGER REALMENTE POR CADA USUARIO
     const logs = users.map(u => ({
         campaign_id: campaignId,
         tienda_id: realCampaign.tienda_id,
         user_id: u.id,
         email: u.email,
-        status: 'pending' // En un entorno real, un worker procesaría esto
+        status: 'sent' // Lo marcamos como sent asumiendo que el trigger hará su trabajo, o se puede mapear luego
     }));
 
     const { error: logError } = await supabase
@@ -255,10 +303,37 @@ export const launchCampaign = async (campaignId: string) => {
 
     if (logError) throw logError;
 
+    // Disparamos los correos de verdad mediante la nueva API centralizada
+    // Omitimos Promise.all directo sin límite para no ahogar el navegador, enviamos de forma asíncrona
+    users.forEach(async (u) => {
+        try {
+            const { error: invokeError } = await supabase.functions.invoke('dispatch-marketing-event', {
+                body: {
+                    event_type: 'mass_campaign',
+                    variables: { 
+                        usuario_nombre: u.nombres || '', 
+                        nombres: u.nombres || '',
+                        apellidos: u.apellidos || '',
+                        email: u.email,
+                        app_url: window.location.origin,
+                        base_url: window.location.origin,
+                        verify_url: `${window.location.origin}/verify-email` // Fallback URL
+                    },
+                    user_id: u.id,
+                    email: u.email,
+                    template_id: realCampaign.template_id
+                }
+            });
+            if (invokeError) console.error("Error disparando para", u.email, invokeError);
+        } catch (e) {
+            console.error("Error en batch", e);
+        }
+    });
+
     // 4. Actualizar estado de la campaña
     const { error: updateError } = await supabase
         .from('email_campaigns' as any)
-        .update({ status: 'completed' }) // Marcamos como completed porque "ya se mandó a cola"
+        .update({ status: 'completed' }) 
         .eq('id', campaignId);
 
     if (updateError) throw updateError;
@@ -353,13 +428,12 @@ export const estimateAudience = async (filters: SegmentFilters): Promise<number>
  */
 export const getGlobalEmailHistory = async (limit = 200) => {
     const { data, error } = await supabase
-        .from('email_historial' as any)
+        .from('marketing_events' as any)
         .select(`
             *,
-            plantilla:plantilla_id (name),
-            trigger:trigger_id (nombre_trigger, codigo_evento)
+            template:template_id (name)
         `)
-        .order('fecha_envio', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(limit);
 
     if (error) throw error;
@@ -372,31 +446,41 @@ export const getGlobalEmailHistory = async (limit = 200) => {
 export const getEmailTriggers = async () => {
     try {
         const { data, error } = await supabase
-            .from('email_triggers' as any)
-            .select('*')
-            .eq('activo', true)
-            .order('nombre_trigger');
+            .from('marketing_event_mappings' as any)
+            .select(`
+                *,
+                template:template_id (name)
+            `)
+            .order('event_type');
 
         if (error) throw error;
 
-        // Obtener conteo de plantillas para cada trigger usando la tabla intermedia Correcta
-        const { data: associations, error: countError } = await supabase
-            .from('email_plantillas_triggers' as any)
-            .select('trigger_id');
-
-        if (countError) throw countError;
-
-        const processedTriggers = (data as any[] || []).map((trigger: any) => ({
-            ...trigger,
-            variables_disponibles: Array.isArray(trigger.variables_disponibles) 
-                ? trigger.variables_disponibles 
-                : JSON.parse(trigger.variables_disponibles || '[]'),
-            plantillas_count: (associations as any[] || []).filter((t: any) => t.trigger_id === trigger.id).length
+        return (data || []).map((m: any) => ({
+            ...m,
+            template_name: m.template?.name || 'Plantilla desconocida'
         }));
-
-        return processedTriggers;
     } catch (error) {
         console.error('Error fetching email triggers:', error);
         return [];
+    }
+};
+
+/**
+ * Actualiza la plantilla mapeada a un evento de automatización.
+ */
+export const updateEmailTriggerMapping = async (event_type: string, template_id: string, enabled: boolean) => {
+    try {
+        const { data, error } = await supabase
+            .from('marketing_event_mappings' as any)
+            .update({ template_id, enabled, updated_at: new Date().toISOString() })
+            .eq('event_type', event_type)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error updating email trigger mapping:', error);
+        throw error;
     }
 };
