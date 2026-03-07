@@ -1,7 +1,7 @@
 import { type InputHTMLAttributes, forwardRef, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
-interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
+interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement>, 'size'> {
     label?: string;
     error?: string;
     helperText?: string;
@@ -10,9 +10,10 @@ interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'>
     rightElement?: React.ReactNode;
     showPasswordToggle?: boolean;
     children?: React.ReactNode;
+    rows?: number;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
+export const Input = forwardRef<HTMLInputElement & HTMLTextAreaElement, InputProps>(
     (
         {
             label,
@@ -27,6 +28,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             className = '',
             disabled,
             children,
+            rows,
+            style: externalStyle,
             ...props
         },
         ref
@@ -35,6 +38,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
         const inputId = id || label?.toLowerCase().replace(/\s+/g, '-');
         const isPassword = type === 'password';
+        const isTextArea = type === 'textarea';
         const resolvedType = isPassword && showPassword ? 'text' : type;
         const hasError = Boolean(error);
         const hasRightAddon = rightIcon || rightElement || (isPassword && showPasswordToggle);
@@ -42,6 +46,26 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         const borderColor = hasError ? 'var(--color-error)' : 'var(--border-color)';
         const focusBorderColor = hasError ? 'var(--color-error)' : 'var(--color-primary)';
         const focusRingColor = hasError ? 'rgba(239,68,68,0.15)' : 'rgba(0,102,255,0.15)';
+
+        const baseStyles: React.CSSProperties = {
+            width: '100%',
+            padding: '12px 16px',
+            paddingLeft: leftIcon ? '44px' : '16px',
+            paddingRight: hasRightAddon ? '44px' : '16px',
+            fontSize: '14px',
+            lineHeight: '1.5',
+            borderRadius: '10px',
+            backgroundColor: disabled ? 'var(--bg-secondary)' : 'var(--bg-primary)',
+            color: 'var(--text-primary)',
+            border: `1.5px solid ${borderColor}`,
+            outline: 'none',
+            transition: 'all 200ms ease',
+            opacity: disabled ? 0.5 : 1,
+            cursor: disabled ? 'not-allowed' : 'text',
+            boxShadow: 'none',
+        };
+
+        const mergedStyles = { ...baseStyles, ...externalStyle };
 
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
@@ -63,8 +87,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                             style={{
                                 position: 'absolute',
                                 left: '14px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
+                                top: isTextArea ? '18px' : '50%',
+                                transform: isTextArea ? 'none' : 'translateY(-50%)',
                                 color: 'var(--text-tertiary)',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -75,41 +99,49 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                             {leftIcon}
                         </span>
                     )}
-                    <input
-                        ref={ref}
-                        id={inputId}
-                        type={resolvedType}
-                        disabled={disabled}
-                        className={className}
-                        style={{
-                            width: '100%',
-                            padding: '12px 16px',
-                            paddingLeft: leftIcon ? '44px' : '16px',
-                            paddingRight: hasRightAddon ? '44px' : '16px',
-                            fontSize: '14px',
-                            lineHeight: '1.5',
-                            borderRadius: '10px',
-                            backgroundColor: disabled ? 'var(--bg-secondary)' : 'var(--bg-primary)',
-                            color: 'var(--text-primary)',
-                            border: `1.5px solid ${borderColor}`,
-                            outline: 'none',
-                            transition: 'all 200ms ease',
-                            opacity: disabled ? 0.5 : 1,
-                            cursor: disabled ? 'not-allowed' : 'text',
-                            boxShadow: 'none',
-                        }}
-                        onFocus={(e) => {
-                            e.target.style.borderColor = focusBorderColor;
-                            e.target.style.boxShadow = `0 0 0 4px ${focusRingColor}`;
-                            props.onFocus?.(e);
-                        }}
-                        onBlur={(e) => {
-                            e.target.style.borderColor = borderColor;
-                            e.target.style.boxShadow = 'none';
-                            props.onBlur?.(e);
-                        }}
-                        {...props}
-                    />
+
+                    {isTextArea ? (
+                        <textarea
+                            ref={ref as any}
+                            id={inputId}
+                            disabled={disabled}
+                            className={className}
+                            rows={rows || 3}
+                            style={{ ...mergedStyles, resize: 'vertical' }}
+                            onFocus={(e) => {
+                                e.target.style.borderColor = focusBorderColor;
+                                e.target.style.boxShadow = `0 0 0 4px ${focusRingColor}`;
+                                (props as any).onFocus?.(e);
+                            }}
+                            onBlur={(e) => {
+                                e.target.style.borderColor = borderColor;
+                                e.target.style.boxShadow = 'none';
+                                (props as any).onBlur?.(e);
+                            }}
+                            {...(props as any)}
+                        />
+                    ) : (
+                        <input
+                            ref={ref as any}
+                            id={inputId}
+                            type={resolvedType}
+                            disabled={disabled}
+                            className={className}
+                            style={mergedStyles}
+                            onFocus={(e) => {
+                                e.target.style.borderColor = focusBorderColor;
+                                e.target.style.boxShadow = `0 0 0 4px ${focusRingColor}`;
+                                (props as any).onFocus?.(e);
+                            }}
+                            onBlur={(e) => {
+                                e.target.style.borderColor = borderColor;
+                                e.target.style.boxShadow = 'none';
+                                (props as any).onBlur?.(e);
+                            }}
+                            {...(props as any)}
+                        />
+                    )}
+
                     {isPassword && showPasswordToggle && (
                         <button
                             type="button"
@@ -146,8 +178,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                             style={{
                                 position: 'absolute',
                                 right: '14px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
+                                top: isTextArea ? '18px' : '50%',
+                                transform: isTextArea ? 'none' : 'translateY(-50%)',
                                 color: 'var(--text-tertiary)',
                                 display: 'flex',
                                 alignItems: 'center',

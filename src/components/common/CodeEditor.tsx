@@ -48,27 +48,29 @@ export function CodeEditor({
                 maxHeight: maxHeight || undefined,
                 overflowY: maxHeight ? 'auto' : undefined,
                 borderRadius: '16px',
-                border: '1px solid #334155',
-                backgroundColor: '#0f172a'
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-primary)',
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
             }}
         >
             <Editor
                 value={value}
                 onValueChange={onChange}
                 highlight={highlight}
-                padding={24}
+                padding={20}
                 placeholder={placeholder}
                 textareaId={id}
                 style={{
                     fontFamily: '"Fira Code", "Fira Mono", "Cascadia Code", "Source Code Pro", Menlo, Monaco, Consolas, "Courier New", monospace',
-                    fontSize: 13,
+                    fontSize: '14px',
                     minHeight: minHeight,
-                    backgroundColor: 'transparent', // Container handles bg
+                    backgroundColor: 'transparent',
                     width: '100%',
                     outline: 'none',
-                    color: '#e2e8f0',
+                    color: 'var(--text-primary)',
+                    lineHeight: '1.6'
                 }}
-                className="dc-code-editor shadow-inner focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
+                className="dc-code-editor focus:ring-0 transition-all"
                 textareaClassName="dc-code-editor-textarea"
                 preClassName="dc-code-editor-pre"
             />
