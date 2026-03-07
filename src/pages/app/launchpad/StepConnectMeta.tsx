@@ -63,12 +63,12 @@ export function StepConnectMeta({ onComplete }: StepConnectMetaProps) {
             const APP_ID = (config as any)?.meta_app_id || import.meta.env.VITE_META_APP_ID || '';
 
             if (!APP_ID) {
-                toast.error('Error de configuraciÃ³n', 'No se ha configurado el ID de la aplicaciÃ³n de Meta.');
+                toast.error('Error de configuración', 'No se ha configurado el ID de la aplicación de Meta.');
                 setIsConnecting(false);
                 return;
             }
 
-            // URL de redirecciÃ³n fija (coincide con la config de Meta)
+            // URL de redirección fija (coincide con la config de Meta)
             const redirectUri = "https://mistyrose-jay-921979.hostingersite.com/api/auth/meta/callback";
             const scopes = [
                 'ads_read',
@@ -79,7 +79,7 @@ export function StepConnectMeta({ onComplete }: StepConnectMetaProps) {
 
             const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&response_type=code&display=page`;
 
-            // RedirecciÃ³n de pÃ¡gina completa
+            // Redirección de página completa
             window.location.href = authUrl;
         } catch (err: any) {
             toast.error('Error', err.message);
@@ -104,7 +104,7 @@ export function StepConnectMeta({ onComplete }: StepConnectMetaProps) {
 
     const isConnected = integration?.estado === 'conectado';
 
-    // Si ya estÃ¡ conectado, mostrar como en MetaAdsIntegrationCard
+    // Si ya está conectado, mostrar como en MetaAdsIntegrationCard
     if (isConnected && integration) {
         return (
             <Card style={{ padding: '0' }}>
@@ -150,7 +150,7 @@ export function StepConnectMeta({ onComplete }: StepConnectMetaProps) {
                             </p>
                         </div>
                         <div>
-                            <p style={{ margin: '0 0 4px', fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Ãšltima SincronizaciÃ³n</p>
+                            <p style={{ margin: '0 0 4px', fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Última Sincronización</p>
                             <p style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                                 {integration.ultima_sincronizacion
                                     ? new Date(integration.ultima_sincronizacion).toLocaleString()
@@ -178,7 +178,7 @@ export function StepConnectMeta({ onComplete }: StepConnectMetaProps) {
                     Conecta tu cuenta de Meta
                 </h2>
                 <p style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>
-                    Necesitamos acceso a tu Business Manager para sincronizar tus campaÃ±as y mÃ©tricas.
+                    Necesitamos acceso a tu Business Manager para sincronizar tus campañas y métricas.
                 </p>
             </div>
 
@@ -188,9 +188,9 @@ export function StepConnectMeta({ onComplete }: StepConnectMetaProps) {
                     border: '1px solid var(--border-color)'
                 }}>
                     <div style={{ marginBottom: '24px' }}>
-                        <p style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 600, marginBottom: '8px' }}>Optimiza tu CPA al mÃ¡ximo</p>
+                        <p style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 600, marginBottom: '8px' }}>Optimiza tu CPA al máximo</p>
                         <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
-                            Al conectar tu perfil de Meta, DropCost Master podrÃ¡ importar automÃ¡ticamente el rendimiento de tus campaÃ±as. Esta conexiÃ³n es necesaria para ver mÃ©tricas reales en el Dashboard.
+                            Al conectar tu perfil de Meta, DropCost Master podrá importar automáticamente el rendimiento de tus campañas. Esta conexión es necesaria para ver métricas reales en el Dashboard.
                         </p>
                     </div>
                 </div>
@@ -220,7 +220,7 @@ export function StepConnectMeta({ onComplete }: StepConnectMetaProps) {
                     <div style={{ display: 'flex', gap: '12px' }}>
                         <Info size={16} color="var(--color-primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
                         <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                            <strong>Nota:</strong> Esta integraciÃ³n es a nivel de perfil de usuario. Una vez conectada, podrÃ¡s asignar cuentas publicitarias especÃ­ficas a cada una de tus tiendas.
+                            <strong>Nota:</strong> Esta integración es a nivel de perfil de usuario. Una vez conectada, podrás asignar cuentas publicitarias específicas a cada una de tus tiendas.
                         </p>
                     </div>
                 </div>

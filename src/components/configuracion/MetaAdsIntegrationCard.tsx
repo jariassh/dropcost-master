@@ -73,7 +73,7 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
     const handleConnect = async () => {
         setShowNewProfileWarning(false);
         if (!canConnect) {
-            toast.error('Plan no compatible', 'Tu plan actual no permite la conexiÃ³n con Meta Ads.');
+            toast.error('Plan no compatible', 'Tu plan actual no permite la conexión con Meta Ads.');
             return;
         }
 
@@ -83,7 +83,7 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
             const APP_ID = (config as any)?.meta_app_id || import.meta.env.VITE_META_APP_ID || '';
 
             if (!APP_ID) {
-                toast.error('Error de configuraciÃ³n', 'No se ha configurado el ID de la aplicaciÃ³n de Meta.');
+                toast.error('Error de configuración', 'No se ha configurado el ID de la aplicación de Meta.');
                 setIsConnecting(false);
                 return;
             }
@@ -94,7 +94,7 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
 
             window.location.href = authUrl;
         } catch (err) {
-            toast.error('Error', 'No se pudo iniciar la conexiÃ³n con Meta.');
+            toast.error('Error', 'No se pudo iniciar la conexión con Meta.');
             setIsConnecting(false);
         }
     };
@@ -110,10 +110,10 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
 
             if (error) throw error;
 
-            toast.success('Perfil desconectado', 'Se ha eliminado la integraciÃ³n correctamente.');
+            toast.success('Perfil desconectado', 'Se ha eliminado la integración correctamente.');
             fetchIntegrations();
         } catch (err) {
-            toast.error('Error', 'No se pudo desconectar la integraciÃ³n.');
+            toast.error('Error', 'No se pudo desconectar la integración.');
         } finally {
             setIsLoading(false);
             setShowDisconnectConfirm(false);
@@ -242,15 +242,15 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
                             }}>
                                 <AlertCircle size={16} color="#EF4444" />
                                 <p style={{ margin: 0, fontSize: '13px', color: '#EF4444', fontWeight: 600 }}>
-                                    Tu plan actual no admite conexiÃ³n con Meta Ads.
+                                    Tu plan actual no admite conexión con Meta Ads.
                                 </p>
                             </div>
                         )}
 
                         <div style={{ marginBottom: '24px' }}>
-                            <p style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 600, marginBottom: '8px' }}>Optimiza tu CPA al mÃ¡ximo</p>
+                            <p style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 600, marginBottom: '8px' }}>Optimiza tu CPA al máximo</p>
                             <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: '500px', margin: '0 auto' }}>
-                                Al conectar tu perfil de Meta, DropCost Master podrÃ¡ importar automÃ¡ticamente el rendimiento de tus campaÃ±as.
+                                Al conectar tu perfil de Meta, DropCost Master podrá importar automáticamente el rendimiento de tus campañas.
                             </p>
                         </div>
 
@@ -275,9 +275,9 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
             <ConfirmDialog
                 isOpen={showDisconnectConfirm}
                 title="Â¿Desconectar Perfil?"
-                description="Se eliminarÃ¡ el acceso a las cuentas publicitarias de este perfil."
+                description="Se eliminará el acceso a las cuentas publicitarias de este perfil."
                 variant="danger"
-                confirmLabel="SÃ­, desconectar"
+                confirmLabel="Sí, desconectar"
                 onConfirm={handleDisconnect}
                 onCancel={() => {
                     setShowDisconnectConfirm(false);
@@ -288,17 +288,17 @@ export function MetaAdsIntegrationCard({ onSelectIntegration, selectedId }: Meta
             {/* Modal de Advertencia para Nuevo Perfil */}
             <ConfirmDialog
                 isOpen={showNewProfileWarning}
-                title="â ï¸ AtenciÃ³n: Nuevo Perfil de Meta"
+                title="â ï¸ Atención: Nuevo Perfil de Meta"
                 description={
                     <div style={{ textAlign: 'left', fontSize: '14px', lineHeight: '1.6' }}>
                         <p>Para vincular un <strong>nuevo perfil de Facebook distinto</strong> al actual, por favor sigue estos pasos:</p>
                         <ol style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <li>Abre <strong>DropCost Master</strong> en una ventana de incÃ³gnito o en un <strong>navegador diferente</strong>.</li>
-                            <li>AsegÃºrate de tener la <strong>sesiÃ³n iniciada en el nuevo perfil de Facebook</strong> que deseas vincular en ese mismo navegador.</li>
+                            <li>Abre <strong>DropCost Master</strong> en una ventana de incógnito o en un <strong>navegador diferente</strong>.</li>
+                            <li>Asegúrate de tener la <strong>sesión iniciada en el nuevo perfil de Facebook</strong> que deseas vincular en ese mismo navegador.</li>
                             <li>Haz clic en conectar desde esa ventana.</li>
                         </ol>
                         <p style={{ marginTop: '12px', color: 'var(--color-warning)', fontWeight: 600 }}>
-                            Si usas el mismo navegador, Facebook intentarÃ¡ reconectar el perfil actual automÃ¡ticamente.
+                            Si usas el mismo navegador, Facebook intentará reconectar el perfil actual automáticamente.
                         </p>
                     </div>
                 }
