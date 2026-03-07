@@ -59,14 +59,14 @@ export const PricingPage: React.FC = () => {
         };
         initialize();
     }, [user?.pais]);
-    // Quitamos [user] completo para evitar re-renders innecesarios, solo dependemos del paÃ­s
+    // Quitamos [user] completo para evitar re-renders innecesarios, solo dependemos del país
 
     const getPriceDisplay = (plan: Plan) => {
         // Price Protection: If this is the current active plan, show what they actually paid
         if (currentPlanId === plan.slug && user?.plan_precio_pagado && user.plan_periodo === billingPeriod) {
             const paidAmount = user.plan_precio_pagado;
-            // plan_precio_pagado puede estar en USD si fue asignado por admin/migraciÃ³n.
-            // Detectamos si estÃ¡ en USD (< 500) y convertimos igual que los demÃ¡s precios.
+            // plan_precio_pagado puede estar en USD si fue asignado por admin/migración.
+            // Detectamos si está en USD (< 500) y convertimos igual que los demás precios.
             const paidIsUSD = paidAmount < 500;
             if (paidIsUSD && targetCurrency !== 'USD' && exchangeRates) {
                 const rateTo = targetCurrency === 'USD' ? 1 : (exchangeRates[targetCurrency] ?? 1);
@@ -116,11 +116,11 @@ export const PricingPage: React.FC = () => {
         // 3. Block Downgrades
         if (paidMonthlyEquiv > 0) {
             if (targetMonthlyEquiv < paidMonthlyEquiv) {
-                toast.warning('Cambio de Plan', 'No puedes bajar a un plan de menor costo desde la aplicaciÃ³n. Por favor contacta a soporte o espera a que tu suscripciÃ³n actual venza.');
+                toast.warning('Cambio de Plan', 'No puedes bajar a un plan de menor costo desde la aplicación. Por favor contacta a soporte o espera a que tu suscripción actual venza.');
                 return;
             }
             if (plan.slug === 'plan_free') {
-                toast.info('Plan Gratuito', 'Para volver al plan gratuito, espera a que finalice tu suscripciÃ³n actual.');
+                toast.info('Plan Gratuito', 'Para volver al plan gratuito, espera a que finalice tu suscripción actual.');
                 return;
             }
         }
@@ -273,10 +273,10 @@ export const PricingPage: React.FC = () => {
                         // Comparison with 0.01 tolerance for floating point
                         if (targetMonthlyEquiv < (paidMonthlyEquiv - 0.01)) {
                             isDisabled = true;
-                            disabledReason = 'No puedes bajar a un plan de menor costo desde la aplicaciÃ³n.';
+                            disabledReason = 'No puedes bajar a un plan de menor costo desde la aplicación.';
                         } else if (plan.slug === 'plan_free') {
                             isDisabled = true;
-                            disabledReason = 'Debes esperar a que venza tu suscripciÃ³n actual para volver al plan gratuito.';
+                            disabledReason = 'Debes esperar a que venza tu suscripción actual para volver al plan gratuito.';
                         }
                     }
 
@@ -298,11 +298,11 @@ export const PricingPage: React.FC = () => {
 
             <div style={{ marginTop: '64px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
                 <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
-                    Â¿Necesitas algo mÃ¡s especÃ­fico? ContÃ¡ctanos para soluciones Enterprise.
+                    Â¿Necesitas algo más específico? Contáctanos para soluciones Enterprise.
                 </p>
                 {globalConfig?.telefono && (
                     <a
-                        href={`https://wa.me/${globalConfig.telefono.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hola, me gustarÃ­a recibir mÃ¡s informaciÃ³n sobre los planes Enterprise de DropCost.')}`}
+                        href={`https://wa.me/${globalConfig.telefono.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hola, me gustaría recibir más información sobre los planes Enterprise de DropCost.')}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ textDecoration: 'none' }}

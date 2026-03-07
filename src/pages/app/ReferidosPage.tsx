@@ -1,6 +1,6 @@
 
 /**
- * PÃ¡gina del Sistema de Referidos.
+ * Página del Sistema de Referidos.
  */
 import React, { useState, useEffect } from 'react';
 import {
@@ -132,22 +132,22 @@ export function ReferidosPage() {
 
     const copy = {
         title: 'Â¡Haz crecer tu red y tus ingresos!',
-        description: `Gana ${stats?.commissionLevel1}% de cada suscripciÃ³n que tus amigos paguen (hasta ${stats?.meses_vigencia_comision || 12} meses). ${isTrueLider ? `Â¡Y ${stats?.commissionLevel2}% extra por los amigos de tus amigos!` : ''}`,
+        description: `Gana ${stats?.commissionLevel1}% de cada suscripción que tus amigos paguen (hasta ${stats?.meses_vigencia_comision || 12} meses). ${isTrueLider ? `Â¡Y ${stats?.commissionLevel2}% extra por los amigos de tus amigos!` : ''}`,
         motivation: `Refiere a ${stats?.minReferredForLeader} amigos y desbloquea el Nivel 2 de comisiones.`
     };
 
     if (totalReferred === 0) {
         copy.title = 'Comparte DropCost con tu comunidad';
-        copy.description = `Â¿Conoces Dropshippers que buscan optimizar costos? RefiÃ©relos a DropCost y gana un ${stats?.commissionLevel1}% mensual por cada uno durante ${stats?.meses_vigencia_comision || 12} meses.`;
+        copy.description = `Â¿Conoces Dropshippers que buscan optimizar costos? Refiérelos a DropCost y gana un ${stats?.commissionLevel1}% mensual por cada uno durante ${stats?.meses_vigencia_comision || 12} meses.`;
     } else if (totalReferred >= 1 && totalReferred < 10) {
-        copy.title = 'EstÃ¡s en el camino correcto ð';
-        copy.description = `Felicidades, ya tienes ${totalReferred} ${totalReferred === 1 ? 'referido' : 'referidos'}. EstÃ¡s generando ingresos pasivos reales por ${stats?.meses_vigencia_comision || 12} meses.`;
+        copy.title = 'Estás en el camino correcto ð';
+        copy.description = `Felicidades, ya tienes ${totalReferred} ${totalReferred === 1 ? 'referido' : 'referidos'}. Estás generando ingresos pasivos reales por ${stats?.meses_vigencia_comision || 12} meses.`;
     } else if (totalReferred >= 40 && totalReferred < 50) {
-        copy.title = 'Â¡Casi eres LÃ­der de tu comunidad! ð';
-        copy.description = `Faltan solo ${stats!.minReferredForLeader - totalReferred} amigos para alcanzar el rango de LÃ­der y desbloquear comisiones de Nivel 2.`;
+        copy.title = 'Â¡Casi eres Líder de tu comunidad! ð';
+        copy.description = `Faltan solo ${stats!.minReferredForLeader - totalReferred} amigos para alcanzar el rango de Líder y desbloquear comisiones de Nivel 2.`;
     } else if (isTrueLider && totalReferred >= 100) {
-        copy.title = 'Liderando la optimizaciÃ³n en tu comunidad ð';
-        copy.description = `Llevas un impacto real en ${totalReferred} dropshippers. Tu red estÃ¡ recibiendo comisiones de hasta ${stats?.meses_vigencia_comision || 12} meses por usuario.`;
+        copy.title = 'Liderando la optimización en tu comunidad ð';
+        copy.description = `Llevas un impacto real en ${totalReferred} dropshippers. Tu red está recibiendo comisiones de hasta ${stats?.meses_vigencia_comision || 12} meses por usuario.`;
     }
 
     const closeOnboarding = () => {
@@ -261,10 +261,10 @@ export function ReferidosPage() {
                     <LinkIcon size={140} style={{ position: 'absolute', right: '-30px', bottom: '-40px', color: 'rgba(0, 102, 255, 0.04)', transform: 'rotate(-15deg)', opacity: 0.5 }} />
                 </div>
 
-                {/* EstadÃ­sticas */}
+                {/* Estadísticas */}
                 <div className="referidos-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '32px' }}>
                     <StatsCard
-                        title="InterÃ©s Generado"
+                        title="Interés Generado"
                         value={stats?.totalClicks || 0}
                         icon={<TrendingUp size={24} />}
                         color="var(--color-primary)"
@@ -289,7 +289,7 @@ export function ReferidosPage() {
                     </div>
                 </div>
 
-                {/* Tabs para LÃ­deres (Existing Code) */}
+                {/* Tabs para Líderes (Existing Code) */}
                 {canSeeLevel2 && (
                     <div className="referidos-tabs" style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto', paddingBottom: '8px' }}>
                         <button onClick={() => setActiveTab('nivel1')} style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', backgroundColor: activeTab === 'nivel1' ? 'var(--color-primary)' : 'var(--bg-tertiary)', color: activeTab === 'nivel1' ? '#fff' : 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Amigos Directos (Nivel 1)</button>
@@ -359,7 +359,7 @@ export function ReferidosPage() {
                                 <tr style={{ textAlign: 'left', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
                                     <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '300px' }}>Usuario</th>
                                     <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '150px' }}>{activeTab === 'nivel1' ? 'Plan' : 'Invitado Por'}</th>
-                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '160px' }}>VerificaciÃ³n</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '160px' }}>Verificación</th>
                                     <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '150px' }}>Registro</th>
                                     <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', width: '130px' }}>Detalles</th>
                                 </tr>
@@ -369,7 +369,7 @@ export function ReferidosPage() {
                                     <tr>
                                         <td colSpan={5} style={{ padding: '60px 48px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
                                             <div style={{ marginBottom: '16px', opacity: 0.5 }}><Users size={48} strokeWidth={1.5} /></div>
-                                            <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '8px', color: 'var(--text-secondary)' }}>{activeTab === 'nivel1' ? 'Â¡Tu red estÃ¡ esperando!' : 'AÃºn no hay actividad en tu Nivel 2'}</div>
+                                            <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '8px', color: 'var(--text-secondary)' }}>{activeTab === 'nivel1' ? 'Â¡Tu red está esperando!' : 'Aún no hay actividad en tu Nivel 2'}</div>
                                         </td>
                                     </tr>
                                 ) : (
@@ -486,7 +486,7 @@ function CommissionHistoryModal({ isOpen, onClose, history, isLoading, convertVa
                 ) : history.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)' }}>
                         <div style={{ marginBottom: '12px', opacity: 0.5 }}><DollarSign size={32} style={{ margin: '0 auto' }} /></div>
-                        <p>AÃºn no hay comisiones registradas.</p>
+                        <p>Aún no hay comisiones registradas.</p>
                     </div>
                 ) : (
                     <div style={{ overflowY: 'auto', paddingRight: '4px' }}>
@@ -494,7 +494,7 @@ function CommissionHistoryModal({ isOpen, onClose, history, isLoading, convertVa
                             <thead>
                                 <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>
                                     <th style={{ padding: '12px', fontSize: '12px', color: 'var(--text-tertiary)' }}>Fecha</th>
-                                    <th style={{ padding: '12px', fontSize: '12px', color: 'var(--text-tertiary)' }}>DescripciÃ³n</th>
+                                    <th style={{ padding: '12px', fontSize: '12px', color: 'var(--text-tertiary)' }}>Descripción</th>
                                     <th style={{ padding: '12px', fontSize: '12px', color: 'var(--text-tertiary)', textAlign: 'right' }}>Monto</th>
                                 </tr>
                             </thead>
@@ -529,12 +529,12 @@ function OnboardingModal({ isOpen, onClose, stats }: { isOpen: boolean, onClose:
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                     <div style={{ width: '64px', height: '64px', borderRadius: '20px', backgroundColor: 'rgba(0, 102, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', margin: '0 auto 20px' }}><Users2 size={32} /></div>
                     <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '12px' }}>Bienvenido a Referidos DropCost</h2>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: 1.6 }}>Esto NO es un programa de multinivel. Es simple comisiÃ³n por recomendaciÃ³n honesta.</p>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: 1.6 }}>Esto NO es un programa de multinivel. Es simple comisión por recomendación honesta.</p>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '32px' }}>
                     <ModalItem icon={<TrendingUp size={18} />} title="Recomienda y Gana" desc={`Comparte DropCost con otros Dropshippers y gana un ${stats?.commissionLevel1 || 15}% mensual.`} />
                     <ModalItem icon={<Lock size={18} />} title="Sin Trucos" desc="No hay que pagar para activar, ni 'reclutar' para cobrar. Recomiendas una herramienta que usas." />
-                    <ModalItem icon={<CreditCard size={18} />} title={`Vigencia de ${stats?.meses_vigencia_comision || 12} meses`} desc={`GanarÃ¡s comisiones por cada referido durante ${stats?.meses_vigencia_comision || 12} meses. Valoramos tu recomendaciÃ³n inicial.`} />
+                    <ModalItem icon={<CreditCard size={18} />} title={`Vigencia de ${stats?.meses_vigencia_comision || 12} meses`} desc={`Ganarás comisiones por cada referido durante ${stats?.meses_vigencia_comision || 12} meses. Valoramos tu recomendación inicial.`} />
                 </div>
                 <button onClick={onClose} style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', backgroundColor: 'var(--color-primary)', color: '#fff', fontSize: '16px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 8px 16px rgba(0, 102, 255, 0.2)' }}>Â¡Entendido, empezar!</button>
             </div>
@@ -597,11 +597,11 @@ function DetailsModal({ isOpen, onClose, user, details, isLoading, commissionRat
                     <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}><Spinner /></div>
                 ) : (
                     <div style={{ backgroundColor: 'var(--bg-tertiary)', borderRadius: '16px', padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                        <div style={{ textAlign: 'center' }}><div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Directos TraÃ­dos</div><div style={{ fontSize: '24px', fontWeight: 600, color: 'var(--color-primary)' }}>{details?.referralsCount || 0}</div><div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>Tu Nivel 2</div></div>
+                        <div style={{ textAlign: 'center' }}><div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Directos Traídos</div><div style={{ fontSize: '24px', fontWeight: 600, color: 'var(--color-primary)' }}>{details?.referralsCount || 0}</div><div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>Tu Nivel 2</div></div>
                         <div style={{ textAlign: 'center' }}><div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Impacto en Red</div><div style={{ fontSize: '24px', fontWeight: 600, color: 'var(--color-success)' }}>{convertValue((details?.commissionsEarned || 0) * (commissionRate / 100))}</div><div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>Ganas el {commissionRate}%</div></div>
                     </div>
                 )}
-                <div style={{ marginTop: '24px', fontSize: '12px', color: 'var(--text-tertiary)', textAlign: 'center', lineHeight: 1.5 }}>Este usuario se registrÃ³ el {user?.createdAt && formatDisplayDate(user.createdAt)}.{details && details.referralsCount > 0 && <span style={{ display: 'block', marginTop: '8px', color: 'var(--color-primary)', fontWeight: 600 }}>ð Â¡Este usuario estÃ¡ ayudando a crecer tu red!</span>}</div>
+                <div style={{ marginTop: '24px', fontSize: '12px', color: 'var(--text-tertiary)', textAlign: 'center', lineHeight: 1.5 }}>Este usuario se registró el {user?.createdAt && formatDisplayDate(user.createdAt)}.{details && details.referralsCount > 0 && <span style={{ display: 'block', marginTop: '8px', color: 'var(--color-primary)', fontWeight: 600 }}>ð Â¡Este usuario está ayudando a crecer tu red!</span>}</div>
                 <button onClick={onClose} style={{ width: '100%', padding: '14px', borderRadius: '12px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '14px', fontWeight: 600, cursor: 'pointer', marginTop: '24px', border: '1px solid var(--border-color)' }}>Cerrar</button>
             </div>
         </div>

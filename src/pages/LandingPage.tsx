@@ -10,9 +10,9 @@ import { Plan } from '@/types/plans.types';
 import { convertPrice, getDisplayCurrency, fetchExchangeRates } from '@/utils/currencyUtils';
 
 /**
- * LandingPage: PÃ¡gina de inicio principal para usuarios no autenticados.
- * Optimizada para conversiÃ³n con animaciones de scroll y diseÃ±o premium.
- * Se corrigiÃ³ un error de visibilidad donde el contenido se mantenÃ­a invisible.
+ * LandingPage: Página de inicio principal para usuarios no autenticados.
+ * Optimizada para conversión con animaciones de scroll y diseño premium.
+ * Se corrigió un error de visibilidad donde el contenido se mantenía invisible.
  */
 export function LandingPage() {
     const [showBreakdown, setShowBreakdown] = useState(false);
@@ -28,13 +28,13 @@ export function LandingPage() {
     const [detectedCountry, setDetectedCountry] = useState<any>(null);
     const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
 
-    // Escuchar detecciÃ³n de paÃ­s desde el Layout
+    // Escuchar detección de país desde el Layout
     useEffect(() => {
         const handleCountryDetected = async (e: any) => {
             const pais = e.detail;
             setDetectedCountry(pais);
 
-            // Cargar tasas si el paÃ­s tiene moneda diferente a USD
+            // Cargar tasas si el país tiene moneda diferente a USD
             if (pais.moneda_codigo !== 'USD') {
                 const rates = await fetchExchangeRates('USD');
                 setExchangeRates(rates);
@@ -49,7 +49,7 @@ export function LandingPage() {
     useEffect(() => {
         document.title = 'DropCost Master - Maximiza tu Rentabilidad en Dropshipping COD';
         const meta = document.querySelector('meta[name="description"]');
-        const content = 'Calcula tu margen real, optimiza tus fletes y escala tus ventas de dropshipping COD con precisiÃ³n matemÃ¡tica. Deja de perder dinero por cada venta.';
+        const content = 'Calcula tu margen real, optimiza tus fletes y escala tus ventas de dropshipping COD con precisión matemática. Deja de perder dinero por cada venta.';
         if (meta) {
             meta.setAttribute('content', content);
         } else {
@@ -60,9 +60,9 @@ export function LandingPage() {
         }
     }, []);
 
-    // Intersection Observer logic - Depende de loadingPlans para detectar elementos dinÃ¡micos
+    // Intersection Observer logic - Depende de loadingPlans para detectar elementos dinámicos
     useEffect(() => {
-        // PequeÃ±o delay para asegurar que el DOM se ha actualizado tras el renderizado de React
+        // Pequeño delay para asegurar que el DOM se ha actualizado tras el renderizado de React
         const timer = setTimeout(() => {
             const revealElements = document.querySelectorAll('.reveal');
 
@@ -100,7 +100,7 @@ export function LandingPage() {
         const fetchPlans = async () => {
             setLoadingPlans(true);
             try {
-                // Intentamos traer planes pÃºblicos y activos
+                // Intentamos traer planes públicos y activos
                 const data = await plansService.getPlans(true, true);
                 if (data && data.length > 0) {
                     setPlans(data);
@@ -111,15 +111,15 @@ export function LandingPage() {
                 console.error("Error fetching plans from DB, using fallback:", error);
             }
 
-            // Fallback estÃ¡tico sincronizado con el diseÃ±o (USD orientativo o COP ajustado)
+            // Fallback estático sincronizado con el diseño (USD orientativo o COP ajustado)
             setPlans([
                 {
                     id: 'fb-1',
                     slug: 'starter',
                     name: 'PLAN STARTER',
                     price_monthly: 10,
-                    description: 'Ideal para probar DropCost y aprender cÃ³mo calcular tus costeos.',
-                    features: ['Hasta 1 Tienda', '50 Costeos', 'Duplicar Ofertas', 'Duplicar Costeos', 'â›” 0 Ofertas'],
+                    description: 'Ideal para probar DropCost y aprender cómo calcular tus costeos.',
+                    features: ['Hasta 1 Tienda', '50 Costeos', 'Duplicar Ofertas', 'Duplicar Costeos', '🚫 0 Ofertas'],
                     limits: { stores: 1 }
                 } as any,
                 {
@@ -127,7 +127,7 @@ export function LandingPage() {
                     slug: 'pro',
                     name: 'PLAN PRO',
                     price_monthly: 25,
-                    description: 'Perfecto para dropshippers activos que manejan mÃºltiples tiendas.',
+                    description: 'Perfecto para dropshippers activos que manejan múltiples tiendas.',
                     features: ['Hasta 5 Tiendas', '250 Costeos', '250 Ofertas', 'Sistema de Referidos', 'Billetera y Retiros'],
                     limits: { stores: 5 }
                 } as any,
@@ -136,7 +136,7 @@ export function LandingPage() {
                     slug: 'enterprise',
                     name: 'PLAN ENTERPRISE',
                     price_monthly: 40,
-                    description: 'La soluciÃ³n completa para equipos y empresas en crecimiento.',
+                    description: 'La solución completa para equipos y empresas en crecimiento.',
                     features: ['Tiendas Ilimitadas', 'Costeos Ilimitados', 'Ofertas Ilimitadas', 'Soporte VIP'],
                     limits: { stores: 999 }
                 } as any
@@ -276,14 +276,14 @@ export function LandingPage() {
                 <div className="hero-grid" style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '64px', alignItems: 'center' }}>
                     <div className="reveal revealed hero-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                         <div style={{ marginBottom: '24px', padding: '8px 16px', borderRadius: '100px', backgroundColor: 'rgba(0, 102, 255, 0.1)', color: 'var(--color-primary)', border: '1px solid rgba(0, 102, 255, 0.2)', fontWeight: 600, fontSize: '14px' }}>
-                            ðŸŽ‰ Ãšnete a la nueva era del COD
+                            🎉 Únete a la nueva era del COD
                         </div>
                         <h1 style={{ fontSize: 'clamp(40px, 5vw, 64px)', fontWeight: 600, lineHeight: 1.1, marginBottom: '24px', letterSpacing: '-0.03em' }}>
-                            Vende mÃ¡s, <br />
+                            Vende más, <br />
                             <span style={{ color: 'var(--color-primary)' }}>gana de verdad.</span>
                         </h1>
                         <p style={{ fontSize: '20px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '40px', maxWidth: '500px' }}>
-                            La Ãºnica herramienta diseÃ±ada por dropshippers para resolver la falta de rentabilidad del COD. Deja de adivinar y empieza a escalar.
+                            La única herramienta diseñada por dropshippers para resolver la falta de rentabilidad del COD. Deja de adivinar y empieza a escalar.
                         </p>
                         <div className="hero-buttons" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
                             <a href="#pricing" className="hero-btn-primary" style={{ padding: '16px 32px', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: '12px', fontWeight: 600, textDecoration: 'none', fontSize: '18px', boxShadow: '0 8px 24px rgba(0, 102, 255, 0.3)' }}>Comenzar Ahora</a>
@@ -319,7 +319,7 @@ export function LandingPage() {
                 </div>
             </section>
 
-            {/* SECCIÃ“N DE COMPARATIVA - SUSTITUYE INTEGRACIONES */}
+            {/* SECCIÓN DE COMPARATIVA - SUSTITUYE INTEGRACIONES */}
 
 
             {/* COMPARISON CALCULATOR */}
@@ -343,7 +343,7 @@ export function LandingPage() {
                         <FeatureItem
                             icon={<Zap size={32} />}
                             title="Estrategia de Ofertas"
-                            description="Crea Bundles, Descuentos y Regalos con un clic, viendo cÃ³mo afectan tu utilidad neta."
+                            description="Crea Bundles, Descuentos y Regalos con un clic, viendo cómo afectan tu utilidad neta."
                         />
                         <FeatureItem
                             icon={<ShieldCheck size={32} />}
@@ -362,8 +362,8 @@ export function LandingPage() {
                         />
                         <FeatureItem
                             icon={<ArrowRight size={32} />}
-                            title="GestiÃ³n Multi-Tienda"
-                            description="Controla mÃºltiples tiendas de dropshipping desde un solo panel centralizado."
+                            title="Gestión Multi-Tienda"
+                            description="Controla múltiples tiendas de dropshipping desde un solo panel centralizado."
                         />
                     </div>
                 </div>
@@ -374,10 +374,10 @@ export function LandingPage() {
                 <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                     <div className="reveal" style={{ textAlign: 'center', marginBottom: '64px' }}>
                         <h2 style={{ fontSize: '40px', fontWeight: 600, marginBottom: '16px' }}>Historias de Ã‰xito Real</h2>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '18px' }}>Expertos que pasaron de adivinar a ganar con nÃºmeros.</p>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '18px' }}>Expertos que pasaron de adivinar a ganar con números.</p>
                     </div>
                     <div style={{ position: 'relative' }}>
-                        {/* Botones de navegaciÃ³n */}
+                        {/* Botones de navegación */}
                         <button
                             onClick={() => {
                                 if (sliderRef.current) {
@@ -473,19 +473,19 @@ export function LandingPage() {
                                 {[...Array(3)].map((_, setIdx) => (
                                     <React.Fragment key={setIdx}>
                                         <TestimonialCard
-                                            name="AndrÃ©s Mendoza"
-                                            location="BogotÃ¡, Colombia"
+                                            name="Andrés Mendoza"
+                                            location="Bogotá, Colombia"
                                             countryCode="co"
-                                            content="Antes vendÃ­a 50 cremas diarias y pensaba que era rico. DropCost me mostrÃ³ que perdÃ­a $3.000 por cada una. AjustÃ© mi oferta y ahora gano $12k netos por venta."
+                                            content="Antes vendía 50 cremas diarias y pensaba que era rico. DropCost me mostró que perdía $3.000 por cada una. Ajusté mi oferta y ahora gano $12k netos por venta."
                                             image="https://i.pravatar.cc/150?u=andres_man"
                                             revenue="+450% Utilidad"
                                             rating={5}
                                         />
                                         <TestimonialCard
                                             name="Karla Ruiz"
-                                            location="Ciudad de MÃ©xico, MÃ©xico"
+                                            location="Ciudad de México, México"
                                             countryCode="mx"
-                                            content="El sistema de Bundles es increÃ­ble. LogrÃ© subir mi ticket promedio de $60k a $110k en una semana sin aumentar mi gasto. Imprescindible para escalar."
+                                            content="El sistema de Bundles es increíble. Logré subir mi ticket promedio de $60k a $110k en una semana sin aumentar mi gasto. Imprescindible para escalar."
                                             image="https://i.pravatar.cc/150?u=karla_woman"
                                             revenue="AOV x2"
                                             rating={4.5}
@@ -494,16 +494,16 @@ export function LandingPage() {
                                             name="Mateo Silva"
                                             location="Quito, Ecuador"
                                             countryCode="ec"
-                                            content="Lo que mÃ¡s valoro es la proyecciÃ³n de devoluciones. En el COD es el asesino silencioso de mÃ¡rgenes. Hoy escalo productos con seguridad total."
+                                            content="Lo que más valoro es la proyección de devoluciones. En el COD es el asesino silencioso de márgenes. Hoy escalo productos con seguridad total."
                                             image="https://i.pravatar.cc/150?u=mateo_man"
                                             revenue="Risk Control"
                                             rating={4}
                                         />
                                         <TestimonialCard
                                             name="Santiago Giraldo"
-                                            location="MedellÃ­n, Colombia"
+                                            location="Medellín, Colombia"
                                             countryCode="co"
-                                            content="La claridad financiera que me da DropCost Master no tiene precio. SÃ© exactamente cuÃ¡nto puedo invertir en Ads sin quemar mi capital."
+                                            content="La claridad financiera que me da DropCost Master no tiene precio. Sé exactamente cuánto puedo invertir en Ads sin quemar mi capital."
                                             image="https://i.pravatar.cc/150?u=santiago"
                                             revenue="Scale Easy"
                                             rating={5}
@@ -512,14 +512,14 @@ export function LandingPage() {
                                             name="Valeria Correa"
                                             location="Guayaquil, Ecuador"
                                             countryCode="ec"
-                                            content="El simulador de ofertas me ayudÃ³ a entender que el Bundle 3x2 es el mÃ¡s rentable para mi nicho. Mis ganancias subieron un 40% este mes."
+                                            content="El simulador de ofertas me ayudó a entender que el Bundle 3x2 es el más rentable para mi nicho. Mis ganancias subieron un 40% este mes."
                                             image="https://i.pravatar.cc/150?u=valeria"
                                             revenue="+40% Ganancia"
                                             rating={4.5}
                                         />
                                         <TestimonialCard
                                             name="Diego Portilla"
-                                            location="Guadalajara, MÃ©xico"
+                                            location="Guadalajara, México"
                                             countryCode="mx"
                                             content="Mis clientes de Dropshipping ahora tienen reportes reales. No solo ventas en Shopify, sino utilidad neta en el bolsillo."
                                             image="https://i.pravatar.cc/150?u=diego"
@@ -550,62 +550,62 @@ export function LandingPage() {
                     <h2 className="reveal" style={{ fontSize: '36px', fontWeight: 600, textAlign: 'center', marginBottom: '48px' }}>Preguntas Frecuentes</h2>
                     <div className="reveal" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <FAQItem
-                            question="Â¿QuÃ© es DropCost Master?"
-                            answer="Es la herramienta definitiva para dropshippers en LatinoamÃ©rica. Te permite calcular la rentabilidad real de tu operaciÃ³n considerando costos de producto, fletes, publicidad y, lo mÃ¡s importante, el impacto de las devoluciones en tu flujo de caja."
+                            question="Â¿Qué es DropCost Master?"
+                            answer="Es la herramienta definitiva para dropshippers en Latinoamérica. Te permite calcular la rentabilidad real de tu operación considerando costos de producto, fletes, publicidad y, lo más importante, el impacto de las devoluciones en tu flujo de caja."
                             isOpen={openFAQIndex === 0}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 0 ? null : 0)}
                         />
                         <FAQItem
-                            question="Â¿CÃ³mo funciona el simulador de costes?"
-                            answer="Solo debes ingresar tus costos operativos bÃ¡sicos y el simulador calcularÃ¡ automÃ¡ticamente tu punto de equilibrio, margen de contribuciÃ³n y utilidad neta. Es la forma mÃ¡s rÃ¡pida de saber si un producto vale la pena escalar o no."
+                            question="Â¿Cómo funciona el simulador de costes?"
+                            answer="Solo debes ingresar tus costos operativos básicos y el simulador calculará automáticamente tu punto de equilibrio, margen de contribución y utilidad neta. Es la forma más rápida de saber si un producto vale la pena escalar o no."
                             isOpen={openFAQIndex === 1}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 1 ? null : 1)}
                         />
                         <FAQItem
-                            question="Â¿QuÃ© son las 3 estrategias de ofertas?"
+                            question="Â¿Qué son las 3 estrategias de ofertas?"
                             answer="Nuestra plataforma te permite crear ofertas irresistibles (Bundles) basadas en 3 estrategias probadas de e-commerce. El sistema calcula el margen exacto para cada combo, asegurando que tus promociones siempre sean rentables."
                             isOpen={openFAQIndex === 2}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 2 ? null : 2)}
                         />
                         <FAQItem
-                            question="Â¿CÃ³mo funciona el programa de referidos?"
-                            answer="Contamos con un sistema robusto de 2 niveles: obtienes hasta un 15% de comisiÃ³n mensual por tus referencias directas y un 5% adicional por las referencias indirectas (Nivel 2). Tus enlaces tienen 90 dÃ­as de permanencia (cookies) y las comisiones duran hasta 6 meses por referido activo."
+                            question="Â¿Cómo funciona el programa de referidos?"
+                            answer="Contamos con un sistema robusto de 2 niveles: obtienes hasta un 15% de comisión mensual por tus referencias directas y un 5% adicional por las referencias indirectas (Nivel 2). Tus enlaces tienen 90 días de permanencia (cookies) y las comisiones duran hasta 6 meses por referido activo."
                             isOpen={openFAQIndex === 3}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 3 ? null : 3)}
                         />
                         <FAQItem
-                            question="Â¿QuÃ© puedo hacer en mi Billetera virtual?"
+                            question="Â¿Qué puedo hacer en mi Billetera virtual?"
                             answer="Desde tu billetera puedes gestionar tus retiros y ver en tiempo real las ganancias acumuladas por tus comisiones de referidos en ambos niveles. Es un centro de control transparente para tu dinero extra."
                             isOpen={openFAQIndex === 4}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 4 ? null : 4)}
                         />
                         <FAQItem
                             question="Â¿Puedo gestionar varias tiendas a la vez?"
-                            answer="SÃ­, DropCost Master es multitienda. Puedes crear y gestionar diferentes perfiles de tienda, cada uno con su propia configuraciÃ³n y moneda local segÃºn el paÃ­s donde operes."
+                            answer="Sí, DropCost Master es multitienda. Puedes crear y gestionar diferentes perfiles de tienda, cada uno con su propia configuración y moneda local según el país donde operes."
                             isOpen={openFAQIndex === 5}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 5 ? null : 5)}
                         />
                         <FAQItem
-                            question="Â¿QuÃ© monedas estÃ¡n disponibles?"
-                            answer="Soportamos las principales monedas de LatinoamÃ©rica (COP, MXN, USD, etc.). El sistema adapta los formatos y cÃ¡lculos a la moneda que selecciones para tu tienda."
+                            question="Â¿Qué monedas están disponibles?"
+                            answer="Soportamos las principales monedas de Latinoamérica (COP, MXN, USD, etc.). El sistema adapta los formatos y cálculos a la moneda que selecciones para tu tienda."
                             isOpen={openFAQIndex === 6}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 6 ? null : 6)}
                         />
                         <FAQItem
-                            question="Â¿Mi cuenta estÃ¡ segura?"
-                            answer="Totalmente. Implementamos seguridad de autenticaciÃ³n en dos pasos (2FA) para proteger tu acceso y asegurar que solo tÃº puedas gestionar tus datos financieros y retiros."
+                            question="Â¿Mi cuenta está segura?"
+                            answer="Totalmente. Implementamos seguridad de autenticación en dos pasos (2FA) para proteger tu acceso y asegurar que solo tú puedas gestionar tus datos financieros y retiros."
                             isOpen={openFAQIndex === 7}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 7 ? null : 7)}
                         />
                         <FAQItem
                             question="Â¿Puedo ver mis movimientos anteriores?"
-                            answer="SÃ­, contamos con un Historial de Actividades detallado donde puedes auditar cada cambio, simulaciÃ³n o acciÃ³n relevante realizada en tu cuenta para un control total."
+                            answer="Sí, contamos con un Historial de Actividades detallado donde puedes auditar cada cambio, simulación o acción relevante realizada en tu cuenta para un control total."
                             isOpen={openFAQIndex === 8}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 8 ? null : 8)}
                         />
                         <FAQItem
                             question="Â¿Existen contratos de permanencia en los planes?"
-                            answer="No. No tenemos contratos forzosos. Puedes cancelar tu suscripciÃ³n en cualquier momento desde tu panel de configuraciÃ³n sin complicaciones."
+                            answer="No. No tenemos contratos forzosos. Puedes cancelar tu suscripción en cualquier momento desde tu panel de configuración sin complicaciones."
                             isOpen={openFAQIndex === 9}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 9 ? null : 9)}
                         />
@@ -763,7 +763,7 @@ function ComparisonSection({ visible, setVisible }: { visible: boolean; setVisib
                 <div className="reveal" style={{ textAlign: 'center', marginBottom: '80px' }}>
                     <h2 style={{ fontSize: '40px', fontWeight: 600, marginBottom: '24px' }}>Excel vs DropCost Master</h2>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '18px', maxWidth: '600px', margin: '0 auto' }}>
-                        Â¿SabÃ­as que el 80% de los dropshippers COD pierden dinero sin saberlo? Mira la diferencia real.
+                        Â¿Sabías que el 80% de los dropshippers COD pierden dinero sin saberlo? Mira la diferencia real.
                     </p>
                 </div>
 
@@ -772,7 +772,7 @@ function ComparisonSection({ visible, setVisible }: { visible: boolean; setVisib
                         <Card style={{ padding: '32px', border: '2px solid #EF4444', height: '100%', backgroundColor: 'rgba(239, 68, 68, 0.02)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', color: '#EF4444' }}>
                                 <TrendingDown size={32} />
-                                <h3 style={{ fontSize: '24px', fontWeight: 600 }}>El "OjÃ­metro"</h3>
+                                <h3 style={{ fontSize: '24px', fontWeight: 600 }}>El "Ojímetro"</h3>
                             </div>
                             <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <ComparisonItem label="Precio de venta" value="$59.900" />
@@ -817,7 +817,7 @@ function ComparisonSection({ visible, setVisible }: { visible: boolean; setVisib
                                 <ComparisonItem label="Utilidad NETA (20%)" value="+$18.079" color="#10B981" bold />
                                 <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '16px', borderRadius: '12px', marginTop: '16px' }}>
                                     <p style={{ fontSize: '14px', color: '#10B981', fontWeight: 600 }}>Incluye impacto de devoluciones real.</p>
-                                    <p style={{ fontSize: '18px', color: '#10B981', fontWeight: 600, marginTop: '4px' }}>Rentabilidad MatemÃ¡tica</p>
+                                    <p style={{ fontSize: '18px', color: '#10B981', fontWeight: 600, marginTop: '4px' }}>Rentabilidad Matemática</p>
                                 </div>
                             </ul>
                         </Card>
@@ -845,16 +845,16 @@ function ComparisonSection({ visible, setVisible }: { visible: boolean; setVisib
 
                     {visible && (
                         <div className="reveal revealed" style={{ marginTop: '24px', padding: '32px', textAlign: 'left', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '20px' }}>
-                            <h4 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '24px' }}>ProyecciÃ³n Financiera Anual (Ejemplo 50 ventas/dÃ­a)</h4>
+                            <h4 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '24px' }}>Proyección Financiera Anual (Ejemplo 50 ventas/día)</h4>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px' }}>
                                 <div style={{ padding: '24px', backgroundColor: 'var(--bg-primary)', borderRadius: '16px' }}>
-                                    <p style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 600 }}>PÃ©rdida con Excel</p>
-                                    <p style={{ fontSize: '28px', fontWeight: 600, color: '#EF4444', margin: '8px 0' }}>-$57.240.000 /aÃ±o</p>
+                                    <p style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 600 }}>Pérdida con Excel</p>
+                                    <p style={{ fontSize: '28px', fontWeight: 600, color: '#EF4444', margin: '8px 0' }}>-$57.240.000 /año</p>
                                     <p style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Dinero que dejas de percibir por un costeo incorrecto.</p>
                                 </div>
                                 <div style={{ padding: '24px', backgroundColor: 'var(--bg-primary)', borderRadius: '16px', border: '1px solid var(--color-primary)' }}>
                                     <p style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 600 }}>Utilidad con DropCost</p>
-                                    <p style={{ fontSize: '28px', fontWeight: 600, color: '#10B981', margin: '8px 0' }}>+$325.422.000 /aÃ±o</p>
+                                    <p style={{ fontSize: '28px', fontWeight: 600, color: '#10B981', margin: '8px 0' }}>+$325.422.000 /año</p>
                                     <p style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Resultado de escalar con un margen del 20% real.</p>
                                 </div>
                             </div>
@@ -929,7 +929,7 @@ function LocalPricingSection({
                             basePrice = plan.price_monthly * 0.85;
                         }
 
-                        // LÃ³gica de conversiÃ³n dinÃ¡mica
+                        // Lógica de conversión dinámica
                         let displayPrice = basePrice;
                         let displayCurrency = 'USD';
                         let displayLocale = 'en-US';
@@ -943,10 +943,10 @@ function LocalPricingSection({
                                         detectedCountry.codigo_iso_2 === 'CL' ? 'es-CL' :
                                             detectedCountry.codigo_iso_2 === 'PE' ? 'es-PE' : 'es-' + detectedCountry.codigo_iso_2;
                         } else if (!detectedCountry) {
-                            // Si no se ha detectado paÃ­s aÃºn, mostramos COP por defecto (Colombia es el mercado principal)
+                            // Si no se ha detectado país aún, mostramos COP por defecto (Colombia es el mercado principal)
                             displayCurrency = 'COP';
                             displayLocale = 'es-CO';
-                            // Tasa aproximada manual si no hay rates aÃºn para el primer render
+                            // Tasa aproximada manual si no hay rates aún para el primer render
                             displayPrice = basePrice * 4000;
                         }
 

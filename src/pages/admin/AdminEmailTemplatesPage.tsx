@@ -75,26 +75,26 @@ const categorizedVariables = {
         { name: 'nombres', label: 'Nombres del Usuario' },
         { name: 'apellidos', label: 'Apellidos del Usuario' },
         { name: 'email', label: 'Email Principal' },
-        { name: 'telefono', label: 'TelÃ©fono de Contacto' },
-        { name: 'pais', label: 'PaÃ­s de Residencia' },
+        { name: 'telefono', label: 'Teléfono de Contacto' },
+        { name: 'pais', label: 'País de Residencia' },
         { name: 'wallet_saldo', label: 'Saldo en Wallet' },
-        { name: 'codigo_referido_personal', label: 'Su CÃ³digo de InvitaciÃ³n' },
+        { name: 'codigo_referido_personal', label: 'Su Código de Invitación' },
         { name: 'fecha_registro', label: 'Fecha de Registro' },
-        { name: 'fecha_actualizacion', label: 'Fecha de ActualizaciÃ³n' }
+        { name: 'fecha_actualizacion', label: 'Fecha de Actualización' }
     ],
-    'SuscripciÃ³n': [
+    'Suscripción': [
         { name: 'plan_nombre', label: 'Nombre del Plan Actual' },
         { name: 'plan_precio', label: 'Precio del Plan' },
-        { name: 'plan_detalles', label: 'Lista de CaracterÃ­sticas' },
-        { name: 'fecha_proximo_cobro', label: 'Fecha PrÃ³ximo Cobro / Vencimiento' },
-        { name: 'dias_restantes', label: 'DÃ­as Restantes del Plan' },
+        { name: 'plan_detalles', label: 'Lista de Características' },
+        { name: 'fecha_proximo_cobro', label: 'Fecha Próximo Cobro / Vencimiento' },
+        { name: 'dias_restantes', label: 'Días Restantes del Plan' },
         { name: 'fecha_vencimiento', label: 'Fecha de Vencimiento' },
         { name: 'link_pago', label: 'Link de Pago Manual' },
         { name: 'estado_suscripcion', label: 'Estado (Activa/Pendiente)' }
     ],
     'Tienda': [
         { name: 'tienda_nombre', label: 'Nombre de la Tienda' },
-        { name: 'tienda_pais', label: 'PaÃ­s de la Tienda' },
+        { name: 'tienda_pais', label: 'País de la Tienda' },
         { name: 'tienda_moneda', label: 'Moneda (COP, USD, etc)' }
     ],
     'Financiero': [
@@ -104,71 +104,71 @@ const categorizedVariables = {
         { name: 'producto_utilidad_neta', label: 'Utilidad Neta Estimada' },
         { name: 'monto_retiro', label: 'Monto a Retirar (USD)' },
         { name: 'saldo_restante', label: 'Saldo Restante en Billetera (USD)' },
-        { name: 'fecha_aprobacion', label: 'Fecha de AprobaciÃ³n del Retiro' },
+        { name: 'fecha_aprobacion', label: 'Fecha de Aprobación del Retiro' },
         { name: 'fecha_estimada_llegada', label: 'Fecha Estimada de Llegada del Dinero' },
         { name: 'banco_destino', label: 'Banco Destino de la Transferencia' },
         { name: 'titular_cuenta', label: 'Titular de la Cuenta Bancaria' },
     ],
     'Referidos': [
-        { name: 'lider_nombre', label: 'Nombre de su LÃ­der' },
+        { name: 'lider_nombre', label: 'Nombre de su Líder' },
         { name: 'total_referidos', label: 'Total de Invitados' },
-        { name: 'monto_comision', label: 'Monto de ComisiÃ³n (USD)' },
-        { name: 'comision_ganada', label: 'ComisiÃ³n Ganada (USD) por Pago de Referido' },
+        { name: 'monto_comision', label: 'Monto de Comisión (USD)' },
+        { name: 'comision_ganada', label: 'Comisión Ganada (USD) por Pago de Referido' },
         { name: 'monto_pago', label: 'Monto Pagado por el Referido (USD)' },
-        { name: 'plan_referido', label: 'Plan que ComprÃ³ el Referido' },
+        { name: 'plan_referido', label: 'Plan que Compró el Referido' },
         { name: 'fecha_pago', label: 'Fecha de Pago (Retiros)' },
         { name: 'fecha_pago_referido', label: 'Fecha de Pago del Referido' },
-        { name: 'fecha_proximo_pago', label: 'PrÃ³ximo Pago del Referido' },
+        { name: 'fecha_proximo_pago', label: 'Próximo Pago del Referido' },
         { name: 'saldo_billetera', label: 'Saldo Actual en Billetera (USD)' },
         { name: 'banco_nombre', label: 'Banco de Destino' },
-        { name: 'referido_nombre', label: 'Nombre del Nuevo Referido (quien se registrÃ³)' },
+        { name: 'referido_nombre', label: 'Nombre del Nuevo Referido (quien se registró)' },
         { name: 'referido_email', label: 'Email del Nuevo Referido' },
-        { name: 'comision_referido_nivel1', label: 'Porcentaje ComisiÃ³n Nivel 1 (Config)' },
-        { name: 'comision_referido_nivel2', label: 'Porcentaje ComisiÃ³n Nivel 2 (Config)' },
-        { name: 'vigencia_meses_comision', label: 'Meses de Vigencia ComisiÃ³n (Config)' },
-        { name: 'requisito_para_lider', label: 'Referidos MÃ­nimos para ser LÃ­der (Config)' },
-        { name: 'referidos_cantidad', label: 'Cantidad Actual de Referidos del LÃ­der' },
-        { name: 'fecha_cancelacion_referido', label: 'Fecha CancelaciÃ³n SuscripciÃ³n del Referido' },
-        { name: 'fecha_ultima_comision', label: 'Fecha Ãltima ComisiÃ³n Generada por Referido' },
-        { name: 'dias_restantes_comision', label: 'DÃ­as Restantes de ComisiÃ³n sobre Referido' },
-        { name: 'comision_mensual', label: 'ComisiÃ³n Mensual por Referido (USD)' },
-        { name: 'fecha_inicio_comision', label: 'Fecha Inicio PerÃ­odo de ComisiÃ³n' },
-        { name: 'fecha_expiracion_comision', label: 'Fecha ExpiraciÃ³n de ComisiÃ³n sobre Referido' },
-        { name: 'comision_total_ganada', label: 'Total Comisionado por Referido en el PerÃ­odo (USD)' },
+        { name: 'comision_referido_nivel1', label: 'Porcentaje Comisión Nivel 1 (Config)' },
+        { name: 'comision_referido_nivel2', label: 'Porcentaje Comisión Nivel 2 (Config)' },
+        { name: 'vigencia_meses_comision', label: 'Meses de Vigencia Comisión (Config)' },
+        { name: 'requisito_para_lider', label: 'Referidos Mínimos para ser Líder (Config)' },
+        { name: 'referidos_cantidad', label: 'Cantidad Actual de Referidos del Líder' },
+        { name: 'fecha_cancelacion_referido', label: 'Fecha Cancelación Suscripción del Referido' },
+        { name: 'fecha_ultima_comision', label: 'Fecha Ãltima Comisión Generada por Referido' },
+        { name: 'dias_restantes_comision', label: 'Días Restantes de Comisión sobre Referido' },
+        { name: 'comision_mensual', label: 'Comisión Mensual por Referido (USD)' },
+        { name: 'fecha_inicio_comision', label: 'Fecha Inicio Período de Comisión' },
+        { name: 'fecha_expiracion_comision', label: 'Fecha Expiración de Comisión sobre Referido' },
+        { name: 'comision_total_ganada', label: 'Total Comisionado por Referido en el Período (USD)' },
         { name: 'referidos_actuales', label: 'Referidos Actuales del Usuario' },
-        { name: 'referidos_faltantes', label: 'Referidos Faltantes para ser LÃ­der' },
-        { name: 'porcentaje_progreso', label: 'Porcentaje de Progreso hacia LÃ­der (%)' },
-        { name: 'requisito_lider', label: 'Requisito Total de Referidos para LÃ­der (alias)' },
-        { name: 'comision_nivel2', label: 'Porcentaje ComisiÃ³n Nivel 2 (alias)' },
+        { name: 'referidos_faltantes', label: 'Referidos Faltantes para ser Líder' },
+        { name: 'porcentaje_progreso', label: 'Porcentaje de Progreso hacia Líder (%)' },
+        { name: 'requisito_lider', label: 'Requisito Total de Referidos para Líder (alias)' },
+        { name: 'comision_nivel2', label: 'Porcentaje Comisión Nivel 2 (alias)' },
     ],
     'Sistema': [
-        { name: 'app_url', label: 'Link a Inicio (RaÃ­z)' },
+        { name: 'app_url', label: 'Link a Inicio (Raíz)' },
         { name: '{{app_url}}/mis-costeos', label: 'Link al Simulador' },
         { name: '{{app_url}}/dashboard', label: 'Link al Dashboard' },
         { name: '{{app_url}}/referidos', label: 'Link a Referidos' },
         { name: '{{app_url}}/billetera', label: 'Link a Billetera' },
         { name: '{{app_url}}/planes', label: 'Link a Planes' },
-        { name: '{{app_url}}/configuracion', label: 'Link a ConfiguraciÃ³n' }
+        { name: '{{app_url}}/configuracion', label: 'Link a Configuración' }
     ],
-    'AutenticaciÃ³n': [
-        { name: 'reset_link', label: 'Link para Restablecer ContraseÃ±a' },
+    'Autenticación': [
+        { name: 'reset_link', label: 'Link para Restablecer Contraseña' },
         { name: 'horas_validez', label: 'Horas de Validez del Link' },
         { name: 'verification_link', label: 'Link para Verificar Email' },
         { name: 'login_url', label: 'Link de Login' }
     ],
     'Legal': [
-        { name: '{{app_url}}/privacidad', label: 'PolÃ­tica de Privacidad' },
-        { name: '{{app_url}}/terminos', label: 'TÃ©rminos y Condiciones' },
-        { name: '{{app_url}}/contacto', label: 'PÃ¡gina de Contacto' }
+        { name: '{{app_url}}/privacidad', label: 'Política de Privacidad' },
+        { name: '{{app_url}}/terminos', label: 'Términos y Condiciones' },
+        { name: '{{app_url}}/contacto', label: 'Página de Contacto' }
     ],
     'Soporte': [
         { name: 'email_soporte', label: 'Email de Soporte (Config)' },
-        { name: 'telefono_soporte', label: 'TelÃ©fono de Soporte' },
+        { name: 'telefono_soporte', label: 'Teléfono de Soporte' },
         { name: '{{app_url}}/soporte', label: 'Centro de Ayuda' }
     ],
     'Seguridad': [
-        { name: 'codigo_2fa', label: 'CÃ³digo 2FA / OTP' },
-        { name: 'expira_en', label: 'Tiempo de ExpiraciÃ³n' },
+        { name: 'codigo_2fa', label: 'Código 2FA / OTP' },
+        { name: 'expira_en', label: 'Tiempo de Expiración' },
         { name: 'email_anterior', label: 'Email Anterior' },
         { name: 'email_nuevo', label: 'Email Nuevo' }
     ],
@@ -195,7 +195,7 @@ const categorizedMJMLComponents: Record<string, any[]> = {
     'Estructura (Root)': [
         {
             name: 'mjml',
-            label: 'RaÃ­z MJML',
+            label: 'Raíz MJML',
             tagName: 'mjml',
             defaultAttributes: {},
             allowedAttributes: [],
@@ -217,22 +217,22 @@ const categorizedMJMLComponents: Record<string, any[]> = {
             defaultAttributes: { 'background-color': '#f0f0f0', width: '600px' },
             allowedAttributes: [
                 { name: 'background-color', label: 'Color Fondo', type: 'color' },
-                { name: 'width', label: 'Ancho MÃ¡ximo', type: 'text', defaultValue: '600px' }
+                { name: 'width', label: 'Ancho Máximo', type: 'text', defaultValue: '600px' }
             ],
             defaultContent: ''
         }
     ],
-    'Layout (DiseÃ±o)': [
+    'Layout (Diseño)': [
         {
             name: 'mj-section',
-            label: 'SecciÃ³n',
+            label: 'Sección',
             tagName: 'mj-section',
             defaultAttributes: { 'background-color': '#ffffff', 'padding': '20px' },
             allowedAttributes: [
                 { name: 'background-color', label: 'Color Fondo', type: 'color' },
                 { name: 'padding', label: 'Relleno (Padding)', type: 'text', defaultValue: '20px' },
                 { name: 'border-radius', label: 'Bordes Redondeados', type: 'text' },
-                { name: 'text-align', label: 'AlineaciÃ³n', type: 'select', options: ['left', 'center', 'right'] }
+                { name: 'text-align', label: 'Alineación', type: 'select', options: ['left', 'center', 'right'] }
             ],
             defaultContent: '<mj-column>\n    <mj-text>Contenido de columna...</mj-text>\n  </mj-column>'
         },
@@ -243,7 +243,7 @@ const categorizedMJMLComponents: Record<string, any[]> = {
             defaultAttributes: { 'width': '', 'vertical-align': 'top' },
             allowedAttributes: [
                 { name: 'width', label: 'Ancho (ej: 50%)', type: 'text' },
-                { name: 'vertical-align', label: 'AlineaciÃ³n Vert.', type: 'select', options: ['top', 'middle', 'bottom'] },
+                { name: 'vertical-align', label: 'Alineación Vert.', type: 'select', options: ['top', 'middle', 'bottom'] },
                 { name: 'background-color', label: 'Color Fondo', type: 'color' },
                 { name: 'padding', label: 'Padding', type: 'text' }
             ],
@@ -284,22 +284,22 @@ const categorizedMJMLComponents: Record<string, any[]> = {
     'Contenido': [
         {
             name: 'mj-text',
-            label: 'Texto / PÃ¡rrafo',
+            label: 'Texto / Párrafo',
             tagName: 'mj-text',
             defaultAttributes: { 'color': '#55575d', 'font-family': 'Arial', 'font-size': '13px', 'line-height': '22px' },
             allowedAttributes: [
                 { name: 'color', label: 'Color Texto', type: 'color' },
-                { name: 'font-size', label: 'TamaÃ±o Fuente', type: 'text', defaultValue: '13px' },
+                { name: 'font-size', label: 'Tamaño Fuente', type: 'text', defaultValue: '13px' },
                 { name: 'font-weight', label: 'Peso Fuente', type: 'select', options: ['300', '400', '600', '700', '900'] },
-                { name: 'align', label: 'AlineaciÃ³n', type: 'select', options: ['left', 'center', 'right', 'justify'] },
-                { name: 'line-height', label: 'Altura LÃ­nea', type: 'text' },
-                { name: 'font-family', label: 'TipografÃ­a', type: 'text' }
+                { name: 'align', label: 'Alineación', type: 'select', options: ['left', 'center', 'right', 'justify'] },
+                { name: 'line-height', label: 'Altura Línea', type: 'text' },
+                { name: 'font-family', label: 'Tipografía', type: 'text' }
             ],
-            defaultContent: 'Escriba su texto aquÃ­...'
+            defaultContent: 'Escriba su texto aquí...'
         },
         {
             name: 'mj-button',
-            label: 'BotÃ³n CTA',
+            label: 'Botón CTA',
             tagName: 'mj-button',
             defaultAttributes: { 'background-color': '#414141', 'color': '#ffffff', 'href': '#', 'border-radius': '3px' },
             allowedAttributes: [
@@ -308,9 +308,9 @@ const categorizedMJMLComponents: Record<string, any[]> = {
                 { name: 'href', label: 'Enlace (URL)', type: 'url' },
                 { name: 'border-radius', label: 'Radio Borde', type: 'text', defaultValue: '3px' },
                 { name: 'width', label: 'Ancho (opcional)', type: 'text' },
-                { name: 'font-size', label: 'TamaÃ±o Fuente', type: 'text' }
+                { name: 'font-size', label: 'Tamaño Fuente', type: 'text' }
             ],
-            defaultContent: 'Haga clic aquÃ­'
+            defaultContent: 'Haga clic aquí'
         },
         {
             name: 'mj-image',
@@ -331,14 +331,14 @@ const categorizedMJMLComponents: Record<string, any[]> = {
             tagName: 'mj-divider',
             defaultAttributes: { 'border-width': '1px', 'border-color': '#E0E0E0' },
             allowedAttributes: [
-                { name: 'border-color', label: 'Color LÃ­nea', type: 'color' },
+                { name: 'border-color', label: 'Color Línea', type: 'color' },
                 { name: 'border-width', label: 'Grosor', type: 'text' },
                 { name: 'padding', label: 'Espaciado', type: 'text' }
             ]
         },
         {
             name: 'mj-spacer',
-            label: 'Espacio VacÃ­o',
+            label: 'Espacio Vacío',
             tagName: 'mj-spacer',
             defaultAttributes: { 'height': '20px' },
             allowedAttributes: [
@@ -352,19 +352,19 @@ const categorizedMJMLComponents: Record<string, any[]> = {
             defaultAttributes: {},
             allowedAttributes: [
                 { name: 'color', label: 'Color Texto', type: 'color' },
-                { name: 'font-size', label: 'TamaÃ±o Fuente', type: 'text' }
+                { name: 'font-size', label: 'Tamaño Fuente', type: 'text' }
             ],
-            defaultContent: '<tr>\n  <td style="padding: 0 15px 0 0;">AÃ±o 2024</td>\n  <td style="padding: 0 15px;">Ventas</td>\n  <td style="padding: 0 0 0 15px;">$500k</td>\n</tr>'
+            defaultContent: '<tr>\n  <td style="padding: 0 15px 0 0;">Año 2024</td>\n  <td style="padding: 0 15px;">Ventas</td>\n  <td style="padding: 0 0 0 15px;">$500k</td>\n</tr>'
         }
     ],
-    'NavegaciÃ³n y Social': [
+    'Navegación y Social': [
         {
             name: 'mj-navbar',
-            label: 'MenÃº NavegaciÃ³n',
+            label: 'Menú Navegación',
             tagName: 'mj-navbar',
             defaultAttributes: { 'hamburger': 'hamburger', 'ico-color': '#444444' },
             allowedAttributes: [
-                { name: 'hamburger', label: 'BotÃ³n MÃ³vil', type: 'select', options: ['hamburger', 'none'] },
+                { name: 'hamburger', label: 'Botón Móvil', type: 'select', options: ['hamburger', 'none'] },
                 { name: 'ico-color', label: 'Color Ãcono', type: 'color' }
             ],
             defaultContent: '<mj-navbar-link href="/home">Inicio</mj-navbar-link>\n<mj-navbar-link href="/products">Productos</mj-navbar-link>\n<mj-navbar-link href="/contact">Contacto</mj-navbar-link>'
@@ -375,7 +375,7 @@ const categorizedMJMLComponents: Record<string, any[]> = {
             tagName: 'mj-social',
             defaultAttributes: { 'font-size': '15px', 'icon-size': '30px', 'mode': 'horizontal' },
             allowedAttributes: [
-                { name: 'icon-size', label: 'TamaÃ±o Ãcono', type: 'text' },
+                { name: 'icon-size', label: 'Tamaño Ãcono', type: 'text' },
                 { name: 'mode', label: 'Modo', type: 'select', options: ['horizontal', 'vertical'] },
                 { name: 'color', label: 'Color', type: 'color' }
             ],
@@ -389,7 +389,7 @@ const categorizedMJMLComponents: Record<string, any[]> = {
             tagName: 'mj-raw',
             defaultAttributes: {},
             allowedAttributes: [],
-            defaultContent: '<!-- HTML personalizado que no serÃ¡ procesado por MJML -->'
+            defaultContent: '<!-- HTML personalizado que no será procesado por MJML -->'
         },
         {
             name: 'mj-style',
@@ -409,7 +409,7 @@ const categorizedMJMLComponents: Record<string, any[]> = {
             allowedAttributes: [
                 { name: 'name', label: 'Nombre Clase', type: 'text' },
                 { name: 'color', label: 'Color', type: 'color' },
-                { name: 'font-size', label: 'TamaÃ±o Fuente', type: 'text' }
+                { name: 'font-size', label: 'Tamaño Fuente', type: 'text' }
             ]
         }
     ]
@@ -529,7 +529,7 @@ const VariableList = ({ onSelect }: { onSelect: (v: string) => void }) => {
             className="dc-admin-dropdown dc-admin-vars-list absolute right-0 top-full mt-2 w-80 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
             style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.2))' }}
         >
-            {/* Buscador DinÃ¡mico */}
+            {/* Buscador Dinámico */}
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
                 <div className="relative">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
@@ -637,7 +637,7 @@ const AddSenderModal = ({ isOpen, onClose, onSave, defaultName, domain }: any) =
                 />
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>DirecciÃ³n de Correo</label>
+                    <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Dirección de Correo</label>
                     <div
                         style={{
                             display: 'flex',
@@ -681,7 +681,7 @@ const AddSenderModal = ({ isOpen, onClose, onSave, defaultName, domain }: any) =
                         </div>
                     </div>
                     <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: 0, fontStyle: 'italic' }}>
-                        Solo se permiten letras minÃºsculas, nÃºmeros, puntos y guiones.
+                        Solo se permiten letras minúsculas, números, puntos y guiones.
                     </p>
                 </div>
 
@@ -723,7 +723,7 @@ const SenderSelector = ({ currentName, currentPrefix, domain, onSelect, template
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Extraer remitentes Ãºnicos de todas las plantillas existentes y contar sus usos
+    // Extraer remitentes únicos de todas las plantillas existentes y contar sus usos
     const uniqueSenders = React.useMemo(() => {
         const senders = new Map();
         templates.forEach((t: any) => {
@@ -789,7 +789,7 @@ const SenderSelector = ({ currentName, currentPrefix, domain, onSelect, template
                             {currentName || globalConfig?.nombre_empresa || 'Seleccionar Remitente'}
                         </div>
                         <div className="text-xs text-[var(--text-tertiary)] font-mono mt-0.5">
-                            {currentPrefix ? `${currentPrefix}@${domain}` : 'Configurar direcciÃ³n...'}
+                            {currentPrefix ? `${currentPrefix}@${domain}` : 'Configurar dirección...'}
                         </div>
                     </div>
                 </div>
@@ -944,7 +944,7 @@ const SenderSelector = ({ currentName, currentPrefix, domain, onSelect, template
                         placeholder="Ej: DropCost Soporte"
                     />
                     <div className="space-y-1.5 opacity-70">
-                        <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Correo ElectrÃ³nico (Solo Lectura)</label>
+                        <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Correo Electrónico (Solo Lectura)</label>
                         <div style={{
                             backgroundColor: 'var(--bg-secondary)',
                             border: '1.5px solid var(--border-color)',
@@ -1165,7 +1165,7 @@ export function AdminEmailTemplatesPage() {
     const [showVariablesBody, setShowVariablesBody] = useState(false);
     const [showMJMLComponents, setShowMJMLComponents] = useState(false);
 
-    // Sincronizar estado local de plantillas para bÃºsqueda/filtros
+    // Sincronizar estado local de plantillas para búsqueda/filtros
     useEffect(() => {
         if (remoteTemplates) {
             setTemplates(remoteTemplates as any);
@@ -1220,12 +1220,12 @@ export function AdminEmailTemplatesPage() {
     const [mjmlModalComponent, setMjmlModalComponent] = useState<any | null>(null);
 
     const mjmlTips = [
-        "JerarquÃ­a MJML: <mjml> -> <mj-body> -> <mj-section> -> <mj-column> -> <mj-text>.",
-        "Secciones: Usa <mj-section> para filas horizontales. Cada secciÃ³n necesita al menos una <mj-column>.",
-        "Responsividad: Â¡MJML se encarga de que tu correo se vea perfecto en mÃ³viles automÃ¡ticamente!",
-        "PersonalizaciÃ³n: Usa {{nombres}} o {{link}} para inyectar datos reales del usuario.",
+        "Jerarquía MJML: <mjml> -> <mj-body> -> <mj-section> -> <mj-column> -> <mj-text>.",
+        "Secciones: Usa <mj-section> para filas horizontales. Cada sección necesita al menos una <mj-column>.",
+        "Responsividad: Â¡MJML se encarga de que tu correo se vea perfecto en móviles automáticamente!",
+        "Personalización: Usa {{nombres}} o {{link}} para inyectar datos reales del usuario.",
         "Estilos: Puedes usar <mj-style> dentro de <mj-head> para estilos globales de la plantilla.",
-        "PrevisualizaciÃ³n: Haz clic en 'Guardar Cambios' para actualizar la vista previa en vivo."
+        "Previsualización: Haz clic en 'Guardar Cambios' para actualizar la vista previa en vivo."
     ];
 
     useEffect(() => {
@@ -1248,7 +1248,7 @@ export function AdminEmailTemplatesPage() {
                 plan = data;
             }
 
-            // Intento 2: si no es UUID o no encontrÃ³ por ID, buscar por slug
+            // Intento 2: si no es UUID o no encontró por ID, buscar por slug
             if (!plan) {
                 const { data: planBySlug } = await (supabase as any)
                     .from('plans')
@@ -1307,7 +1307,7 @@ export function AdminEmailTemplatesPage() {
             [field]: newText
         });
 
-        // Cerrar menÃºs
+        // Cerrar menús
         setShowVariablesSubject(false);
         setShowVariablesBody(false);
         setShowMJMLComponents(false);
@@ -1350,13 +1350,13 @@ export function AdminEmailTemplatesPage() {
             let htmlFinal = selectedTemplate.html_content || '';
             if (selectedTemplate.mjml_content) {
                 try {
-                    // Pre-reemplazar variables para que MJML no falle en su validaciÃ³n interna (especialmente colores)
+                    // Pre-reemplazar variables para que MJML no falle en su validación interna (especialmente colores)
                     const mjmlPreparado = renderPreview(selectedTemplate.mjml_content);
                     const result = mjml2html(mjmlPreparado, { validationLevel: 'skip' });
                     htmlFinal = result.html;
                 } catch (mjError) {
                     console.error('MJML compile error en prueba:', mjError);
-                    // Usar HTML previo si falla la compilaciÃ³n
+                    // Usar HTML previo si falla la compilación
                 }
             }
 
@@ -1388,14 +1388,14 @@ export function AdminEmailTemplatesPage() {
                 nombres: selectedTestUser.nombres || '',
                 apellidos: selectedTestUser.apellidos || '',
                 email: selectedTestUser.email || '',
-                usuario_email: selectedTestUser.email || '', // Mantener por compatibilidad si algÃºn trigger viejo lo usa
+                usuario_email: selectedTestUser.email || '', // Mantener por compatibilidad si algún trigger viejo lo usa
                 telefono: selectedTestUser.telefono || '+57 321 000 0000',
                 fecha_registro: fmtDateStr(selectedTestUser.created_at || new Date().toISOString()),
                 fecha_actualizacion: fmtDate(new Date()),
                 codigo_referido: selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA',
                 codigo_referido_personal: selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA',
-                referido_nombre: 'Carlos MartÃ­nez', // Ejemplo: nombre de quien se registrÃ³ con el link de referido
-                // Variables de prueba genÃ©ricas para triggers que las necesiten
+                referido_nombre: 'Carlos Martínez', // Ejemplo: nombre de quien se registró con el link de referido
+                // Variables de prueba genéricas para triggers que las necesiten
                 app_url: (globalConfig as any)?.site_url || window.location.origin,
                 login_url: `${(globalConfig as any)?.site_url || window.location.origin}/login`,
                 reset_link: `${(globalConfig as any)?.site_url || window.location.origin}/actualizar-contrasena?token=PRUEBA`,
@@ -1467,7 +1467,7 @@ export function AdminEmailTemplatesPage() {
                     if (reg) { const d = new Date(reg); d.setDate(d.getDate() + 30); return fmtDate(d); }
                     return fmtDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
                 })(),
-                plan_detalles: selectedUserPlan?.features ? selectedUserPlan.features.map((f: string) => `â¢ ${f}`).join('<br>') : 'â¢ GestiÃ³n de hasta 5 tiendas<br>â¢ Simulador de costos avanzado<br>â¢ IntegraciÃ³n con Meta Ads<br>â¢ Soporte prioritario',
+                plan_detalles: selectedUserPlan?.features ? selectedUserPlan.features.map((f: string) => `â¢ ${f}`).join('<br>') : 'â¢ Gestión de hasta 5 tiendas<br>â¢ Simulador de costos avanzado<br>â¢ Integración con Meta Ads<br>â¢ Soporte prioritario',
                 plan_precio: selectedUserPlan?.price_monthly != null ? String(selectedUserPlan.price_monthly) : '0.00',
                 link_pago: 'https://www.mercadopago.com.co/checkout/v1/redirect?pref_id=PRUEBA',
                 email_soporte: globalConfig?.email_contacto || 'soporte@dropcost.com',
@@ -1574,7 +1574,7 @@ export function AdminEmailTemplatesPage() {
                 parent_id: navigationPath.length > 0 ? navigationPath[navigationPath.length - 1] : null
             }) as any;
 
-            // Si se seleccionÃ³ un trigger, gestionar exclusividad y crear asociaciÃ³n
+            // Si se seleccionó un trigger, gestionar exclusividad y crear asociación
             if (newItem.trigger_event && data?.id) {
                 const trigger = availableTriggers.find(t => t.codigo_evento === newItem.trigger_event);
                 if (trigger) {
@@ -1584,7 +1584,7 @@ export function AdminEmailTemplatesPage() {
                         .eq('trigger_event', newItem.trigger_event)
                         .neq('id', data.id); // Protect newly created template
 
-                    // 2. Crear nueva asociaciÃ³n
+                    // 2. Crear nueva asociación
                     await (supabase as any).from('email_plantillas_triggers').insert({
                         plantilla_id: data.id,
                         trigger_id: trigger.id,
@@ -1720,7 +1720,7 @@ export function AdminEmailTemplatesPage() {
             setIsRenameModalOpen(false);
             setItemToManage(null);
             setNewItem({ name: '', slug: '', description: '', subject: '', trigger_event: '', mjml_content: '', sender_prefix: 'support' });
-            toast.success('Â¡Actualizado!', 'Se ha actualizado la informaciÃ³n correctamente.');
+            toast.success('Â¡Actualizado!', 'Se ha actualizado la información correctamente.');
         } catch (error) {
             toast.error('Error', 'No se pudo actualizar.');
         } finally {
@@ -1743,7 +1743,7 @@ export function AdminEmailTemplatesPage() {
         }
     }
 
-    // Cerrar menÃº al hacer clic fuera
+    // Cerrar menú al hacer clic fuera
     useEffect(() => {
         const handleClickOutside = () => setActiveMenuId(null);
         if (activeMenuId) window.addEventListener('click', handleClickOutside);
@@ -1854,7 +1854,7 @@ export function AdminEmailTemplatesPage() {
                                 className="flex items-center w-full text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--color-primary)] rounded-xl transition-colors text-left border-none cursor-pointer"
                                 style={{ padding: '14px 24px', gap: '16px' }}
                             >
-                                <Edit3 size={18} /> Editar InformaciÃ³n
+                                <Edit3 size={18} /> Editar Información
                             </button>
                             <button
                                 onClick={() => {
@@ -1907,7 +1907,7 @@ export function AdminEmailTemplatesPage() {
         </div>
     );
 
-    // Renderizador de previsualizaciÃ³n simple
+    // Renderizador de previsualización simple
     const renderPreview = (content: string) => {
         if (!selectedTemplate) return content;
         let rendered = content;
@@ -1934,12 +1934,12 @@ export function AdminEmailTemplatesPage() {
             app_url: (globalConfig as any)?.site_url || window.location.origin,
             login_url: `${(globalConfig as any)?.site_url || window.location.origin}/login`,
             telefono: globalConfig?.telefono || '{{telefono}}',
-            "telÃ©fono": globalConfig?.telefono || '{{telefono}}',
+            "teléfono": globalConfig?.telefono || '{{telefono}}',
             fecha_actualizacion: fmtDate(new Date()),
             plan_nombre: selectedUserPlan?.name || '{{plan_nombre}}',
             plan_precio: selectedUserPlan?.price_monthly != null ? String(selectedUserPlan.price_monthly) : '{{plan_precio}}',
             plan_detalles: selectedUserPlan?.features ? selectedUserPlan.features.map((f: string) => `â¢ ${f}`).join('<br>') : '{{plan_detalles}}',
-            // Calcular fecha prÃ³ximo cobro desde mÃºltiples fuentes
+            // Calcular fecha próximo cobro desde múltiples fuentes
             fecha_proximo_cobro: (() => {
                 // Prioridad 1: campo fecha_vencimiento_plan
                 const fv = selectedTestUser?.fecha_vencimiento_plan;
@@ -1947,7 +1947,7 @@ export function AdminEmailTemplatesPage() {
                 // Prioridad 2: campo plan_expires_at
                 const pe = selectedTestUser?.plan_expires_at;
                 if (pe) return fmtDate(new Date(pe));
-                // Prioridad 3: calcular 30 dÃ­as despuÃ©s del created_at como estimaciÃ³n
+                // Prioridad 3: calcular 30 días después del created_at como estimación
                 const reg = selectedTestUser?.created_at || selectedTestUser?.fecha_registro;
                 if (reg) {
                     const d = new Date(reg);
@@ -1980,7 +1980,7 @@ export function AdminEmailTemplatesPage() {
                     if (v === 'nombres') mockValue = selectedTestUser.nombres;
                     else if (v === 'apellidos') mockValue = selectedTestUser.apellidos;
                     else if (v === 'email') mockValue = selectedTestUser.email;
-                    else if (v === 'telefono') mockValue = selectedTestUser.telefono || '[Sin TelÃ©fono]';
+                    else if (v === 'telefono') mockValue = selectedTestUser.telefono || '[Sin Teléfono]';
                     else if (v === 'fecha_actualizacion') mockValue = fmtDate(new Date());
                     else if (v === 'id' || v === 'user_id') mockValue = selectedTestUser.id.toString();
                     else if (v === 'nombre_completo') mockValue = `${selectedTestUser.nombres} ${selectedTestUser.apellidos}`;
@@ -2007,15 +2007,15 @@ export function AdminEmailTemplatesPage() {
             fallbacks['apellidos'] = selectedTestUser.apellidos || '';
             fallbacks['email'] = selectedTestUser.email || '';
             fallbacks['telefono'] = selectedTestUser.telefono || '{{telefono}}';
-            fallbacks['telÃ©fono'] = selectedTestUser.telefono || '{{telefono}}';
+            fallbacks['teléfono'] = selectedTestUser.telefono || '{{telefono}}';
             fallbacks['fecha_actualizacion'] = fmtDate(new Date());
             fallbacks['nombre_completo'] = `${selectedTestUser.nombres || ''} ${selectedTestUser.apellidos || ''}`.trim();
-            // CÃ³digo de referido del usuario seleccionado
+            // Código de referido del usuario seleccionado
             fallbacks['codigo_referido_personal'] = selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA';
             fallbacks['codigo_referido'] = selectedTestUser.codigo_referido_personal || 'CODIGO_PRUEBA';
-            // Nombre de la persona que se registrÃ³ con el link de referido (ejemplo para preview)
-            fallbacks['referido_nombre'] = 'Carlos MartÃ­nez';
-            // ConfiguraciÃ³n de referidos (valores de ejemplo, en producciÃ³n vienen de sistema_referidos_config)
+            // Nombre de la persona que se registró con el link de referido (ejemplo para preview)
+            fallbacks['referido_nombre'] = 'Carlos Martínez';
+            // Configuración de referidos (valores de ejemplo, en producción vienen de sistema_referidos_config)
             fallbacks['comision_referido_nivel1'] = '15';
             fallbacks['comision_referido_nivel2'] = '5';
             fallbacks['vigencia_meses_comision'] = '12';
@@ -2047,7 +2047,7 @@ export function AdminEmailTemplatesPage() {
             fallbacks['fecha_pago_referido'] = fmtDate(new Date());
             fallbacks['fecha_proximo_pago'] = fmtDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
             fallbacks['saldo_billetera'] = '32.50';
-            // AutenticaciÃ³n
+            // Autenticación
             fallbacks['reset_link'] = (brandingVars.app_url || `${window.location.origin}`) + '/actualizar-contrasena?token=PRUEBA';
             fallbacks['horas_validez'] = '24';
             fallbacks['verification_link'] = (brandingVars.app_url || `${window.location.origin}`) + '/verificar-email?token=PRUEBA';
@@ -2055,7 +2055,7 @@ export function AdminEmailTemplatesPage() {
             fallbacks['expira_en'] = '24 horas';
         }
 
-        // Agregar explÃ­citamente los datos del plan (sobreescribe cualquier valor anterior)
+        // Agregar explícitamente los datos del plan (sobreescribe cualquier valor anterior)
         if (selectedUserPlan) {
             // IMPORTANTE: price_monthly puede ser 0 (plan gratuito/admin), checar != null y no solo truthy
             fallbacks['plan_nombre'] = selectedUserPlan.name || '{{plan_nombre}}';
@@ -2067,7 +2067,7 @@ export function AdminEmailTemplatesPage() {
                 : '{{plan_detalles}}';
         }
 
-        // Calcular fecha prÃ³ximo cobro desde mÃºltiples fuentes
+        // Calcular fecha próximo cobro desde múltiples fuentes
         const calcFechaProximoCobro = () => {
             const fv = selectedTestUser?.fecha_vencimiento_plan;
             if (fv) return new Date(fv).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -2085,7 +2085,7 @@ export function AdminEmailTemplatesPage() {
             fallbacks['fecha_proximo_cobro'] = calcFechaProximoCobro();
         }
 
-        // Calcular dias_restantes dinÃ¡micamente
+        // Calcular dias_restantes dinámicamente
         const calcDiasRestantes = () => {
             const fv = selectedTestUser?.fecha_vencimiento_plan || selectedTestUser?.plan_expires_at;
             if (fv) {
@@ -2094,7 +2094,7 @@ export function AdminEmailTemplatesPage() {
                 const diff = Math.ceil((venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
                 return String(Math.max(0, diff));
             }
-            // Fallback: calcular desde created_at + 30 dÃ­as
+            // Fallback: calcular desde created_at + 30 días
             const reg = selectedTestUser?.created_at || selectedTestUser?.fecha_registro;
             if (reg) {
                 const venc = new Date(reg); venc.setDate(venc.getDate() + 30);
@@ -2106,19 +2106,19 @@ export function AdminEmailTemplatesPage() {
         };
         if (selectedTestUser) {
             fallbacks['dias_restantes'] = calcDiasRestantes();
-            // fecha_vencimiento: si hay fecha explÃ­cita la usa, si no copia fecha_proximo_cobro
+            // fecha_vencimiento: si hay fecha explícita la usa, si no copia fecha_proximo_cobro
             const fvRaw = selectedTestUser?.fecha_vencimiento_plan || selectedTestUser?.plan_expires_at;
             if (fvRaw) {
                 fallbacks['fecha_vencimiento'] = new Date(fvRaw).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
             } else {
-                // Alias de fecha_proximo_cobro para usuarios sin fecha explÃ­cita
+                // Alias de fecha_proximo_cobro para usuarios sin fecha explícita
                 fallbacks['fecha_vencimiento'] = fallbacks['fecha_proximo_cobro'] || '{{fecha_vencimiento}}';
             }
         }
 
         Object.entries(fallbacks).forEach(([key, val]) => {
             const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'gi');
-            // NO reemplazar con string vacÃ­o: deja el placeholder visible
+            // NO reemplazar con string vacío: deja el placeholder visible
             if (val !== '') {
                 rendered = rendered.replace(regex, val);
             }
@@ -2128,7 +2128,7 @@ export function AdminEmailTemplatesPage() {
     };
 
     /**
-     * Formatea el cÃ³digo MJML con indentaciÃ³n simple
+     * Formatea el código MJML con indentación simple
      */
     const formatMJML = () => {
         if (!selectedTemplate || selectedTemplate.mjml_content === undefined) return;
@@ -2139,10 +2139,10 @@ export function AdminEmailTemplatesPage() {
             let pad = 0;
 
             // Dividir por etiquetas, manteniendo el contenido de texto intacto lo mejor posible
-            // Esta es una implementaciÃ³n simple. Para algo robusto se necesitarÃ­a un parser real.
-            // Para fines de UX rÃ¡pido, esto funciona para estructuras limpias.
+            // Esta es una implementación simple. Para algo robusto se necesitaría un parser real.
+            // Para fines de UX rápido, esto funciona para estructuras limpias.
             const lines = mjml
-                .replace(/>\s*</g, '>\n<') // Romper lÃ­neas entre etiquetas
+                .replace(/>\s*</g, '>\n<') // Romper líneas entre etiquetas
                 .split('\n');
 
             lines.forEach(line => {
@@ -2151,14 +2151,14 @@ export function AdminEmailTemplatesPage() {
 
                 if (!trimmed) return;
 
-                // Disminuir indentaciÃ³n si es etiqueta de cierre
+                // Disminuir indentación si es etiqueta de cierre
                 if (trimmed.match(/^<\//)) {
                     pad = Math.max(0, pad - 1);
                 }
 
                 indent = pad;
 
-                // Aumentar indentaciÃ³n si es etiqueta de apertura pero no autocierre
+                // Aumentar indentación si es etiqueta de apertura pero no autocierre
                 if (trimmed.match(/^<[^/].*[^/]>/) && !trimmed.match(/\/>$/) && !trimmed.match(/^<.*>.*<\/.*>$/)) {
                     pad += 1;
                 }
@@ -2171,10 +2171,10 @@ export function AdminEmailTemplatesPage() {
                 mjml_content: formatted.trim()
             });
 
-            toast.success('Formato aplicado', 'El cÃ³digo se ha reordenado correctamente.');
+            toast.success('Formato aplicado', 'El código se ha reordenado correctamente.');
         } catch (error) {
             console.error('Error formatting MJML:', error);
-            toast.error('Error', 'No se pudo formatear el cÃ³digo.');
+            toast.error('Error', 'No se pudo formatear el código.');
         }
     };
 
@@ -2213,10 +2213,10 @@ export function AdminEmailTemplatesPage() {
                 <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
                     <div style={{ flex: '1', minWidth: '280px' }}>
                         <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
-                            Plantillas de correo electrÃ³nico
+                            Plantillas de correo electrónico
                         </h1>
                         <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                            Cree y gestione plantillas para todos sus correos electrÃ³nicos transaccionales.
+                            Cree y gestione plantillas para todos sus correos electrónicos transaccionales.
                         </p>
                     </div>
 
@@ -2272,7 +2272,7 @@ export function AdminEmailTemplatesPage() {
                                 <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
                                 <input
                                     type="text"
-                                    placeholder="Buscar por nombre, asunto o descripciÃ³n..."
+                                    placeholder="Buscar por nombre, asunto o descripción..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     style={{
@@ -2428,7 +2428,7 @@ export function AdminEmailTemplatesPage() {
                                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '900px' }}>
                                     <thead style={{ position: 'sticky', top: 0, zIndex: 20 }}>
                                         <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
-                                            <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', borderTopLeftRadius: '16px' }}>IdentificaciÃ³n</th>
+                                            <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', borderTopLeftRadius: '16px' }}>Identificación</th>
                                             <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tipo</th>
                                             <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Estado</th>
                                             <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ãltima Actividad</th>
@@ -2442,7 +2442,7 @@ export function AdminEmailTemplatesPage() {
                                                 <td colSpan={6} style={{ padding: '100px 24px', textAlign: 'center' }}>
                                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', opacity: 0.4 }}>
                                                         <Mail size={56} strokeWidth={1.5} color="var(--text-tertiary)" />
-                                                        <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-secondary)' }}>Sin elementos en esta ubicaciÃ³n</p>
+                                                        <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-secondary)' }}>Sin elementos en esta ubicación</p>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -2491,7 +2491,7 @@ export function AdminEmailTemplatesPage() {
                                                                     {item.name || item.slug}
                                                                 </span>
                                                                 <span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 400, maxWidth: '280px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                                    {item.description || (item.is_folder ? 'Carpeta organizada' : 'Sin descripciÃ³n adicional')}
+                                                                    {item.description || (item.is_folder ? 'Carpeta organizada' : 'Sin descripción adicional')}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -2590,7 +2590,7 @@ export function AdminEmailTemplatesPage() {
                     <Modal
                         isOpen={isRenameModalOpen}
                         onClose={() => setIsRenameModalOpen(false)}
-                        title={itemToManage?.is_folder ? "Editar Carpeta" : "Editar InformaciÃ³n"}
+                        title={itemToManage?.is_folder ? "Editar Carpeta" : "Editar Información"}
                     >
                         <div className="flex flex-col gap-6">
                             {itemToManage?.is_folder ? (
@@ -2602,10 +2602,10 @@ export function AdminEmailTemplatesPage() {
                                         placeholder="Ej: Marketing, Sistema..."
                                     />
                                     <Input
-                                        label="DescripciÃ³n (Opcional)"
+                                        label="Descripción (Opcional)"
                                         value={newItem.description}
                                         onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                                        placeholder="Â¿Para quÃ© sirve esta carpeta?"
+                                        placeholder="Â¿Para qué sirve esta carpeta?"
                                     />
                                 </>
                             ) : (
@@ -2634,7 +2634,7 @@ export function AdminEmailTemplatesPage() {
                                                 paddingLeft: '16px'
                                             }}
                                         >
-                                            <option value="">Sin Disparador AutomÃ¡tico</option>
+                                            <option value="">Sin Disparador Automático</option>
                                             {Array.from(new Set(availableTriggers.map(t => t.categoria || 'otro'))).map(categoria => (
                                                 <optgroup key={categoria} label={categoria.charAt(0).toUpperCase() + categoria.slice(1)}>
                                                     {availableTriggers.filter(t => (t.categoria || 'otro') === categoria).map(t => (
@@ -2653,10 +2653,10 @@ export function AdminEmailTemplatesPage() {
                                     </div>
 
                                     <Input
-                                        label="DescripciÃ³n"
+                                        label="Descripción"
                                         value={newItem.description}
                                         onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                                        placeholder="Para quÃ© sirve esta plantilla..."
+                                        placeholder="Para qué sirve esta plantilla..."
                                     />
                                 </>
                             )}
@@ -2692,8 +2692,8 @@ export function AdminEmailTemplatesPage() {
                             </div>
 
                             <div className="max-h-60 overflow-y-auto pr-1 flex flex-col gap-1.5 custom-scrollbar" style={{ minHeight: '180px' }}>
-                                {/* OpciÃ³n RaÃ­z */}
-                                {(!folderSearchQuery || 'inicio raÃ­z'.includes(folderSearchQuery.toLowerCase())) && (
+                                {/* Opción Raíz */}
+                                {(!folderSearchQuery || 'inicio raíz'.includes(folderSearchQuery.toLowerCase())) && (
                                     <button
                                         onClick={() => setSelectedFolderId(null)}
                                         className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all text-left border-[1.5px] ${selectedFolderId === null ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5' : 'border-transparent hover:bg-[var(--bg-secondary)]'}`}
@@ -2702,7 +2702,7 @@ export function AdminEmailTemplatesPage() {
                                             <Layout size={16} />
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className={`text-sm font-bold ${selectedFolderId === null ? 'text-[var(--color-primary)]' : 'text-[var(--text-primary)]'}`}>RaÃ­z / Inicio</span>
+                                            <span className={`text-sm font-bold ${selectedFolderId === null ? 'text-[var(--color-primary)]' : 'text-[var(--text-primary)]'}`}>Raíz / Inicio</span>
                                         </div>
                                     </button>
                                 )}
@@ -2747,7 +2747,7 @@ export function AdminEmailTemplatesPage() {
                                     disabled={selectedFolderId === itemToManage?.parent_id}
                                     isLoading={isCreating}
                                 >
-                                    Mover AquÃ­
+                                    Mover Aquí
                                 </Button>
                             </div>
                         </div>
@@ -2765,7 +2765,7 @@ export function AdminEmailTemplatesPage() {
                         </div>
                     </div>
 
-                    {/* SecciÃ³n Superior: Editor de CÃ³digo e Info Lateral */}
+                    {/* Sección Superior: Editor de Código e Info Lateral */}
                     <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
                         {/* Editor Principal */}
                         <div className="xl:col-span-8">
@@ -2825,7 +2825,7 @@ export function AdminEmailTemplatesPage() {
                                             </label>
 
                                             <div className="flex items-center gap-2 relative">
-                                                {/* BotÃ³n de Auto-Formato */}
+                                                {/* Botón de Auto-Formato */}
                                                 {selectedTemplate?.mjml_content !== undefined && (
                                                     <button
                                                         onClick={formatMJML}
@@ -2966,7 +2966,7 @@ export function AdminEmailTemplatesPage() {
                         <div className="xl:col-span-4 flex flex-col gap-6">
                             <Card title="Herramientas de Desarrollador">
                                 <div className="flex flex-col gap-8 p-2">
-                                    {/* ConfiguraciÃ³n del Remitente */}
+                                    {/* Configuración del Remitente */}
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2" style={{ marginBottom: '12px' }}>
                                             <Mail size={16} className="text-[var(--text-tertiary)]" />
@@ -2994,17 +2994,17 @@ export function AdminEmailTemplatesPage() {
                                         />
 
                                         <p className="text-[10px] text-[var(--text-tertiary)] italic">
-                                            Define quiÃ©n envÃ­a este correo. El dominio es fijo para asegurar entregabilidad (SPF/DKIM).
+                                            Define quién envía este correo. El dominio es fijo para asegurar entregabilidad (SPF/DKIM).
                                         </p>
                                     </div>
 
-                                    {/* EnvÃ­o de Prueba */}
+                                    {/* Envío de Prueba */}
                                     <div className="space-y-4 pt-6 border-t border-[var(--border-color)] border-dashed">
                                         <h5
                                             className="text-[11px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-2"
                                             style={{ marginTop: '16px', marginBottom: '12px' }}
                                         >
-                                            <Send size={14} /> Probar envÃ­o Real
+                                            <Send size={14} /> Probar envío Real
                                         </h5>
 
                                         <div className="flex flex-col gap-4">
@@ -3161,7 +3161,7 @@ export function AdminEmailTemplatesPage() {
                                         justifyContent: 'center',
                                         boxShadow: previewDevice === 'mobile' ? '0 2px 6px rgba(0,0,0,0.06)' : 'none'
                                     }}
-                                    title="Vista MÃ³vil (375px)"
+                                    title="Vista Móvil (375px)"
                                 >
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="10" height="18" x="7" y="3" rx="2" ry="2" /><path d="M12 18h.01" /></svg>
                                 </button>
@@ -3207,7 +3207,7 @@ export function AdminEmailTemplatesPage() {
                         }
                     >
 
-                        {/* Canvas de PrevisualizaciÃ³n */}
+                        {/* Canvas de Previsualización */}
                         <div
                             style={{
                                 display: 'flex',
@@ -3289,7 +3289,7 @@ export function AdminEmailTemplatesPage() {
                                             if (selectedTemplate.mjml_content) {
                                                 try {
                                                     // Usamos renderPreview ANTES de compilar para que MJML reciba colores reales
-                                                    // y no genere advertencias de validaciÃ³n en la consola.
+                                                    // y no genere advertencias de validación en la consola.
                                                     const mjmlConVariables = renderPreview(selectedTemplate.mjml_content);
                                                     const { html, errors } = mjml2html(mjmlConVariables, { validationLevel: 'skip' });
 
@@ -3307,7 +3307,7 @@ export function AdminEmailTemplatesPage() {
                                                         } catch (retryError) {
                                                             return `<div style="padding: 20px; text-align: center; color: #EF4444;">
                                                                 <h3 style="margin-bottom: 8px;">Error de Estructura MJML</h3>
-                                                                <p style="font-size: 12px; opacity: 0.8;">El cÃ³digo no es vÃ¡lido. Revisa las etiquetas de apertura/cierre.</p>
+                                                                <p style="font-size: 12px; opacity: 0.8;">El código no es válido. Revisa las etiquetas de apertura/cierre.</p>
                                                             </div>`;
                                                         }
                                                     } else {
@@ -3329,7 +3329,7 @@ export function AdminEmailTemplatesPage() {
                 </div>
             )}
 
-            {/* Modales de CreaciÃ³n */}
+            {/* Modales de Creación */}
             <Modal
                 isOpen={isCreateModalOpen}
                 onClose={() => {
@@ -3351,7 +3351,7 @@ export function AdminEmailTemplatesPage() {
                             }}
                         />
                         <div className="flex flex-col gap-2.5">
-                            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Slug AutomÃ¡tico (ID del Sistema)</label>
+                            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Slug Automático (ID del Sistema)</label>
                             <div className="bg-[var(--bg-secondary)] border-[1.5px] border-[var(--border-color)] border-dashed" style={{ padding: '14px 18px', borderRadius: '12px' }}>
                                 <code className="text-[11px] text-[var(--color-primary)] font-bold tracking-widest uppercase">{newItem.slug || 'ESPERANDO NOMBRE...'}</code>
                             </div>
@@ -3371,7 +3371,7 @@ export function AdminEmailTemplatesPage() {
                                     paddingLeft: '16px'
                                 }}
                             >
-                                <option value="">Sin Disparador AutomÃ¡tico</option>
+                                <option value="">Sin Disparador Automático</option>
                                 {Array.from(new Set(availableTriggers.map(t => t.categoria || 'otro'))).map(categoria => (
                                     <optgroup key={categoria} label={categoria.charAt(0).toUpperCase() + categoria.slice(1)}>
                                         {availableTriggers.filter(t => (t.categoria || 'otro') === categoria).map(t => (
@@ -3386,16 +3386,16 @@ export function AdminEmailTemplatesPage() {
                                 const selected = availableTriggers.find(t => t.codigo_evento === newItem.trigger_event);
                                 return selected ? (
                                     <p className="text-[11px]" style={{ color: 'var(--primary)', fontWeight: 500 }}>
-                                        â¡ CÃ³digo: <code style={{ fontFamily: 'monospace' }}>{selected.codigo_evento}</code>
+                                        â¡ Código: <code style={{ fontFamily: 'monospace' }}>{selected.codigo_evento}</code>
                                     </p>
                                 ) : null;
                             })()}
-                            <p className="text-[10px] text-[var(--text-tertiary)] italic">El disparador automatiza el envÃ­o cuando sucede el evento.</p>
+                            <p className="text-[10px] text-[var(--text-tertiary)] italic">El disparador automatiza el envío cuando sucede el evento.</p>
                         </div>
 
                         <Input
-                            label="DescripciÃ³n"
-                            placeholder="Â¿Para quÃ© sirve esta plantilla?"
+                            label="Descripción"
+                            placeholder="Â¿Para qué sirve esta plantilla?"
                             value={newItem.description}
                             onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
                         />
@@ -3427,8 +3427,8 @@ export function AdminEmailTemplatesPage() {
                         onChange={(e) => setNewItem(prev => ({ ...prev, slug: e.target.value }))}
                     />
                     <Input
-                        label="DescripciÃ³n (Opcional)"
-                        placeholder="Â¿Para quÃ© sirve esta carpeta?"
+                        label="Descripción (Opcional)"
+                        placeholder="Â¿Para qué sirve esta carpeta?"
                         value={newItem.description}
                         onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
                     />
@@ -3446,8 +3446,8 @@ export function AdminEmailTemplatesPage() {
                 isOpen={isConfirmDeleteOpen}
                 title={itemToManage?.is_folder ? 'Â¿Eliminar carpeta?' : 'Â¿Eliminar plantilla?'}
                 description={itemToManage?.is_folder
-                    ? `Esta acciÃ³n eliminarÃ¡ la carpeta "${itemToManage.slug}" y todo su contenido de forma permanente.`
-                    : `Â¿EstÃ¡s seguro de que deseas eliminar la plantilla "${itemToManage?.name || itemToManage?.slug}"? Esta acciÃ³n no se puede deshacer.`}
+                    ? `Esta acción eliminará la carpeta "${itemToManage.slug}" y todo su contenido de forma permanente.`
+                    : `Â¿Estás seguro de que deseas eliminar la plantilla "${itemToManage?.name || itemToManage?.slug}"? Esta acción no se puede deshacer.`}
                 confirmLabel="Eliminar"
                 onConfirm={confirmDelete}
                 onCancel={() => {
@@ -3460,7 +3460,7 @@ export function AdminEmailTemplatesPage() {
             <ConfirmDialog
                 isOpen={isConfirmMJMLOpen}
                 title="Â¿Convertir a MJML?"
-                description="Esto reemplazarÃ¡ el cÃ³digo HTML actual con una estructura MJML base. Esta acciÃ³n es ideal para hacer que tu correo sea 100% responsivo, pero el cÃ³digo HTML previo se perderÃ¡."
+                description="Esto reemplazará el código HTML actual con una estructura MJML base. Esta acción es ideal para hacer que tu correo sea 100% responsivo, pero el código HTML previo se perderá."
                 confirmLabel="Convertir ahora"
                 onConfirm={() => {
                     if (selectedTemplate) {
