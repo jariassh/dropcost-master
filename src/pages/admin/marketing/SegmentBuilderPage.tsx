@@ -3,7 +3,7 @@
  * UI para crear e informar "Listas Inteligentes" mediante filtros JSON.
  */
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
     Card,
     Button,
@@ -12,9 +12,11 @@ import {
     PageHeader,
     CodePreview,
     Badge,
-    SelectPais
+    SelectPais,
+    useToast
 } from '@/components/common';
 import { plansService } from '@/services/plansService';
+import { userService } from '@/services/userService';
 import { Plan } from '@/types/plans.types';
 import {
     Plus,
@@ -26,21 +28,27 @@ import {
     ChevronLeft,
     Save
 } from 'lucide-react';
-import { saveSegment, estimateAudience } from '@/services/marketingService';
+import { estimateAudience, getSegmentById } from '@/services/marketingService';
+import { useSaveSegment } from '@/hooks/useMarketing';
 import { FilterCondition, SegmentFilters } from '@/types/marketing';
 import { useAuthStore } from '@/store/authStore';
 import { useStoreStore } from '@/store/useStoreStore';
 
 export default function SegmentBuilderPage() {
     const navigate = useNavigate();
+    const { id } = useParams();
     const { user } = useAuthStore();
     const { tiendaActual } = useStoreStore();
+    const saveSegmentMutation = useSaveSegment();
+    const toast = useToast();
 
     const [name, setName] = useState('Mi Nueva Lista');
     const [description, setDescription] = useState('');
     const [estimatedSize, setEstimatedSize] = useState<number | null>(null);
     const [isEstimating, setIsEstimating] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [plans, setPlans] = useState<Plan[]>([]);
+    const [availableRoles, setAvailableRoles] = useState<string[]>([]);
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [filters, setFilters] = useState<SegmentFilters>({
         operator: 'AND',
@@ -58,6 +66,19 @@ export default function SegmentBuilderPage() {
             try {
                 const planList = await plansService.getPlans();
                 setPlans(planList);
+
+                const roleList = await userService.getUniqueRoles();
+                setAvailableRoles(roleList);
+
+                // Si hay un ID en la URL, cargar el segmento para edición
+                if (id) {
+                    const segment = await getSegmentById(id);
+                    if (segment) {
+                        setName(segment.name);
+                        setDescription(segment.description);
+                        setFilters(segment.filters);
+                    }
+                }
             } catch (err) {
                 console.error('Error cargando metadata segmentador:', err);
             }
@@ -65,7 +86,7 @@ export default function SegmentBuilderPage() {
         loadMetadata();
 
         return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    }, [id]);
 
     // Estimación automática con debounce (500ms) para no saturar la BD mientras se escribe
     useEffect(() => {
@@ -108,19 +129,29 @@ export default function SegmentBuilderPage() {
     };
 
     const handleSave = async () => {
-        if (!user || !tiendaActual || !name) return;
+        if (!user || !tiendaActual || !name) {
+            toast.warning('Campo requerido', 'Por favor completa el nombre de la lista');
+            return;
+        }
 
+        setIsSaving(true);
         try {
-            await saveSegment({
+            await saveSegmentMutation.mutateAsync({
+                id,
                 name,
                 description,
                 filters,
                 tienda_id: tiendaActual.id,
                 usuario_id: user.id
             });
+
+            toast.success('Lista guardada', '¡Lista Inteligente guardada correctamente!');
             navigate('/admin/marketing');
         } catch (error) {
             console.error('Error al guardar segmento:', error);
+            toast.error('Error de guardado', 'Hubo un error al guardar la lista. Por favor intenta de nuevo.');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -259,11 +290,13 @@ export default function SegmentBuilderPage() {
                                             label="Valor"
                                             value={condition.value}
                                             onChange={(val) => updateCondition(idx, { value: val })}
-                                            options={[
-                                                { value: 'admin', label: 'Administrador' },
-                                                { value: 'master', label: 'Master' },
-                                                { value: 'user', label: 'Usuario Estándar' }
-                                            ]}
+                                            options={availableRoles.map(r => ({
+                                                value: r,
+                                                label: r === 'superadmin' ? 'Super Administrador' :
+                                                    r === 'admin' ? 'Administrador' :
+                                                        r === 'cliente' ? 'Cliente' :
+                                                            r.charAt(0).toUpperCase() + r.slice(1).toLowerCase()
+                                            }))}
                                         />
                                     ) : (
                                         <Input
@@ -333,8 +366,14 @@ export default function SegmentBuilderPage() {
                     margin: '0 -24px'
                 }}
             >
-                <Button variant="primary" size="lg" onClick={handleSave} leftIcon={<Database size={18} />}>
-                    Guardar Lista Inteligente
+                <Button
+                    variant="primary"
+                    size="lg"
+                    onClick={handleSave}
+                    leftIcon={<Database size={18} />}
+                    isLoading={isSaving}
+                >
+                    {id ? 'Actualizar Lista Inteligente' : 'Guardar Lista Inteligente'}
                 </Button>
             </div>
         </div>
