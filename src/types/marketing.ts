@@ -58,3 +58,28 @@ export interface EmailTemplate {
     html_content?: string;
     status: 'activo' | 'archivado';
 }
+
+export interface MarketingEvent {
+    id: string;
+    event_type: string;
+    user_id?: string;
+    email: string;
+    template_id?: string;
+    template?: { name: string };
+    variables: Record<string, any>;
+    status: 'pending' | 'sent' | 'failed' | 'test' | 'skipped';
+    is_test_email: boolean;
+    error_message?: string;
+    created_at: string;
+    sent_at?: string;
+}
+
+export interface MarketingEventMapping {
+    id: string;
+    event_type: string;
+    template_id: string;
+    enabled: boolean;
+    template_name?: string;
+    category?: string;
+    updated_at: string;
+}

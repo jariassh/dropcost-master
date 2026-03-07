@@ -49,3 +49,63 @@ entrypoint = "./functions/integraciones/conectar-meta/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/integraciones/get-meta-accounts/index.ts"
+
+[functions.auth-password-reset]
+enabled = true
+verify_jwt = false
+
+[functions.auth-register]
+enabled = true
+verify_jwt = false
+
+[functions.auth-resend-verification]
+enabled = true
+verify_jwt = false
+
+[functions.auth-mailer]
+enabled = true
+verify_jwt = false
+
+[functions.dispatch-marketing-event]
+enabled = true
+verify_jwt = false
+
+[functions.email-service]
+enabled = true
+verify_jwt = false
+
+[functions.webhook-redirect]
+enabled = true
+verify_jwt = false
+
+[functions.email-cron-jobs]
+enabled = true
+verify_jwt = false
+
+[functions.subscription-reminder-cron]
+enabled = true
+verify_jwt = false
+
+[functions.shopify-exchange-token]
+enabled = true
+verify_jwt = false
+
+[functions.email-marketing-process-queue]
+enabled = true
+verify_jwt = false
+
+[functions.email-marketing-metrics]
+enabled = true
+verify_jwt = false
+
+[functions.email-marketing-segment-builder]
+enabled = true
+verify_jwt = false
+
+[functions.email-marketing-campaign-manager]
+enabled = true
+verify_jwt = false
+
+[functions.debug-historial]
+enabled = true
+verify_jwt = false
