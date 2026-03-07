@@ -34,6 +34,9 @@ export interface EmailCampaign {
     segment_id: string;
     status: 'draft' | 'scheduled' | 'processing' | 'completed' | 'failed';
     scheduled_at?: string;
+    sender_name?: string;
+    sender_prefix?: string;
+    created_by?: string;
     created_at: string;
     stats?: CampaignStats;
 }
@@ -48,5 +51,10 @@ export interface CampaignStats {
 export interface EmailTemplate {
     id: string;
     name: string;
+    subject: string;
+    sender_name?: string;
+    sender_prefix?: string;
     preview_url?: string;
+    html_content?: string;
+    status: 'activo' | 'archivado';
 }
