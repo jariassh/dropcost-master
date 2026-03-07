@@ -30,14 +30,18 @@ export default function App() {
   useEffect(() => {
     initialize();
 
-    // Sincronizar estado global con Supabase Auth si la sesión caduca o es borrada
+    // Sincronizar estado global con Supabase Auth si la sesión caduca, inicia o se recupera
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      const state = useAuthStore.getState();
       if (event === 'SIGNED_OUT') {
-        // Si supabase por si mismo detecta logout (ej. token expira, revocado, otra pestaña), 
-        // forzamos limpieza en nuestro zustand.
-        const state = useAuthStore.getState();
         if (state.isAuthenticated) {
           state.logout();
+        }
+      } else if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') {
+        // Forzar actualización silenciosa del usuario cuando Supabase autómaticamente
+        // toma una sesión de la URL (ej. Recuperación de contraseña).
+        if (!state.isAuthenticated && !state.isLoading) {
+          state.refreshUser();
         }
       }
     });

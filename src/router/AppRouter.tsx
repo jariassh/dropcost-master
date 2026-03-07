@@ -52,6 +52,7 @@ const AdminSettingsPage = lazy(() => import('@/pages/admin/AdminSettingsPage').t
 const MarketingDashboardPage = lazy(() => import('@/pages/admin/marketing/MarketingDashboardPage'));
 const SegmentBuilderPage = lazy(() => import('@/pages/admin/marketing/SegmentBuilderPage'));
 const CampaignWizardPage = lazy(() => import('@/pages/admin/marketing/CampaignWizardPage'));
+const CampaignDetailsPage = lazy(() => import('@/pages/admin/marketing/CampaignDetailsPage'));
 
 // Otras páginas
 const LandingPage = lazy(() => import('@/pages/LandingPage').then(m => ({ default: m.LandingPage })));
@@ -183,6 +184,7 @@ export function AppRouter() {
                         <Route path="marketing/new-list" element={<SegmentBuilderPage />} />
                         <Route path="marketing/list/:id" element={<SegmentBuilderPage />} />
                         <Route path="marketing/new-campaign" element={<CampaignWizardPage />} />
+                        <Route path="marketing/:id" element={<CampaignDetailsPage />} />
                     </Route>
 
                     {/* Rutas Públicas (sin layout, accesibles por cualquier persona) */}

@@ -129,7 +129,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
                 };
 
                 if (newStatus === 'aprobado') {
-                    dispararTriggerEmail('PAGO_COMISIONES_APROBADO', {
+                    dispararTriggerEmail('commission_approved', {
                         ...datosBase,
                         fecha_aprobacion: new Date().toISOString().split('T')[0],
                     });
