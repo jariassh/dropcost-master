@@ -71,11 +71,12 @@ serve(async (req) => {
     const resetLink = linkData.properties.action_link
     console.log(`[auth-password-reset] Link generado exitosamente`);
 
-    // 4. Disparar el trigger de email personalizado
+    // 4. Disparar el trigger de email personalizado (password_reset)
     const dispatcherPayload = {
-      codigo_evento: 'USUARIO_OLVIDO_CONTRASENA',
-      targetId: targetUser.id,
-      datos: {
+      event_type: 'password_reset',
+      user_id: targetUser.id,
+      email: email,
+      variables: {
         usuario_id: targetUser.id,
         nombres: `${targetUser.user_metadata?.nombres || ''} ${targetUser.user_metadata?.apellidos || ''}`.trim(),
         usuario_email: email,
@@ -85,15 +86,14 @@ serve(async (req) => {
       }
     };
 
-    console.log(`[auth-password-reset] Paso 4: Llamando a email-trigger-dispatcher...`);
+    console.log(`[auth-password-reset] Paso 4: Llamando a dispatch-marketing-event...`);
     console.log(`[auth-password-reset] Payload para dispatcher:`, JSON.stringify(dispatcherPayload));
     
-    const dispatcherRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/email-trigger-dispatcher`, {
+    const dispatcherRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/dispatch-marketing-event`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-        'apikey': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
       },
       body: JSON.stringify(dispatcherPayload)
     })

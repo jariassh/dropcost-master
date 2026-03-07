@@ -92,12 +92,13 @@ serve(async (req) => {
       || targetUser.user_metadata?.apellidos
       || '';
 
-    // 5. Disparar el trigger de email (USUARIO_REGISTRADO => plantilla de verificacion)
-    console.log(`[auth-resend-verification] Paso 5: Llamando a email-trigger-dispatcher...`);
+    // 5. Disparar el trigger de email (user_registered => plantilla de verificacion)
+    console.log(`[auth-resend-verification] Paso 5: Llamando a dispatch-marketing-event...`);
     const dispatcherPayload = {
-      codigo_evento: 'USUARIO_REGISTRADO',
-      targetId: targetUser.id,
-      datos: {
+      event_type: 'user_registered',
+      user_id: targetUser.id,
+      email: email,
+      variables: {
         usuario_id: targetUser.id,
         usuario_nombre: `${nombres} ${apellidos}`.trim() || 'Usuario',
         nombres: `${nombres} ${apellidos}`.trim() || 'Usuario',
@@ -111,12 +112,11 @@ serve(async (req) => {
       }
     };
 
-    const dispatcherRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/email-trigger-dispatcher`, {
+    const dispatcherRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/dispatch-marketing-event`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-        'apikey': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
       },
       body: JSON.stringify(dispatcherPayload)
     })

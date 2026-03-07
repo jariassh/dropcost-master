@@ -286,7 +286,7 @@ export async function updatePassword(newPassword: string): Promise<AuthResponse>
                 .eq('id', user.id)
                 .maybeSingle();
 
-            dispararTriggerEmail('CONTRASENA_CAMBIADA', {
+            dispararTriggerEmail('password_changed', {
                 usuario_id: user.id,
                 nombres: `${profile?.nombres || ''} ${profile?.apellidos || ''}`.trim(),
                 usuario_nombre: `${profile?.nombres || ''} ${profile?.apellidos || ''}`.trim(),
@@ -331,7 +331,7 @@ export async function updateEmail(newEmail: string): Promise<AuthResponse> {
             .eq('id', user.id)
             .maybeSingle();
 
-        dispararTriggerEmail('EMAIL_CAMBIADO', {
+        dispararTriggerEmail('email_changed', {
             usuario_id: user.id,
             usuario_nombre: `${profile?.nombres || ''} ${profile?.apellidos || ''}`.trim(),
             email_nuevo: newEmail,
@@ -451,8 +451,8 @@ export async function updateUserProfile(userData: Partial<User>): Promise<AuthRe
         if (profileError) return { success: false, error: translateError(profileError.message) };
     }
 
-    // Disparar trigger PERFIL_ACTUALIZADO (fire-and-forget)
-    dispararTriggerEmail('PERFIL_ACTUALIZADO', {
+    // Disparar trigger profile_updated (fire-and-forget)
+    dispararTriggerEmail('profile_updated', {
         usuario_id: user.id,
         usuario_nombre: `${userData.nombres || ''} ${userData.apellidos || ''}`.trim(),
         usuario_email: user.email || '',

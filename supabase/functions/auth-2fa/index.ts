@@ -7,27 +7,32 @@ const corsHeaders = {
 }
 
 // Helper: disparar trigger de email (Esperar respuesta para depuración)
-async function dispararTrigger(supabaseUrl: string, serviceKey: string, codigo_evento: string, datos: Record<string, string>) {
+async function dispararTrigger(supabaseUrl: string, serviceKey: string, event_type: string, variables: Record<string, any>) {
     try {
-        const response = await fetch(`${supabaseUrl}/functions/v1/email-trigger-dispatcher`, {
+        const response = await fetch(`${supabaseUrl}/functions/v1/dispatch-marketing-event`, {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json', 
               'Authorization': `Bearer ${serviceKey}` 
             },
-            body: JSON.stringify({ codigo_evento, datos }),
+            body: JSON.stringify({ 
+                event_type: event_type.toLowerCase(), 
+                variables,
+                email: variables.email_nuevo || variables.usuario_email || variables.email,
+                user_id: variables.usuario_id
+            }),
         });
         
         if (!response.ok) {
           const errorBody = await response.text();
-          console.error(`[email-trigger] Dispatcher respondió error (${response.status}):`, errorBody);
+          console.error(`[marketing-event] Dispatcher respondió error (${response.status}):`, errorBody);
           return { success: false, status: response.status, error: errorBody };
         }
         
         const result = await response.json();
         return { success: true, ...result };
     } catch (e) {
-        console.error(`[email-trigger] Error disparando ${codigo_evento}:`, e);
+        console.error(`[marketing-event] Error disparando ${event_type}:`, e);
         return { success: false, error: e.message };
     }
 }
@@ -91,7 +96,7 @@ serve(async (req) => {
       console.log("Código insertado en DB, disparando trigger de email...");
       
       const { context } = body;
-      const trigger_code = (context === 'activation') ? '2FA_SOLICITUD_ACTIVACION' : 'AUTH_2FA';
+      const trigger_code = (context === 'activation') ? '2fa_activation_request' : '2fa_login';
 
       // Enviar email usando el disparador centralizado
       await dispararTrigger(supabaseUrl, supabaseServiceKey, trigger_code, {
@@ -171,8 +176,8 @@ serve(async (req) => {
         // 2. Limpiar códigos del usuario
         await adminClient.from('auth_codes').delete().eq('user_id', user.id)
 
-        // EMAIL TRIGGER: 2FA_ACTIVADO
-        dispararTrigger(supabaseUrl, supabaseServiceKey, '2FA_ACTIVADO', {
+        // EMAIL TRIGGER: 2fa_enabled
+        dispararTrigger(supabaseUrl, supabaseServiceKey, '2fa_enabled', {
             usuario_id: user.id,
             usuario_email: user.email ?? '',
             usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
@@ -257,8 +262,8 @@ serve(async (req) => {
 
       if (updateError) throw updateError
 
-      // EMAIL TRIGGER: 2FA_DESACTIVADO
-      await dispararTrigger(supabaseUrl, supabaseServiceKey, '2FA_DESACTIVADO', {
+      // EMAIL TRIGGER: 2fa_disabled
+      await dispararTrigger(supabaseUrl, supabaseServiceKey, '2fa_disabled', {
           usuario_id: user.id,
           usuario_email: user.email ?? '',
           usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
@@ -310,8 +315,8 @@ serve(async (req) => {
       if (dbError) throw dbError;
       
       // Enviar email al NUEVO correo
-      console.log(`[auth-2fa] Disparando trigger AUTH_EMAIL_CHANGE_CODE hacia: ${new_email}`);
-      const triggerResult = await dispararTrigger(supabaseUrl, supabaseServiceKey, 'AUTH_EMAIL_CHANGE_CODE', {
+      console.log(`[auth-2fa] Disparando trigger email_change_request hacia: ${new_email}`);
+      const triggerResult = await dispararTrigger(supabaseUrl, supabaseServiceKey, 'email_change_request', {
         usuario_id: user.id,
         usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
         email_nuevo: new_email,
@@ -378,7 +383,7 @@ serve(async (req) => {
         await adminClient.from('auth_codes').delete().eq('user_id', user.id)
         
         // 5. Trigger final de confirmación (Notificación de éxito)
-        dispararTrigger(supabaseUrl, supabaseServiceKey, 'EMAIL_CAMBIADO', {
+        dispararTrigger(supabaseUrl, supabaseServiceKey, 'email_changed', {
             usuario_id: user.id,
             usuario_nombre: user.user_metadata?.nombres || user.email?.split('@')[0] || '',
             email_nuevo: newEmail,

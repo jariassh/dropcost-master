@@ -18,20 +18,6 @@ serve(async (req) => {
 
     const { action, email, data } = await req.json()
 
-    if (action === 'reset_password') {
-      // 1. Generar link de recuperación usando Service Role
-      const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-        type: 'recovery',
-        email: email,
-        options: {
-          redirectTo: `${Deno.env.get('SITE_URL') || 'http://localhost:5173'}/reset-password`
-        }
-      })
-
-      if (linkError) throw linkError
-
-      const resetLink = linkData.properties.action_link
-
     const resendKey = Deno.env.get('RESEND_API_KEY')
     if (!resendKey) throw new Error('RESEND_API_KEY no configurada')
 

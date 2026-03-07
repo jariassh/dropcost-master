@@ -104,9 +104,9 @@ Deno.serve(async (req: Request) => {
         // PASO 2: Disparar emails según dias_restantes actualizado
         // ============================================================
         const triggerMap = [
-            { diasRestantes: 2, evento: 'SUSCRIPCION_RENOVACION_2_DIAS' },
-            { diasRestantes: 1, evento: 'SUSCRIPCION_RENOVACION_1_DIA' },
-            { diasRestantes: 0, evento: 'SUSCRIPCION_RENOVACION_HOY' },
+            { diasRestantes: 2, evento: 'subscription_renewal_2_days' },
+            { diasRestantes: 1, evento: 'subscription_renewal_1_day' },
+            { diasRestantes: 0, evento: 'subscription_renewal_today' },
         ];
 
         const resultsTriggers: Record<string, any>[] = [];

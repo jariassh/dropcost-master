@@ -177,7 +177,7 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
 
     console.log(`!!! [BACKEND] Disparando email SUSCRIPCION_ACTIVADA. Plan: ${planData?.name}, Precio: ${planPrecio}, Email: ${userData2?.email}`);
 
-    await dispararTrigger(supabaseUrl, serviceKey, 'SUSCRIPCION_ACTIVADA', {
+    await dispararTrigger(supabaseUrl, serviceKey, 'subscription_activated', {
         usuario_id: finalUserId,
         usuario_nombre: `${userData2?.nombres || ''} ${userData2?.apellidos || ''}`.trim(),
         nombres: userData2?.nombres || '',
@@ -275,7 +275,7 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
                 let planNombreLegible = planId;
                 const { data: planInfo } = await supabase.from('plans').select('name').eq('slug', planId).maybeSingle();
                 if (planInfo?.name) planNombreLegible = planInfo.name;
-                dispararTrigger(supabaseUrl, serviceKey, 'REFERIDO_PRIMER_PAGO', {
+                dispararTrigger(supabaseUrl, serviceKey, 'referral_first_payment', {
                     usuario_id: leader.user_id,
                     usuario_nombre: `${leaderUser?.nombres || ''} ${leaderUser?.apellidos || ''}`.trim(),
                     nombres: leaderUser?.nombres || '',

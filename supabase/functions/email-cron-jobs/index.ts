@@ -64,7 +64,7 @@ Deno.serve(async (req: Request) => {
             let count = 0;
             for (const sub of (suscripciones || [])) {
                 const user = (sub as any).users;
-                await dispararTrigger('SUSCRIPCION_POR_VENCER', {
+                await dispararTrigger('subscription_expiring_soon', {
                     usuario_nombre: `${user.nombres} ${user.apellidos}`,
                     usuario_email: user.email,
                     plan_nombre: sub.plan_id || 'Plan',
@@ -103,7 +103,7 @@ Deno.serve(async (req: Request) => {
             let count = 0;
             for (const comision of (comisiones || [])) {
                 const user = (comision as any).users;
-                await dispararTrigger('COMISION_PROXIMA_EXPIRAR', {
+                await dispararTrigger('commission_expiring_soon', {
                     usuario_nombre: `${user.nombres} ${user.apellidos}`,
                     usuario_email: user.email,
                     monto_comision: String(comision.monto || 0),
@@ -137,7 +137,7 @@ Deno.serve(async (req: Request) => {
             let count = 0;
             for (const comision of (expiradas || [])) {
                 const user = (comision as any).users;
-                await dispararTrigger('COMISION_EXPIRADA', {
+                await dispararTrigger('commission_expired', {
                     usuario_nombre: `${user.nombres} ${user.apellidos}`,
                     usuario_email: user.email,
                     monto_comision: String(comision.monto || 0),
@@ -194,7 +194,7 @@ Deno.serve(async (req: Request) => {
 
                 // 3. Notificar al usuario
                 const user = (sub as any).users;
-                await dispararTrigger('SUSCRIPCION_VENCIDA', {
+                await dispararTrigger('subscription_expired', {
                     usuario_nombre: `${user.nombres} ${user.apellidos}`,
                     usuario_email: user.email,
                     plan_nombre: sub.plan_id || 'Plan Pro',
@@ -242,7 +242,7 @@ Deno.serve(async (req: Request) => {
                 if (hitosAbsolutos.includes(total)) {
                     const faltantes = requisitoLider - total;
                     const progreso = Math.round((total / requisitoLider) * 100);
-                    await dispararTrigger('PROXIMO_REFERIDO_PARA_LIDER', {
+                    await dispararTrigger('next_referral_for_leader', {
                         usuario_nombre: `${usuario.nombres} ${usuario.apellidos}`,
                         usuario_email: usuario.email,
                         // Variables clásicas (compatibilidad)

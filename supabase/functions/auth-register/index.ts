@@ -48,18 +48,18 @@ serve(async (req) => {
     
     const emailPromises = [];
 
-    // Promesa de Bienvenida
-    const welcomePromise = fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/email-trigger-dispatcher`, {
+    // Promesa de Bienvenida (Mapping: user_registered)
+    const welcomePromise = fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/dispatch-marketing-event`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-        'apikey': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
       },
       body: JSON.stringify({
-        codigo_evento: 'USUARIO_REGISTRADO',
-        targetId: userId,
-        datos: {
+        event_type: 'user_registered',
+        user_id: userId,
+        email: email,
+        variables: {
           usuario_id: userId,
           usuario_nombre: `${nombres} ${apellidos}`.trim(),
           nombres: `${nombres} ${apellidos}`.trim(),
@@ -77,20 +77,19 @@ serve(async (req) => {
 
     emailPromises.push(welcomePromise);
 
-    // Promesa de Referido (si aplica)
+    // Promesa de Referido (Mapping: referido_registrado)
     let referralPromise = Promise.resolve('none');
     if (referred_by) {
-      referralPromise = fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/email-trigger-dispatcher`, {
+      referralPromise = fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/dispatch-marketing-event`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-          'apikey': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
         },
         body: JSON.stringify({
-          codigo_evento: 'REFERIDO_REGISTRADO',
-          refersToUserId: userId,
-          datos: {
+          event_type: 'referido_registrado',
+          email: email, // El dispatcher buscará el líder por código si es necesario, pero aquí enviamos info del referido
+          variables: {
             usuario_id: userId,
             referido_nombre: `${nombres} ${apellidos}`.trim(),
             referido_email: email,
