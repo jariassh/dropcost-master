@@ -111,6 +111,7 @@ export interface GlobalConfig {
     font_line_height_small?: string;
     font_line_height_mono?: string;
     font_letter_spacing_labels?: string;
+    meta_robots?: string; // e.g., "index,follow"
 }
 
 export interface ConfigHistory {
@@ -255,6 +256,7 @@ export const configService = {
                 font_line_height_headings: '1.2',
                 font_line_height_small: '1.4',
                 font_line_height_mono: '1.5',
+                meta_robots: 'index,follow',
              };
              localStorage.setItem(CACHE_KEY, JSON.stringify(fallback));
              return fallback;
@@ -312,7 +314,8 @@ export const configService = {
             'font_size_small', 'font_size_tiny',
             'font_letter_spacing_h', 'font_letter_spacing_labels',
             'font_family_accent', 'font_family_mono',
-            'font_line_height_base', 'font_line_height_headings', 'font_line_height_small', 'font_line_height_mono'
+            'font_line_height_base', 'font_line_height_headings', 'font_line_height_small', 'font_line_height_mono',
+            'meta_robots'
         ];
 
         fields.forEach(f => {

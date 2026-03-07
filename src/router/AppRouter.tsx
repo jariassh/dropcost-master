@@ -8,6 +8,7 @@ import { LandingLayout } from '@/layouts/LandingLayout';
 import { Spinner } from '@/components/common/Spinner';
 import { SubscriptionGuard } from '@/components/common/SubscriptionGuard';
 import { AffiliateTracker } from '@/components/common/AffiliateTracker';
+import { useCustomCode } from '@/hooks/useCustomCode';
 
 // Lazy loading de páginas para mejor performance
 const DashboardPage = lazy(() => import('@/pages/app/DashboardPage').then(m => ({ default: m.DashboardPage })));
@@ -48,7 +49,15 @@ const AdminPlansPage = lazy(() => import('@/pages/admin/AdminPlansPage').then(m 
 const AdminAuditLogsPage = lazy(() => import('@/pages/admin/AdminAuditLogsPage').then(m => ({ default: m.AdminAuditLogsPage })));
 const AdminReferralPage = lazy(() => import('@/pages/admin/AdminReferralPage').then(m => ({ default: m.AdminReferralPage })));
 const AdminWithdrawalsPage = lazy(() => import('@/pages/admin/AdminWithdrawalsPage').then(m => ({ default: m.AdminWithdrawalsPage })));
-const AdminSettingsPage = lazy(() => import('@/pages/admin/AdminSettingsPage').then(m => ({ default: m.AdminSettingsPage })));
+
+// Admin Settings (Static for stability)
+import { AdminSettingsProvider } from '@/pages/admin/settings/AdminSettingsContext';
+import { AdminSettingsLayout } from '@/pages/admin/settings/AdminSettingsLayout';
+import { SEOSectionPage } from '@/pages/admin/settings/sections/SEOSectionPage';
+import { BrandingSectionPage } from '@/pages/admin/settings/sections/BrandingSectionPage';
+import { TrackingSectionPage } from '@/pages/admin/settings/sections/TrackingSectionPage';
+
+// Admin Marketing (Lazy)
 const MarketingDashboardPage = lazy(() => import('@/pages/admin/marketing/MarketingDashboardPage'));
 const SegmentBuilderPage = lazy(() => import('@/pages/admin/marketing/SegmentBuilderPage'));
 const CampaignWizardPage = lazy(() => import('@/pages/admin/marketing/CampaignWizardPage'));
@@ -91,6 +100,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 export function AppRouter() {
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+    useCustomCode();
 
     return (
         <>
@@ -179,8 +189,18 @@ export function AppRouter() {
                         <Route path="withdrawals" element={<AdminWithdrawalsPage />} />
                         <Route path="promo-codes" element={<AdminDashboard />} />
                         <Route path="logs" element={<AdminAuditLogsPage />} />
-                        <Route path="settings" element={<AdminSettingsPage />} />
+                        <Route path="settings" element={
+                            <AdminSettingsProvider>
+                                <AdminSettingsLayout />
+                            </AdminSettingsProvider>
+                        }>
+                            <Route index element={<Navigate to="seo" replace />} />
+                            <Route path="seo" element={<SEOSectionPage />} />
+                            <Route path="branding" element={<BrandingSectionPage />} />
+                            <Route path="tracking-code" element={<TrackingSectionPage />} />
+                        </Route>
                         <Route path="marketing" element={<MarketingDashboardPage />} />
+
                         <Route path="marketing/new-list" element={<SegmentBuilderPage />} />
                         <Route path="marketing/list/:id" element={<SegmentBuilderPage />} />
                         <Route path="marketing/new-campaign" element={<CampaignWizardPage />} />

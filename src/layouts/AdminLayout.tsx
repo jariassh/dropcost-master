@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { configService } from '@/services/configService';
 import {
     Users,
@@ -50,7 +50,16 @@ const adminNavItems = [
     { to: '/admin/withdrawals', icon: CreditCard, label: 'Gestión de Retiros', active: true },
 
     // SISTEMA
-    { to: '/admin/settings', icon: Settings, label: 'Ajustes Globales', active: true },
+    {
+        label: 'Ajustes Globales',
+        icon: Settings,
+        active: true,
+        children: [
+            { to: '/admin/settings/seo', label: 'SEO & Metadatos' },
+            { to: '/admin/settings/branding', label: 'Branding & Diseño' },
+            { to: '/admin/settings/tracking-code', label: 'Tracking & Scripts' },
+        ]
+    },
     { to: '/admin/logs', icon: History, label: 'Logs de Auditoría', active: true },
 
     // Próximamente (Inactivos)
@@ -65,6 +74,7 @@ export function AdminLayout() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
+    const [openGroup, setOpenGroup] = useState<string | null>(null);
     const { unreadCount } = useNotificationStore();
     const { isDark, toggleTheme } = useTheme();
     const { user, logout } = useAuthStore();
@@ -244,15 +254,29 @@ export function AdminLayout() {
                 >
                     {/* Módulos Activos */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        {adminNavItems.filter(i => i.active).map((item) => (
-                            <AdminSidebarNavItem
-                                key={item.to}
-                                {...item}
-                                collapsed={effectivelyCollapsed}
-                                isDark={isDark}
-                                onClick={() => setMobileOpen(false)}
-                            />
-                        ))}
+                        {adminNavItems.filter(i => i.active).map((item) => {
+                            if (item.children) {
+                                return (
+                                    <AdminSidebarGroupItem
+                                        key={item.label}
+                                        {...item as any}
+                                        collapsed={effectivelyCollapsed}
+                                        isOpen={openGroup === item.label}
+                                        onToggle={() => setOpenGroup(openGroup === item.label ? null : item.label)}
+                                        onClickSub={() => setMobileOpen(false)}
+                                    />
+                                );
+                            }
+                            return (
+                                <AdminSidebarNavItem
+                                    key={item.to}
+                                    {...item as any}
+                                    collapsed={effectivelyCollapsed}
+                                    isDark={isDark}
+                                    onClick={() => setMobileOpen(false)}
+                                />
+                            );
+                        })}
                     </div>
 
                     {/* Módulos Próximamente */}
@@ -428,7 +452,7 @@ export function AdminLayout() {
     );
 }
 
-function AdminSidebarNavItem({ to, icon: Icon, label, collapsed, disabled, end, isDark, onClick }: any) {
+function AdminSidebarNavItem({ to, icon: Icon, label, collapsed, disabled, end, isDark, onClick, style }: any) {
     const [hovered, setHovered] = useState(false);
 
     if (disabled) {
@@ -464,6 +488,7 @@ function AdminSidebarNavItem({ to, icon: Icon, label, collapsed, disabled, end, 
                 textDecoration: 'none', transition: 'all 150ms ease',
                 backgroundColor: isActive ? 'var(--color-admin-sidebar-active)' : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
                 color: isActive ? '#fff' : hovered ? '#fff' : 'var(--sidebar-text)',
+                ...style
             })}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
@@ -471,6 +496,89 @@ function AdminSidebarNavItem({ to, icon: Icon, label, collapsed, disabled, end, 
             <Icon size={18} />
             {!collapsed && label}
         </NavLink>
+    );
+}
+
+function AdminSidebarGroupItem({ label, icon: Icon, children, collapsed, isOpen, onToggle, onClickSub }: any) {
+    const [hovered, setHovered] = useState(false);
+    const location = useLocation();
+
+    // Check if any child is active
+    const isChildActive = children.some((child: any) => location.pathname === child.to);
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <button
+                onClick={collapsed ? undefined : onToggle}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: collapsed ? 'center' : 'space-between',
+                    gap: '12px',
+                    padding: collapsed ? '12px' : '10px 14px',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: isChildActive ? 600 : 500,
+                    backgroundColor: isChildActive && !isOpen
+                        ? 'var(--color-admin-sidebar-active)'
+                        : hovered ? 'rgba(255,255,255,0.08)' : 'transparent',
+                    color: (isChildActive && !isOpen) || hovered ? '#fff' : 'var(--sidebar-text)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 200ms ease',
+                    width: '100%',
+                    textAlign: 'left'
+                }}
+            >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Icon size={18} style={{ flexShrink: 0 }} />
+                    {!collapsed && <span>{label}</span>}
+                </div>
+                {!collapsed && (
+                    <ChevronDown
+                        size={14}
+                        style={{
+                            transform: isOpen ? 'rotate(180deg)' : 'rotate(0)',
+                            transition: 'transform 200ms ease',
+                            opacity: 0.5
+                        }}
+                    />
+                )}
+            </button>
+
+            {isOpen && !collapsed && (
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                    paddingLeft: '32px',
+                    marginTop: '2px',
+                    animation: 'slideDown 200ms ease-out'
+                }}>
+                    {children.map((child: any) => (
+                        <NavLink
+                            key={child.to}
+                            to={child.to}
+                            onClick={onClickSub}
+                            style={({ isActive }) => ({
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                fontSize: '13px',
+                                fontWeight: isActive ? 600 : 400,
+                                textDecoration: 'none',
+                                color: isActive ? '#fff' : 'rgba(255,255,255,0.45)',
+                                backgroundColor: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                                transition: 'all 150ms ease',
+                            })}
+                        >
+                            {child.label}
+                        </NavLink>
+                    ))}
+                </div>
+            )}
+        </div>
     );
 }
 
