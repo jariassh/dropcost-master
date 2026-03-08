@@ -1,5 +1,5 @@
 # ESTADO DEL PROYECTO: DropCost Master
-**Fecha de actualización:** 4 de marzo de 2026
+**Fecha de actualización:** 7 de marzo de 2026
 **Estado:** Optimización Core y Estandarización Visual - EN CURSO 🔄
 
 ---
@@ -8,11 +8,9 @@
 DropCost Master es una plataforma integral diseñada para la optimización financiera de negocios de Dropshipping en LATAM. Soporta multitenancy, simulaciones financieras avanzadas e integraciones con Shopify y Meta Ads.
 
 ## 2. Últimas Actualizaciones (PM Focus)
-- **Módulo de Contactos v1.0:** Implementación completa (Base de datos, servicios, UI mobile-first e integración con Dashboard).
-- **Estandarización de Tipografía Global:** Implementación de un sistema de escala tipográfica (Poppins/Inter/Lora/JetBrains Mono) persistente en base de datos.
-- **Nuevo Administrador de Diseño:** Interfaz mejorada para personalizar tamaños, line-heights e interletrado en tiempo real.
-- **Refactorización de Plantillas de Email:** Se centralizó el estado de las plantillas usando hooks de React Query, eliminando redundancia y mejorando la velocidad de carga.
-- **Integración Meta Ads v1.0:** Conexión completa con la API de Meta, intercambio de tokens seguro y almacenamiento persistente.
+- **Administrador de Código Personalizado (GTM/Meta):** Implementación de sistema de inyección de scripts dinámicos con editor de código avanzado, resaltado de sintaxis y rediseño de tarjetas premium.
+- **Modularización de Ajustes:** Reestructuración completa de las páginas de ajustes (Branding, SEO, Tracking) en componentes independientes para mejorar mantenibilidad.
+- **Optimización de UI/UX:** Ajustes de espaciado, tipografía y modo oscuro en toda la sección de administración para una experiencia más profesional.
 
 ## 3. Funcionalidades Implementadas ✅
 
@@ -25,6 +23,11 @@ DropCost Master es una plataforma integral diseñada para la optimización finan
 - Sincronización en tiempo real del estado de verificación desde Auth -> Public Table.
 - Red de Líderes Nivel 1 y 2 con visualización de red heredada corregida.
 - Wallet integrada con soporte para moneda local (COP, MXN, PEN, etc.).
+
+### ✅ Inyección de Código & Tracking
+- Administrador centralizado de fragmentos (GTM, Meta, Custom JS/HTML).
+- Control de inyección por ubicación (Head, Body Start, Body End).
+- Reglas dinámicas por tipos de página (Global, Landing, Home, etc.).
 
 ### ✅ Seguridad (Ironclad)
 - RLS Nuclear (aislamiento absoluto).
