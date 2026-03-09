@@ -687,7 +687,15 @@ export function MisCosteos() {
                 </div>
             </Modal>
 
-            <ConfirmDialog isOpen={confirmOpen} title="Eliminar Costeo" description="¿Estás seguro de que deseas eliminar este costeo? Esta acción retirará el registro de tu historial de forma permanente." confirmLabel="Sí, eliminar" variant="danger" onConfirm={handleDelete} onCancel={() => setConfirmOpen(false)} />
+            <ConfirmDialog
+                isOpen={confirmOpen}
+                title="Eliminar Costeo"
+                description="¿Estás seguro de que deseas eliminar este costeo? Esta acción retirará el registro de tu historial de forma permanente. ¡ATENCIÓN!: Si has tenido conversaciones con el Mentor IA sobre este producto, todo el conocimiento estratégico acumulado se perderá definitivamente."
+                confirmLabel="Sí, eliminar"
+                variant="danger"
+                onConfirm={handleDelete}
+                onCancel={() => setConfirmOpen(false)}
+            />
 
             <Modal isOpen={showDuplicarModal} onClose={() => !isDuplicating && setShowDuplicarModal(false)} title="Duplicar Costeo" size="sm">
                 <div>

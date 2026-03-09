@@ -1,12 +1,13 @@
+import { useState } from "react";
 import type { SimulatorInputs } from '@/types/simulator';
 import { Package, Truck, Megaphone, Info, Sparkles } from 'lucide-react';
 
 interface InputCardsProps {
-    inputs: SimulatorInputs;
+    inputs: SimulatorInputs; currency?: string; country?: string;
     onChange: (newInputs: SimulatorInputs) => void;
 }
 
-export function InputCards({ inputs, onChange }: InputCardsProps) {
+export function InputCards({ inputs, onChange, currency = "USD", country = "US" }: InputCardsProps) {
     const handleInputChange = (field: keyof SimulatorInputs, value: any) => {
         onChange({ ...inputs, [field]: value });
     };
@@ -25,13 +26,13 @@ export function InputCards({ inputs, onChange }: InputCardsProps) {
                 color="var(--color-primary)"
             >
                 <InputField
-                    label="Costo Unitario (USD)"
+                    label={`Costo Unitario (${currency})`} tooltip="Costo que se paga al proveedor por cada unidad del producto."
                     value={inputs.productCost}
                     onChange={(v) => handleInputChange('productCost', v)}
                     hint="Precio de compra al proveedor"
                 />
                 <InputField
-                    label="Margen Objetivo (%)"
+                    label="Margen Objetivo (%)" tooltip="Porcentaje de ganancia que deseas obtener por venta. En COD un margen saludable oscila entre 20% y 30%."
                     value={inputs.desiredMarginPercent}
                     onChange={(v) => handleInputChange('desiredMarginPercent', v)}
                     hint="Porcentaje de ganancia deseado"
@@ -88,13 +89,13 @@ export function InputCards({ inputs, onChange }: InputCardsProps) {
                 color="var(--color-error)"
             >
                 <InputField
-                    label="CPA Esperado (USD)"
+                    label={`CPA Esperado (${currency})`} tooltip="Costo por Adquisición promedio en Meta Ads. En Colombia suele estar entre $15.000 y $25.000 COP."
                     value={inputs.averageCpa}
                     onChange={(v) => handleInputChange('averageCpa', v)}
                     hint="Costo máximo por adquisición"
                 />
                 <InputField
-                    label="% de Cancelación"
+                    label="% de Cancelación" tooltip="Porcentaje de pedidos que se cancelan antes del envío. En COD normalmente ronda el 20%."
                     value={inputs.preCancellationPercent}
                     onChange={(v) => handleInputChange('preCancellationPercent', v)}
                     hint="Antes del envío"
@@ -125,13 +126,13 @@ export function InputCards({ inputs, onChange }: InputCardsProps) {
             >
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <InputField
-                        label="Flete (USD)"
+                        label={`Flete (${currency})`} tooltip="Promedio del flete cobrado por las transportadoras. En Colombia suele estar entre $18.000 y $25.000 COP."
                         value={inputs.shippingCost}
                         onChange={(v) => handleInputChange('shippingCost', v)}
                         hint="Envío promedio"
                     />
                     <InputField
-                        label="Recaudo (%)"
+                        label="Recaudo (%)" tooltip="Porcentaje que las transportadoras cobran por recaudar dinero COD. En Colombia varía entre 1% y 3%."
                         value={inputs.collectionCommissionPercent}
                         onChange={(v) => handleInputChange('collectionCommissionPercent', v)}
                         hint="Comisión COD"
@@ -141,14 +142,14 @@ export function InputCards({ inputs, onChange }: InputCardsProps) {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <InputField
-                        label="% Devolución"
+                        label="% Devolución" tooltip="Porcentaje de devoluciones sobre pedidos enviados. En Colombia suele ser entre 15% y 20%."
                         value={inputs.returnRatePercent}
                         onChange={(v) => handleInputChange('returnRatePercent', v)}
                         hint="Efectividad"
                         suffix="%"
                     />
                     <InputField
-                        label="Otros (USD)"
+                        label={`Otros (${currency})`} tooltip="Gastos operacionales: comisiones de plataforma, empaques, seguros de envío, etc."
                         value={inputs.otherExpenses}
                         onChange={(v) => handleInputChange('otherExpenses', v)}
                         hint="Costos extra"
@@ -193,12 +194,15 @@ function Card({ title, icon, color, children }: { title: string; icon: React.Rea
     );
 }
 
-function InputField({ label, value, onChange, hint, suffix }: { label: string; value: number; onChange: (v: number) => void; hint: string; suffix?: string }) {
+function InputField({ label, value, onChange, hint, suffix, tooltip }: { label: string; value: number; onChange: (v: number) => void; hint: string; suffix?: string }) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
-                {label}
-            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.02em', margin: 0 }}>
+                    {label}
+                </label>
+                {tooltip && <InfoTooltip text={tooltip} />}
+            </div>
             <div style={{ position: 'relative' }}>
                 <input
                     type="number"
@@ -228,5 +232,20 @@ function InputField({ label, value, onChange, hint, suffix }: { label: string; v
             </div>
             <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 500 }}>{hint}</span>
         </div>
+    );
+}
+
+function InfoTooltip({ text }: { text: string }) {
+    const [isHovered, setIsHovered] = useState(false);
+    return (
+        <span onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <Info size={12} style={{ color: isHovered ? 'var(--color-primary)' : 'var(--text-tertiary)', cursor: 'help' }} />
+            {isHovered && (
+                <div style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%) translateY(-8px)', backgroundColor: '#1E293B', color: 'white', padding: '10px 14px', borderRadius: '8px', width: '220px', fontSize: '12px', zIndex: 100, boxShadow: '0 8px 24px rgba(0,0,0,0.3)', pointerEvents: 'none', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    {text}
+                    <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '6px solid #1E293B' }} />
+                </div>
+            )}
+        </span>
     );
 }

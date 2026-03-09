@@ -21,6 +21,8 @@ interface SliderProps {
     /** Texto a mostrar debajo del centro */
     midLabel?: string;
     disabled?: boolean;
+    /** Oculta por completo el input badge de la derecha si el componente original ya tiene su propio input */
+    hideInputLabel?: boolean;
 }
 
 export function Slider({
@@ -35,6 +37,7 @@ export function Slider({
     maxLabel,
     midLabel,
     disabled = false,
+    hideInputLabel = false,
 }: SliderProps) {
     const percentage = ((value - min) / (max - min)) * 100;
 
@@ -122,9 +125,10 @@ export function Slider({
                         {label}
                     </span>
                 )}
+
                 <div
                     style={{
-                        display: 'inline-flex',
+                        display: hideInputLabel ? 'none' : 'inline-flex',
                         alignItems: 'center',
                         gap: '0',
                         borderRadius: '6px',

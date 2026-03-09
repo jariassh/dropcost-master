@@ -21,8 +21,10 @@ export function ViabilityOutput({ results, inputs, currency, manualPrice, setMan
 
     const viability = isHealthy ? 'viable' : isViable ? 'breakeven' : 'not_viable';
 
-    const formatCurrency = (val: number) => {
-        return new Intl.NumberFormat('es-CO', {
+        const formatCurrency = (val: number) => {
+        const country = inputs.country || 'US';
+        const locale = country === 'CO' ? 'es-CO' : country === 'MX' ? 'es-MX' : country === 'PE' ? 'es-PE' : 'en-US';
+        return new Intl.NumberFormat(locale, {
             style: 'currency',
             currency: currency,
             minimumFractionDigits: currency === 'COP' ? 0 : 2,
