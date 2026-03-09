@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { SimulatorInputs } from '@/types/simulator';
-import { Package, Truck, Megaphone, Info, Sparkles } from 'lucide-react';
+import { Package, Truck, Megaphone, Info, Sparkles, ChevronDown } from 'lucide-react';
 
 interface InputCardsProps {
-    inputs: SimulatorInputs; currency?: string; country?: string;
+    inputs: SimulatorInputs & { country?: string };
+    currency?: string;
+    country?: string;
     onChange: (newInputs: SimulatorInputs) => void;
 }
 
@@ -31,53 +33,57 @@ export function InputCards({ inputs, onChange, currency = "USD", country = "US" 
                     onChange={(v) => handleInputChange('productCost', v)}
                     hint="Precio de compra al proveedor"
                 />
-                <InputField
-                    label="Margen Objetivo (%)" tooltip="Porcentaje de ganancia que deseas obtener por venta. En COD un margen saludable oscila entre 20% y 30%."
-                    value={inputs.desiredMarginPercent}
-                    onChange={(v) => handleInputChange('desiredMarginPercent', v)}
-                    hint="Porcentaje de ganancia deseado"
-                    suffix="%"
-                />
-                <div style={{ marginTop: '16px' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '8px' }}>
-                        Nivel de Ambición
-                    </label>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        {['Suave', 'Moderado', 'Ambicioso'].map(level => {
-                            const isSelected = (level === 'Suave' && inputs.desiredMarginPercent <= 25) ||
-                                (level === 'Moderado' && inputs.desiredMarginPercent > 25 && inputs.desiredMarginPercent <= 42) ||
-                                (level === 'Ambicioso' && inputs.desiredMarginPercent > 42);
 
-                            // Map levels to target margins if they click
-                            const setLevel = (l: string) => {
-                                let target = inputs.desiredMarginPercent;
-                                if (l === 'Suave') target = 20;
-                                if (l === 'Moderado') target = 35;
-                                if (l === 'Ambicioso') target = 50;
-                                handleInputChange('desiredMarginPercent', target);
-                            };
-
-                            return (
-                                <button
-                                    key={level}
-                                    onClick={() => setLevel(level)}
-                                    style={{
-                                        flex: 1,
-                                        padding: '8px 4px',
-                                        fontSize: '11px',
-                                        fontWeight: 700,
-                                        borderRadius: '8px',
-                                        border: isSelected ? '1px solid var(--color-primary)' : '1px solid var(--border-color)',
-                                        backgroundColor: isSelected ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
-                                        color: isSelected ? 'var(--color-primary)' : 'var(--text-secondary)',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    {level}
-                                </button>
-                            );
-                        })}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <InputField
+                        label="Margen (%)" tooltip="Porcentaje de ganancia deseado."
+                        value={inputs.desiredMarginPercent}
+                        onChange={(v) => handleInputChange('desiredMarginPercent', v)}
+                        hint="Ganancia deseada"
+                        suffix="%"
+                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                            <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.02em', margin: 0, fontFamily: 'var(--font-body)' }}>
+                                Ambición
+                            </label>
+                            <InfoTooltip text="Nivel de agresividad en el precio." />
+                        </div>
+                        <div style={{ position: 'relative', height: '40px' }}>
+                            <select
+                                value={inputs.desiredMarginPercent <= 25 ? 'Suave' : inputs.desiredMarginPercent <= 42 ? 'Moderado' : 'Ambicioso'}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (val === 'Suave') handleInputChange('desiredMarginPercent', 20);
+                                    if (val === 'Moderado') handleInputChange('desiredMarginPercent', 35);
+                                    if (val === 'Ambicioso') handleInputChange('desiredMarginPercent', 50);
+                                }}
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    backgroundColor: 'var(--bg-primary)',
+                                    border: '1px solid var(--card-border)',
+                                    borderRadius: '10px',
+                                    padding: '0 32px 0 12px',
+                                    fontSize: '13px',
+                                    fontWeight: 700,
+                                    color: 'var(--color-primary)',
+                                    appearance: 'none',
+                                    cursor: 'pointer',
+                                    outline: 'none',
+                                    transition: 'all 0.2s',
+                                    fontFamily: 'var(--font-headings)'
+                                }}
+                                onFocus={e => e.currentTarget.style.borderColor = 'var(--color-primary)'}
+                                onBlur={e => e.currentTarget.style.borderColor = 'var(--card-border)'}
+                            >
+                                <option value="Suave">Suave (20%)</option>
+                                <option value="Moderado">Moderado (35%)</option>
+                                <option value="Ambicioso">Ambicioso (50%)</option>
+                            </select>
+                            <ChevronDown size={14} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--color-primary)' }} />
+                        </div>
+                        <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 500, fontFamily: 'var(--font-body)' }}>Ajuste rápido</span>
                     </div>
                 </div>
             </Card>
@@ -101,21 +107,7 @@ export function InputCards({ inputs, onChange, currency = "USD", country = "US" 
                     hint="Antes del envío"
                     suffix="%"
                 />
-                <div style={{
-                    marginTop: '8px',
-                    padding: '10px 12px',
-                    backgroundColor: 'var(--card-bg)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '10px',
-                    border: '1px solid var(--card-border)'
-                }}>
-                    <Sparkles size={14} color="var(--color-error)" style={{ marginTop: '2px', flexShrink: 0 }} />
-                    <span style={{ fontSize: '10px', color: 'var(--color-error)', fontWeight: 500, lineHeight: '1.5' }}>
-                        El CPA se puede optimizar configurando correctamente en Meta. <strong>Consulta a Drop Analyst</strong> para recibir una guía paso a paso.
-                    </span>
-                </div>
+                <div style={{ height: '24px' }} /> {/* Espaciador para igualar tamaño */}
             </Card>
 
             {/* Card 🚚 LOGÍSTICA */}
@@ -155,13 +147,7 @@ export function InputCards({ inputs, onChange, currency = "USD", country = "US" 
                         hint="Costos extra"
                     />
                 </div>
-
-                <div style={{ marginTop: '8px', padding: '8px 12px', backgroundColor: 'var(--card-bg)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Info size={12} color="var(--color-success)" />
-                    <span style={{ fontSize: '10px', color: 'var(--color-success)', fontWeight: 500 }}>
-                        Recuerda: El transportista cobra flete de retorno (50%).
-                    </span>
-                </div>
+                <div style={{ height: '24px' }} /> {/* Espaciador para igualar tamaño */}
             </Card>
         </div>
     );
@@ -177,7 +163,8 @@ function Card({ title, icon, color, children }: { title: string; icon: React.Rea
             padding: '24px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '16px'
+            gap: '16px',
+            height: '100%'
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{
@@ -187,28 +174,72 @@ function Card({ title, icon, color, children }: { title: string; icon: React.Rea
                 }}>
                     {icon}
                 </div>
-                <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{title}</h3>
+                <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, fontFamily: 'var(--font-headings)' }}>{title}</h3>
             </div>
             {children}
         </div>
     );
 }
 
-function InputField({ label, value, onChange, hint, suffix, tooltip }: { label: string; value: number; onChange: (v: number) => void; hint: string; suffix?: string }) {
+function InputField({ label, value, onChange, hint, suffix, tooltip }: { label: string; value: number; onChange: (v: number) => void; hint: string; suffix?: string; tooltip?: string }) {
+    const formatValue = (num: number) => {
+        if (num === 0) return '';
+        const parts = num.toString().split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        return parts.length > 1 ? `${parts[0]},${parts[1].padEnd(2, '0').slice(0, 2)}` : parts[0];
+    };
+
+    const [displayValue, setDisplayValue] = useState(formatValue(value));
+
+    // Sincronizar con cambios externos (e.g. reseteos o cambios en otros campos)
+    useEffect(() => {
+        setDisplayValue(formatValue(value));
+    }, [value]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let val = e.target.value;
+
+        // Solo permitir dígitos, puntos y comas
+        val = val.replace(/[^\d.,]/g, '');
+
+        // Normalizar comas y puntos: tratamos ambos como decimales para ser flexibles
+        // pero mostramos punto como miles y coma como decimal
+        const cleanVal = val.replace(/\./g, '').replace(',', '.');
+        const numeric = parseFloat(cleanVal) || 0;
+
+        // Formateo visual inmediato
+        const parts = val.replace(/\./g, '').split(',');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        const formatted = parts.length > 1 ? `${parts[0]},${parts[1].slice(0, 2)}` : parts[0];
+
+        setDisplayValue(formatted);
+        onChange(numeric);
+    };
+
+    const handleBlur = () => {
+        // Al salir, aseguramos los 2 decimales fijos si hay valor
+        if (value > 0) {
+            setDisplayValue(formatValue(value));
+        } else {
+            setDisplayValue('');
+        }
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.02em', margin: 0 }}>
+                <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.02em', margin: 0, fontFamily: 'var(--font-body)' }}>
                     {label}
                 </label>
                 {tooltip && <InfoTooltip text={tooltip} />}
             </div>
             <div style={{ position: 'relative' }}>
                 <input
-                    type="number"
-                    value={value || ''}
-                    onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-                    placeholder="0.00"
+                    type="text"
+                    value={displayValue}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    placeholder="0,00"
                     style={{
                         width: '100%',
                         backgroundColor: 'var(--bg-primary)',
@@ -216,13 +247,13 @@ function InputField({ label, value, onChange, hint, suffix, tooltip }: { label: 
                         borderRadius: '10px',
                         padding: '10px 12px',
                         fontSize: '14px',
-                        fontWeight: 600,
+                        fontWeight: 700,
                         color: 'var(--text-primary)',
                         outline: 'none',
-                        transition: 'all 0.2s'
+                        transition: 'all 0.2s',
+                        fontFamily: 'var(--font-headings)'
                     }}
                     onFocus={e => e.currentTarget.style.borderColor = 'var(--color-primary)'}
-                    onBlur={e => e.currentTarget.style.borderColor = 'var(--card-border)'}
                 />
                 {suffix && (
                     <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 700 }}>
@@ -230,7 +261,7 @@ function InputField({ label, value, onChange, hint, suffix, tooltip }: { label: 
                     </span>
                 )}
             </div>
-            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 500 }}>{hint}</span>
+            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 500, fontFamily: 'var(--font-body)' }}>{hint}</span>
         </div>
     );
 }
@@ -241,7 +272,7 @@ function InfoTooltip({ text }: { text: string }) {
         <span onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <Info size={12} style={{ color: isHovered ? 'var(--color-primary)' : 'var(--text-tertiary)', cursor: 'help' }} />
             {isHovered && (
-                <div style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%) translateY(-8px)', backgroundColor: '#1E293B', color: 'white', padding: '10px 14px', borderRadius: '8px', width: '220px', fontSize: '12px', zIndex: 100, boxShadow: '0 8px 24px rgba(0,0,0,0.3)', pointerEvents: 'none', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%) translateY(-8px)', backgroundColor: '#1E293B', color: 'white', padding: '10px 14px', borderRadius: '8px', width: '220px', fontSize: '12px', zIndex: 100, boxShadow: '0 8px 24px rgba(0,0,0,0.3)', pointerEvents: 'none', border: '1px solid rgba(255,255,255,0.1)', fontFamily: 'var(--font-body)' }}>
                     {text}
                     <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '6px solid #1E293B' }} />
                 </div>
