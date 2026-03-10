@@ -43,6 +43,7 @@ const adminNavItems = [
 
     // GESTIÓN DE USUARIOS
     { to: '/admin/users', icon: Users, label: 'Gestión Usuarios', active: true },
+    { to: '/admin/leads', icon: UserCircle, label: 'Gestión de Leads', active: true },
     { to: '/admin/marketing', icon: Megaphone, label: 'Email Marketing', active: true },
 
     // FINANCIERO & CRECIMIENTO

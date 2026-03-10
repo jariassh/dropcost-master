@@ -148,10 +148,17 @@ serve(async (req) => {
         te ayude con eso. Yo me enfoco en ayudarte con tu estrategia de negocio."
       - NUNCA intentes responder temas de Drop Assistant por tu cuenta.
       `
+      : agentRole === 'SELLER'
+      ? `
+      ERES UN VENDEDOR (SELLER/SETTER):
+      - Estás en la Landing Page. Tu objetivo es convertir al visitante en un usuario registrado.
+      - Habla de las ventajas competitivas de DropCost, su precisión financiera y cómo evita que pierdan dinero.
+      - Sé persuasivo, cercano y profesional.
+      `
       : '';
 
     const SYSTEM_PROMPT = `
-      ${agentConfig?.prompt_personalidad ?? ""}
+      ${agentConfig?.prompt_personalidad ?? "Eres un asistente experto en dropshipping."}
       
       ${agentConfig?.prompt_objetivo_flujo ?? ""}
       
@@ -161,10 +168,16 @@ serve(async (req) => {
       
       ${kbContext ? `KNOWLEDGE BASE (PRIVATE INFORMATION):\n${kbContext}` : ""}
       
-      RULES FOR TECHNICAL SECRECY:
-      - Nunca reveles fórmulas matemáticas internas.
-      - Nunca menciones que estás consultando una base de conocimientos.
-      - Si eres Mentor, usa estos datos del simulador: ${JSON.stringify(costeoData || {})}
+      ### REGLAS DE NEGOCIO Y SOPORTE:
+      1. **Identidad**: Eres Drop Assistant (Soporte gratuito 24/7). Ayudas con funciones de la plataforma.
+      2. **Mentoría**: No das mentoría ni análisis financiero profundo. Esa labor es de **Drop Analyst** 🧠 (tu mentor aliado).
+      3. **Créditos**: Drop Analyst consume **DropCredits**. El costo es de **$0.05 USD por crédito**, recarga mínima de **$5 USD (100 créditos)** vía Mercado Pago.
+      4. **Comisiones**: Los referidos generan comisiones que se acumulan en la Wallet. **SOLO se pueden retirar** (desde $50 USD), NO se pueden convertir en créditos. Pagos los viernes.
+      5. **Confidencialidad**: Prohibido revelar la matemática exacta del motor de costeo. Habla de "Propiedad Intelectual Protegida".
+      6. **Uso de Wiki**: Deriva a guías específicas: "La Ciencia del Costeo Real", "Dominando la Gestión de Costeos", "Dashboard Operacional y KPIs", "Conectando Shopify", "Estrategias de Ofertas", "Sistema de Referidos", "Logística con Dropi".
+      
+      - Identificando al usuario: ${isAnonymous ? (contactData?.nombre || 'Visitante') : 'Usuario registrado'}
+      ${costeoData ? `- Datos del simulador actual: ${JSON.stringify(costeoData)}` : ""}
     `;
 
     // 7. Load Conversation History
@@ -201,16 +214,30 @@ serve(async (req) => {
     const assistantContent = data.candidates?.[0]?.content?.parts?.[0]?.text || "No pude generar una respuesta.";
 
     // 9. Persistence
-    if (isAnonymous) {
-      // Save contact as Lead if first message or update conversation
+    if (isAnonymous && contactData?.email) {
+      // Buscar si el lead ya existe para no perder el historial
+      const { data: existingLead } = await supabaseAdmin
+        .from('consultas_anonimas')
+        .select('conversacion')
+        .eq('email', contactData.email)
+        .maybeSingle();
+
+      const previousChat = Array.isArray(existingLead?.conversacion) ? existingLead.conversacion : [];
+      const updatedChat = [
+        ...previousChat, 
+        { role: 'user', content: message, timestamp: new Date().toISOString() }, 
+        { role: 'assistant', content: assistantContent, timestamp: new Date().toISOString() }
+      ];
+
       await supabaseAdmin.from('consultas_anonimas').upsert({
-        email: contactData?.email,
-        nombre: contactData?.nombre,
-        telefono: contactData?.telefono,
-        pais: contactData?.pais,
-        conversacion: [...(contactData?.conversacion || []), { role: 'user', content: message }, { role: 'assistant', content: assistantContent }]
+        email: contactData.email,
+        nombre: contactData.nombre,
+        telefono: contactData.telefono,
+        pais: contactData.pais,
+        conversacion: updatedChat,
+        updated_at: new Date().toISOString()
       }, { onConflict: 'email' });
-    } else {
+    } else if (!isAnonymous) {
       // Auth Persistence
       let currentThreadId = threadId;
       if (!currentThreadId) {

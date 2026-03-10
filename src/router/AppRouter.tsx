@@ -51,6 +51,7 @@ const AdminPlansPage = lazy(() => import('@/pages/admin/AdminPlansPage').then(m 
 const AdminAuditLogsPage = lazy(() => import('@/pages/admin/AdminAuditLogsPage').then(m => ({ default: m.AdminAuditLogsPage })));
 const AdminReferralPage = lazy(() => import('@/pages/admin/AdminReferralPage').then(m => ({ default: m.AdminReferralPage })));
 const AdminWithdrawalsPage = lazy(() => import('@/pages/admin/AdminWithdrawalsPage').then(m => ({ default: m.AdminWithdrawalsPage })));
+const AdminLeadsPage = lazy(() => import('@/pages/admin/AdminLeadsPage').then(m => ({ default: m.AdminLeadsPage })));
 
 // Admin Settings (Static for stability)
 import { AdminSettingsProvider } from '@/pages/admin/settings/AdminSettingsContext';
@@ -192,6 +193,7 @@ export function AppRouter() {
                     >
                         <Route index element={<AdminDashboard />} />
                         <Route path="users" element={<AdminUsersPage />} />
+                        <Route path="leads" element={<AdminLeadsPage />} />
                         <Route path="plans" element={<AdminPlansPage />} />
                         <Route path="referrals" element={<AdminReferralPage />} />
                         <Route path="withdrawals" element={<AdminWithdrawalsPage />} />

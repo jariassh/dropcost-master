@@ -65,17 +65,25 @@ export function useGeoCountry(): Pais | null {
 export function getPhonePlaceholder(pais: Pais | null): string {
     if (!pais?.formato_telefono) return '300 123 4567';
 
+    // Para Colombia (+57), el formato estándar amigable es 300 123 4567
+    if (pais.codigo_iso_2 === 'CO') return '300 123 4567';
+
     // Extraer solo la parte del número local (sin el código de país)
-    // formato_telefono es como "+57 XXX XXXXXXX"
     const parts = pais.formato_telefono.split(' ');
-    // Remover la primera parte que es el código de país (+57, +1, etc.)
     const localParts = parts.slice(1);
+    
     if (localParts.length === 0) return '300 123 4567';
 
-    // Reemplazar X por dígitos de ejemplo
-    const digits = '3001234567890';
+    // Si el formato es básico como "XXX XXXXXXX", intentamos mejorarlo para el usuario
+    let format = localParts.join(' ');
+    if (format === 'XXX XXXXXXX') {
+        format = 'XXX XXX XXXX';
+    }
+
+    // Reemplazar X por dígitos de ejemplo realistas
+    const digits = '3124567890';
     let digitIndex = 0;
-    const placeholder = localParts.join(' ').replace(/X/g, () => {
+    const placeholder = format.replace(/X/g, () => {
         return digits[digitIndex++ % digits.length];
     });
 
