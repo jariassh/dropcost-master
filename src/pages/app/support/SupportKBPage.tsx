@@ -2,21 +2,55 @@
 import React, { useState, useEffect } from 'react';
 import {
     Search, HelpCircle, Book, MessageSquare,
-    ChevronRight, ExternalLink, LifeBuoy, Sparkles
+    ChevronRight, ExternalLink, LifeBuoy, Sparkles, ArrowLeft
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { wikiService, WikiArticle } from '@/services/wikiService';
 
 const categories = [
-    { id: 'simulador', name: 'Simulador Financiero', icon: <Book size={20} />, count: 12 },
-    { id: 'ofertas', name: 'Creador de Ofertas', icon: <Sparkles size={20} />, count: 8 },
-    { id: 'plataforma', name: 'Plataforma & Cuenta', icon: <Search size={20} />, count: 15 },
-    { id: 'cobros', name: 'Pagos & Créditos', icon: <HelpCircle size={20} />, count: 6 },
+    { id: 'simulador', name: 'Simulador Financiero', icon: <Book size={20} />, count: 0 },
+    { id: 'plataforma', name: 'Plataforma & Cuenta', icon: <Search size={20} />, count: 0 },
+    { id: 'finanzas', name: 'Pagos & Créditos', icon: <HelpCircle size={20} />, count: 0 },
 ];
 
 export function SupportKBPage() {
     const { user } = useAuthStore();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [activeArticle, setActiveArticle] = useState<WikiArticle | null>(null);
+    const [articles, setArticles] = useState<WikiArticle[]>([]);
+
+    useEffect(() => {
+        const allArticles = wikiService.getPublicArticles();
+        setArticles(allArticles);
+
+        // Soporte para navegación directa via URL: /soporte?article=id
+        const params = new URLSearchParams(window.location.search);
+        const articleId = params.get('article');
+        if (articleId) {
+            const art = allArticles.find(a => a.id === articleId);
+            if (art) setActiveArticle(art);
+        }
+    }, []);
+
+    const filteredArticles = articles.filter(a => {
+        const matchesSearch = a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            a.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategory ? a.category === selectedCategory : true;
+        return matchesSearch && matchesCategory;
+    });
+
+    if (activeArticle) {
+        return (
+            <ArticleView
+                article={activeArticle}
+                onBack={() => {
+                    setActiveArticle(null);
+                    window.history.pushState({}, '', window.location.pathname);
+                }}
+            />
+        );
+    }
 
     return (
         <div style={{ maxWidth: '1000px', margin: '0 auto', color: 'var(--text-primary)' }}>
@@ -30,7 +64,7 @@ export function SupportKBPage() {
                     Centro de Ayuda & Base de Conocimiento
                 </h1>
                 <p style={{ color: 'var(--text-tertiary)', fontSize: '18px', maxWidth: '600px', margin: '0 auto 32px' }}>
-                    Todo lo que necesitas saber sobre DropCost Master, desde cálculos matemáticos hasta gestión de tiendas.
+                    Todo lo que necesitas saber sobre DropCost Master, desde conceptos financieros hasta gestión diaria.
                 </p>
 
                 {/* Barra de búsqueda Premium */}
@@ -59,22 +93,12 @@ export function SupportKBPage() {
                 {categories.map((cat) => (
                     <div
                         key={cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
+                        onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
                         style={{
                             padding: '24px', backgroundColor: 'var(--card-bg)',
-                            borderRadius: '24px', border: '1px solid var(--border-color)',
+                            borderRadius: '24px', border: selectedCategory === cat.id ? '2px solid var(--color-primary)' : '1px solid var(--border-color)',
                             cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                             display: 'flex', flexDirection: 'column', gap: '16px'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-6px)';
-                            e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.08)';
-                            e.currentTarget.style.borderColor = 'var(--color-primary)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = 'none';
-                            e.currentTarget.style.borderColor = 'var(--border-color)';
                         }}
                     >
                         <div style={{
@@ -87,34 +111,31 @@ export function SupportKBPage() {
                         </div>
                         <div>
                             <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>{cat.name}</h3>
-                            <span style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>{cat.count} artículos</span>
+                            <span style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>
+                                {articles.filter(a => a.category === cat.id).length} artículos
+                            </span>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Artículos Populares */}
+            {/* Listado de Artículos */}
             <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-                    <h2 style={{ fontSize: '24px', fontWeight: 700 }}>Artículos Populares</h2>
-                    <button style={{
-                        background: 'none', border: 'none', color: 'var(--color-primary)',
-                        fontWeight: 600, cursor: 'pointer', fontSize: '14px'
-                    }}>
-                        Ver todo
-                    </button>
+                    <h2 style={{ fontSize: '24px', fontWeight: 700 }}>
+                        {selectedCategory ? `Artículos: ${categories.find(c => c.id === selectedCategory)?.name}` : 'Artículos Populares'}
+                    </h2>
                 </div>
 
                 <div style={{ display: 'grid', gap: '12px' }}>
-                    {[
-                        "Cómo funciona el motor de costeo avanzado",
-                        "Integración de tiendas con Shopify y Dropi",
-                        "Estrategias de escala para campañas Meta Ads",
-                        "Gestión de Billetera y Retiros de Comisiones",
-                        "Configuración de Seguridad y 2FA"
-                    ].map((title, i) => (
+                    {filteredArticles.length > 0 ? filteredArticles.map((art) => (
                         <div
-                            key={i}
+                            key={art.id}
+                            onClick={() => {
+                                setActiveArticle(art);
+                                // Actualizar URL sin recargar para que sea compartible
+                                window.history.pushState({}, '', `?article=${art.id}`);
+                            }}
                             style={{
                                 padding: '16px 20px', backgroundColor: 'var(--card-bg)',
                                 borderRadius: '16px', border: '1px solid var(--border-color)',
@@ -126,11 +147,18 @@ export function SupportKBPage() {
                         >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                 <MessageSquare size={18} color="var(--text-tertiary)" />
-                                <span style={{ fontWeight: 500 }}>{title}</span>
+                                <div>
+                                    <div style={{ fontWeight: 600 }}>{art.title}</div>
+                                    <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{art.excerpt}</div>
+                                </div>
                             </div>
                             <ChevronRight size={18} color="var(--text-tertiary)" />
                         </div>
-                    ))}
+                    )) : (
+                        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)' }}>
+                            No se encontraron artículos que coincidan con tu búsqueda.
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -154,6 +182,9 @@ export function SupportKBPage() {
                     <p style={{ color: 'var(--text-tertiary)' }}>Nuestro Drop Assistant está disponible 24/7 para ayudarte en tiempo real.</p>
                 </div>
                 <button
+                    onClick={() => {
+                        window.dispatchEvent(new CustomEvent('open-drop-assistant'));
+                    }}
                     style={{
                         padding: '12px 32px', backgroundColor: 'var(--color-primary)',
                         color: 'white', border: 'none', borderRadius: '12px',
@@ -163,6 +194,119 @@ export function SupportKBPage() {
                 >
                     Hablar con el Asistente
                 </button>
+            </div>
+        </div>
+    );
+}
+
+function ArticleView({ article, onBack }: { article: WikiArticle, onBack: () => void }) {
+    const [content, setContent] = useState<string>('Cargando...');
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        setLoading(true);
+        wikiService.getArticleContent(article.contentPath)
+            .then(text => setContent(text))
+            .finally(() => setLoading(false));
+    }, [article]);
+
+    const formatText = (text: string) => {
+        // Regex que busca negritas **texto**, *texto* o enlaces [texto](url)
+        const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|\[.*?\]\(.*?\))/g);
+
+        return parts.map((part, pi) => {
+            // Manejar Negritas (Soporta ** y *)
+            if ((part.startsWith('**') && part.endsWith('**')) || (part.startsWith('*') && part.endsWith('*'))) {
+                const content = part.startsWith('**') ? part.slice(2, -2) : (part.startsWith('*') ? part.slice(1, -1) : part);
+                return <strong key={pi} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{content}</strong>;
+            }
+
+            // Manejar Enlaces [texto](url)
+            const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
+            if (linkMatch) {
+                const [_, linkText, linkUrl] = linkMatch;
+                return (
+                    <a
+                        key={pi}
+                        href={linkUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                            color: 'var(--color-primary)',
+                            textDecoration: 'none',
+                            fontWeight: 600,
+                            borderBottom: '1px solid transparent',
+                            transition: 'border-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = 'var(--color-primary)'}
+                        onMouseLeave={(e) => e.currentTarget.style.borderBottomColor = 'transparent'}
+                    >
+                        {linkText} <ExternalLink size={12} style={{ display: 'inline', marginLeft: '2px', verticalAlign: 'middle' }} />
+                    </a>
+                );
+            }
+
+            return part;
+        });
+    };
+
+    const renderContent = () => {
+        if (loading) return <div style={{ color: 'var(--text-tertiary)' }}>Cargando contenido...</div>;
+
+        return content.split('\n').map((line, i) => {
+            const trimmedLine = line.trim();
+
+            // Titulares
+            if (line.startsWith('# ')) return <h1 key={i} style={{ fontSize: '32px', fontWeight: 800, margin: '32px 0 16px', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{formatText(line.substring(2))}</h1>;
+            if (line.startsWith('## ')) return <h2 key={i} style={{ fontSize: '24px', fontWeight: 700, margin: '24px 0 12px', color: 'var(--text-primary)' }}>{formatText(line.substring(3))}</h2>;
+            if (line.startsWith('### ')) return <h3 key={i} style={{ fontSize: '20px', fontWeight: 700, margin: '20px 0 10px', color: 'var(--text-primary)' }}>{formatText(line.substring(4))}</h3>;
+
+            // Listas desordenadas (+ soportar asteriscos)
+            if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
+                const bulletChar = line.trim().startsWith('- ') ? '- ' : '* ';
+                return (
+                    <li key={i} style={{ marginLeft: '24px', marginBottom: '10px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                        {formatText(line.trim().substring(bulletChar.length))}
+                    </li>
+                );
+            }
+
+            // Listas numeradas (ej: 1. Texto)
+            if (/^\d+\.\s/.test(trimmedLine)) {
+                const content = trimmedLine.replace(/^\d+\.\s/, '');
+                return (
+                    <div key={i} style={{ display: 'flex', gap: '12px', marginLeft: '4px', marginBottom: '10px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                        <span style={{ fontWeight: 700, color: 'var(--color-primary)', minWidth: '20px' }}>{trimmedLine.match(/^\d+/)?.[0]}.</span>
+                        <span>{formatText(content)}</span>
+                    </div>
+                );
+            }
+
+            if (trimmedLine === '') return <div key={i} style={{ height: '8px' }} />;
+
+            // Párrafos normales
+            return (
+                <p key={i} style={{ marginBottom: '16px', lineHeight: '1.7', color: 'var(--text-secondary)', fontSize: '16px' }}>
+                    {formatText(line)}
+                </p>
+            );
+        });
+    };
+
+    return (
+        <div style={{ maxWidth: '800px', margin: '40px auto', color: 'var(--text-primary)' }}>
+            <button
+                onClick={onBack}
+                style={{
+                    display: 'flex', alignItems: 'center', gap: '8px', background: 'none',
+                    border: 'none', color: 'var(--color-primary)', cursor: 'pointer',
+                    fontWeight: 600, marginBottom: '32px'
+                }}
+            >
+                <ArrowLeft size={18} /> Volver al Centro de Ayuda
+            </button>
+            <div style={{ padding: '48px', backgroundColor: 'var(--card-bg)', borderRadius: '32px', border: '1px solid var(--border-color)', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+                {renderContent()}
             </div>
         </div>
     );

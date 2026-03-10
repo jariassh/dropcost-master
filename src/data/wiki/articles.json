@@ -1,0 +1,98 @@
+[
+    {
+        "id": "metodologia-costeo",
+        "title": "La Ciencia del Costeo Real",
+        "category": "simulador",
+        "excerpt": "Descubre por qué DropCost Master es el único sistema que protege tu margen real cargando costos invisibles.",
+        "contentPath": "/wiki/articles/metodologia-costeo.md",
+        "isPublic": true
+    },
+    {
+        "id": "gestion-costeos",
+        "title": "Dominando la Gestión de Costeos",
+        "category": "simulador",
+        "excerpt": "Aprende a configurar tus costes de producto, flete y CPA para proteger tu rentabilidad.",
+        "contentPath": "/wiki/articles/gestion-costeos.md",
+        "isPublic": true
+    },
+    {
+        "id": "dashboard-kpis-analisis",
+        "title": "Dashboard Operacional y KPIs",
+        "category": "plataforma",
+        "excerpt": "Cómo interpretar tus métricas diarias de ventas, gastos ads y margen neto real.",
+        "contentPath": "/wiki/articles/dashboard-kpis-analisis.md",
+        "isPublic": true
+    },
+    {
+        "id": "integracion-shopify",
+        "title": "Conectando tu Tienda Shopify",
+        "category": "plataforma",
+        "excerpt": "Guía paso a paso para sincronizar tus órdenes de manera automática.",
+        "contentPath": "/wiki/articles/integracion-shopify.md",
+        "isPublic": true
+    },
+    {
+        "id": "sincronizacion-manual",
+        "title": "Sincronización Manual de Pedidos (Dropi)",
+        "category": "plataforma",
+        "excerpt": "Cómo importar tu reporte de Dropi, mapear columnas y actualizar estados logísticos.",
+        "contentPath": "/wiki/articles/sincronizacion-manual.md",
+        "isPublic": true
+    },
+    {
+        "id": "estrategia-ofertas",
+        "title": "Estrategias de Ofertas Irresistibles",
+        "category": "crecimiento",
+        "excerpt": "Crea bundles y descuentos inteligentes para aumentar tu ticket promedio sin perder margen.",
+        "contentPath": "/wiki/articles/estrategia-ofertas.md",
+        "isPublic": true
+    },
+    {
+        "id": "referidos-lideres",
+        "title": "Sistema de Referidos y Rango de Líder",
+        "category": "finanzas",
+        "excerpt": "Aprende cómo ganar comisiones recurrentes, los niveles de red y cómo convertirte en Líder.",
+        "contentPath": "/wiki/articles/referidos-lideres.md",
+        "isPublic": true
+    },
+    {
+        "id": "comisiones-billetera",
+        "title": "Comisiones, Billetera y DropCredits",
+        "category": "finanzas",
+        "excerpt": "Todo sobre el retiro de comisiones, configuración bancaria, costos de DropCredits y recargas.",
+        "contentPath": "/wiki/articles/comisiones-billetera.md",
+        "isPublic": true
+    },
+    {
+        "id": "privacidad-contactos",
+        "title": "Privacidad y Gestión de Contactos",
+        "category": "plataforma",
+        "excerpt": "Protección de datos de clientes, módulo de activación manual y registro de auditoría legal.",
+        "contentPath": "/wiki/articles/privacidad-contactos.md",
+        "isPublic": true
+    },
+    {
+        "id": "configuracion-seguridad-2fa",
+        "title": "Configuración, Tiendas y 2FA",
+        "category": "plataforma",
+        "excerpt": "Administra tus tiendas, perfil y protege tu cuenta con el segundo factor de autenticación.",
+        "contentPath": "/wiki/articles/configuracion-seguridad-2fa.md",
+        "isPublic": true
+    },
+    {
+        "id": "historial-actividad",
+        "title": "Historial de Actividad y Auditoría",
+        "category": "plataforma",
+        "excerpt": "Mantén el control total revisando quién y cuándo se realizaron cambios en tu cuenta.",
+        "contentPath": "/wiki/articles/historial-actividad.md",
+        "isPublic": true
+    },
+    {
+        "id": "reglas-oro-scaling",
+        "title": "Reglas de Oro del Escalamiento",
+        "category": "simulador",
+        "excerpt": "Aprende las métricas críticas que determinan si tu campaña debe escalar o detenerse.",
+        "contentPath": "/wiki/articles/reglas-oro-scaling.md",
+        "isPublic": true
+    }
+]
