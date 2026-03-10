@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -144,6 +144,23 @@ export type Database = {
           email_domain: string | null
           favicon_url: string | null
           fecha_actualizacion: string | null
+          font_family_accent: string | null
+          font_family_mono: string | null
+          font_family_primary: string | null
+          font_family_secondary: string | null
+          font_letter_spacing_h: string | null
+          font_letter_spacing_labels: string | null
+          font_line_height_base: string | null
+          font_line_height_headings: string | null
+          font_line_height_mono: string | null
+          font_line_height_small: string | null
+          font_size_base: string | null
+          font_size_h1: string | null
+          font_size_h2: string | null
+          font_size_h3: string | null
+          font_size_h4: string | null
+          font_size_small: string | null
+          font_size_tiny: string | null
           id: string
           instagram_url: string | null
           linkedin_url: string | null
@@ -211,6 +228,23 @@ export type Database = {
           email_domain?: string | null
           favicon_url?: string | null
           fecha_actualizacion?: string | null
+          font_family_accent?: string | null
+          font_family_mono?: string | null
+          font_family_primary?: string | null
+          font_family_secondary?: string | null
+          font_letter_spacing_h?: string | null
+          font_letter_spacing_labels?: string | null
+          font_line_height_base?: string | null
+          font_line_height_headings?: string | null
+          font_line_height_mono?: string | null
+          font_line_height_small?: string | null
+          font_size_base?: string | null
+          font_size_h1?: string | null
+          font_size_h2?: string | null
+          font_size_h3?: string | null
+          font_size_h4?: string | null
+          font_size_small?: string | null
+          font_size_tiny?: string | null
           id?: string
           instagram_url?: string | null
           linkedin_url?: string | null
@@ -278,6 +312,23 @@ export type Database = {
           email_domain?: string | null
           favicon_url?: string | null
           fecha_actualizacion?: string | null
+          font_family_accent?: string | null
+          font_family_mono?: string | null
+          font_family_primary?: string | null
+          font_family_secondary?: string | null
+          font_letter_spacing_h?: string | null
+          font_letter_spacing_labels?: string | null
+          font_line_height_base?: string | null
+          font_line_height_headings?: string | null
+          font_line_height_mono?: string | null
+          font_line_height_small?: string | null
+          font_size_base?: string | null
+          font_size_h1?: string | null
+          font_size_h2?: string | null
+          font_size_h3?: string | null
+          font_size_h4?: string | null
+          font_size_small?: string | null
+          font_size_tiny?: string | null
           id?: string
           instagram_url?: string | null
           linkedin_url?: string | null
@@ -343,6 +394,197 @@ export type Database = {
             columns: ["usuario_admin"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultas_anonimas: {
+        Row: {
+          conversacion: Json | null
+          created_at: string | null
+          email: string
+          id: string
+          nombre: string
+          pais: string | null
+          telefono: string
+          updated_at: string | null
+        }
+        Insert: {
+          conversacion?: Json | null
+          created_at?: string | null
+          email: string
+          id?: string
+          nombre: string
+          pais?: string | null
+          telefono: string
+          updated_at?: string | null
+        }
+        Update: {
+          conversacion?: Json | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          nombre?: string
+          pais?: string | null
+          telefono?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      contact_downloads: {
+        Row: {
+          cantidad_registros: number | null
+          descargado_en: string | null
+          formato: string | null
+          hash_archivo: string | null
+          id: string
+          ip_address: string | null
+          tienda_id: string
+          user_id: string
+        }
+        Insert: {
+          cantidad_registros?: number | null
+          descargado_en?: string | null
+          formato?: string | null
+          hash_archivo?: string | null
+          id?: string
+          ip_address?: string | null
+          tienda_id: string
+          user_id: string
+        }
+        Update: {
+          cantidad_registros?: number | null
+          descargado_en?: string | null
+          formato?: string | null
+          hash_archivo?: string | null
+          id?: string
+          ip_address?: string | null
+          tienda_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_downloads_tienda_id_fkey"
+            columns: ["tienda_id"]
+            isOneToOne: false
+            referencedRelation: "tiendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contact_module_acceptance: {
+        Row: {
+          aceptado_en: string
+          estado: string | null
+          id: string
+          ip_address: string | null
+          revocado_en: string | null
+          tienda_id: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          aceptado_en?: string
+          estado?: string | null
+          id?: string
+          ip_address?: string | null
+          revocado_en?: string | null
+          tienda_id: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          aceptado_en?: string
+          estado?: string | null
+          id?: string
+          ip_address?: string | null
+          revocado_en?: string | null
+          tienda_id?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_module_acceptance_tienda_id_fkey"
+            columns: ["tienda_id"]
+            isOneToOne: false
+            referencedRelation: "tiendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          credits_consumed: number | null
+          id: string
+          role: string
+          thread_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          credits_consumed?: number | null
+          id?: string
+          role: string
+          thread_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          credits_consumed?: number | null
+          id?: string
+          role?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_threads: {
+        Row: {
+          created_at: string | null
+          id: string
+          status: Database["public"]["Enums"]["thread_status"] | null
+          tienda_id: string | null
+          tipo: Database["public"]["Enums"]["thread_type"]
+          total_credits_used: number | null
+          updated_at: string | null
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["thread_status"] | null
+          tienda_id?: string | null
+          tipo?: Database["public"]["Enums"]["thread_type"]
+          total_credits_used?: number | null
+          updated_at?: string | null
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["thread_status"] | null
+          tienda_id?: string | null
+          tipo?: Database["public"]["Enums"]["thread_type"]
+          total_credits_used?: number | null
+          updated_at?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_threads_tienda_id_fkey"
+            columns: ["tienda_id"]
+            isOneToOne: false
+            referencedRelation: "tiendas"
             referencedColumns: ["id"]
           },
         ]
@@ -466,6 +708,78 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      credit_transactions: {
+        Row: {
+          consultation_type: string | null
+          cost_usd: number | null
+          created_at: string | null
+          credits_amount: number
+          id: string
+          mercado_pago_transaction_id: string | null
+          notes: string | null
+          tipo: Database["public"]["Enums"]["credit_transaction_type"]
+          usuario_id: string
+        }
+        Insert: {
+          consultation_type?: string | null
+          cost_usd?: number | null
+          created_at?: string | null
+          credits_amount: number
+          id?: string
+          mercado_pago_transaction_id?: string | null
+          notes?: string | null
+          tipo: Database["public"]["Enums"]["credit_transaction_type"]
+          usuario_id: string
+        }
+        Update: {
+          consultation_type?: string | null
+          cost_usd?: number | null
+          created_at?: string | null
+          credits_amount?: number
+          id?: string
+          mercado_pago_transaction_id?: string | null
+          notes?: string | null
+          tipo?: Database["public"]["Enums"]["credit_transaction_type"]
+          usuario_id?: string
+        }
+        Relationships: []
+      }
+      custom_code_snippets: {
+        Row: {
+          apply_to: Json | null
+          code: string | null
+          created_at: string | null
+          id: string
+          location: string
+          name: string
+          priority: number | null
+          status: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          apply_to?: Json | null
+          code?: string | null
+          created_at?: string | null
+          id?: string
+          location: string
+          name: string
+          priority?: number | null
+          status?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          apply_to?: Json | null
+          code?: string | null
+          created_at?: string | null
+          id?: string
+          location?: string
+          name?: string
+          priority?: number | null
+          status?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       dashboard_metrics: {
         Row: {
@@ -650,6 +964,187 @@ export type Database = {
           },
         ]
       }
+      drop_assistant_agents: {
+        Row: {
+          created_at: string | null
+          id: string
+          nombre: string
+          prompt_objetivo_flujo: string
+          prompt_personalidad: string
+          prompt_reglas: string
+          scope: Database["public"]["Enums"]["agent_scope"]
+          status: Database["public"]["Enums"]["agent_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nombre: string
+          prompt_objetivo_flujo: string
+          prompt_personalidad: string
+          prompt_reglas: string
+          scope: Database["public"]["Enums"]["agent_scope"]
+          status?: Database["public"]["Enums"]["agent_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nombre?: string
+          prompt_objetivo_flujo?: string
+          prompt_personalidad?: string
+          prompt_reglas?: string
+          scope?: Database["public"]["Enums"]["agent_scope"]
+          status?: Database["public"]["Enums"]["agent_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      email_campaign_logs: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          email: string
+          error_message: string | null
+          id: string
+          sent_at: string | null
+          status: string
+          tienda_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          email: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          tienda_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          email?: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          tienda_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaign_logs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaign_logs_tienda_id_fkey"
+            columns: ["tienda_id"]
+            isOneToOne: false
+            referencedRelation: "tiendas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaign_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_campaigns: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          scheduled_at: string | null
+          segment_id: string | null
+          sender_name: string | null
+          sender_prefix: string | null
+          status: string
+          subject: string
+          template_id: string
+          tienda_id: string | null
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          scheduled_at?: string | null
+          segment_id?: string | null
+          sender_name?: string | null
+          sender_prefix?: string | null
+          status?: string
+          subject: string
+          template_id: string
+          tienda_id?: string | null
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          scheduled_at?: string | null
+          segment_id?: string | null
+          sender_name?: string | null
+          sender_prefix?: string | null
+          status?: string
+          subject?: string
+          template_id?: string
+          tienda_id?: string | null
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaigns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaigns_segment_id_fkey"
+            columns: ["segment_id"]
+            isOneToOne: false
+            referencedRelation: "email_segments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaigns_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaigns_tienda_id_fkey"
+            columns: ["tienda_id"]
+            isOneToOne: false
+            referencedRelation: "tiendas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaigns_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_historial: {
         Row: {
           asunto_enviado: string | null
@@ -755,6 +1250,54 @@ export type Database = {
             columns: ["trigger_id"]
             isOneToOne: false
             referencedRelation: "email_triggers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_segments: {
+        Row: {
+          created_at: string
+          description: string | null
+          filters: Json
+          id: string
+          name: string
+          tienda_id: string | null
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          filters?: Json
+          id?: string
+          name: string
+          tienda_id?: string | null
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          filters?: Json
+          id?: string
+          name?: string
+          tienda_id?: string | null
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_segments_tienda_id_fkey"
+            columns: ["tienda_id"]
+            isOneToOne: false
+            referencedRelation: "tiendas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_segments_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -933,34 +1476,177 @@ export type Database = {
           },
         ]
       }
-      meta_ad_accounts: {
+      knowledge_base: {
         Row: {
-          ad_account_id: string
+          category: string
+          content: string
+          created_at: string | null
           id: string
-          nombre: string | null
-          tienda_id: string
-          vinculado_en: string | null
+          is_public: boolean | null
+          title: string
+          updated_at: string | null
         }
         Insert: {
-          ad_account_id: string
+          category: string
+          content: string
+          created_at?: string | null
           id?: string
-          nombre?: string | null
-          tienda_id: string
-          vinculado_en?: string | null
+          is_public?: boolean | null
+          title: string
+          updated_at?: string | null
         }
         Update: {
-          ad_account_id?: string
+          category?: string
+          content?: string
+          created_at?: string | null
           id?: string
-          nombre?: string | null
-          tienda_id?: string
-          vinculado_en?: string | null
+          is_public?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      marketing_event_mappings: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          enabled: boolean | null
+          event_type: string
+          id: string
+          template_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          enabled?: boolean | null
+          event_type: string
+          id?: string
+          template_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          enabled?: boolean | null
+          event_type?: string
+          id?: string
+          template_id?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "meta_ad_accounts_tienda_id_fkey"
-            columns: ["tienda_id"]
+            foreignKeyName: "marketing_event_mappings_template_id_fkey"
+            columns: ["template_id"]
             isOneToOne: false
-            referencedRelation: "tiendas"
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_events: {
+        Row: {
+          created_at: string | null
+          email: string
+          email_service_id: string | null
+          error_message: string | null
+          event_type: string
+          id: string
+          is_test_email: boolean | null
+          sent_at: string | null
+          status: string | null
+          template_id: string | null
+          user_id: string | null
+          variables: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          email_service_id?: string | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          is_test_email?: boolean | null
+          sent_at?: string | null
+          status?: string | null
+          template_id?: string | null
+          user_id?: string | null
+          variables?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          email_service_id?: string | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          is_test_email?: boolean | null
+          sent_at?: string | null
+          status?: string | null
+          template_id?: string | null
+          user_id?: string | null
+          variables?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_events_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ad_accounts: {
+        Row: {
+          account_id: string | null
+          business_id: string | null
+          business_name: string | null
+          currency: string | null
+          id: string
+          integracion_id: string
+          last_synced_at: string | null
+          meta_id: string
+          name: string | null
+          usuario_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          business_id?: string | null
+          business_name?: string | null
+          currency?: string | null
+          id?: string
+          integracion_id: string
+          last_synced_at?: string | null
+          meta_id: string
+          name?: string | null
+          usuario_id: string
+        }
+        Update: {
+          account_id?: string | null
+          business_id?: string | null
+          business_name?: string | null
+          currency?: string | null
+          id?: string
+          integracion_id?: string
+          last_synced_at?: string | null
+          meta_id?: string
+          name?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ad_accounts_integracion_id_fkey"
+            columns: ["integracion_id"]
+            isOneToOne: false
+            referencedRelation: "integraciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_ad_accounts_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -1136,7 +1822,7 @@ export type Database = {
           paso_4_cuentas_publicitarias: boolean | null
           paso_actual: number | null
           porcentaje_completado: number | null
-          tienda_id: string
+          tienda_id: string | null
           user_id: string
         }
         Insert: {
@@ -1151,7 +1837,7 @@ export type Database = {
           paso_4_cuentas_publicitarias?: boolean | null
           paso_actual?: number | null
           porcentaje_completado?: number | null
-          tienda_id: string
+          tienda_id?: string | null
           user_id: string
         }
         Update: {
@@ -1166,7 +1852,7 @@ export type Database = {
           paso_4_cuentas_publicitarias?: boolean | null
           paso_actual?: number | null
           porcentaje_completado?: number | null
-          tienda_id?: string
+          tienda_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1545,6 +2231,74 @@ export type Database = {
           },
         ]
       }
+      shopify_clientes: {
+        Row: {
+          ciudad: string | null
+          cliente_shopify_id: string | null
+          created_at: string | null
+          departamento: string | null
+          email: string | null
+          id: string
+          nombre: string | null
+          numero_compras: number | null
+          pais: string | null
+          primera_compra_fecha: string | null
+          sincronizado_en: string | null
+          tags: string[] | null
+          telefono: string | null
+          tienda_id: string
+          total_compras_valor: number | null
+          ultima_compra_fecha: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ciudad?: string | null
+          cliente_shopify_id?: string | null
+          created_at?: string | null
+          departamento?: string | null
+          email?: string | null
+          id?: string
+          nombre?: string | null
+          numero_compras?: number | null
+          pais?: string | null
+          primera_compra_fecha?: string | null
+          sincronizado_en?: string | null
+          tags?: string[] | null
+          telefono?: string | null
+          tienda_id: string
+          total_compras_valor?: number | null
+          ultima_compra_fecha?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ciudad?: string | null
+          cliente_shopify_id?: string | null
+          created_at?: string | null
+          departamento?: string | null
+          email?: string | null
+          id?: string
+          nombre?: string | null
+          numero_compras?: number | null
+          pais?: string | null
+          primera_compra_fecha?: string | null
+          sincronizado_en?: string | null
+          tags?: string[] | null
+          telefono?: string | null
+          tienda_id?: string
+          total_compras_valor?: number | null
+          ultima_compra_fecha?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopify_clientes_tienda_id_fkey"
+            columns: ["tienda_id"]
+            isOneToOne: false
+            referencedRelation: "tiendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sistema_referidos_cambios: {
         Row: {
           descripcion: string | null
@@ -1630,10 +2384,59 @@ export type Database = {
           },
         ]
       }
+      support_tickets: {
+        Row: {
+          assigned_admin_id: string | null
+          created_at: string | null
+          description: string
+          id: string
+          priority: Database["public"]["Enums"]["ticket_priority"] | null
+          status: Database["public"]["Enums"]["ticket_status"] | null
+          subject: string
+          thread_id: string | null
+          updated_at: string | null
+          usuario_id: string
+        }
+        Insert: {
+          assigned_admin_id?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"] | null
+          status?: Database["public"]["Enums"]["ticket_status"] | null
+          subject: string
+          thread_id?: string | null
+          updated_at?: string | null
+          usuario_id: string
+        }
+        Update: {
+          assigned_admin_id?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"] | null
+          status?: Database["public"]["Enums"]["ticket_status"] | null
+          subject?: string
+          thread_id?: string | null
+          updated_at?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tiendas: {
         Row: {
           active: boolean | null
           configuracion: Json | null
+          contactos_habilitado_en: string | null
+          contactos_modulo_habilitado: boolean | null
           created_at: string
           id: string
           logo_url: string | null
@@ -1649,6 +2452,8 @@ export type Database = {
         Insert: {
           active?: boolean | null
           configuracion?: Json | null
+          contactos_habilitado_en?: string | null
+          contactos_modulo_habilitado?: boolean | null
           created_at?: string
           id?: string
           logo_url?: string | null
@@ -1664,6 +2469,8 @@ export type Database = {
         Update: {
           active?: boolean | null
           configuracion?: Json | null
+          contactos_habilitado_en?: string | null
+          contactos_modulo_habilitado?: boolean | null
           created_at?: string
           id?: string
           logo_url?: string | null
@@ -1724,9 +2531,34 @@ export type Database = {
           },
         ]
       }
+      user_credits: {
+        Row: {
+          created_at: string | null
+          credits: number
+          total_spent_usd: number | null
+          updated_at: string | null
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          credits?: number
+          total_spent_usd?: number | null
+          updated_at?: string | null
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string | null
+          credits?: number
+          total_spent_usd?: number | null
+          updated_at?: string | null
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           "2fa_habilitado": boolean | null
+          ai_learning_opt_in: boolean | null
           apellidos: string | null
           avatar_url: string | null
           bank_info: Json | null
@@ -1744,6 +2576,7 @@ export type Database = {
           plan_id: string | null
           plan_periodo: string | null
           plan_precio_pagado: number | null
+          preferencias: Json | null
           rol: string | null
           session_token: string | null
           telefono: string | null
@@ -1753,6 +2586,7 @@ export type Database = {
         }
         Insert: {
           "2fa_habilitado"?: boolean | null
+          ai_learning_opt_in?: boolean | null
           apellidos?: string | null
           avatar_url?: string | null
           bank_info?: Json | null
@@ -1770,6 +2604,7 @@ export type Database = {
           plan_id?: string | null
           plan_periodo?: string | null
           plan_precio_pagado?: number | null
+          preferencias?: Json | null
           rol?: string | null
           session_token?: string | null
           telefono?: string | null
@@ -1779,6 +2614,7 @@ export type Database = {
         }
         Update: {
           "2fa_habilitado"?: boolean | null
+          ai_learning_opt_in?: boolean | null
           apellidos?: string | null
           avatar_url?: string | null
           bank_info?: Json | null
@@ -1796,6 +2632,7 @@ export type Database = {
           plan_id?: string | null
           plan_periodo?: string | null
           plan_precio_pagado?: number | null
+          preferencias?: Json | null
           rol?: string | null
           session_token?: string | null
           telefono?: string | null
@@ -1908,6 +2745,10 @@ export type Database = {
         }[]
       }
       get_simulator_presets: { Args: { p_tienda_id: string }; Returns: Json }
+      increment_credits: {
+        Args: { amount: number; userid: string }
+        Returns: undefined
+      }
       increment_referral_clicks: {
         Args: { ref_code: string }
         Returns: undefined
@@ -1926,7 +2767,13 @@ export type Database = {
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
-      [_ in never]: never
+      agent_scope: "landing" | "app_registrado" | "app_suscrito"
+      agent_status: "active" | "inactive"
+      credit_transaction_type: "purchase" | "usage" | "refund"
+      thread_status: "active" | "closed"
+      thread_type: "soporte" | "mentoría"
+      ticket_priority: "low" | "medium" | "high" | "critical"
+      ticket_status: "open" | "pending" | "resolved" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2053,6 +2900,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      agent_scope: ["landing", "app_registrado", "app_suscrito"],
+      agent_status: ["active", "inactive"],
+      credit_transaction_type: ["purchase", "usage", "refund"],
+      thread_status: ["active", "closed"],
+      thread_type: ["soporte", "mentoría"],
+      ticket_priority: ["low", "medium", "high", "critical"],
+      ticket_status: ["open", "pending", "resolved", "closed"],
+    },
   },
 } as const

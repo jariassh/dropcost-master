@@ -14,6 +14,7 @@ export type AuditAction =
   | 'UPDATE_PROFILE'
   | 'ENABLE_2FA'
   | 'DISABLE_2FA'
+  | 'CREDITS_PURCHASED'
   | 'ADMIN_UPDATE_USER'
   | 'ADMIN_DELETE_USER';
 

@@ -312,6 +312,81 @@ async function processSuccessfulPayment(paymentData: any, supabase: SupabaseClie
     };
 }
 
+// Helper: Procesar carga de créditos
+// IMPORTANTE: Los créditos IA se almacenan en 'user_credits', NO en 'wallet_saldo' (billetera de dinero real)
+// Las transacciones de créditos van a 'credit_transactions', NO a 'wallet_transactions' (esa es solo para comisiones)
+async function processCreditPurchase(userId: string, credits: number, amountUsd: number, amountCop: number, paymentId: string, supabase: SupabaseClient) {
+    console.log(`[credits] Procesando recarga de ${credits} créditos para usuario ${userId}. USD: ${amountUsd}, COP: ${amountCop}`);
+    
+    // 1. Upsert en user_credits (tabla dedicada para créditos IA)
+    const { data: existingCredits } = await supabase
+        .from('user_credits')
+        .select('credits, total_spent_usd')
+        .eq('usuario_id', userId)
+        .maybeSingle();
+
+    const currentCredits = existingCredits?.credits ?? 0;
+    const currentSpent = Number(existingCredits?.total_spent_usd ?? 0);
+    const newCredits = currentCredits + credits;
+    const newSpent = Math.round((currentSpent + amountUsd) * 100) / 100;
+
+    const { error: upsertError } = await supabase
+        .from('user_credits')
+        .upsert({
+            usuario_id: userId,
+            credits: newCredits,
+            total_spent_usd: newSpent,
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'usuario_id' });
+
+    if (upsertError) {
+        console.error('[credits] Error al actualizar user_credits:', upsertError);
+        throw upsertError;
+    }
+
+    // 2. Registrar en credit_transactions (historial de créditos IA - tabla dedicada)
+    // NO usar wallet_transactions (esa es exclusiva para comisiones de referidos)
+    await supabase.from("credit_transactions").insert({
+        usuario_id: userId,
+        tipo: 'purchase',
+        credits_amount: credits,
+        cost_usd: amountUsd,
+        mercado_pago_transaction_id: paymentId,
+        notes: `Recarga: +${credits} CR ($${amountUsd} USD / ${amountCop} COP)`
+    });
+
+    // 3. Audit Log (con entidad para que aparezca en el historial de actividad del usuario)
+    await supabase.from("audit_logs").insert({
+        usuario_id: userId,
+        accion: 'CREDITS_PURCHASED',
+        entidad: 'CREDITS',
+        detalles: { credits, amount_usd: amountUsd, amount_cop: amountCop, payment_id: paymentId, new_balance: newCredits }
+    });
+
+    console.log(`[credits] Recarga exitosa. Saldo anterior: ${currentCredits}, Nuevo: ${newCredits}`);
+    return { status: "success", newBalance: newCredits };
+}
+
+async function processIncomingPayment(paymentData: any, supabase: SupabaseClient) {
+    let metadata;
+    try {
+        const extRef = paymentData.external_reference;
+        metadata = typeof extRef === 'string' ? JSON.parse(extRef) : extRef;
+    } catch (e) {
+        metadata = paymentData.metadata;
+    }
+
+    if (metadata?.type === 'credits') {
+        const userId = metadata.userId || metadata.user_id;
+        const credits = Number(metadata.credits);
+        const amountUsd = Number(metadata.amount_usd || metadata.amount);
+        const amountCop = Number(metadata.amount_cop || paymentData.transaction_amount || 0);
+        return await processCreditPurchase(userId, credits, amountUsd, amountCop, String(paymentData.id), supabase);
+    } else {
+        return await processSuccessfulPayment(paymentData, supabase);
+    }
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
@@ -348,84 +423,100 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: "Invalid JSON body" }), { status: 200, headers: corsHeaders });
       }
 
-      const { planId, period, userId, email, returnUrl } = body;
-      console.log(`!!! DEBUG create_preference !!! Received: planId=${planId}, email=${email}, userId=${userId}`);
-
-      if (!planId || !userId) {
-        return new Response(JSON.stringify({ error: "Missing required fields." }), { status: 200, headers: corsHeaders });
+      const { planId, period, userId, email, returnUrl, type, credits, amountUSD, amountCOP } = body;
+      
+      if (!userId) {
+        return new Response(JSON.stringify({ error: "Missing userId." }), { status: 200, headers: corsHeaders });
       }
 
-      // 1. Obtener detalles del Plan
-      const { data: plan, error: planError } = await supabase
-        .from("plans")
-        .select("*")
-        .eq("slug", planId)
-        .single();
+      let finalPriceCOP = 0;
+      let title = "";
+      let extRefData: any = { userId };
 
-      if (planError || !plan) {
-        return new Response(JSON.stringify({ error: `Plan not found: ${planId}` }), { status: 200, headers: corsHeaders });
+      if (type === 'credits') {
+          // Recarga de créditos
+          title = `Recarga de ${credits} DropCredits`;
+          const basePriceUSD = Number(amountUSD);
+          
+          if (amountCOP) {
+              finalPriceCOP = Math.round(Number(amountCOP));
+          } else {
+              try {
+                const rateResponse = await fetch('https://open.er-api.com/v6/latest/USD');
+                const rateData = await rateResponse.json();
+                const exchangeRate = rateData.rates.COP || 4000;
+                finalPriceCOP = Math.round(basePriceUSD * exchangeRate);
+              } catch (e) {
+                finalPriceCOP = basePriceUSD * 4000;
+              }
+          }
+
+          extRefData = { ...extRefData, type: 'credits', credits, amount_usd: basePriceUSD, amount_cop: finalPriceCOP };
+      } else {
+          // Suscripción de plan (comportamiento original)
+          if (!planId) return new Response(JSON.stringify({ error: "Missing planId." }), { status: 200, headers: corsHeaders });
+
+          const { data: plan, error: planError } = await supabase
+            .from("plans")
+            .select("*")
+            .eq("slug", planId)
+            .single();
+
+          if (planError || !plan) {
+            return new Response(JSON.stringify({ error: `Plan not found: ${planId}` }), { status: 200, headers: corsHeaders });
+          }
+
+          let basePrice = period === 'monthly' ? plan.price_monthly : plan.price_semiannual;
+
+          // Price Protection Logic
+          const { data: userProfile } = await supabase
+            .from('users')
+            .select('plan_id, plan_precio_pagado, plan_periodo')
+            .eq('id', userId)
+            .maybeSingle();
+
+          if (userProfile && userProfile.plan_id === plan.slug && 
+              Number(userProfile.plan_precio_pagado) > 0 && 
+              userProfile.plan_periodo === period) {
+              basePrice = Number(userProfile.plan_precio_pagado);
+          }
+
+          try {
+            const rateResponse = await fetch('https://open.er-api.com/v6/latest/USD');
+            const rateData = await rateResponse.json();
+            const exchangeRate = rateData.rates.COP || 4000;
+            finalPriceCOP = Math.round(Number(basePrice) * exchangeRate);
+          } catch (e) {
+            finalPriceCOP = Number(basePrice) * 4000;
+          }
+
+          title = `${plan.name} (${period === 'monthly' ? 'Mensual' : 'Semestral'})`;
+          extRefData = { ...extRefData, planId, period };
       }
-
-      // Use dynamic test email from body (crucial for Sandbox stability)
-      const finalEmail = email;
-      console.log(`[mercadopago] Payer email: ${finalEmail}`);
-
-      let basePrice = period === 'monthly' ? plan.price_monthly : plan.price_semiannual;
-
-      // Price Protection Logic
-      const { data: userProfile } = await supabase
-        .from('users')
-        .select('plan_id, plan_precio_pagado, plan_periodo')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (userProfile && userProfile.plan_id === plan.slug && 
-          Number(userProfile.plan_precio_pagado) > 0 && 
-          userProfile.plan_periodo === period) {
-          basePrice = Number(userProfile.plan_precio_pagado);
-          console.log(`[price-protection] Usando precio bloqueado: ${basePrice}`);
-      }
-
-      // 3. Dynamic Currency Conversion (USD -> COP)
-      let finalPriceCOP = Number(basePrice);
-      try {
-        const rateResponse = await fetch('https://open.er-api.com/v6/latest/USD');
-        const rateData = await rateResponse.json();
-        const exchangeRate = rateData.rates.COP || 4000;
-        finalPriceCOP = Math.round(Number(basePrice) * exchangeRate);
-        console.log(`[currency-conversion] USD ${basePrice} converted to COP ${finalPriceCOP}`);
-      } catch (e) {
-        finalPriceCOP = Number(basePrice) * 4000;
-      }
-
-      const title = `${plan.name} (${period === 'monthly' ? 'Mensual' : 'Semestral'})`;
 
       // Dynamic redirection logic: Manual for localhost, Automatic for remote
       const isLocalhost = returnUrl.includes("localhost") || returnUrl.includes("127.0.0.1");
 
-      // 4. Construct Preference
       const preferenceData = {
         items: [
           {
-            id: planId,
+            id: type === 'credits' ? 'credits-recharge' : planId,
             title: title,
             quantity: 1,
             currency_id: "COP",
             unit_price: finalPriceCOP,
           },
         ],
-        payer: { email: finalEmail },
+        payer: { email },
         back_urls: {
           success: `${returnUrl}/payment/status?status=approved`,
           failure: `${returnUrl}/payment/status?status=rejected`,
           pending: `${returnUrl}/payment/status?status=pending`,
         },
         auto_return: isLocalhost ? undefined : "approved",
-        external_reference: JSON.stringify({ userId, planId, period }),
+        external_reference: JSON.stringify(extRefData),
         notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago?action=webhook`,
       };
-
-      console.log("[mercadopago] Creating preference:", JSON.stringify(preferenceData));
 
       const mpResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
         method: "POST",
@@ -439,7 +530,6 @@ serve(async (req) => {
       const mpData = await mpResponse.json();
 
       if (!mpResponse.ok) {
-        console.error("MP Error:", JSON.stringify(mpData));
         return new Response(JSON.stringify({ error: "Error de Mercado Pago", details: mpData }), { status: 200, headers: corsHeaders });
       }
 
@@ -449,6 +539,32 @@ serve(async (req) => {
       }), { 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 
       });
+    }
+
+    // -----------------------------------------------------------------------
+    // ACTION: ADMIN_RECHARGE (Direct Credits Bypass)
+    // -----------------------------------------------------------------------
+    if (req.method === "POST" && action === "admin_recharge") {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+
+      // Validar usuario mediante JWT
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (authError || !user) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+
+      // Verificar rol (SÓLO admin o superadmin)
+      const { data: dbUser } = await supabase.from('users').select('rol').eq('id', user.id).single();
+      if (!dbUser || (dbUser.rol !== 'admin' && dbUser.rol !== 'superadmin')) {
+          return new Response("Forbidden: Only admins can perform direct recharges", { status: 403, headers: corsHeaders });
+      }
+
+      const { targetUserId, credits } = await req.json();
+      if (!targetUserId || !credits) return new Response("Missing targetUserId or credits", { status: 400, headers: corsHeaders });
+
+      const result = await processCreditPurchase(targetUserId, credits, 0, 0, "ADMIN_BYPASS_" + Date.now(), supabase);
+      return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // -----------------------------------------------------------------------
@@ -480,8 +596,8 @@ serve(async (req) => {
 
         if (paymentData.status === 'approved') {
             console.log("!!! [BACKEND] Pago APROBADO en Mercado Pago. Iniciando procesamiento de activación...");
-            const result = await processSuccessfulPayment(paymentData, supabase);
-            console.log("!!! [BACKEND] Resultado de processSuccessfulPayment:", JSON.stringify(result, null, 2));
+            const result = await processIncomingPayment(paymentData, supabase);
+            console.log("!!! [BACKEND] Resultado de processIncomingPayment:", JSON.stringify(result, null, 2));
             return new Response(JSON.stringify({ status: "approved", result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         } else {
             console.log(`!!! [BACKEND] El pago NO está aprobado. Estado MP: ${paymentData.status}`);
@@ -506,7 +622,7 @@ serve(async (req) => {
         if (mpRes.ok) {
             const paymentData = await mpRes.json();
             if (paymentData.status === "approved") {
-                await processSuccessfulPayment(paymentData, supabase);
+                await processIncomingPayment(paymentData, supabase);
             }
         }
       }

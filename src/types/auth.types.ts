@@ -49,6 +49,7 @@ export interface User {
         documento_id: string;
         titular_nombre: string;
     };
+    ai_learning_opt_in?: boolean;
 }
 
 export interface LoginCredentials {

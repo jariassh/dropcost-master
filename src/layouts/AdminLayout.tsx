@@ -26,6 +26,7 @@ import {
     X,
     Mail,
     Zap,
+    BookOpen,
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
@@ -61,6 +62,7 @@ const adminNavItems = [
         ]
     },
     { to: '/admin/logs', icon: History, label: 'Logs de Auditoría', active: true },
+    { to: '/admin/knowledge-base', icon: BookOpen, label: 'Base de Conocimientos', active: true },
 
     // Próximamente (Inactivos)
     { to: '/admin/traffic', icon: PieChart, label: 'Análisis de Tráfico', active: false },

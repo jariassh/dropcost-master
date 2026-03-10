@@ -193,20 +193,7 @@ export function SimuladorPage() {
 
             </div>
 
-            {/* 🤖 BOTÓN FLOTANTE DROP ANALYST */}
-            <button
-                onClick={() => setIsMentorOpen(true)}
-                style={{
-                    position: 'fixed', bottom: '32px', right: '32px', width: '64px', height: '64px', borderRadius: '20px',
-                    backgroundColor: 'rgba(99, 102, 241, 1)', color: '#fff', border: 'none', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 12px 32px rgba(99, 102, 241, 0.4)',
-                    zIndex: 900, transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
-                className="hover-pop"
-                title="Consultar DROP ANALYST"
-            >
-                <Sparkles size={28} />
-            </button>
+
 
             <MentorAssistant isOpen={isMentorOpen} onClose={() => setIsMentorOpen(false)} inputs={inputs} results={results} tiendaId={costeoPadre?.tienda_id || ''} costeoId={id} />
 

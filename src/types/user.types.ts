@@ -24,6 +24,7 @@ export interface User {
     plan_id?: string; // ID del plan suscrito
     fecha_vencimiento_plan?: string;
     dias_restantes?: number;
+    ai_learning_opt_in?: boolean;
 }
 
 export interface UserFilters {

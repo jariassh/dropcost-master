@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTheme } from '@/hooks/useTheme';
 import type { SimulatorResults as Results, SimulatorInputs } from '@/types/simulator';
 import { TrendingUp, BarChart3, CheckCircle2, XCircle, AlertCircle, ShoppingBag, ShieldCheck, Pencil, RotateCcw, TrendingDown } from 'lucide-react';
 import { VerticalFunnel } from '../VerticalFunnel';
@@ -15,6 +16,8 @@ interface ViabilityOutputProps {
 }
 
 export function ViabilityOutput({ results, inputs, currency, manualPrice, setManualPrice, layoutOnly }: ViabilityOutputProps) {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const [dailyOrders, setDailyOrders] = useState(25);
     const marginPct = (results.netProfitPerSale / (results.suggestedPrice || 1)) * 100;
     const isViable = results.netProfitPerSale > 0;
@@ -203,8 +206,8 @@ export function ViabilityOutput({ results, inputs, currency, manualPrice, setMan
             {/* 💎 Precio Sugerido (Tarjeta Azul / Premium) */}
             <div style={{
                 padding: '48px 24px 24px', borderRadius: '24px',
-                background: 'var(--sim-primary-bg)',
-                color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                background: isDark ? 'var(--sim-primary-bg)' : '#FFFFFF',
+                color: isDark ? '#FFFFFF' : 'var(--text-primary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 textAlign: 'center', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--border-color)', position: 'relative',
                 overflow: 'visible'
             }}>
@@ -229,16 +232,16 @@ export function ViabilityOutput({ results, inputs, currency, manualPrice, setMan
                     <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
                         {manualPrice !== null ? (
                             <div style={{
-                                backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)',
+                                backgroundColor: 'var(--bg-secondary)', backdropFilter: 'blur(8px)',
                                 borderRadius: '100px', padding: '6px 16px', display: 'flex', alignItems: 'center', gap: '8px',
-                                border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', transition: 'all 0.2s',
-                                color: 'white', fontFamily: 'var(--font-headings)'
+                                border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'all 0.2s',
+                                color: 'var(--sim-primary-text)', fontFamily: 'var(--font-headings)'
                             }} onClick={() => setManualPrice(null)}>
                                 <span style={{ fontSize: '10px', fontWeight: 900 }}>SUGERIDO: {formatCurrency(results.originalSuggestedPrice || results.suggestedPrice)}</span>
                                 <RotateCcw size={12} />
                             </div>
                         ) : (
-                            <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'white', opacity: 0.9, fontFamily: 'var(--font-headings)' }}>
+                            <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--sim-primary-text)', opacity: 0.8, fontFamily: 'var(--font-headings)' }}>
                                 Precio de Venta Sugerido
                             </div>
                         )}
@@ -249,7 +252,7 @@ export function ViabilityOutput({ results, inputs, currency, manualPrice, setMan
                         <div style={{
                             backgroundColor: viability === 'viable' ? 'rgba(52, 211, 153, 0.15)' : 'rgba(239, 68, 68, 0.15)', backdropFilter: 'blur(8px)',
                             borderRadius: '100px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '8px',
-                            border: `1px solid ${viability === 'viable' ? 'rgba(52, 211, 153, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`, color: 'white',
+                            border: `1px solid ${viability === 'viable' ? 'rgba(52, 211, 153, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`, color: 'var(--sim-primary-text)',
                             fontFamily: 'var(--font-headings)'
                         }}>
                             <div style={{
@@ -270,24 +273,24 @@ export function ViabilityOutput({ results, inputs, currency, manualPrice, setMan
                         display: 'inline-flex', alignItems: 'center', gap: '8px',
                         paddingBottom: '4px'
                     }}>
-                        <span style={{ fontSize: '36px', fontWeight: 800, color: 'white', opacity: 0.9, marginTop: '10px' }}>$</span>
+                        <span style={{ fontSize: '36px', fontWeight: 800, color: 'var(--sim-primary-text)', opacity: 0.9, marginTop: '10px' }}>$</span>
                         <PriceInput
                             value={manualPrice !== null ? manualPrice : results.suggestedPrice}
                             onChange={setManualPrice}
                         />
-                        <Pencil size={24} style={{ opacity: 0.8, color: 'white', marginLeft: '4px', marginTop: '10px' }} />
+                        <Pencil size={24} style={{ opacity: 0.8, color: 'var(--sim-primary-text)', marginLeft: '4px', marginTop: '10px' }} />
                     </div>
                 </div>
 
                 {/* Sub-cards de métricas */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', width: '100%', marginTop: '16px' }}>
-                    <div style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '16px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '11px', fontWeight: 800, color: 'white', textTransform: 'uppercase', opacity: 0.8, fontFamily: 'var(--font-body)' }}>UTILIDAD / VENTA</span>
-                        <span style={{ fontSize: '20px', fontWeight: 950, color: '#10B981', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))', fontFamily: 'var(--font-headings)' }}>{formatCurrency(results.netProfitPerSale)}</span>
+                    <div style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'var(--bg-secondary)', padding: '16px', borderRadius: '20px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--sim-primary-text)', textTransform: 'uppercase', opacity: 0.8, fontFamily: 'var(--font-body)' }}>UTILIDAD / VENTA</span>
+                        <span style={{ fontSize: '20px', fontWeight: 950, color: 'var(--color-success)', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))', fontFamily: 'var(--font-headings)' }}>{formatCurrency(results.netProfitPerSale)}</span>
                     </div>
-                    <div style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '16px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '11px', fontWeight: 800, color: 'white', textTransform: 'uppercase', opacity: 0.8, fontFamily: 'var(--font-body)' }}>EFECTIVIDAD</span>
-                        <span style={{ fontSize: '22px', fontWeight: 950, color: 'white', fontFamily: 'var(--font-headings)' }}>{Math.round(100 - inputs.returnRatePercent - inputs.preCancellationPercent)}%</span>
+                    <div style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'var(--bg-secondary)', padding: '16px', borderRadius: '20px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--sim-primary-text)', textTransform: 'uppercase', opacity: 0.8, fontFamily: 'var(--font-body)' }}>EFECTIVIDAD</span>
+                        <span style={{ fontSize: '22px', fontWeight: 950, color: 'var(--sim-primary-text)', fontFamily: 'var(--font-headings)' }}>{Math.round(100 - inputs.returnRatePercent - inputs.preCancellationPercent)}%</span>
                     </div>
                 </div>
             </div>
@@ -358,6 +361,8 @@ function DailyOrdersInput({ value, onChange }: { value: number; onChange: (v: nu
 }
 
 function PriceInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const formatValue = (num: number) => {
         if (num === 0) return '';
         const parts = num.toFixed(2).split('.');
@@ -403,7 +408,7 @@ function PriceInput({ value, onChange }: { value: number; onChange: (v: number) 
             style={{
                 background: 'transparent',
                 border: 'none',
-                color: 'white',
+                color: isDark ? 'white' : 'var(--color-primary)',
                 fontSize: '62px',
                 fontWeight: 950,
                 outline: 'none',

@@ -264,6 +264,7 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
             case 'STORE': return { label: 'Tiendas', icon: ShoppingCart, color: '#10B981' };
             case 'COSTEO': return { label: 'Costeos', icon: Calculator, color: '#F59E0B' };
             case 'SUBSCRIPTION': return { label: 'Suscripciones', icon: CreditCard, color: '#8B5CF6' };
+            case 'CREDITS': return { label: 'DropCredits', icon: CreditCard, color: '#06B6D4' };
             case 'SYSTEM': return { label: 'Sistema', icon: Shield, color: '#6B7280' };
             default: return { label: entidad, icon: Layout, color: '#6B7280' };
         }
@@ -272,6 +273,7 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
     const getActionConfig = (action: AuditAction | string) => {
         if (action === 'LOGIN') return { label: 'Inicio de Sesión', icon: LogIn, color: '#3B82F6' };
         if (action === 'LOGOUT') return { label: 'Cierre de Sesión', icon: LogOut, color: '#6B7280' };
+        if (action === 'CREDITS_PURCHASED') return { label: 'Recarga de Créditos', icon: CreditCard, color: '#06B6D4' };
         if (action.includes('CREATE')) return { label: 'Nuevo Registro', icon: PlusCircle, color: '#10B981' };
         if (action.includes('UPDATE')) return { label: 'Actualización', icon: Edit, color: '#F59E0B' };
         if (action.includes('DELETE')) return { label: 'Eliminación', icon: Trash2, color: '#EF4444' };

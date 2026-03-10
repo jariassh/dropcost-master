@@ -10,6 +10,7 @@ import { configService, GlobalConfig } from '@/services/configService';
 import { CookieBanner } from '@/components/common/CookieBanner';
 import { CookiePreferencesModal } from '@/components/common/CookiePreferencesModal';
 import { useGeoCountry } from '@/hooks/useGeoCountry';
+import { ChatWidget } from '@/components/DropAssistant/ChatWidget';
 
 /**
  * LandingLayout: Layout para la página de ventas.
@@ -386,6 +387,7 @@ export function LandingLayout({ children }: { children?: React.ReactNode }) {
             `}</style>
             <CookieBanner />
             <CookiePreferencesModal />
+            <ChatWidget />
         </div>
     );
 }
