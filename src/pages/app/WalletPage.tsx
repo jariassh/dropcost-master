@@ -165,7 +165,7 @@ export const WalletPage: React.FC = () => {
             title="Billetera Premium"
             description="El sistema de comisiones y retiros es una funcionalidad exclusiva para planes superiores. ¡Mejora tu plan para empezar a ganar!"
         >
-            <div className="dc-wallet-container" style={{ display: 'flex', flexDirection: 'column', gap: '32px', padding: '20px 0 60px 0' }}>
+            <div className="dc-wallet-container" style={{ display: 'flex', flexDirection: 'column', gap: '32px', padding: '0 0 60px 0' }}>
                 <PageHeader
                     title="Mi"
                     highlight="Billetera"

@@ -20,6 +20,8 @@ const SincronizarPage = lazy(() => import('@/pages/app/SincronizarPage').then(m 
 const OfertasPage = lazy(() => import('@/pages/app/ofertas/OfertasPage').then(m => ({ default: m.OfertasPage })));
 const ContactosPage = lazy(() => import('@/pages/app/ContactosPage').then(m => ({ default: m.ContactosPage })));
 const LaunchpadPage = lazy(() => import('@/pages/app/LaunchpadPage').then(m => ({ default: m.LaunchpadPage })));
+const DropCreditsPage = lazy(() => import('@/pages/app/DropCreditsPage').then(m => ({ default: m.DropCreditsPage })));
+const BilleteraPage = lazy(() => import('@/pages/app/BilleteraPage').then(m => ({ default: m.BilleteraPage })));
 
 // Configuración
 const ConfiguracionPage = lazy(() => import('@/pages/app/ConfiguracionPage').then(m => ({ default: m.ConfiguracionPage })));
@@ -69,6 +71,8 @@ const PricingPage = lazy(() => import('@/pages/PricingPage').then(m => ({ defaul
 const TerminosPage = lazy(() => import('@/pages/legal/TerminosPage').then(m => ({ default: m.TerminosPage })));
 const PrivacidadPage = lazy(() => import('@/pages/legal/PrivacidadPage').then(m => ({ default: m.PrivacidadPage })));
 const CookiesPage = lazy(() => import('@/pages/legal/CookiesPage').then(m => ({ default: m.CookiesPage })));
+const SupportKBPage = lazy(() => import('@/pages/app/support/SupportKBPage').then(m => ({ default: m.SupportKBPage })));
+const AdminKnowledgeBase = lazy(() => import('@/pages/admin/AdminKnowledgeBase').then(m => ({ default: m.AdminKnowledgeBase })));
 
 function ChargingPage() {
     return (
@@ -167,10 +171,14 @@ export function AppRouter() {
                             <Route path="tiendas" element={<TiendasPage />} />
                         </Route>
                         <Route path="/referidos" element={<SubscriptionGuard><ReferidosPage /></SubscriptionGuard>} />
-                        <Route path="/billetera" element={<SubscriptionGuard><WalletPage /></SubscriptionGuard>} />
+                        <Route path="/billetera" element={<SubscriptionGuard><BilleteraPage /></SubscriptionGuard>}>
+                            <Route path="comisiones" element={<WalletPage />} />
+                            <Route path="dropcredits" element={<DropCreditsPage />} />
+                        </Route>
                         <Route path="/configuracion/tiendas/:id" element={<SubscriptionGuard><StoreManagementPage /></SubscriptionGuard>} />
                         <Route path="/historial" element={<UserAuditLogsPage />} />
                         <Route path="/payment/status" element={<PaymentStatusPage />} />
+                        <Route path="/soporte" element={<SupportKBPage />} />
                     </Route>
 
                     {/* Rutas de Administración (Independientes) */}
@@ -205,6 +213,7 @@ export function AppRouter() {
                         <Route path="marketing/list/:id" element={<SegmentBuilderPage />} />
                         <Route path="marketing/new-campaign" element={<CampaignWizardPage />} />
                         <Route path="marketing/:id" element={<CampaignDetailsPage />} />
+                        <Route path="knowledge-base" element={<AdminKnowledgeBase />} />
                     </Route>
 
                     {/* Rutas Públicas (sin layout, accesibles por cualquier persona) */}

@@ -27,7 +27,9 @@ import {
     Gift,
     Share2,
     Wallet,
+    CreditCard,
     Link2,
+    LifeBuoy,
     PieChart,
     GraduationCap,
     History as HistoryIcon,
@@ -47,6 +49,7 @@ import { configService } from '@/services/configService';
 import { subscriptionService } from '@/services/subscriptionService';
 import { useLaunchpadStore } from '@/store/useLaunchpadStore';
 import { Rocket, Target, CheckCircle2 } from 'lucide-react';
+import { ChatWidget } from '@/components/DropAssistant/ChatWidget';
 
 const SIDEBAR_OPEN = 240;
 const SIDEBAR_COLLAPSED = 72;
@@ -58,7 +61,15 @@ const navItems = [
     { to: '/ofertas', icon: Gift, label: 'Creador de Ofertas', active: true },
     { to: '/contactos', icon: Users, label: 'Contactos', active: true },
     { to: '/referidos', icon: Share2, label: 'Sistema de Referidos', active: true },
-    { to: '/billetera', icon: Wallet, label: 'Billetera / Wallet', active: true },
+    {
+        label: 'Mi Billetera',
+        icon: Wallet,
+        active: true,
+        children: [
+            { to: '/billetera/comisiones', label: 'Comisiones Referidos' },
+            { to: '/billetera/dropcredits', label: 'DropCredits' },
+        ]
+    },
     { to: '/sincronizar', icon: UploadCloud, label: 'Sincronizar Envíos', active: true },
 
     {
@@ -75,6 +86,7 @@ const navItems = [
     { to: '/analisis-regional', icon: Map, label: 'Análisis Regional', active: false },
     { to: '/capacitacion', icon: GraduationCap, label: 'Capacitación', active: false },
     { to: '/historial', icon: HistoryIcon, label: 'Historial Actividad', active: true },
+    { to: '/soporte', icon: LifeBuoy, label: 'Centro de Soporte', active: true },
 ];
 
 const adminLink = { to: '/admin', icon: ShieldAlert, label: 'Panel Administración' };
@@ -678,6 +690,7 @@ export function AppLayout() {
                     <Outlet />
                 </main>
             </div>
+            <ChatWidget />
         </div>
     );
 }
