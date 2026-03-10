@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { SimulatorInputs } from '@/types/simulator';
 import { Package, Truck, Megaphone, Info, Sparkles, ChevronDown } from 'lucide-react';
 
@@ -193,31 +193,25 @@ function InputField({ label, value, onChange, hint, suffix, tooltip }: { label: 
 
     // Sincronizar con cambios externos (e.g. reseteos o cambios en otros campos)
     useEffect(() => {
-        setDisplayValue(formatValue(value));
+        if (document.activeElement !== inputRef.current) {
+            setDisplayValue(formatValue(value));
+        }
     }, [value]);
 
+    const inputRef = useRef<HTMLInputElement>(null);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        let val = e.target.value;
+        const val = e.target.value.replace(/[^\d.,]/g, '');
+        setDisplayValue(val);
 
-        // Solo permitir dígitos, puntos y comas
-        val = val.replace(/[^\d.,]/g, '');
-
-        // Normalizar comas y puntos: tratamos ambos como decimales para ser flexibles
-        // pero mostramos punto como miles y coma como decimal
         const cleanVal = val.replace(/\./g, '').replace(',', '.');
         const numeric = parseFloat(cleanVal) || 0;
-
-        // Formateo visual inmediato
-        const parts = val.replace(/\./g, '').split(',');
-        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        const formatted = parts.length > 1 ? `${parts[0]},${parts[1].slice(0, 2)}` : parts[0];
-
-        setDisplayValue(formatted);
-        onChange(numeric);
+        if (!isNaN(numeric)) {
+            onChange(numeric);
+        }
     };
 
     const handleBlur = () => {
-        // Al salir, aseguramos los 2 decimales fijos si hay valor
         if (value > 0) {
             setDisplayValue(formatValue(value));
         } else {
@@ -235,6 +229,7 @@ function InputField({ label, value, onChange, hint, suffix, tooltip }: { label: 
             </div>
             <div style={{ position: 'relative' }}>
                 <input
+                    ref={inputRef}
                     type="text"
                     value={displayValue}
                     onChange={handleChange}

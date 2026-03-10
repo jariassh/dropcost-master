@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { SimulatorResults as Results, SimulatorInputs } from '@/types/simulator';
 import { TrendingUp, BarChart3, CheckCircle2, XCircle, AlertCircle, ShoppingBag, ShieldCheck, Pencil, RotateCcw, TrendingDown } from 'lucide-react';
 import { VerticalFunnel } from '../VerticalFunnel';
@@ -368,31 +368,38 @@ function PriceInput({ value, onChange }: { value: number; onChange: (v: number) 
     const [displayValue, setDisplayValue] = useState(formatValue(value));
 
     useEffect(() => {
-        setDisplayValue(formatValue(value));
+        // Solo actualizar si no estamos enfocados para no romper la escritura del usuario
+        if (document.activeElement !== inputRef.current) {
+            setDisplayValue(formatValue(value));
+        }
     }, [value]);
 
+    const inputRef = useRef<HTMLInputElement>(null);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        let val = e.target.value;
-        val = val.replace(/[^\d.,]/g, '');
+        const val = e.target.value.replace(/[^\d.,]/g, '');
+        setDisplayValue(val);
 
         const cleanVal = val.replace(/\./g, '').replace(',', '.');
         const numeric = parseFloat(cleanVal) || 0;
+        if (!isNaN(numeric)) {
+            onChange(numeric);
+        }
+    };
 
-        const parts = val.replace(/\./g, '').split(',');
-        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        const formatted = parts.length > 1 ? `${parts[0]},${parts[1].slice(0, 2)}` : parts[0];
-
-        setDisplayValue(formatted);
-        onChange(numeric);
+    const handleBlur = () => {
+        setDisplayValue(formatValue(value));
     };
 
     const inputWidth = `${Math.max(displayValue.length, 3) + 1}ch`;
 
     return (
         <input
+            ref={inputRef}
             type="text"
             value={displayValue}
             onChange={handleChange}
+            onBlur={handleBlur}
             style={{
                 background: 'transparent',
                 border: 'none',
