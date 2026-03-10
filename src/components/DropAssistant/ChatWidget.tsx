@@ -4,13 +4,14 @@ import {
     MessageCircle, Send, X, Bot, Sparkles, Minus,
     Settings, Shield, ChevronLeft, User, HelpCircle,
     BrainCircuit, AlertCircle, ChevronDown, Check,
-    Zap, Brain, Crown, CreditCard, Trash2, ShieldCheck, MessageSquare, Info, Filter, ArrowRight, Maximize2
+    Zap, Brain, Crown, CreditCard, Trash2, ShieldCheck, MessageSquare, Info, Filter, ArrowRight, Maximize2, Copy
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { RechargeModal } from './RechargeModal';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '@/hooks/useTheme';
 import { supabase } from '@/lib/supabase';
+import { SmartPhoneInput } from '@/components/common/SmartPhoneInput';
 
 // Páginas donde Drop Analyst (Mentoría) está disponible
 // Solo en contextos de análisis de negocio y números
@@ -20,6 +21,15 @@ const ANALYST_PAGES = [
     '/ofertas',         // Creador de ofertas
     '/configuracion/tiendas'  // Gestión de tienda (métricas por tienda)
 ];
+
+const PAGE_SUGGESTIONS: Record<string, string[]> = {
+    '/dashboard': ["¿Cómo interpreto mi ROAS Real?", "¿Por qué bajó mi utilidad hoy?"],
+    '/mis-costeos': ["¿Es viable este producto?", "Dame una estrategia de CPA", "¿Cómo mejoro mi margen?"],
+    '/ofertas': ["¿Qué bundle me recomiendas crear?", "¿Cómo aumento mi Ticket Promedio?"],
+    '/billetera': ["¿Cómo retiro mis comisiones?", "¿Cómo recargo DropCredits?"],
+    '/configuracion': ["¿Cómo activo el 2FA?", "¿Cómo gestiono mis tiendas?"],
+    'landing': ["¿Qué planes tienen?", "¿Cómo conecto mi tienda?", "¿Qué es DropCost Master?"],
+};
 
 /* --- Tipos --- */
 interface Message {
@@ -50,6 +60,24 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
         isAuthenticated ? 'chat' : 'contact'
     );
     const [selectedRole, setSelectedRole] = useState<'soporte' | 'mentoría'>(initialRole);
+    const [aceptaTerminos, setAceptaTerminos] = useState(false);
+    const [contact, setContact] = useState({ nombre: '', email: '', telefono: '', pais: '' });
+
+    const userName = useMemo(() => {
+        if (user?.nombres) return user.nombres.split(' ')[0];
+        if (contact.nombre) return contact.nombre.split(' ')[0];
+        return '';
+    }, [user, contact.nombre]);
+
+    // Determinar sugerencias actuales
+    const suggestions = useMemo(() => {
+        if (location.pathname === '/soporte') return [];
+        if (location.pathname === '/' || location.pathname === '') return PAGE_SUGGESTIONS['landing'];
+
+        // Buscar coincidencia parcial (ej: /mis-costeos/123 -> /mis-costeos)
+        const key = Object.keys(PAGE_SUGGESTIONS).find(k => location.pathname.startsWith(k));
+        return key ? PAGE_SUGGESTIONS[key] : [];
+    }, [location.pathname]);
 
     // Si el usuario navega a una página sin mentoría, forzar soporte
     useEffect(() => {
@@ -57,6 +85,16 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
             setSelectedRole('soporte');
         }
     }, [showMentorTab, selectedRole]);
+
+    // Listener para eventos globales de apertura (desde Wiki u otros componentes)
+    useEffect(() => {
+        const handleOpen = () => {
+            setIsOpen(true);
+            setIsMinimized(false);
+        };
+        window.addEventListener('open-drop-assistant', handleOpen);
+        return () => window.removeEventListener('open-drop-assistant', handleOpen);
+    }, []);
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
@@ -70,7 +108,6 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
     const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
     const [optIn, setOptIn] = useState(true);
     const [isContactFilled, setIsContactFilled] = useState(false);
-    const [contact, setContact] = useState({ nombre: '', email: '', telefono: '' });
 
     // Configuración de Mentoría (Estilo Gemini)
     const [researchDepth, setResearchDepth] = useState<'quick' | 'standard' | 'deep'>('standard');
@@ -130,14 +167,15 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
         }
     };
 
-    const handleSendMessage = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!inputValue.trim() || isTyping) return;
+    const handleSendMessage = async (e?: React.FormEvent, overrideText?: string) => {
+        if (e) e.preventDefault();
+        const textToSend = overrideText || inputValue;
+        if (!textToSend.trim() || isTyping) return;
 
         const userMsg: Message = {
             id: Date.now().toString(),
             role: 'user',
-            content: inputValue,
+            content: textToSend,
             timestamp: new Date()
         };
 
@@ -162,7 +200,8 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                     roleSelected: selectedRole,
                     depth: selectedRole === 'mentoría' ? researchDepth : 'standard',
                     threadId: currentThreadId,
-                    contactInfo: !isAuthenticated ? contact : null,
+                    contactData: !isAuthenticated ? { ...contact, acepta_terminos: aceptaTerminos } : null,
+                    isAnonymous: !isAuthenticated,
                     context: {
                         page: window.location.pathname,
                         is_demo: !isAuthenticated
@@ -309,7 +348,7 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                         style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: '4px' }}
                         title={isMinimized ? "Expandir" : "Minimizar"}
                     >
-                        {isMinimized ? <Maximize2 size={16} /> : <Minus size={18} />}
+                        {isMinimized ? <Copy size={16} /> : <Minus size={18} />}
                     </button>
                     {!isMinimized && (
                         <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: '4px' }}>
@@ -431,36 +470,147 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                             ref={scrollRef}
                             style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'var(--bg-primary)' }}
                         >
-                            {messages.map((msg) => (
-                                <div
-                                    key={msg.id}
-                                    style={{
-                                        alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                                        maxWidth: '85%',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '4px',
-                                        animation: 'assistantFadeIn 0.3s ease-out'
-                                    }}
-                                >
-                                    <div style={{
-                                        padding: '12px 16px',
-                                        borderRadius: msg.role === 'user' ? '18px 18px 2px 18px' : '18px 18px 18px 2px',
-                                        backgroundColor: msg.role === 'user' ? '#6366F1' : 'var(--card-bg)',
-                                        color: msg.role === 'user' ? 'white' : 'var(--text-primary)',
-                                        border: msg.role === 'user' ? 'none' : '1px solid var(--border-color)',
-                                        fontSize: '14px',
-                                        lineHeight: '1.5',
-                                        boxShadow: msg.role === 'assistant' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
-                                        whiteSpace: 'pre-wrap'
-                                    }}>
-                                        {msg.content}
+                            {messages.length > 1 ? (
+                                messages.map((msg) => (
+                                    <div
+                                        key={msg.id}
+                                        style={{
+                                            alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                                            maxWidth: '85%',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '4px',
+                                            animation: 'assistantFadeIn 0.3s ease-out'
+                                        }}
+                                    >
+                                        <div style={{
+                                            padding: '12px 16px',
+                                            borderRadius: msg.role === 'user' ? '18px 18px 2px 18px' : '18px 18px 18px 2px',
+                                            backgroundColor: msg.role === 'user' ? '#6366F1' : 'var(--card-bg)',
+                                            color: msg.role === 'user' ? 'white' : 'var(--text-primary)',
+                                            border: msg.role === 'user' ? 'none' : '1px solid var(--border-color)',
+                                            fontSize: '14px',
+                                            lineHeight: '1.5',
+                                            boxShadow: msg.role === 'assistant' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+                                            whiteSpace: 'pre-wrap'
+                                        }}>
+                                            {msg.content}
+                                        </div>
+                                        <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                                            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
                                     </div>
-                                    <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                                        {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
+                                ))
+                            ) : (
+                                <div style={{
+                                    flex: 1,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    textAlign: 'center',
+                                    padding: '20px',
+                                    gap: '16px',
+                                    animation: 'assistantFadeIn 0.5s ease-out'
+                                }}>
+                                    <div style={{
+                                        width: '80px', height: '80px', borderRadius: '24px',
+                                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        color: '#6366F1', marginBottom: '8px'
+                                    }}>
+                                        {selectedRole === 'mentoría' ? <Brain size={40} /> : <Sparkles size={40} />}
+                                    </div>
+                                    <h2 style={{ fontSize: '24px', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                                        {selectedRole === 'mentoría' ? '¿Qué analizamos hoy?' : `¿En qué puedo ayudarte${userName ? `, ${userName}` : ''}?`}
+                                    </h2>
+                                    <p style={{ color: 'var(--text-tertiary)', fontSize: '14px', maxWidth: '300px', margin: 0, lineHeight: '1.5' }}>
+                                        {selectedRole === 'mentoría'
+                                            ? 'Soy tu mentor experto. Analizaré la viabilidad de tu producto y optimizaré tu rentabilidad.'
+                                            : 'Tu asistente Drop assistant 24/7. Resuelvo tus dudas sobre la plataforma y logística en segundos.'}
+                                    </p>
+
+                                    {suggestions.length > 0 && (
+                                        <div style={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '10px',
+                                            width: '100%',
+                                            marginTop: '12px'
+                                        }}>
+                                            {suggestions.map((s, si) => (
+                                                <button
+                                                    key={si}
+                                                    onClick={() => handleSendMessage(undefined, s)}
+                                                    style={{
+                                                        padding: '14px 20px',
+                                                        borderRadius: '16px',
+                                                        backgroundColor: 'var(--bg-secondary)',
+                                                        border: '1px solid var(--border-color)',
+                                                        color: 'var(--text-primary)',
+                                                        fontSize: '14px',
+                                                        fontWeight: 600,
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s',
+                                                        textAlign: 'center',
+                                                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
+                                                        e.currentTarget.style.borderColor = '#6366F1';
+                                                        e.currentTarget.style.color = '#6366F1';
+                                                        e.currentTarget.style.transform = 'translateY(-2px)';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                                                        e.currentTarget.style.borderColor = 'var(--border-color)';
+                                                        e.currentTarget.style.color = 'var(--text-primary)';
+                                                        e.currentTarget.style.transform = 'translateY(0)';
+                                                    }}
+                                                >
+                                                    {s}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-                            ))}
+                            )}
+
+                            {/* Sugerencias Dinámicas (Solo después de interactuar) */}
+                            {messages.length > 1 && !isTyping && messages[messages.length - 1]?.role === 'assistant' && suggestions.length > 0 && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', animation: 'assistantFadeIn 0.5s ease-out' }}>
+                                    {suggestions.map((s, si) => (
+                                        <button
+                                            key={si}
+                                            onClick={() => handleSendMessage(undefined, s)}
+                                            style={{
+                                                padding: '8px 16px',
+                                                borderRadius: '12px',
+                                                backgroundColor: 'var(--bg-secondary)',
+                                                border: '1px solid var(--border-color)',
+                                                color: 'var(--text-primary)',
+                                                fontSize: '12px',
+                                                fontWeight: 500,
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s',
+                                                textAlign: 'left'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
+                                                e.currentTarget.style.borderColor = '#6366F1';
+                                                e.currentTarget.style.color = '#6366F1';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                                                e.currentTarget.style.borderColor = 'var(--border-color)';
+                                                e.currentTarget.style.color = 'var(--text-primary)';
+                                            }}
+                                        >
+                                            {s}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
 
                             {isTyping && (
                                 <div style={{ alignSelf: 'flex-start', display: 'flex', gap: '6px', padding: '12px 20px', backgroundColor: 'var(--bg-secondary)', borderRadius: '18px 18px 18px 2px' }}>
@@ -483,7 +633,7 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                                 <User size={32} />
                             </div>
                             <h3 style={{ margin: '0 0 8px 0', fontSize: '20px', fontWeight: 800 }}>Dinos quién eres</h3>
-                            <p style={{ margin: '0 0 24px 0', color: 'var(--text-tertiary)', fontSize: '14px' }}>Completa tus datos para que un mentor pueda contactarte si es necesario.</p>
+                            <p style={{ margin: '0 0 24px 0', color: 'var(--text-tertiary)', fontSize: '14px' }}>Completa tus datos para que nuestro equipo pueda contactarte si es necesario.</p>
 
                             <form
                                 onSubmit={(e) => { e.preventDefault(); setIsContactFilled(true); setView('chat'); }}
@@ -492,18 +642,32 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                                 <input
                                     type="text" placeholder="Nombre completo" required
                                     value={contact.nombre} onChange={(e) => setContact({ ...contact, nombre: e.target.value })}
-                                    style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', outline: 'none' }}
+                                    style={{ padding: '12px 16px', borderRadius: '12px', border: '1.5px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', outline: 'none', transition: 'border-color 0.2s' }}
                                 />
                                 <input
                                     type="email" placeholder="Correo electrónico" required
                                     value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })}
-                                    style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', outline: 'none' }}
+                                    style={{ padding: '12px 16px', borderRadius: '12px', border: '1.5px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', outline: 'none', transition: 'border-color 0.2s' }}
                                 />
-                                <input
-                                    type="tel" placeholder="Teléfono" required
-                                    value={contact.telefono} onChange={(e) => setContact({ ...contact, telefono: e.target.value })}
-                                    style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', outline: 'none' }}
-                                />
+                                <div style={{ textAlign: 'left' }}>
+                                    <SmartPhoneInput
+                                        value={contact.telefono}
+                                        onChange={(fullValue, iso) => setContact({ ...contact, telefono: fullValue, pais: iso })}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', textAlign: 'left', marginTop: '4px' }}>
+                                    <input
+                                        type="checkbox"
+                                        required
+                                        id="terminos-chat"
+                                        checked={aceptaTerminos}
+                                        onChange={(e) => setAceptaTerminos(e.target.checked)}
+                                        style={{ marginTop: '4px', cursor: 'pointer', accentColor: '#6366F1' }}
+                                    />
+                                    <label htmlFor="terminos-chat" style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4', cursor: 'pointer' }}>
+                                        Acepto los <a href="/terminos" target="_blank" style={{ color: '#6366F1', textDecoration: 'none' }}>Términos y Condiciones</a> y la <a href="/privacidad" target="_blank" style={{ color: '#6366F1', textDecoration: 'none' }}>Política de Privacidad</a> para la protección de mis datos.
+                                    </label>
+                                </div>
                                 <button type="submit" style={{ marginTop: '12px', padding: '14px', borderRadius: '12px', backgroundColor: '#6366F1', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.2)' }}>
                                     Empezar a Chatear
                                 </button>
