@@ -38,7 +38,7 @@ export function SlideOver({
     if (!isVisible) return null;
 
     return (
-        <div className="fixed inset-0 z-50 overflow-hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-[999] overflow-hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
             <div className="absolute inset-0 overflow-hidden">
                 {/* Background overlay */}
                 <div

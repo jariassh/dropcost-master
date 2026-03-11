@@ -22,13 +22,28 @@ const ANALYST_PAGES = [
     '/configuracion/tiendas'  // Gestión de tienda (métricas por tienda)
 ];
 
-const PAGE_SUGGESTIONS: Record<string, string[]> = {
-    '/dashboard': ["¿Cómo interpreto mi ROAS Real?", "¿Por qué bajó mi utilidad hoy?"],
-    '/mis-costeos': ["¿Es viable este producto?", "Dame una estrategia de CPA", "¿Cómo mejoro mi margen?"],
-    '/ofertas': ["¿Qué bundle me recomiendas crear?", "¿Cómo aumento mi Ticket Promedio?"],
-    '/billetera': ["¿Cómo retiro mis comisiones?", "¿Cómo recargo DropCredits?"],
-    '/configuracion': ["¿Cómo activo el 2FA?", "¿Cómo gestiono mis tiendas?"],
-    'landing': ["¿Qué planes tienen?", "¿Cómo conecto mi tienda?", "¿Qué es DropCost Master?"],
+const PAGE_SUGGESTIONS: Record<string, { soporte: string[], mentoria?: string[] }> = {
+    '/dashboard': {
+        soporte: ["¿Cómo descargo mis reportes?", "¿Qué significa este gráfico?"],
+        mentoria: ["¿Cómo interpreto mi ROAS Real?", "¿Por qué bajó mi utilidad hoy?"]
+    },
+    '/mis-costeos': {
+        soporte: ["¿Cómo edito un costeo?", "¿Cómo elimino un registro?"],
+        mentoria: ["¿Es viable este producto?", "Dame una estrategia de CPA", "¿Cómo mejoro mi margen?"]
+    },
+    '/ofertas': {
+        soporte: ["¿Cómo activo una oferta?", "¿Cómo veo el historial?"],
+        mentoria: ["¿Qué bundle me recomiendas crear?", "¿Cómo aumento mi Ticket Promedio?"]
+    },
+    '/billetera': {
+        soporte: ["¿Cómo retiro mis comisiones?", "¿Cómo recargo DropCredits?"],
+    },
+    '/configuracion': {
+        soporte: ["¿Cómo activo el 2FA?", "¿Cómo gestiono mis tiendas?"],
+    },
+    'landing': {
+        soporte: ["¿Qué planes tienen?", "¿Cómo conecto mi tienda?", "¿Qué es DropCost Master?"],
+    },
 };
 
 /* --- Tipos --- */
@@ -69,15 +84,27 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
         return '';
     }, [user, contact.nombre]);
 
-    // Determinar sugerencias actuales
+    // Determinar sugerencias actuales basadas en página Y rol seleccionado
     const suggestions = useMemo(() => {
         if (location.pathname === '/soporte') return [];
-        if (location.pathname === '/' || location.pathname === '') return PAGE_SUGGESTIONS['landing'];
 
-        // Buscar coincidencia parcial (ej: /mis-costeos/123 -> /mis-costeos)
-        const key = Object.keys(PAGE_SUGGESTIONS).find(k => location.pathname.startsWith(k));
-        return key ? PAGE_SUGGESTIONS[key] : [];
-    }, [location.pathname]);
+        // Encontrar la clave de sugerencias actual
+        let currentKey = location.pathname === '/' || location.pathname === ''
+            ? 'landing'
+            : Object.keys(PAGE_SUGGESTIONS).find(k => location.pathname.startsWith(k));
+
+        if (!currentKey) return [];
+
+        const pageData = PAGE_SUGGESTIONS[currentKey];
+
+        // Si el rol es mentoría y hay sugerencias específicas de mentoría, usarlas
+        if (selectedRole === 'mentoría' && pageData.mentoria) {
+            return pageData.mentoria;
+        }
+
+        // Por defecto (o si no hay versión de mentoría), usar soporte
+        return pageData.soporte || [];
+    }, [location.pathname, selectedRole]);
 
     // Si el usuario navega a una página sin mentoría, forzar soporte
     useEffect(() => {
@@ -139,13 +166,26 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
     useEffect(() => {
         if (user) {
             setOptIn(user.ai_learning_opt_in ?? true);
-            // Cargar créditos IA desde user_credits (NO wallet_saldo)
             refreshCredits();
             setView('chat');
         } else {
             setView('contact');
         }
     }, [user]);
+
+    // Personalizar saludo inicial cuando el nombre esté disponible
+    useEffect(() => {
+        if (userName && messages.length === 1 && messages[0].id === '1') {
+            setMessages([
+                {
+                    id: '1',
+                    role: 'assistant',
+                    content: `¡Hola${userName ? ` ${userName}` : ''}! Soy tu asistente de DropCost. ¿En qué puedo ayudarte hoy?`,
+                    timestamp: new Date()
+                }
+            ]);
+        }
+    }, [userName]);
 
     // Leer créditos IA desde tabla dedicada (user_credits)
     const refreshCredits = async () => {
@@ -160,10 +200,26 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
 
     /* --- Manejadores --- */
     const handleToggleOptIn = async () => {
+        if (!user) return;
         const newVal = !optIn;
+        const now = new Date().toISOString();
+
         setOptIn(newVal);
-        if (user) {
+
+        try {
+            // 1. Actualizar perfil básico
             await supabase.from('users').update({ ai_learning_opt_in: newVal }).eq('id', user.id);
+
+            // 2. Upsert en tabla de preferencias detallada
+            await supabase.from('user_sharing_preferences').upsert({
+                usuario_id: user.id,
+                compartir_anonimo: newVal,
+                fecha_opt_in: newVal ? now : null,
+                updated_at: now
+            }, { onConflict: 'usuario_id' });
+
+        } catch (error) {
+            console.error("Error al actualizar preferencias de IA:", error);
         }
     };
 
@@ -193,7 +249,7 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session?.access_token}`
+                    ...(session?.access_token ? { 'Authorization': `Bearer ${session?.access_token}` } : {})
                 },
                 body: JSON.stringify({
                     message: userMsg.content,
@@ -286,7 +342,7 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
         <div style={{
             position: 'fixed', bottom: '24px', right: '24px',
             width: isMinimized ? '260px' : '400px',
-            height: isMinimized ? '56px' : '650px',
+            height: isMinimized ? '56px' : '700px',
             maxWidth: 'calc(100vw - 48px)',
             maxHeight: 'calc(100vh - 48px)',
             backgroundColor: 'var(--card-bg)',
@@ -514,17 +570,17 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                                     animation: 'assistantFadeIn 0.5s ease-out'
                                 }}>
                                     <div style={{
-                                        width: '80px', height: '80px', borderRadius: '24px',
+                                        width: '64px', height: '64px', borderRadius: '20px',
                                         backgroundColor: 'rgba(99, 102, 241, 0.1)',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        color: '#6366F1', marginBottom: '8px'
+                                        color: '#6366F1', marginBottom: '4px'
                                     }}>
-                                        {selectedRole === 'mentoría' ? <Brain size={40} /> : <Sparkles size={40} />}
+                                        {selectedRole === 'mentoría' ? <Brain size={32} /> : <Sparkles size={32} />}
                                     </div>
-                                    <h2 style={{ fontSize: '24px', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                                    <h2 style={{ fontSize: '22px', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
                                         {selectedRole === 'mentoría' ? '¿Qué analizamos hoy?' : `¿En qué puedo ayudarte${userName ? `, ${userName}` : ''}?`}
                                     </h2>
-                                    <p style={{ color: 'var(--text-tertiary)', fontSize: '14px', maxWidth: '300px', margin: 0, lineHeight: '1.5' }}>
+                                    <p style={{ color: 'var(--text-tertiary)', fontSize: '13px', maxWidth: '300px', margin: 0, lineHeight: '1.4' }}>
                                         {selectedRole === 'mentoría'
                                             ? 'Soy tu mentor experto. Analizaré la viabilidad de tu producto y optimizaré tu rentabilidad.'
                                             : 'Tu asistente Drop assistant 24/7. Resuelvo tus dudas sobre la plataforma y logística en segundos.'}
@@ -534,9 +590,9 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                                         <div style={{
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            gap: '10px',
+                                            gap: '8px',
                                             width: '100%',
-                                            marginTop: '12px'
+                                            marginTop: '8px'
                                         }}>
                                             {suggestions.map((s, si) => (
                                                 <button
@@ -573,42 +629,6 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                                             ))}
                                         </div>
                                     )}
-                                </div>
-                            )}
-
-                            {/* Sugerencias Dinámicas (Solo después de interactuar) */}
-                            {messages.length > 1 && !isTyping && messages[messages.length - 1]?.role === 'assistant' && suggestions.length > 0 && (
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', animation: 'assistantFadeIn 0.5s ease-out' }}>
-                                    {suggestions.map((s, si) => (
-                                        <button
-                                            key={si}
-                                            onClick={() => handleSendMessage(undefined, s)}
-                                            style={{
-                                                padding: '8px 16px',
-                                                borderRadius: '12px',
-                                                backgroundColor: 'var(--bg-secondary)',
-                                                border: '1px solid var(--border-color)',
-                                                color: 'var(--text-primary)',
-                                                fontSize: '12px',
-                                                fontWeight: 500,
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s',
-                                                textAlign: 'left'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
-                                                e.currentTarget.style.borderColor = '#6366F1';
-                                                e.currentTarget.style.color = '#6366F1';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
-                                                e.currentTarget.style.borderColor = 'var(--border-color)';
-                                                e.currentTarget.style.color = 'var(--text-primary)';
-                                            }}
-                                        >
-                                            {s}
-                                        </button>
-                                    ))}
                                 </div>
                             )}
 

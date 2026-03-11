@@ -48,9 +48,9 @@ export const LeadList: React.FC = () => {
     };
 
     const filteredLeads = leads.filter(l =>
-        l.nombre.toLowerCase().includes(search.toLowerCase()) ||
-        l.email.toLowerCase().includes(search.toLowerCase()) ||
-        l.telefono.includes(search)
+        (l.nombre || '').toLowerCase().includes(search.toLowerCase()) ||
+        (l.email || '').toLowerCase().includes(search.toLowerCase()) ||
+        (l.telefono || '').includes(search)
     );
 
     const handleDelete = async (e: React.MouseEvent, id: string) => {
@@ -96,7 +96,7 @@ export const LeadList: React.FC = () => {
             </div>
 
             {/* List Table */}
-            <Card padding="0">
+            <Card noPadding>
                 <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
                     <div style={{ position: 'relative', maxWidth: '450px', width: '100%' }}>
                         <Search style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} size={18} />
@@ -116,10 +116,10 @@ export const LeadList: React.FC = () => {
                         />
                     </div>
                     <div style={{ display: 'flex', gap: '12px' }}>
-                        <Button variant="outline" icon={<RefreshCcw size={18} />} onClick={loadLeads} disabled={loading}>
-                            {loading ? 'Cargando...' : 'Actualizar'}
+                        <Button variant="secondary" leftIcon={<RefreshCcw size={18} />} onClick={loadLeads} isLoading={loading}>
+                            Actualizar
                         </Button>
-                        <Button variant="outline" icon={<Filter size={18} />}>Filtros</Button>
+                        <Button variant="secondary" leftIcon={<Filter size={18} />}>Filtros</Button>
                     </div>
                 </div>
 
@@ -138,7 +138,11 @@ export const LeadList: React.FC = () => {
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan={6} style={{ padding: '60px', textAlign: 'center' }}><Spinner /></td>
+                                    <td colSpan={6} style={{ padding: '60px', textAlign: 'center' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                            <Spinner />
+                                        </div>
+                                    </td>
                                 </tr>
                             ) : filteredLeads.length === 0 ? (
                                 <tr>
@@ -163,10 +167,10 @@ export const LeadList: React.FC = () => {
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 color: 'white', fontWeight: 700, fontSize: '16px'
                                             }}>
-                                                {lead.nombre.charAt(0)}
+                                                {(lead.nombre || 'U').charAt(0).toUpperCase()}
                                             </div>
                                             <div>
-                                                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{lead.nombre}</div>
+                                                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{lead.nombre || 'Sin nombre'}</div>
                                                 <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{lead.email}</div>
                                             </div>
                                         </div>
@@ -197,10 +201,10 @@ export const LeadList: React.FC = () => {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>
                                                 <Calendar size={14} style={{ color: 'var(--text-tertiary)' }} />
-                                                {new Date(lead.updated_at).toLocaleDateString()}
+                                                {lead.updated_at ? new Date(lead.updated_at).toLocaleDateString() : '-'}
                                             </div>
                                             <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', paddingLeft: '20px' }}>
-                                                {new Date(lead.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {lead.updated_at ? new Date(lead.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                                             </div>
                                         </div>
                                     </td>

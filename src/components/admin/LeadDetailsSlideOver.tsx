@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Bot, Calendar, MessageSquare, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { X, User, Bot, Calendar, MessageSquare, ChevronLeft, ChevronRight, Clock, Mail, Phone, Globe } from 'lucide-react';
 import { SlideOver, Card } from '../common';
 import { Lead } from '@/services/leadService';
 
@@ -72,44 +72,74 @@ export const LeadDetailsSlideOver: React.FC<LeadDetailsSlideOverProps> = ({ lead
             }}
             title={selectedSession ? `Chat - Sesión ${selectedSession.id}` : `Perfil de Lead: ${lead.nombre}`}
         >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
+            <div style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
 
                 {/* Cabecera del Lead */}
                 {!selectedSession && (
                     <div style={{
-                        padding: '20px',
+                        padding: '24px',
                         backgroundColor: 'var(--bg-secondary)',
-                        borderRadius: '16px',
+                        borderRadius: '20px',
                         border: '1px solid var(--border-color)',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '12px'
+                        gap: '20px',
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+                        position: 'relative',
+                        overflow: 'hidden'
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{
+                            position: 'absolute', top: 0, left: 0, right: 0, height: '4px',
+                            background: 'linear-gradient(90deg, #6366f1, #a855f7, #ec4899)'
+                        }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                             <div style={{
-                                width: '60px', height: '60px', borderRadius: '14px',
-                                background: 'linear-gradient(135deg, var(--color-primary), #6366f1)',
+                                width: '70px', height: '70px', borderRadius: '18px',
+                                background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: 'white', fontSize: '20px', fontWeight: 700
+                                color: 'white', fontSize: '28px', fontWeight: 800,
+                                boxShadow: '0 8px 16px rgba(99, 102, 241, 0.25)'
                             }}>
-                                {lead.nombre.charAt(0)}
+                                {(lead.nombre || 'U').charAt(0).toUpperCase()}
                             </div>
-                            <div>
-                                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>{lead.nombre}</h3>
-                                <p style={{ margin: '4px 0 0', fontSize: '14px', color: 'var(--text-tertiary)' }}>{lead.email}</p>
+                            <div style={{ flex: 1, overflow: 'hidden' }}>
+                                <h3 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{lead.nombre || 'Sin nombre'}</h3>
+                                <p style={{ margin: '6px 0 0', fontSize: '14px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <Mail size={14} /> <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{lead.email}</span>
+                                </p>
                             </div>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
-                            <div style={{ fontSize: '13px' }}>
-                                <span style={{ color: 'var(--text-tertiary)', display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Teléfono</span>
-                                <span style={{ fontWeight: 500 }}>{lead.telefono}</span>
+                        <div style={{ height: '1px', backgroundColor: 'var(--border-color)' }} />
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px' }}>
+                            <div style={{
+                                padding: '12px 16px', backgroundColor: 'var(--bg-primary)',
+                                borderRadius: '14px', border: '1px solid var(--border-color)',
+                                display: 'flex', alignItems: 'center', gap: '12px'
+                            }}>
+                                <div style={{ color: '#6366F1', padding: '8px', backgroundColor: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px' }}>
+                                    <Phone size={16} />
+                                </div>
+                                <div style={{ overflow: 'hidden' }}>
+                                    <span style={{ color: 'var(--text-tertiary)', display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Teléfono</span>
+                                    <span style={{ fontWeight: 600, fontSize: '14px', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', display: 'block' }}>{lead.telefono}</span>
+                                </div>
                             </div>
-                            <div style={{ fontSize: '13px' }}>
-                                <span style={{ color: 'var(--text-tertiary)', display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>País</span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    {lead.pais && <img src={`https://flagcdn.com/w40/${lead.pais.toLowerCase()}.png`} alt={lead.pais} style={{ width: '16px', height: '11px' }} />}
-                                    <span style={{ fontWeight: 500 }}>{lead.pais || 'N/A'}</span>
+                            <div style={{
+                                padding: '12px 16px', backgroundColor: 'var(--bg-primary)',
+                                borderRadius: '14px', border: '1px solid var(--border-color)',
+                                display: 'flex', alignItems: 'center', gap: '12px'
+                            }}>
+                                <div style={{ color: '#10B981', padding: '8px', backgroundColor: 'rgba(16, 185, 129, 0.1)', borderRadius: '10px' }}>
+                                    <Globe size={16} />
+                                </div>
+                                <div>
+                                    <span style={{ color: 'var(--text-tertiary)', display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Ubicación</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                        {lead.pais && <img src={`https://flagcdn.com/w40/${lead.pais.toLowerCase()}.png`} alt={lead.pais} style={{ width: '18px', height: '13px', borderRadius: '2px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }} />}
+                                        <span style={{ fontWeight: 600, fontSize: '14px' }}>{lead.pais || 'N/A'}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -183,15 +213,26 @@ export const LeadDetailsSlideOver: React.FC<LeadDetailsSlideOverProps> = ({ lead
                             </div>
                         </div>
                     ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <MessageSquare size={18} style={{ color: '#6366F1' }} />
-                                Historial de Sesiones ({sessions.length})
-                            </h4>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
+                            <div style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                borderBottom: '1px solid var(--border-color)', paddingBottom: '12px'
+                            }}>
+                                <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ padding: '6px', borderRadius: '8px', backgroundColor: 'rgba(99, 102, 241, 0.1)', color: '#6366F1' }}>
+                                        <MessageSquare size={16} />
+                                    </div>
+                                    Historial de Sesiones
+                                </h4>
+                                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)', backgroundColor: 'var(--bg-secondary)', padding: '2px 10px', borderRadius: '12px' }}>
+                                    {sessions.length} total
+                                </span>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 {sessions.length === 0 ? (
-                                    <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '14px' }}>
-                                        No hay conversaciones registradas.
+                                    <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '14px', backgroundColor: 'var(--bg-secondary)', borderRadius: '16px', border: '1px dashed var(--border-color)' }}>
+                                        No hay conversaciones registradas aún.
                                     </div>
                                 ) : (
                                     sessions.map((session) => (
@@ -199,35 +240,55 @@ export const LeadDetailsSlideOver: React.FC<LeadDetailsSlideOverProps> = ({ lead
                                             key={session.id}
                                             onClick={() => setSelectedSession(session)}
                                             style={{
-                                                padding: '16px',
-                                                backgroundColor: 'var(--bg-primary)',
-                                                borderRadius: '12px',
+                                                padding: '20px',
+                                                backgroundColor: 'var(--bg-secondary)',
+                                                borderRadius: '16px',
                                                 border: '1px solid var(--border-color)',
                                                 cursor: 'pointer',
-                                                transition: 'all 0.2s ease',
+                                                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                justifyContent: 'space-between'
+                                                justifyContent: 'space-between',
+                                                position: 'relative',
+                                                overflow: 'hidden'
                                             }}
-                                            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#6366F1'}
-                                            onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.borderColor = '#6366F1';
+                                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.08)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.borderColor = 'var(--border-color)';
+                                                e.currentTarget.style.transform = 'translateY(0)';
+                                                e.currentTarget.style.boxShadow = 'none';
+                                            }}
                                         >
-                                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                                <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(99, 102, 241, 0.1)', color: '#6366F1' }}>
-                                                    <Clock size={18} />
+                                            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                                                <div style={{
+                                                    width: '44px', height: '44px', borderRadius: '12px',
+                                                    backgroundColor: 'rgba(99, 102, 241, 0.1)', color: '#6366F1',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                }}>
+                                                    <MessageSquare size={20} />
                                                 </div>
-                                                <div>
-                                                    <div style={{ fontSize: '14px', fontWeight: 600 }}>Sesión #{session.id}</div>
-                                                    <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
-                                                        {new Date(session.startTime).toLocaleDateString()} • {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                    <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Sesión #{session.id}</div>
+                                                    <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        <Calendar size={12} /> {new Date(session.startTime).toLocaleDateString()}
+                                                        <span style={{ margin: '0 4px' }}>•</span>
+                                                        <Clock size={12} /> {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '10px', backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>
-                                                    {session.messages.length} msgs
-                                                </span>
-                                                <ChevronRight size={18} style={{ color: 'var(--text-tertiary)' }} />
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                                                    <span style={{ fontSize: '12px', fontWeight: 700, padding: '4px 10px', borderRadius: '12px', backgroundColor: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>
+                                                        {session.messages.length} msgs
+                                                    </span>
+                                                </div>
+                                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
+                                                    <ChevronRight size={16} style={{ color: '#6366F1' }} />
+                                                </div>
                                             </div>
                                         </div>
                                     ))

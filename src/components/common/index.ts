@@ -27,4 +27,5 @@ export { CodeEditor } from './CodeEditor';
 export { UnitInput } from './UnitInput';
 export { PageHeader } from './PageHeader';
 export { StatsCard } from './StatsCard';
+export { SlideOver } from './SlideOver';
 
