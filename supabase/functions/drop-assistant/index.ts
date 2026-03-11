@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { summarizeThread, getCollectiveInsights } from "./ollama-service.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,7 +9,7 @@ const corsHeaders = {
 };
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -33,10 +34,13 @@ serve(async (req) => {
     let userRole = 'cliente';
     let userId = null;
     let isAdmin = false;
+    let userRegistradoNombre = 'Usuario registrado';
 
     // 1. Auth & Identification
     if (!isAnonymous) {
-      const authHeader = req.headers.get("Authorization")!;
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) throw new Error("No autorizado: Falta token");
+      
       const supabaseClient = createClient(
         Deno.env.get("SUPABASE_URL") ?? "",
         Deno.env.get("SUPABASE_ANON_KEY") ?? "",
@@ -44,16 +48,17 @@ serve(async (req) => {
       );
       
       const { data: { user } } = await supabaseClient.auth.getUser();
-      if (!user) throw new Error("No autorizado");
+      if (!user) throw new Error("No autorizado: Token inválido");
       userId = user.id;
 
       const { data: userData } = await supabaseAdmin
         .from('users')
-        .select('rol, ai_learning_opt_in')
+        .select('rol, ai_learning_opt_in, nombres')
         .eq('id', userId)
         .single();
       
       userRole = userData?.rol ?? 'cliente';
+      userRegistradoNombre = userData?.nombres?.split(' ')[0] ?? 'Usuario registrado';
       isAdmin = (userRole === 'admin' || userRole === 'superadmin');
     }
 
@@ -116,6 +121,23 @@ serve(async (req) => {
       kbContext = kbEntries?.map(e => `### ${e.title}\n${e.content}`).join('\n\n') ?? "";
     }
 
+    // 5.5 Fetch Active Plans for SELLER context
+    let plansContext = "";
+    if (agentRole === 'SELLER') {
+      const { data: plansData } = await supabaseAdmin
+        .from('plans')
+        .select('name, price_monthly, description, features')
+        .eq('is_active', true)
+        .eq('is_public', true)
+        .order('price_monthly', { ascending: true });
+        
+      if (plansData && plansData.length > 0) {
+        plansContext = plansData.map(p => `- ${p.name} ($${p.price_monthly}/mes): ${p.description}`).join('\n');
+      } else {
+        plansContext = "- Starter ($10/mes)\n- Pro ($25/mes)\n- Enterprise ($40/mes)";
+      }
+    }
+
     // 6. Build System Prompt
     const ROLE_BOUNDARIES = agentRole === 'SUPPORT' 
       ? `
@@ -150,38 +172,34 @@ serve(async (req) => {
       `
       : agentRole === 'SELLER'
       ? `
-      ERES UN VENDEDOR (SELLER/SETTER):
-      - Estás en la Landing Page. Tu objetivo es convertir al visitante en un usuario registrado.
-      - Habla de las ventajas competitivas de DropCost, su precisión financiera y cómo evita que pierdan dinero.
-      - Sé persuasivo, cercano y profesional.
+      ERES UN SETTER EXPERTO (VENTA CONSULTIVA):
+      - Tu objetivo es descubrir el dolor del visitante y luego invitarlo a registrarse a DropCost para adquirir un plan.
+      - TIENES DOS FASES OBLIGATORIAS:
+        FASE 1 - DESCUBRIMIENTO (Máximo 2 preguntas):
+        * Escucha su situación.
+        * Haz preguntas cortas para encontrar su "punto de dolor" (pain point), ej: "¿Cómo calculas tus márgenes hoy?".
+        FASE 2 - PRESENTACIÓN Y CIERRE (Tan pronto conozcas su problema):
+        * Valida su problema: "Te entiendo, calcular en Excel es un dolor de cabeza."
+        * Presenta DropCost como la ÚNICA solución a SU problema: "Justamente DropCost Master te calcula esa utilidad real al centavo en segundos."
+        * Cierra invitándolo a registrarse y elegir su plan. **NUNCA digas que la herramienta es gratis para usar o probar.** El registro es gratis, pero el uso requiere plan.
+        * Ejemplo de cierre suave: "¿Te gustaría registrarte gratis para explorar nuestros planes y empezar a ser rentable hoy?".
+      - REGLAS ESTRICTAS: 
+        * NUNCA te quedes en un bucle infinito de preguntas. Si ya te dijo su problema, PASA A LA FASE 2.
+        * Usa datos reales sutilmente: "El 80% pierden dinero sin conocer su CPA real".
+        * NO mientas ofreciendo pruebas gratis ni "usarlo gratis". 
+      
+      - CONOCIMIENTO DE PLANES (Solo para persuadir si preguntan):
+      ${plansContext}
       `
       : '';
 
-    const SYSTEM_PROMPT = `
-      ${agentConfig?.prompt_personalidad ?? "Eres un asistente experto en dropshipping."}
-      
-      ${agentConfig?.prompt_objetivo_flujo ?? ""}
-      
-      ${agentConfig?.prompt_reglas ?? ""}
-      
-      ${ROLE_BOUNDARIES}
-      
-      ${kbContext ? `KNOWLEDGE BASE (PRIVATE INFORMATION):\n${kbContext}` : ""}
-      
-      ### REGLAS DE NEGOCIO Y SOPORTE:
-      1. **Identidad**: Eres Drop Assistant (Soporte gratuito 24/7). Ayudas con funciones de la plataforma.
-      2. **Mentoría**: No das mentoría ni análisis financiero profundo. Esa labor es de **Drop Analyst** 🧠 (tu mentor aliado).
-      3. **Créditos**: Drop Analyst consume **DropCredits**. El costo es de **$0.05 USD por crédito**, recarga mínima de **$5 USD (100 créditos)** vía Mercado Pago.
-      4. **Comisiones**: Los referidos generan comisiones que se acumulan en la Wallet. **SOLO se pueden retirar** (desde $50 USD), NO se pueden convertir en créditos. Pagos los viernes.
-      5. **Confidencialidad**: Prohibido revelar la matemática exacta del motor de costeo. Habla de "Propiedad Intelectual Protegida".
-      6. **Uso de Wiki**: Deriva a guías específicas: "La Ciencia del Costeo Real", "Dominando la Gestión de Costeos", "Dashboard Operacional y KPIs", "Conectando Shopify", "Estrategias de Ofertas", "Sistema de Referidos", "Logística con Dropi".
-      
-      - Identificando al usuario: ${isAnonymous ? (contactData?.nombre || 'Visitante') : 'Usuario registrado'}
-      ${costeoData ? `- Datos del simulador actual: ${JSON.stringify(costeoData)}` : ""}
-    `;
+    // Se eliminó la declaración temprana de SYSTEM_PROMPT para evitar el SyntaxError: Identifier 'SYSTEM_PROMPT' has already been declared.
 
     // 7. Load Conversation History
     let history = [];
+    let ollamaSummary = "";
+    let communalInsight = null;
+
     if (!isAnonymous && threadId) {
       const { data: messages } = await supabaseAdmin
         .from('conversation_messages')
@@ -189,28 +207,125 @@ serve(async (req) => {
         .eq('thread_id', threadId)
         .order('created_at', { ascending: true });
       history = messages || [];
+
+      // Ahorro de Tokens: Si el hilo es largo (>10 msgs), resumimos con Ollama
+      if (history.length > 5) {
+        ollamaSummary = await summarizeThread(supabaseAdmin, history, userId) || "";
+      }
+    } else if (isAnonymous && contactData?.email) {
+      // Cargar historial de leads (anónimos) desde consultas_anonimas
+      const { data: leadData } = await supabaseAdmin
+        .from('consultas_anonimas')
+        .select('conversacion')
+        .eq('email', contactData.email)
+        .maybeSingle();
+      
+      if (leadData?.conversacion && Array.isArray(leadData.conversacion)) {
+        history = leadData.conversacion;
+      }
     }
 
-    // 8. Call Gemini
-    const contents = [
-      ...history.map((m: any) => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }]
-      })),
-      { role: "user", parts: [{ text: message }] }
-    ];
+    // 8. Aprendizaje Colectivo (Paso B: Enriquecimiento)
+    // Buscamos benchmarks si el usuario tiene opt-in o es anónimo (landing)
+    if (agentRole === 'MENTOR' && costeoData?.niche) {
+      communalInsight = await getCollectiveInsights(
+        supabaseAdmin, 
+        costeoData.niche, 
+        costeoData.pais || 'CO', 
+        costeoData.tipo || 'viabilidad'
+      );
+    }
+
+    // 9. Build Hybrid System Prompt
+    const SYSTEM_PROMPT = `
+      ${agentConfig?.prompt_personalidad ?? "Eres un asistente experto en dropshipping."}
+      ${agentConfig?.prompt_objetivo_flujo ?? ""}
+      ${agentConfig?.prompt_reglas ?? ""}
+      
+      ${ROLE_BOUNDARIES}
+      
+      ${kbContext ? `KNOWLEDGE BASE (PRIVATE INFORMATION):\n${kbContext}` : ""}
+      
+      ${ollamaSummary ? `### RESUMEN CONTEXTO PREVIO (CONCISO):\n${ollamaSummary}` : ""}
+      
+      ${communalInsight ? `### BENCHMARKS COLECTIVOS (CASOS DE ÉXITO):\nNicho: ${costeoData.niche}\nCPA Promedio: $${communalInsight.cpa_promedio}\nMargen Sugerido: ${communalInsight.margen_promedio}%\nInsight: ${communalInsight.resumen_exito}` : ""}
+
+      ### REGLAS DE NEGOCIO Y SOPORTE:
+      1. **Identidad**: Eres Drop Assistant (Soporte gratuito 24/7). Si asumes el rol de Drop Analyst (Mentor), ayudas con el negocio.
+      2. **Estilo de Comunicación (CRÍTICO)**: Responde con ESTILO WHATSAPP. Muy corto, fluido, directo al grano. NO des introducciones largas. Máximo 40-60 palabras. Siéntete como un amigo charlando por chat.
+      3. **Contexto DropCost**: Somos DropCost Master, un SaaS financiero y operacional para dropshippers. Ofrecemos costeos precisos que muestran la utilidad real (descontando devoluciones, fletes, etc). 
+      4. **Créditos**: El "Drop Analyst" (Mentoría AI profunda) consume DropCredits.
+      5. **Confidencialidad**: No reveles formulas matemáticas exactas.
+      6. **Efectividad**: Responde de forma precisa basándote en el resumen previo. No inventes características. Si no sabes, deriva al equipo humano.
+      
+      ### MODO DE CONVERSACIÓN ACTUAL:
+      - Estás chateando en tiempo real con: ${isAnonymous ? (contactData?.nombre || 'Visitante') : userRegistradoNombre}
+      - Historial actual: ${history.length} mensajes previos.
+      - REGLA CRÍTICA DE SALUDO: ${history.length > 0 ? "ESTA ES UNA CHARLA EN CURSO. PROHIBIDO decir '¡Hola [Nombre]!' o saludar de nuevo. Continúa la charla directamente." : "Este es el primer mensaje, puedes saludar cordialmente una sola vez."}
+      ${costeoData ? `- Datos del simulador actual: ${JSON.stringify(costeoData)}` : ""}
+    `;
+
+    const finalUserMessage = message;
+    
+    // Función para garantizar roles estrictamente alternados para Gemini (user -> model -> user -> model ...)
+    const buildAlternatingHistory = (messages: any[]) => {
+      if (!messages || messages.length === 0) return [];
+      const alternated = [];
+      let currentRole = messages[0].role === 'assistant' ? 'model' : 'user';
+      let currentContent = messages[0].content || '';
+
+      for (let i = 1; i < messages.length; i++) {
+        const msgRole = messages[i].role === 'assistant' ? 'model' : 'user';
+        if (msgRole === currentRole) {
+          currentContent += `\n\n${messages[i].content}`;
+        } else {
+          alternated.push({ role: currentRole, parts: [{ text: currentContent }] });
+          currentRole = msgRole;
+          currentContent = messages[i].content || '';
+        }
+      }
+      alternated.push({ role: currentRole, parts: [{ text: currentContent }] });
+      return alternated;
+    };
+
+    let baseHistory = history;
+    if (ollamaSummary) {
+        baseHistory = [
+            { role: 'user', content: "Contexto previo resumido: " + ollamaSummary },
+            { role: 'assistant', content: "Entendido." },
+            ...history.slice(-3)
+        ];
+    }
+    
+    let processedContents = buildAlternatingHistory([...baseHistory, { role: 'user', content: finalUserMessage }]);
+    
+    // Si el primer mensaje es 'model', Gemini podría quejarse. Verificamos:
+    if (processedContents.length > 0 && processedContents[0].role === 'model') {
+        processedContents = [
+            { role: 'user', parts: [{ text: 'Iniciando conversación...' }] },
+            ...processedContents
+        ];
+    }
+    
+    const optimizedContents = processedContents;
 
     const geminiResponse = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents,
+        contents: optimizedContents,
         systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-        generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
+        generationConfig: { temperature: 0.5 }
       })
     });
 
     const data = await geminiResponse.json();
+    
+    if (!geminiResponse.ok) {
+        console.error("Gemini API Error:", data);
+        throw new Error(`Gemini API Error: ${data?.error?.message || "Unknown error"}`);
+    }
+
     const assistantContent = data.candidates?.[0]?.content?.parts?.[0]?.text || "No pude generar una respuesta.";
 
     // 9. Persistence
@@ -271,7 +386,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ 
-      content: assistantContent, 
+      reply: assistantContent, 
       threadId: isAnonymous ? null : threadId 
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
