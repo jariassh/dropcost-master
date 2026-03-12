@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, User, Bot, Calendar, MessageSquare, ChevronLeft, ChevronRight, Clock, Mail, Phone, Globe } from 'lucide-react';
+import { X, User, Bot, Calendar, MessageSquare, ChevronLeft, ChevronRight, Clock, Mail, Phone, Globe, Zap } from 'lucide-react';
 import { SlideOver, Card } from '../common';
 import { Lead } from '@/services/leadService';
+import { AIStatsDropdown } from './AIStatsDropdown';
 
 interface LeadDetailsSlideOverProps {
     lead: Lead | null;
@@ -190,19 +191,27 @@ export const LeadDetailsSlideOver: React.FC<LeadDetailsSlideOverProps> = ({ lead
                                             fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600
                                         }}>
                                             {msg.role === 'user' ? <User size={12} /> : <Bot size={12} />}
-                                            {msg.role === 'user' ? 'Visitante' : 'Drop Assistant'}
+                                            {msg.role === 'user' ? (lead.nombre || 'Visitante') : 'Drop Assistant'}
                                         </div>
                                         <div style={{
                                             padding: '12px 16px',
-                                            borderRadius: msg.role === 'user' ? '18px 18px 2px 18px' : '18px 18px 18px 2px',
+                                            borderRadius: msg.role === 'user' 
+                                                ? '18px 18px 2px 18px' 
+                                                : (msg.ai_stats ? '18px 18px 0 0' : '18px 18px 18px 2px'),
                                             backgroundColor: msg.role === 'user' ? 'rgba(99, 102, 241, 0.1)' : 'var(--card-bg)',
                                             color: 'var(--text-primary)',
                                             border: '1px solid ' + (msg.role === 'user' ? 'rgba(99, 102, 241, 0.2)' : 'var(--border-color)'),
+                                            borderBottom: msg.ai_stats ? 'none' : undefined,
                                             fontSize: '14px',
                                             lineHeight: '1.5'
                                         }}>
                                             {msg.content}
                                         </div>
+                                        {msg.ai_stats ? (
+                                            <AIStatsDropdown stats={msg.ai_stats} />
+                                        ) : (
+                                            msg.role === 'assistant' && <div style={{fontSize: '9px', opacity: 0.5}}>(Sin datos de consumo)</div>
+                                        )}
                                         {msg.timestamp && (
                                             <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textAlign: msg.role === 'user' ? 'right' : 'left' }}>
                                                 {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -235,20 +244,38 @@ export const LeadDetailsSlideOver: React.FC<LeadDetailsSlideOverProps> = ({ lead
                                         No hay conversaciones registradas aún.
                                     </div>
                                 ) : (
-                                    sessions.map((session) => (
+                                    sessions.map((session) => {
+                                        // Calcular tokens acumulados de la sesión
+                                        const sessionStats = session.messages.reduce((acc: any, msg: any) => {
+                                            if (msg.ai_stats) {
+                                                const g = msg.ai_stats.gemini || {};
+                                                const o = msg.ai_stats.ollama || {};
+                                                acc.geminiIn += (g.in ?? 0);
+                                                acc.geminiOut += (g.out ?? 0);
+                                                acc.geminiTotal += (g.total ?? 0);
+                                                acc.ollamaIn += (o.in ?? 0);
+                                                acc.ollamaOut += (o.out ?? 0);
+                                                acc.ollamaTotal += (o.total ?? 0);
+                                                acc.hasEstimated = acc.hasEstimated || msg.ai_stats.estimated;
+                                                if (msg.ai_stats.model) acc.model = msg.ai_stats.model;
+                                            }
+                                            return acc;
+                                        }, { geminiIn: 0, geminiOut: 0, geminiTotal: 0, ollamaIn: 0, ollamaOut: 0, ollamaTotal: 0, hasEstimated: false, model: 'IA' });
+
+                                        return (
                                         <div
                                             key={session.id}
                                             onClick={() => setSelectedSession(session)}
                                             style={{
-                                                padding: '20px',
+                                                padding: '16px 20px',
                                                 backgroundColor: 'var(--bg-secondary)',
                                                 borderRadius: '16px',
                                                 border: '1px solid var(--border-color)',
                                                 cursor: 'pointer',
                                                 transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                                                 display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
+                                                flexDirection: 'column',
+                                                gap: '12px',
                                                 position: 'relative',
                                                 overflow: 'hidden'
                                             }}
@@ -263,35 +290,61 @@ export const LeadDetailsSlideOver: React.FC<LeadDetailsSlideOverProps> = ({ lead
                                                 e.currentTarget.style.boxShadow = 'none';
                                             }}
                                         >
-                                            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                                                <div style={{
-                                                    width: '44px', height: '44px', borderRadius: '12px',
-                                                    backgroundColor: 'rgba(99, 102, 241, 0.1)', color: '#6366F1',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                                }}>
-                                                    <MessageSquare size={20} />
-                                                </div>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                    <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Sesión #{session.id}</div>
-                                                    <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                        <Calendar size={12} /> {new Date(session.startTime).toLocaleDateString()}
-                                                        <span style={{ margin: '0 4px' }}>•</span>
-                                                        <Clock size={12} /> {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {/* Fila 1: Info sesión */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                                                    <div style={{
+                                                        width: '44px', height: '44px', borderRadius: '12px',
+                                                        backgroundColor: 'rgba(99, 102, 241, 0.1)', color: '#6366F1',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                    }}>
+                                                        <MessageSquare size={20} />
+                                                    </div>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                        <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Sesión #{session.id}</div>
+                                                        <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                            <Calendar size={12} /> {new Date(session.startTime).toLocaleDateString()}
+                                                            <span style={{ margin: '0 4px' }}>•</span>
+                                                            <Clock size={12} /> {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 700, padding: '4px 10px', borderRadius: '12px', backgroundColor: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>
                                                         {session.messages.length} msgs
                                                     </span>
+                                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
+                                                        <ChevronRight size={16} style={{ color: '#6366F1' }} />
+                                                    </div>
                                                 </div>
-                                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
-                                                    <ChevronRight size={16} style={{ color: '#6366F1' }} />
+                                            </div>
+
+                                            {/* Fila 2: Desglose de tokens */}
+                                            <div style={{
+                                                borderTop: '1px solid var(--border-color)',
+                                                paddingTop: '10px',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '6px',
+                                                fontSize: '11px',
+                                                fontFamily: 'monospace'
+                                            }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                    <span style={{ color: '#6366F1', fontWeight: 'bold' }}>[G] <span style={{ fontWeight: 600 }}>{sessionStats.model}</span></span>
+                                                    <span style={{ opacity: 0.8, color: 'var(--text-secondary)', paddingLeft: '20px' }}>
+                                                        In: {sessionStats.geminiIn.toLocaleString()} | Out: {sessionStats.hasEstimated ? '~' : ''}{sessionStats.geminiOut.toLocaleString()} | Tot: {sessionStats.hasEstimated ? '~' : ''}{sessionStats.geminiTotal.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>[O] <span style={{ fontWeight: 600 }}>Ollama</span></span>
+                                                    <span style={{ opacity: 0.8, color: 'var(--text-secondary)', paddingLeft: '20px' }}>
+                                                        In: {sessionStats.ollamaIn.toLocaleString()} | Out: {sessionStats.ollamaOut.toLocaleString()} | Tot: {sessionStats.ollamaTotal.toLocaleString()}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
-                                    ))
+                                        );
+                                    })
                                 )}
                             </div>
                         </div>
