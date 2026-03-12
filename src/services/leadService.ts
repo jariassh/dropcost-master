@@ -65,5 +65,14 @@ export const leadService = {
             .eq('id', id);
 
         if (error) throw error;
+    },
+
+    async getRegisteredEmails(): Promise<string[]> {
+        const { data, error } = await supabase
+            .from('users')
+            .select('email');
+        
+        if (error) throw error;
+        return (data || []).map((u: any) => u.email?.toLowerCase()).filter(Boolean);
     }
 };
