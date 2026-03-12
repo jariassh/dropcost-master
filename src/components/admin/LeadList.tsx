@@ -1,18 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Filter, ChevronRight, MessageSquare, Trash2, Calendar, User, Hash, RefreshCcw } from 'lucide-react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
+import { Search, Filter, ChevronRight, MessageSquare, Trash2, Calendar, User, Hash, RefreshCcw, Zap, Brain, CheckCircle, TrendingUp } from 'lucide-react';
 import { leadService, Lead } from '../../services/leadService';
 import { Button, Spinner, Card } from '../common';
 import { LeadDetailsSlideOver } from './LeadDetailsSlideOver';
 
-export const LeadList: React.FC = () => {
+interface LeadListProps {
+    period: 'today' | '7d' | '30d' | 'all';
+}
+
+export const LeadList = forwardRef<{ refresh: () => void }, LeadListProps>(({ period }, ref) => {
     const [leads, setLeads] = useState<Lead[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
+    const [registeredEmails, setRegisteredEmails] = useState<string[]>([]);
 
     useEffect(() => {
         loadLeads();
+        loadRegisteredEmails();
     }, []);
 
     const loadLeads = async () => {
@@ -25,6 +31,19 @@ export const LeadList: React.FC = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const loadRegisteredEmails = async () => {
+        try {
+            const emails = await leadService.getRegisteredEmails();
+            setRegisteredEmails(emails);
+        } catch (error) {
+            console.error("Error loading registered emails:", error);
+        }
+    };
+
+    const isConverted = (lead: Lead): boolean => {
+        return registeredEmails.includes(lead.email?.toLowerCase());
     };
 
     const countSessions = (conversacion: any[]): number => {
@@ -47,6 +66,38 @@ export const LeadList: React.FC = () => {
         return sessions;
     };
 
+    const calculateTotalMessages = (leads: Lead[]): number => {
+        return leads.reduce((acc, lead) => {
+            const conv = lead.conversacion || [];
+            return acc + conv.filter((m: any) => m.role === 'user' || m.role === 'assistant').length;
+        }, 0);
+    };
+
+    const calculateGeminiTokens = (leads: Lead[]): { total: number, hasEstimated: boolean } => {
+        let total = 0;
+        let hasEstimated = false;
+        leads.forEach(lead => {
+            (lead.conversacion || []).forEach((msg: any) => {
+                if (msg.ai_stats?.gemini) {
+                    total += (msg.ai_stats.gemini.total ?? 0);
+                    if (msg.ai_stats.estimated) hasEstimated = true;
+                }
+            });
+        });
+        return { total, hasEstimated };
+    };
+
+    const calculateOllamaTokens = (leads: Lead[]): number => {
+        return leads.reduce((acc, lead) => {
+            return acc + (lead.conversacion || []).reduce((msgAcc: number, msg: any) => {
+                if (msg.ai_stats?.ollama) {
+                    return msgAcc + (msg.ai_stats.ollama.total ?? 0);
+                }
+                return msgAcc;
+            }, 0);
+        }, 0);
+    };
+
     const filteredLeads = leads.filter(l =>
         (l.nombre || '').toLowerCase().includes(search.toLowerCase()) ||
         (l.email || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -65,34 +116,79 @@ export const LeadList: React.FC = () => {
         }
     };
 
+    useImperativeHandle(ref, () => ({
+        refresh: loadLeads,
+        loading: loading
+    }));
+
+
+    const getFilteredLeads = (): Lead[] => {
+        if (period === 'all') return leads;
+        const now = new Date();
+        const cutoff = new Date();
+        if (period === 'today') cutoff.setHours(0, 0, 0, 0);
+        else if (period === '7d') cutoff.setDate(now.getDate() - 7);
+        else if (period === '30d') cutoff.setDate(now.getDate() - 30);
+        return leads.filter(l => new Date(l.created_at) >= cutoff);
+    };
+
+    const filteredByPeriod = getFilteredLeads();
+    const formatPremiumNumber = (num: number): string => {
+        if (num < 10000) return num.toLocaleString();
+        if (num < 1000000) return (num / 1000).toFixed(1) + 'K';
+        return (num / 1000000).toFixed(2) + 'M';
+    };
+
+    const periodConversions = filteredByPeriod.filter(isConverted).length;
+    const periodConversionRate = filteredByPeriod.length > 0 ? ((periodConversions / filteredByPeriod.length) * 100).toFixed(1) : '0.0';
+    const periodGemini = calculateGeminiTokens(filteredByPeriod);
+    const periodOllama = calculateOllamaTokens(filteredByPeriod);
+
+    const kpiCards = [
+        { title: 'Total Leads', value: formatPremiumNumber(filteredByPeriod.length), icon: User, color: '#6366F1', bg: 'rgba(99, 102, 241, 0.1)' },
+        { title: 'Mensajes Totales', value: formatPremiumNumber(calculateTotalMessages(filteredByPeriod)), icon: MessageSquare, color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
+        { title: 'Conversiones', value: formatPremiumNumber(periodConversions), icon: CheckCircle, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)' },
+        { title: 'Tokens Gemini', value: `${periodGemini.hasEstimated ? '~' : ''}${formatPremiumNumber(periodGemini.total)}`, icon: Zap, color: '#6366F1', bg: 'rgba(99, 102, 241, 0.1)' },
+        { title: 'Tokens Ollama', value: formatPremiumNumber(periodOllama), icon: Brain, color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
+        { title: 'Tasa Conversión', value: `${periodConversionRate}%`, icon: TrendingUp, color: '#22c55e', bg: 'rgba(34, 197, 94, 0.1)' },
+    ];
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            {/* Header / Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-                <Card>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ padding: '12px', borderRadius: '14px', backgroundColor: 'rgba(99, 102, 241, 0.1)', color: '#6366F1' }}>
-                            <User size={28} />
-                        </div>
-                        <div>
-                            <div style={{ fontSize: '14px', color: 'var(--text-tertiary)', fontWeight: 500 }}>Total Leads Únicos</div>
-                            <div style={{ fontSize: '28px', fontWeight: 800 }}>{leads.length}</div>
-                        </div>
-                    </div>
-                </Card>
-                <Card>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ padding: '12px', borderRadius: '14px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
-                            <MessageSquare size={28} />
-                        </div>
-                        <div>
-                            <div style={{ fontSize: '14px', color: 'var(--text-tertiary)', fontWeight: 500 }}>Conversaciones Totales</div>
-                            <div style={{ fontSize: '28px', fontWeight: 800 }}>
-                                {leads.reduce((acc, current) => acc + countSessions(current.conversacion), 0)}
+            {/* KPIs */}
+            <div className="kpi-grid">
+                {kpiCards.map((card, index) => (
+                    <div key={card.title} style={{ animation: 'slideUp 0.5s ease-out forwards', opacity: 0, animationDelay: `${index * 0.08}s` }}>
+                        <Card hoverable style={{ height: '100%' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <p style={{
+                                        fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)',
+                                        margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em',
+                                        marginBottom: '4px'
+                                    }}>
+                                        {card.title}
+                                    </p>
+                                    <h3 style={{
+                                        fontSize: '26px', fontWeight: 600, color: 'var(--text-primary)',
+                                        margin: 0, letterSpacing: '-0.02em',
+                                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                                    }}>
+                                        {card.value}
+                                    </h3>
+                                </div>
+                                <div style={{
+                                    width: '52px', height: '52px', borderRadius: '14px',
+                                    backgroundColor: card.bg, display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                                    boxShadow: `0 8px 16px -4px ${card.color}20`
+                                }}>
+                                    <card.icon size={26} style={{ color: card.color }} />
+                                </div>
                             </div>
-                        </div>
+                        </Card>
                     </div>
-                </Card>
+                ))}
             </div>
 
             {/* List Table */}
@@ -161,13 +257,25 @@ export const LeadList: React.FC = () => {
                                 >
                                     <td style={{ padding: '16px 24px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                            <div style={{
-                                                width: '44px', height: '44px', borderRadius: '12px',
-                                                background: 'linear-gradient(135deg, #6366F1, #4F46E5)',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                color: 'white', fontWeight: 700, fontSize: '16px'
-                                            }}>
-                                                {(lead.nombre || 'U').charAt(0).toUpperCase()}
+                                            <div style={{ position: 'relative' }}>
+                                                <div style={{
+                                                    width: '44px', height: '44px', borderRadius: '12px',
+                                                    background: 'linear-gradient(135deg, #6366F1, #4F46E5)',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    color: 'white', fontWeight: 700, fontSize: '16px'
+                                                }}>
+                                                    {(lead.nombre || 'U').charAt(0).toUpperCase()}
+                                                </div>
+                                                {isConverted(lead) && (
+                                                    <div style={{
+                                                        position: 'absolute', bottom: '-3px', right: '-3px',
+                                                        width: '18px', height: '18px', borderRadius: '50%',
+                                                        backgroundColor: '#22c55e', border: '2px solid var(--bg-primary)',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                    }}>
+                                                        <CheckCircle size={11} style={{ color: 'white' }} />
+                                                    </div>
+                                                )}
                                             </div>
                                             <div>
                                                 <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{lead.nombre || 'Sin nombre'}</div>
@@ -238,4 +346,5 @@ export const LeadList: React.FC = () => {
             />
         </div>
     );
-};
+});
+
