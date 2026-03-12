@@ -54,7 +54,7 @@ export function CookieBanner() {
         }} className="cookie-banner">
             <style>{`
                 @keyframes slideUp {
-                    from { transform: translate(-50%, 100px); opacity: 0; }
+                    from { transform: translate(-50%, 150%); opacity: 0; }
                     to { transform: translate(-50%, 0); opacity: 1; }
                 }
                 @media (max-width: 768px) {
