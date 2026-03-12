@@ -78,7 +78,12 @@ Resumen máximo 300 tokens. Idioma: Español.`;
       status: 'success'
     });
 
-    return summary;
+    return { 
+      summary, 
+      tokensIn: usage.prompt_tokens, 
+      tokensOut: usage.completion_tokens,
+      tokensTotal: usage.prompt_tokens + usage.completion_tokens
+    };
 
   } catch (error) {
     await logUsage(supabase, {
@@ -91,7 +96,7 @@ Resumen máximo 300 tokens. Idioma: Español.`;
       status: 'error',
       error_message: error.message
     });
-    return null;
+    return { summary: null, tokensIn: 0, tokensOut: 0, tokensTotal: 0 };
   }
 }
 
