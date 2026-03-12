@@ -12,7 +12,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '@/hooks/useTheme';
 import { supabase } from '@/lib/supabase';
 import { SmartPhoneInput } from '@/components/common/SmartPhoneInput';
-
+import { affiliateService } from '@/services/affiliateService';
 // Páginas donde Drop Analyst (Mentoría) está disponible
 // Solo en contextos de análisis de negocio y números
 const ANALYST_PAGES = [
@@ -126,7 +126,7 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
         {
             id: '1',
             role: 'assistant',
-            content: '¡Hola! Soy tu asistente de DropCost. ¿En qué puedo ayudarte hoy?',
+            content: 'Encantado de saludarte, soy Drop Assistant y estaré encantado de ayudarte el día de hoy.',
             timestamp: new Date()
         }
     ]);
@@ -180,7 +180,7 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                 {
                     id: '1',
                     role: 'assistant',
-                    content: `¡Hola${userName ? ` ${userName}` : ''}! Soy tu asistente de DropCost. ¿En qué puedo ayudarte hoy?`,
+                    content: `Encantado de saludarte ${userName}, soy Drop Assistant y estaré encantado de ayudarte el día de hoy.`,
                     timestamp: new Date()
                 }
             ]);
@@ -260,7 +260,9 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                     isAnonymous: !isAuthenticated,
                     context: {
                         page: window.location.pathname,
-                        is_demo: !isAuthenticated
+                        is_demo: !isAuthenticated,
+                        app_url: window.location.origin,
+                        referral_code: affiliateService.getAffiliateId() || 'jariash'
                     }
                 })
             });
@@ -283,7 +285,7 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                 const assistantMsg: Message = {
                     id: (Date.now() + 1).toString(),
                     role: 'assistant',
-                    content: data.reply || 'Lo siento, tuve un problema procesando tu consulta.',
+                    content: data.reply || data.error || 'Lo siento, tuve un problema procesando tu consulta.',
                     timestamp: new Date()
                 };
                 setMessages(prev => [...prev, assistantMsg]);

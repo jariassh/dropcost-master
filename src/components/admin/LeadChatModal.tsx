@@ -1,7 +1,8 @@
 import React from 'react';
-import { X, User, Bot, Clock, Calendar } from 'lucide-react';
+import { X, User, Bot, Clock, Calendar, Zap } from 'lucide-react';
 import { Modal, Card } from '../common';
 import { Lead } from '@/services/leadService';
+import { AIStatsDropdown } from './AIStatsDropdown';
 
 interface LeadChatModalProps {
     lead: Lead | null;
@@ -106,20 +107,26 @@ export const LeadChatModal: React.FC<LeadChatModalProps> = ({ lead, isOpen, onCl
                                     marginBottom: '2px'
                                 }}>
                                     {msg.role === 'user' ? <User size={12} /> : <Bot size={12} />}
-                                    {msg.role === 'user' ? 'Visitante' : 'Asistente IA'}
+                                    {msg.role === 'user' ? (lead.nombre || 'Visitante') : 'Asistente IA'}
                                 </div>
                                 <div style={{
                                     padding: '12px 16px',
-                                    borderRadius: msg.role === 'user' ? '18px 18px 2px 18px' : '18px 18px 18px 2px',
+                                    borderRadius: msg.role === 'user' 
+                                        ? '18px 18px 2px 18px' 
+                                        : (msg.ai_stats ? '18px 18px 0 0' : '18px 18px 18px 2px'),
                                     backgroundColor: msg.role === 'user' ? 'rgba(99, 102, 241, 0.1)' : 'var(--card-bg)',
                                     color: 'var(--text-primary)',
                                     border: '1px solid ' + (msg.role === 'user' ? 'rgba(99, 102, 241, 0.2)' : 'var(--border-color)'),
+                                    borderBottom: msg.ai_stats ? 'none' : undefined,
                                     fontSize: '14px',
                                     lineHeight: '1.5',
                                     whiteSpace: 'pre-wrap'
                                 }}>
                                     {msg.content}
                                 </div>
+                                {msg.ai_stats && (
+                                    <AIStatsDropdown stats={msg.ai_stats} />
+                                )}
                             </div>
                         ))
                     )}
