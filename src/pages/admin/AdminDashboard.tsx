@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/common/Card';
-import { Users, CreditCard, Ticket, ShieldAlert } from 'lucide-react';
+import { Users, CreditCard, Ticket, ShieldAlert, LayoutGrid } from 'lucide-react';
 import { adminService, AdminStats } from '@/services/adminService';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Spinner } from '@/components/common/Spinner';
 
 import { supabase } from '@/lib/supabase';
@@ -51,7 +52,7 @@ export const AdminDashboard: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
                 <Spinner size="lg" />
             </div>
         );
@@ -59,15 +60,11 @@ export const AdminDashboard: React.FC = () => {
 
     return (
         <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '40px', padding: '0 var(--main-padding)' }}>
-            {/* Header Section */}
-            <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
-                    Panel de Administración
-                </h1>
-                <p style={{ fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                    Resumen global del estado de DropCost Master y herramientas de gestión.
-                </p>
-            </div>
+            <PageHeader
+                title="Panel de Administración"
+                description="Resumen global del estado de DropCost Master y herramientas de gestión."
+                icon={LayoutGrid}
+            />
 
             {/* Stats Row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }} className="dc-admin-stats-grid">

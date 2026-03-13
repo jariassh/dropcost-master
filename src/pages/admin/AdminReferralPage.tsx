@@ -20,6 +20,7 @@ import { obtenerPaisPorCodigo } from '@/services/paisesService';
 import { useAuthStore } from '@/store/authStore';
 import { formatDisplayDate, getDateTimeAuditInfo } from '@/utils/dateUtils';
 import { Tooltip } from '@/components/common/Tooltip';
+import { PageHeader } from '@/components/common/PageHeader';
 
 export function AdminReferralPage() {
     const [config, setConfig] = useState<ReferralConfig | null>(null);
@@ -41,7 +42,6 @@ export function AdminReferralPage() {
         comision_nivel_2: '5',
         referidos_minimo_lider: '50',
         meses_vigencia_comision: '12',
-        dias_retencion_comision: '30',
         monto_minimo_retiro_usd: '10.00'
     });
 
@@ -66,7 +66,6 @@ export function AdminReferralPage() {
                     comision_nivel_2: String(c.comision_nivel_2),
                     referidos_minimo_lider: String(c.referidos_minimo_lider),
                     meses_vigencia_comision: String(c.meses_vigencia_comision),
-                    dias_retencion_comision: String((c as any).dias_retencion_comision ?? 30),
                     monto_minimo_retiro_usd: String((c as any).monto_minimo_retiro_usd ?? 10.00)
                 });
             }
@@ -104,7 +103,6 @@ export function AdminReferralPage() {
                 comision_nivel_2: parseFloat(formData.comision_nivel_2) || 0,
                 referidos_minimo_lider: parseInt(formData.referidos_minimo_lider) || 0,
                 meses_vigencia_comision: parseInt(formData.meses_vigencia_comision) || 0,
-                dias_retencion_comision: parseInt(formData.dias_retencion_comision) ?? 0,
                 monto_minimo_retiro_usd: parseFloat(formData.monto_minimo_retiro_usd) || 10.00
             };
 
@@ -143,22 +141,19 @@ export function AdminReferralPage() {
         return formatCurrency(val * rate, targetCurrency);
     };
 
-    if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '100px' }}><Spinner /></div>;
+    if (isLoading) return (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px', width: '100%' }}>
+            <Spinner />
+        </div>
+    );
 
     return (
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 var(--main-padding)', display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-                    <div style={{ flex: '1', minWidth: '280px' }}>
-                        <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
-                            Sistema de Referidos
-                        </h1>
-                        <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                            Monitoreo global y configuración dinámica del programa de referidos.
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <PageHeader
+                title="Sistema de Referidos"
+                description="Monitoreo global y configuración dinámica del programa de referidos."
+                icon={Settings}
+            />
 
             {/* Global Stats */}
             <div style={{ gap: '20px' }} className="dc-referral-stats-grid">
@@ -266,24 +261,6 @@ export function AdminReferralPage() {
                                 />
                                 <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
                                     Duración de la comisión recurrente.
-                                </span>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                                    Días de Retención
-                                </label>
-                                <input
-                                    type="number"
-                                    value={formData.dias_retencion_comision}
-                                    onChange={e => setFormData({ ...formData, dias_retencion_comision: e.target.value })}
-                                    style={{
-                                        padding: '12px', borderRadius: '10px', border: '1px solid var(--border-color)',
-                                        backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)'
-                                    }}
-                                />
-                                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
-                                    Días de retención antes de retiro.
                                 </span>
                             </div>
 

@@ -37,21 +37,7 @@ export const walletService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('No user authenticated');
 
-        // 1. Obtener configuración de días de retención
-        const { data: config } = await supabase
-            .from('sistema_referidos_config' as any)
-            .select('dias_retencion_comision')
-            .order('fecha_actualizacion', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-        const retentionDays = (config as any)?.dias_retencion_comision ?? 30;
-
-        // 2. Calcular fecha límite para comisiones disponibles
-        const retentionDate = new Date();
-        retentionDate.setDate(retentionDate.getDate() - retentionDays);
-
-        // 3. Obtener todas las transacciones de tipo referral_bonus
+        // 1. Obtener todas las transacciones de tipo referral_bonus
         const { data: movements, error: movementsError } = await supabase
             .from('wallet_transactions' as any)
             .select('*')
@@ -65,15 +51,7 @@ export const walletService = {
         // Total generado (todas las comisiones históricas)
         const total_earned = movementsArray.reduce((acc, m) => acc + Number(m.amount || 0), 0);
         
-        // Comisiones en revisión (< días de retención)
-        const pending_commissions = movementsArray
-            .filter(m => {
-                const createdDate = new Date(m.created_at);
-                return !isNaN(createdDate.getTime()) && createdDate > retentionDate;
-            })
-            .reduce((acc, m) => acc + Number(m.amount || 0), 0);
-
-        // 4. Obtener retiros pendientes, en proceso o completados (no rechazados)
+        // 2. Obtener retiros pendientes, en proceso o completados (no rechazados)
         const { data: withdrawals, error: withdrawalsError } = await supabase
             .from('retiros_referidos' as any)
             .select('monto_usd, estado')
@@ -84,20 +62,14 @@ export const walletService = {
 
         const total_withdrawals = (withdrawals || []).reduce((acc: number, w: any) => acc + Number(w.monto_usd || 0), 0);
 
-        // Saldo disponible (>= días de retención) - Retiros
-        const gross_available = movementsArray
-            .filter(m => {
-                const createdDate = new Date(m.created_at);
-                return !isNaN(createdDate.getTime()) && createdDate <= retentionDate;
-            })
-            .reduce((acc, m) => acc + Number(m.amount || 0), 0);
-
-        const available_balance = Math.max(0, gross_available - total_withdrawals);
+        // Saldo disponible: Total histórico menos retiros realizados/pendientes
+        // Ya no aplicamos días de retención
+        const available_balance = Math.max(0, total_earned - total_withdrawals);
 
         return {
             available_balance: available_balance,
             total_earned: total_earned,
-            pending_commissions: pending_commissions
+            pending_commissions: 0 // Ya no hay comisiones en revisión
         };
     },
 

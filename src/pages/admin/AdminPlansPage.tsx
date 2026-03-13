@@ -8,6 +8,8 @@ import { plansService } from '@/services/plansService';
 import { Plan, PlanInput } from '@/types/plans.types';
 import { formatCurrency, formatNumber } from '@/lib/format';
 import { useAuthStore } from '@/store/authStore';
+import { PageHeader } from '@/components/common/PageHeader';
+import { LayoutGrid } from 'lucide-react';
 
 export const AdminPlansPage: React.FC = () => {
     const [plans, setPlans] = useState<Plan[]>([]);
@@ -80,23 +82,16 @@ export const AdminPlansPage: React.FC = () => {
 
     return (
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 var(--main-padding)', display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-                    <div style={{ flex: '1', minWidth: '280px' }}>
-                        <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
-                            Gestión de Planes
-                        </h1>
-                        <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                            Configura los niveles de suscripción y precios.
-                        </p>
-                    </div>
-                    <div className="dc-admin-actions">
-                        <Button onClick={handleCreate} leftIcon={<Plus size={18} />} className="dc-admin-create-btn">
-                            Nuevo Plan
-                        </Button>
-                    </div>
-                </div>
-            </div>
+            <PageHeader
+                title="Gestión de Planes"
+                description="Configura los niveles de suscripción y precios."
+                icon={LayoutGrid}
+                actions={
+                    <Button onClick={handleCreate} leftIcon={<Plus size={18} />} className="dc-admin-create-btn">
+                        Nuevo Plan
+                    </Button>
+                }
+            />
 
             <style>{`
                 @media (max-width: 767px) {

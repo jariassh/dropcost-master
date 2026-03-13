@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import {
     Plus, Search, Edit2, Trash2, Eye,
     Save, X, FileText, Globe, Lock,
-    CheckCircle2, AlertCircle
+    CheckCircle2, AlertCircle, BookOpen
 } from 'lucide-react';
+import { PageHeader } from '@/components/common/PageHeader';
 
 /* --- Mock Logic --- */
 interface Article {
@@ -32,22 +33,24 @@ export function AdminKnowledgeBase() {
 
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', color: 'var(--text-primary)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
-                <div>
-                    <h1 style={{ fontSize: '28px', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>Gestión de Conocimiento (RAG)</h1>
-                    <p style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>Administra los artículos que alimentan al Drop Assistant y la página de soporte.</p>
-                </div>
-                <button
-                    onClick={() => { setIsEditing(true); setCurrentArticle({ is_public: false }); }}
-                    style={{
-                        padding: '10px 20px', backgroundColor: 'var(--color-primary)',
-                        color: 'white', border: 'none', borderRadius: '12px',
-                        fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'
-                    }}
-                >
-                    <Plus size={18} /> Nuevo Artículo
-                </button>
-            </div>
+            <PageHeader
+                title="Gestión de Conocimiento"
+                highlight="(RAG)"
+                description="Administra los artículos que alimentan al Drop Assistant y la página de soporte."
+                icon={BookOpen}
+                actions={
+                    <button
+                        onClick={() => { setIsEditing(true); setCurrentArticle({ is_public: false }); }}
+                        style={{
+                            padding: '10px 20px', backgroundColor: 'var(--color-primary)',
+                            color: 'white', border: 'none', borderRadius: '12px',
+                            fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'
+                        }}
+                    >
+                        <Plus size={18} /> Nuevo Artículo
+                    </button>
+                }
+            />
 
             {/* Editor Modal / Overlay */}
             {isEditing && (

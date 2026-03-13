@@ -27,6 +27,7 @@ import { obtenerPaisPorCodigo } from '@/services/paisesService';
 import { dispararTriggerEmail } from '@/utils/emailTrigger';
 import { formatDisplayDate, getDateTimeAuditInfo } from '@/utils/dateUtils';
 import { Tooltip } from '@/components/common/Tooltip';
+import { PageHeader } from '@/components/common/PageHeader';
 
 export const AdminWithdrawalsPage: React.FC = () => {
     const { user } = useAuthStore();
@@ -170,17 +171,11 @@ export const AdminWithdrawalsPage: React.FC = () => {
     return (
         <>
             <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', padding: '0 var(--main-padding)', display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                {/* Header */}
-                <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }} className="dc-admin-header-container">
-                        <div style={{ flex: '1', minWidth: '280px' }} className="dc-admin-header-text">
-                            <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, letterSpacing: 'var(--ls-h)', fontFamily: 'var(--font-headings)' }}>
-                                Gestión de Retiros
-                            </h1>
-                            <p style={{ marginTop: '8px', fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                                Supervisa y procesa las solicitudes de pago de los usuarios.
-                            </p>
-                        </div>
+                <PageHeader
+                    title="Gestión de Retiros"
+                    description="Supervisa y procesa las solicitudes de pago de los usuarios."
+                    icon={DollarSign}
+                    actions={
                         <button
                             className="dc-admin-refresh-btn"
                             onClick={loadWithdrawals}
@@ -204,8 +199,8 @@ export const AdminWithdrawalsPage: React.FC = () => {
                             <RefreshCw size={16} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
                             Actualizar
                         </button>
-                    </div>
-                </div>
+                    }
+                />
 
                 {/* Stats Cards */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }} className="dc-withdraw-stats-grid">

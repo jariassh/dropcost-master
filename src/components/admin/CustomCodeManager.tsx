@@ -115,7 +115,7 @@ export const CustomCodeManager = forwardRef<CustomCodeManagerHandle>((_, ref) =>
     };
 
     if (isLoading && snippets.length === 0) {
-        return <div className="flex justify-center p-12"><Spinner size="lg" /></div>;
+        return <div style={{ display: 'flex', justifyContent: 'center', padding: '48px', width: '100%' }}><Spinner size="lg" /></div>;
     }
 
     if (editMode && currentSnippet) {

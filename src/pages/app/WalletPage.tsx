@@ -37,7 +37,6 @@ export const WalletPage: React.FC = () => {
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
     const [isBankEditOpen, setIsBankEditOpen] = useState(false);
     const [minimumWithdrawal, setMinimumWithdrawal] = useState<number>(10);
-    const [retentionDays, setRetentionDays] = useState<number>(30);
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const toast = useToast();
 
@@ -57,14 +56,6 @@ export const WalletPage: React.FC = () => {
                 fetchExchangeRates('USD'),
                 walletService.getMinimumWithdrawal()
             ]);
-
-            // 2. Obtener días de retención desde la configuración
-            const { data: config } = await supabase
-                .from('sistema_referidos_config' as any)
-                .select('dias_retencion_comision')
-                .order('fecha_actualizacion', { ascending: false })
-                .limit(1)
-                .maybeSingle();
 
             // 3. Cargar bank_info: primero desde users, luego fallback desde retiro más reciente
             const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -101,14 +92,11 @@ export const WalletPage: React.FC = () => {
                 }
             }
 
-            const days = (config as any)?.dias_retencion_comision ?? 30;
-
             setBalance(balanceData);
             setMovements(movementsData);
             setWithdrawals(withdrawalsData);
             setExchangeRates(rates);
             setMinimumWithdrawal(minWithdrawal);
-            setRetentionDays(days);
 
             // Determinar moneda de visualización según el país del usuario
             let currency = 'COP';
@@ -153,7 +141,7 @@ export const WalletPage: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', width: '100%' }}>
                 <Spinner size="lg" />
             </div>
         );
@@ -175,7 +163,7 @@ export const WalletPage: React.FC = () => {
                 />
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <StatsCard
                         title="Saldo Disponible"
                         value={getConverted(balance?.available_balance || 0)}
@@ -200,14 +188,6 @@ export const WalletPage: React.FC = () => {
                         icon={<TrendingUp size={24} />}
                         color="var(--color-success)"
                         subtitle="Histórico de ganancias"
-                    />
-                    <StatsCard
-                        title="En Revisión"
-                        value={getConverted(balance?.pending_commissions || 0)}
-                        currency={displayCurrency}
-                        icon={<History size={24} />}
-                        color="var(--color-warning)"
-                        subtitle={`Comisiones pendientes (< ${retentionDays} días)`}
                     />
                 </div>
 

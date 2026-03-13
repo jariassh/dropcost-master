@@ -223,7 +223,7 @@ export default function MarketingDashboardPage() {
                 {activeTab === 'campaigns' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {isLoading ? (
-                            <Card><div style={{ padding: '40px', textAlign: 'center' }}><Clock className="animate-spin" /></div></Card>
+                            <Card><div style={{ padding: '80px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Clock className="animate-spin" size={32} color="var(--color-primary)" /></div></Card>
                         ) : campaigns.length === 0 ? (
                             <EmptyState
                                 title="No hay campañas"

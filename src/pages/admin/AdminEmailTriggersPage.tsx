@@ -18,11 +18,7 @@ import {
     Calendar,
     ExternalLink,
 } from 'lucide-react';
-import { Card } from '@/components/common/Card';
-import { Badge } from '@/components/common/Badge';
-import { Spinner } from '@/components/common/Spinner';
-import { Modal } from '@/components/common/Modal';
-import { useToast } from '@/components/common/Toast';
+import { Card, Badge, Spinner, Modal, useToast, PageHeader, Button } from '@/components/common';
 import { supabase } from '@/lib/supabase';
 
 // ============================================================
@@ -379,15 +375,12 @@ export const AdminEmailTriggersPage: React.FC = () => {
     return (
         <>
             <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', padding: '0 var(--main-padding)', display: 'flex', flexDirection: 'column', gap: '32px' }} className="dc-admin-container">
-                {/* Header */}
-                <div className="dc-admin-header-row" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
-                        Triggers de Email
-                    </h1>
-                    <p style={{ fontSize: '15px', color: 'var(--text-secondary)', margin: 0 }}>
-                        Gestiona los 19 eventos automáticos que envían emails en DropCost Master.
-                    </p>
-                </div>
+                <PageHeader
+                    title="Triggers de"
+                    highlight="Email"
+                    description="Gestiona los eventos automáticos que envían emails en DropCost Master."
+                    icon={Zap}
+                />
 
                 {/* Stats */}
                 <div className="dc-email-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
@@ -455,7 +448,7 @@ export const AdminEmailTriggersPage: React.FC = () => {
                 {activeTab === 'triggers' && (
                     <>
                         {loading ? (
-                            <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px', width: '100%' }}>
                                 <Spinner />
                             </div>
                         ) : (
@@ -553,7 +546,7 @@ export const AdminEmailTriggersPage: React.FC = () => {
                         {/* Tabla historial */}
                         <Card style={{ padding: 0, overflow: 'hidden', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
                             {loadingHistorial ? (
-                                <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px', width: '100%' }}>
                                     <Spinner />
                                 </div>
                             ) : filteredHistorial.length === 0 ? (

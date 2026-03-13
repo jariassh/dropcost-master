@@ -62,7 +62,11 @@ export default function CampaignDetailsPage() {
     };
 
     if (isCampaignLoading) {
-        return <div style={{ padding: '40px', textAlign: 'center' }}>Cargando detalles...</div>;
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+                <Spinner />
+            </div>
+        );
     }
 
     if (!campaign) {
@@ -132,7 +136,9 @@ export default function CampaignDetailsPage() {
 
                     <Card noPadding style={{ overflow: 'hidden', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-color)' }}>
                         {isLogsLoading ? (
-                            <div style={{ padding: '60px', textAlign: 'center' }}><Spinner /></div>
+                            <div style={{ display: 'flex', justifyContent: 'center', padding: '60px' }}>
+                                <Spinner />
+                            </div>
                         ) : logs.length === 0 ? (
                             <div style={{ padding: '60px', textAlign: 'center' }}>
                                 <Mail size={40} color="var(--text-tertiary)" style={{ marginBottom: '16px', opacity: 0.5 }} />

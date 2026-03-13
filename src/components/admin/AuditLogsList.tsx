@@ -377,7 +377,13 @@ export const AuditLogsList: React.FC<AuditLogsListProps> = ({ userId, hideUser =
                                 </thead>
                                 <tbody>
                                     {loading ? (
-                                        <tr><td colSpan={hideUser ? 4 : 5} style={{ padding: '100px', textAlign: 'center' }}><Spinner size="lg" /></td></tr>
+                                        <tr>
+                                            <td colSpan={hideUser ? 4 : 5} style={{ padding: '100px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                                                    <Spinner size="lg" />
+                                                </div>
+                                            </td>
+                                        </tr>
                                     ) : logs.length === 0 ? (
                                         <tr><td colSpan={hideUser ? 4 : 5} style={{ padding: '100px', textAlign: 'center', color: 'var(--text-tertiary)' }}>No se encontraron registros activos.</td></tr>
                                     ) : (

@@ -7,6 +7,7 @@ export interface ReferralStats {
     totalClicks: number;
     totalReferred: number;
     totalEarned: number;
+    availableBalance: number;
     referralCode: string;
     // Fields
     minReferredForLeader: number;
@@ -45,14 +46,15 @@ export interface ReferredUser {
  */
 export async function getReferralStats(): Promise<ReferralStats> {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { totalClicks: 0, totalReferred: 0, totalEarned: 0, referralCode: '', minReferredForLeader: 50, commissionLevel1: 15, commissionLevel2: 5, meses_vigencia_comision: 12 };
+    if (!user) return { totalClicks: 0, totalReferred: 0, totalEarned: 0, availableBalance: 0, referralCode: '', minReferredForLeader: 50, commissionLevel1: 15, commissionLevel2: 5, meses_vigencia_comision: 12 };
 
-    // 1. Obtener datos del usuario, configuración y transacciones de bonos
-    const [userDataRes, leaderStatsRes, configRes, bonusRes] = await Promise.all([
+    // 1. Obtener datos del usuario, configuración, transacciones de bonos y retiros
+    const [userDataRes, leaderStatsRes, configRes, bonusRes, withdrawalsRes] = await Promise.all([
         supabase.from('users').select('codigo_referido_personal').eq('id', user.id).single(),
         supabase.from('referidos_lideres').select('total_clicks, total_usuarios_referidos').eq('user_id', user.id).maybeSingle(),
         supabase.from('sistema_referidos_config' as any).select('*').order('fecha_actualizacion', { ascending: false }).limit(1).maybeSingle(),
-        supabase.from('wallet_transactions' as any).select('amount').eq('user_id', user.id).eq('type', 'referral_bonus')
+        supabase.from('wallet_transactions' as any).select('amount').eq('user_id', user.id).eq('type', 'referral_bonus'),
+        supabase.from('retiros_referidos' as any).select('monto_usd').eq('user_id', user.id).neq('estado', 'rechazado')
     ]);
 
     if (configRes.error && configRes.error.code !== 'PGRST116') {
@@ -67,13 +69,17 @@ export async function getReferralStats(): Promise<ReferralStats> {
     const config = configRes.data as any;
     
     // Sumamos todas las comisiones históricas para obtener el "Total Earned"
-    // Esto es más preciso que usar wallet_saldo que es el balance actual (y puede estar desfasado)
     const totalEarned = ((bonusRes.data as any[]) || []).reduce((acc: number, t: any) => acc + Number(t.amount || 0), 0);
+    
+    // Calculamos retiros realizados
+    const totalWithdrawals = ((withdrawalsRes.data as any[]) || []).reduce((acc: number, w: any) => acc + Number(w.monto_usd || 0), 0);
+    const availableBalance = Math.max(0, totalEarned - totalWithdrawals);
 
     return {
         totalClicks: leaderStats?.total_clicks || 0,
         totalReferred: leaderStats?.total_usuarios_referidos || 0,
         totalEarned: totalEarned,
+        availableBalance: availableBalance,
         referralCode: userData?.codigo_referido_personal || '',
         minReferredForLeader: config?.referidos_minimo_lider || 50,
         commissionLevel1: config?.comision_nivel_1 || 15,
@@ -367,9 +373,11 @@ export async function getAdminReferralStats(): Promise<any> {
         // Dinero REAL ya pagado (retiros completados)
         const totalPaid = (withdrawalsRes.data as any[] || []).reduce((acc: number, curr: any) => acc + (Number(curr.amount) || 0), 0);
         
-        // Dinero que los usuarios tienen en su billetera (Deuda de DropCost)
-        const { data: wallets } = await supabase.from('users').select('wallet_saldo').gt('wallet_saldo', 0);
-        const totalPending = (wallets as any[] || []).reduce((acc: number, curr: any) => acc + (Number(curr.wallet_saldo) || 0), 0);
+        // Dinero total generado por comisiones en el sistema
+        const totalGenerated = (leaderStatsRes.data as any[] || []).reduce((acc: number, curr: any) => acc + (Number(curr.total_comisiones_generadas) || 0), 0);
+        
+        // El pendiente es lo generado menos lo ya pagado
+        const totalPending = Math.max(0, totalGenerated - totalPaid);
 
         return {
             totalReferred,

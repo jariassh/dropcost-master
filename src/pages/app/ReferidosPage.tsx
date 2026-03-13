@@ -236,7 +236,11 @@ export function ReferidosPage() {
 
 
 
-    if (isLoading && !isRestricted) return <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '100px' }}><Spinner /></div>;
+    if (isLoading && !isRestricted) return (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px', width: '100%' }}>
+            <Spinner />
+        </div>
+    );
 
 
 
@@ -557,23 +561,14 @@ export function ReferidosPage() {
                     />
 
                     <div className="referidos-earnings-card">
-
                         <StatsCard
-
-                            title="Ganancias Totales"
-
-                            value={convertValue(stats?.totalEarned || 0)}
-
+                            title="Comisiones Disponibles"
+                            value={convertValue(stats?.availableBalance || 0)}
                             icon={<DollarSign size={24} />}
-
                             color="#f59e0b"
-
-                            subtitle="disponibles para retirar - Ver Historial"
-
+                            subtitle="listo para retirar - Ver Historial"
                             onClick={handleOpenHistory}
-
                         />
-
                     </div>
 
                 </div>
@@ -965,9 +960,9 @@ function CommissionHistoryModal({ isOpen, onClose, history, isLoading, convertVa
 
 
                 {isLoading ? (
-
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}><Spinner /></div>
-
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px', width: '100%' }}>
+                        <Spinner />
+                    </div>
                 ) : history.length === 0 ? (
 
                     <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)' }}>
@@ -1189,9 +1184,9 @@ function DetailsModal({ isOpen, onClose, user, details, isLoading, commissionRat
                 </div>
 
                 {isLoading ? (
-
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}><Spinner /></div>
-
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', width: '100%' }}>
+                        <Spinner />
+                    </div>
                 ) : (
 
                     <div style={{ backgroundColor: 'var(--bg-tertiary)', borderRadius: '16px', padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>

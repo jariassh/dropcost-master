@@ -179,7 +179,9 @@ export default function CampaignWizardPage() {
 
                         <div style={{ maxHeight: '500px', overflowY: 'auto', padding: '12px' }}>
                             {isLoadingTemplates ? (
-                                <div style={{ padding: '60px', textAlign: 'center' }}><Spinner /></div>
+                                <div style={{ display: 'flex', justifyContent: 'center', padding: '60px' }}>
+                                    <Spinner />
+                                </div>
                             ) : filteredTemplates.length === 0 ? (
                                 <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-tertiary)' }}>No se encontraron plantillas.</div>
                             ) : (
