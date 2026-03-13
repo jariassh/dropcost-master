@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { Search, Filter, ChevronRight, MessageSquare, Trash2, Calendar, User, Hash, RefreshCcw, Zap, Brain, CheckCircle, TrendingUp } from 'lucide-react';
 import { leadService, Lead } from '../../services/leadService';
-import { Button, Spinner, Card } from '../common';
+import { Button, Spinner, Card, ConfirmDialog, useToast } from '../common';
 import { LeadDetailsSlideOver } from './LeadDetailsSlideOver';
 
 interface LeadListProps {
@@ -15,6 +15,10 @@ export const LeadList = forwardRef<{ refresh: () => void }, LeadListProps>(({ pe
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
     const [registeredEmails, setRegisteredEmails] = useState<string[]>([]);
+    const toast = useToast();
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [leadToDelete, setLeadToDelete] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         loadLeads();
@@ -104,15 +108,26 @@ export const LeadList = forwardRef<{ refresh: () => void }, LeadListProps>(({ pe
         (l.telefono || '').includes(search)
     );
 
-    const handleDelete = async (e: React.MouseEvent, id: string) => {
+    const handleDelete = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
-        if (window.confirm('¿Estás seguro de eliminar este lead?')) {
-            try {
-                await leadService.deleteLead(id);
-                setLeads(leads.filter(l => l.id !== id));
-            } catch (error) {
-                alert('Error al eliminar');
-            }
+        setLeadToDelete(id);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!leadToDelete) return;
+        try {
+            setIsDeleting(true);
+            await leadService.deleteLead(leadToDelete);
+            setLeads(leads.filter(l => l.id !== leadToDelete));
+            setIsDeleteDialogOpen(false);
+            setLeadToDelete(null);
+            toast.success('Lead eliminado', 'El contacto ha sido eliminado correctamente.');
+        } catch (error) {
+            console.error('Error deleting lead:', error);
+            toast.error('Error al eliminar', 'No se pudo eliminar el lead. Intentalo de nuevo.');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -343,6 +358,21 @@ export const LeadList = forwardRef<{ refresh: () => void }, LeadListProps>(({ pe
                 lead={selectedLead}
                 isOpen={isSlideOverOpen}
                 onClose={() => setIsSlideOverOpen(false)}
+            />
+
+            <ConfirmDialog
+                isOpen={isDeleteDialogOpen}
+                title="Eliminar Lead"
+                description="¿Estás seguro de que deseas eliminar este lead? Esta acción no se puede deshacer."
+                confirmLabel="Eliminar"
+                cancelLabel="Mantener"
+                variant="danger"
+                isLoading={isDeleting}
+                onConfirm={confirmDelete}
+                onCancel={() => {
+                    setIsDeleteDialogOpen(false);
+                    setLeadToDelete(null);
+                }}
             />
         </div>
     );

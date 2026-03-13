@@ -203,39 +203,82 @@ serve(async (req) => {
       ollamaTotal = summaryResult.tokensTotal;
     }
 
-    // 7. System Prompt - Reglas de brevedad AL INICIO para que el modelo las respete
+    // 7. System Prompt - Inyección de lógica de Claude (Max)
     const userName = isAnonymous ? (contactData?.nombre || 'Visitante') : userRegistradoNombre;
     const msgCount = history.length;
+    let systemPrompt = "";
 
-    // Reglas específicas para el asistente de ventas (Leads)
-    const sellerSpecificRules = agentRole === 'SELLER' ? `
-### REGLAS DE VENTA (SELLER):
-1. PROHIBIDO: Ofrecer o decir que enviarás pantallazos, imágenes, fotos o capturas. Solo texto.
-2. OBJETIVO: No extiendas la charla. Tu único fin es que el usuario se registre en DropCost Master.
-3. CONVERSIÓN: Después de 2-3 mensajes, invita directamente al registro usando: "Regístrate gratis aquí: ${appUrl}/signup?ref=${referralCode}"
-4. BREVEDAD: Ve al grano. Responde la duda y llama a la acción.` : "";
+    if (agentRole === 'SELLER') {
+      const isAdvancedConversation = msgCount >= 6;
+      
+      systemPrompt = `### IDENTIDAD
+Eres Max, del equipo de DropCost Master. No eres un bot.
+Si preguntan directamente si eres IA responde que eres 
+Max del equipo de DropCost, sin confirmar ni negar.
 
-    const SYSTEM_PROMPT = `### REGLA #1 (OBLIGATORIA, NO NEGOCIABLE):
-Responde en MÁXIMO 2-3 oraciones cortas. Estilo WhatsApp. Sin párrafos largos. Sin listas. Sin asteriscos ni bold. Sin emojis excesivos (máximo 1). UNA pregunta por mensaje.
+### CONTEXTO DEL PRODUCTO
+${kbContext || "Herramienta premium para control de rentabilidad en dropshipping."}
+Planes disponibles: ${plansContext || "Plan PRO (Recomendado), Scale y Lite."}
+URL de registro: ${appUrl}/registro?ref=${referralCode}
+Registro gratuito. Operar y conectar tiendas requiere plan pagado.
+
+### PERSONALIDAD
+- Tono latinoamericano neutro, cálido, directo.
+- Máximo 3-4 oraciones por respuesta completa.
+- OBLIGATORIO: Separa siempre tu respuesta de la pregunta final usando el signo de barra diagonal con espacios / . Ejemplo: Esto te va a servir mucho / ¿Qué te parece?
+- PROHIBIDO el uso de asteriscos (*), guiones (-), o cualquier símbolo de formato Markdown. No uses negritas ni itálicas.
+- Escribe como una persona real en WhatsApp: limpio y sin ruidos visuales.
+- BOTONES: Si el usuario muestra interés real o la conversación está avanzada, usa este formato: [BOTON: Regístrate aquí | ${appUrl}/registro?ref=${referralCode}] .
+- REGLA CRÍTICA DE BOTONES: Prohibido enviar el botón en el primer mensaje de respuesta. Max debe ser un consultor, no un vendedor desesperado. El botón siempre va al final, después del slash / .
+
+### FLUJO DE VENTAS (ESTRICTO)
+1. ABRIR (Mensajes 1-2): Responde la duda, empatiza y haz una PREGUNTA DE DOLOR (ej. ¿cómo controlas hoy tus márgenes?). NUNCA envíes el botón aquí.
+2. DESCUBRIR Y EMPATIZAR (Mensajes 3-4): Una vez que el usuario hable de su problema (Excel, fletes, tiempo), valida su frustración y explica brevemente cómo DropCost lo soluciona.
+3. SOLUCIÓN Y CIERRE (Mensaje 5+): Aquí es donde invitas al registro con el botón y recomiendas un plan.
+
+### ESTADO DEL CHAT
+- Mensajes previos: ${msgCount}
+${msgCount <= 1 ? "- FASE ACTUAL: APERTURA. Prohibido enviar botones de registro. Enfócate en descubrir el dolor." : ""}
+${isAdvancedConversation ? "- FASE ACTUAL: CIERRE. Puedes usar el botón de registro si el usuario está listo." : "- FASE ACTUAL: DIAGNÓSTICO. No presiones el registro aún."}
+${ollamaSummary ? `- HISTORIAL RESUMIDO: ${ollamaSummary}` : ""}
+
+- Usa el historial para no repetir preguntas.
+- SIEMPRE usa el separador: /
+
+### EJEMPLOS DE RESPUESTA
+User: ¿Qué es DropCost Master?
+Max: DropCost es la herramienta que te saca de la ceguera financiera en tu tienda de dropshipping. Básicamente te dice cuánto dinero estás ganando de verdad por cada venta, quitando fletes, devoluciones y CPA. / ¿Cómo estás llevando ese control ahora mismo, en un Excel? (Nota: Sin botón)
+
+User: ¿Qué precio tiene?
+Max: Tenemos planes que se ajustan a tu nivel, desde el Lite para los que arrancan hasta el PRO que es nuestro favorito. / ¿Te gustaría que te cuente qué incluye cada uno? (Nota: Sin botón en la primera duda)
+
+### REGLAS DE ORO
+- NUNCA uses asteriscos.
+- NUNCA uses negritas.
+- SIEMPRE usa el slash / para separar el mensaje de la pregunta final.
+
+Chateando con: ${userName}`;
+    } else {
+      // Prompt para Soporte y Mentoría (Mantiene la base actual)
+      systemPrompt = `### REGLA #1 (OBLIGATORIA):
+Responde en MÁXIMO 2-3 oraciones. Estilo chat. Sin listas largas.
+Si necesitas explicar varios puntos, usa el separador [SPLIT] para dividir el mensaje en ráfagas.
 
 ${agentConfig?.prompt_personalidad ?? "Eres un asistente experto en dropshipping."}
-
 ${agentConfig?.prompt_objetivo_flujo ?? ""}
-
 ${agentConfig?.prompt_reglas ?? ""}
-${sellerSpecificRules}
 
 ### CONTEXTO:
-- Rol activo: ${agentRole}
-- Chateando con: ${userName}
-- Mensajes previos: ${msgCount}
-${msgCount > 0 ? '- ESTA ES UNA CHARLA EN CURSO. PROHIBIDO saludar de nuevo. Continúa directamente.' : '- Primer mensaje: puedes saludar UNA vez de forma breve.'}
-${ollamaSummary ? `\n### RESUMEN PREVIO:\n${ollamaSummary}` : ""}
-${kbContext ? `\n### KB:\n${kbContext}` : ""}
-${plansContext ? `\n### PLANES:\n${plansContext}` : ""}
-${costeoData ? `\n### DATOS SIMULADOS:\n${JSON.stringify(costeoData)}` : ""}
+- Rol: ${agentRole}
+- Usuario: ${userName}
+${ollamaSummary ? `\n### RESUMEN:\n${ollamaSummary}` : ""}
+${kbContext ? `\n### CONOCIMIENTO:\n${kbContext}` : ""}
+${costeoData ? `\n### DATOS SIMULACIÓN:\n${JSON.stringify(costeoData)}` : ""}
 
-RECUERDA: Máximo 2-3 oraciones. Estilo chat. Nada de textos largos.`;
+RECUERDA: Sé breve y directo.`;
+    }
+
+    const SYSTEM_PROMPT = systemPrompt;
 
     // 8. Preparar historial con el nuevo mensaje del usuario (NO guardar aún, se guarda en paso 9 con la respuesta)
     let leadHistory = history;
@@ -253,7 +296,7 @@ RECUERDA: Máximo 2-3 oraciones. Estilo chat. Nada de textos largos.`;
     // Si no hay historial previo, inyectamos el saludo del frontend como contexto
     // para que la IA sepa que ya se presentó y no repita el saludo
     const greetingContext = history.length === 0 
-      ? [{ role: 'assistant', content: `Encantado de saludarte ${userName}, soy Drop Assistant y estaré encantado de ayudarte el día de hoy.` }]
+      ? [{ role: 'assistant', content: `Encantado de saludarte ${userName}, soy Max del equipo de DropCost y estaré encantado de ayudarte el día de hoy.` }]
       : [];
 
     const apiHistory = ollamaSummary 
@@ -309,7 +352,57 @@ RECUERDA: Máximo 2-3 oraciones. Estilo chat. Nada de textos largos.`;
       throw new Error(`Google API (${modelName}): ${googleError}`);
     }
 
-    const assistantContent = aiData.candidates[0].content?.parts?.[0]?.text || "No pude generar una respuesta.";
+    let assistantContent = aiData.candidates[0].content?.parts?.[0]?.text || "No pude generar una respuesta.";
+    
+    // LIMPIEZA DRÁSTICA: El código es la última línea de defensa
+    assistantContent = assistantContent.replace(/\*/g, '').trim();
+    
+    // Si el modelo olvidó el slash pero detectamos una pregunta, forzamos la división
+    if (!assistantContent.includes('/') && assistantContent.includes('?')) {
+      // 1. Intentar por el signo de apertura (estándar)
+      let splitIndex = assistantContent.lastIndexOf('¿');
+      
+      // 2. Si no hay ¿, buscamos el último punto o salto de línea antes de la pregunta
+      if (splitIndex === -1) {
+        const lastQM = assistantContent.lastIndexOf('?');
+        const textBeforeQ = assistantContent.slice(0, lastQM);
+        // Buscamos el final de la oración anterior
+        const lastDot = Math.max(
+          textBeforeQ.lastIndexOf('.'), 
+          textBeforeQ.lastIndexOf('!'),
+          textBeforeQ.lastIndexOf('\n')
+        );
+        if (lastDot !== -1 && lastDot < lastQM - 5) {
+          splitIndex = lastDot + 1;
+        }
+      }
+
+      // Inyectar el slash si encontramos un punto de corte razonable
+      if (splitIndex > 10 && splitIndex < assistantContent.length - 5) {
+        assistantContent = assistantContent.slice(0, splitIndex).trim() + ' / ' + assistantContent.slice(splitIndex).trim();
+      }
+    }
+
+    // Segunda medida de seguridad: Si hay un link de registro y no está en formato BOTON, lo convertimos
+    const regUrl = `${appUrl}/registro?ref=${referralCode}`;
+    if (assistantContent.includes(regUrl) && !assistantContent.includes('[BOTON:')) {
+       assistantContent = assistantContent.replace(regUrl, `[BOTON: Regístrate aquí | ${regUrl}]`);
+    }
+
+    // TERCERA MEDIDA (HUMANIDAD): Asegurar que el botón esté al final de la última burbuja
+    const buttonRegex = /\[BOTON:\s*[^|]+\|\s*[^\]]+\]/;
+    const buttonMatch = assistantContent.match(buttonRegex);
+    if (buttonMatch) {
+      // Hard guard: Si es el primer mensaje del lead, prohibimos el botón programáticamente
+      if (msgCount <= 1 && !message.toLowerCase().includes('registro') && !message.toLowerCase().includes('empezar')) {
+        assistantContent = assistantContent.replace(buttonRegex, '').trim();
+      } else {
+        const buttonTag = buttonMatch[0];
+        // Lo quitamos de donde esté y lo pegamos al final
+        assistantContent = assistantContent.replace(buttonTag, '').replace(/\s+/g, ' ').trim();
+        assistantContent = assistantContent + " " + buttonTag;
+      }
+    }
     const rawUsage = aiData.usageMetadata || {};
     const promptTokens = rawUsage.promptTokenCount || 0;
     // Gemma no devuelve candidatesTokenCount, estimamos desde el texto (~4.5 chars/token en español)

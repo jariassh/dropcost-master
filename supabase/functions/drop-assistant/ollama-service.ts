@@ -3,7 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const OLLAMA_API_URL = Deno.env.get("OLLAMA_API_URL");
 const OLLAMA_API_KEY = Deno.env.get("OLLAMA_API_KEY");
-const OLLAMA_MODEL = Deno.env.get("OLLAMA_MODEL") || "mistral:7b";
+// Usamos 'mistral' como modelo por defecto para la resumación en la nube
+const OLLAMA_MODEL = "mistral"; 
 
 interface UsageLog {
   usuario_id?: string;
@@ -41,8 +42,9 @@ export async function summarizeThread(
     const historyText = messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join("\n");
     
     const systemPrompt = `Eres un asistente de resumación para DropCost Master.
-Identifica puntos clave, decisiones y datos financieros (CPA, Márgenes).
-Resumen máximo 300 tokens. Idioma: Español.`;
+Identifica puntos clave, decisiones del usuario y datos financieros mencionados (CPA, Márgenes, Devoluciones).
+Genera un resumen ejecutivo de máximo 300 tokens para que el siguiente agente tenga contexto claro.
+Idioma: Español.`;
 
     const response = await fetch(`${OLLAMA_API_URL}/chat/completions`, {
       method: 'POST',
@@ -66,7 +68,12 @@ Resumen máximo 300 tokens. Idioma: Español.`;
     if (!response.ok) throw new Error(data.error?.message || "Error en Ollama API");
 
     const summary = data.choices[0].message.content;
-    const usage = data.usage || { prompt_tokens: 0, completion_tokens: 0 };
+    
+    // Mejorar detección de usage con fallback de estimación
+    const usage = data.usage || { 
+      prompt_tokens: Math.ceil((systemPrompt.length + historyText.length) / 4), 
+      completion_tokens: Math.ceil(summary.length / 4) 
+    };
 
     await logUsage(supabase, {
       usuario_id: userId,
