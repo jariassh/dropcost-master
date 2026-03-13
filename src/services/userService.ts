@@ -22,7 +22,17 @@ export const userService = {
             }
 
             if (filters.status && filters.status !== 'all') {
-                query = query.eq('estado_suscripcion', filters.status);
+                if (filters.status === 'sin_verificar') {
+                    query = query.eq('rol', 'suscriptor');
+                } else if (filters.status === 'activa') {
+                    // Clientes premium son aquellos con rol 'cliente'
+                    query = query.eq('rol', 'cliente');
+                } else if (filters.status === 'usuario' as any) {
+                    // Usuarios free son aquellos con rol 'usuario'
+                    query = query.eq('rol', 'usuario');
+                } else {
+                    query = query.eq('estado_suscripcion', filters.status);
+                }
             }
 
             if (filters.role && filters.role !== 'all') {
@@ -150,6 +160,28 @@ export const userService = {
         }
 
         return true;
+    },
+
+    /**
+     * Elimina un usuario que no ha verificado su email.
+     * Esta acción es irreversible y limpia la base de datos de registros basura.
+     */
+    async deleteUnverifiedUser(id: string): Promise<{ success: boolean; error?: string }> {
+        // En una implementación real, esto debería llamar a una Edge Function 
+        // para eliminar también de auth.users si es necesario.
+        // Por ahora eliminamos el perfil de la tabla public.users.
+        const { error } = await supabase
+            .from('users')
+            .delete()
+            .eq('id', id)
+            .eq('email_verificado', false); // Seguridad extra
+
+        if (error) {
+            console.error('Error deleting unverified user:', error);
+            return { success: false, error: error.message };
+        }
+
+        return { success: true };
     },
 
     /**

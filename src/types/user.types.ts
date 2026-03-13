@@ -1,5 +1,5 @@
-export type UserRole = 'cliente' | 'lider' | 'admin' | 'superadmin';
-export type SubscriptionStatus = 'activa' | 'cancelada' | 'suspendida' | 'pendiente' | 'trial' | 'inactiva';
+export type UserRole = 'cliente' | 'lider' | 'admin' | 'superadmin' | 'suscriptor' | 'usuario';
+export type SubscriptionStatus = 'activa' | 'cancelada' | 'suspendida' | 'pendiente' | 'trial' | 'inactiva' | 'sin_verificar' | 'usuario';
 
 export interface User {
     id: string;
