@@ -80,7 +80,7 @@ export function MentorAssistant({
     const fetchThreads = async () => {
         setIsLoadingThreads(true);
         try {
-            const { data, error } = await supabase
+            const { data, error } = await (supabase as any)
                 .from('ia_threads')
                 .select('*')
                 .eq('tienda_id', tiendaId)
@@ -97,7 +97,7 @@ export function MentorAssistant({
 
     const fetchMessages = async (threadId: string) => {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await (supabase as any)
                 .from('ia_messages')
                 .select('*')
                 .eq('thread_id', threadId)
@@ -109,7 +109,7 @@ export function MentorAssistant({
             setView('chat');
         } catch (error) {
             console.error('Error fetching messages:', error);
-            toast.show('Error al cargar la conversación', 'error');
+            toast.error('Error al cargar la conversación');
         }
     };
 
@@ -171,17 +171,17 @@ export function MentorAssistant({
 
     const deleteThread = async (id: string) => {
         try {
-            const { error } = await supabase.from('ia_threads').delete().eq('id', id);
+            const { error } = await (supabase as any).from('ia_threads').delete().eq('id', id);
             if (error) throw error;
             setThreads(threads.filter(t => t.id !== id));
             if (activeThreadId === id) {
                 setActiveThreadId(null);
                 setMessages([]);
             }
-            toast.show('Conversación eliminada', 'success');
+            toast.success('Conversación eliminada');
         } catch (error) {
             console.error('Error deleting thread:', error);
-            toast.show('No se pudo eliminar', 'error');
+            toast.error('No se pudo eliminar');
         }
     };
 

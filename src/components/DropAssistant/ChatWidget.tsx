@@ -4,7 +4,7 @@ import {
     MessageCircle, Send, X, Bot, Sparkles, Minus,
     Settings, Shield, ChevronLeft, User, HelpCircle,
     BrainCircuit, AlertCircle, ChevronDown, Check,
-    Zap, Brain, Crown, CreditCard, Trash2, ShieldCheck, MessageSquare, Info, Filter, ArrowRight, Maximize2, Copy
+    Zap, Brain, Crown, CreditCard, Trash2, ShieldCheck, MessageSquare, Info, Filter, ArrowRight, Maximize2, Copy, ExternalLink
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { RechargeModal } from './RechargeModal';
@@ -126,7 +126,7 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
         {
             id: '1',
             role: 'assistant',
-            content: 'Encantado de saludarte, soy Drop Assistant y estaré encantado de ayudarte el día de hoy.',
+            content: 'Encantado de saludarte, soy Max del equipo de DropCost y estaré encantado de ayudarte el día de hoy.',
             timestamp: new Date()
         }
     ]);
@@ -141,6 +141,58 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
     const [isLevelMenuOpen, setIsLevelMenuOpen] = useState(false);
     const [credits, setCredits] = useState<number>(0);
     const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
+    const [contactError, setContactError] = useState<string | null>(null);
+    const [isValidatingEmail, setIsValidatingEmail] = useState(false);
+    const [isDisposableEmail, setIsDisposableEmail] = useState(false);
+    const [emailTouched, setEmailTouched] = useState(false);
+
+    // Dominios de correo basura o prohibidos (Capa local rápida)
+    const BANNED_DOMAINS = [
+        'mail.com', 'test.com', 'example.com', 'tempmail.com', 'junk.com', 'demo.com', 
+        'asdf.com', 'qwerty.com', 'bigonla.com', '1secmail.com', 'guerrillamail.com',
+        'sharklasers.com', 'getnada.com', 'dispostable.com', 'yopmail.com'
+    ];
+    const MAJOR_DOMAINS = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'icloud.com', 'live.com', 'me.com', 'msn.com'];
+
+    // Helper para detectar teclado "limpiado" o patrones basura
+    const isKeyboardMash = (str: string) => {
+        // Patrones de secuencias y repeticiones
+        const patterns = [/asdf/i, /sdsd/i, /qwerty/i, /1234/i, /zxcv/i, /(.)\1{3,}/];
+        if (patterns.some(p => p.test(str))) return true;
+        
+        // Detectar demasiados números mezclados (típico de temp-mail como semfo9291)
+        const numbers = str.replace(/[^0-9]/g, '').length;
+        if (numbers > 4 && str.length < 15) return true;
+        
+        return false;
+    };
+
+    // Validar si el contacto es válido para habilitar el chat
+    const isContactValid = useMemo(() => {
+        const nombreTrim = contact.nombre.trim();
+        // Exigir al menos 2 palabras (Nombre y Apellido) y que no sea keyboard mash
+        if (!nombreTrim || nombreTrim.split(/\s+/).length < 2) return false;
+        if (isKeyboardMash(nombreTrim)) return false;
+        
+        // Validar Email
+        const email = contact.email.toLowerCase().trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) return false;
+        if (isKeyboardMash(email.split('@')[0])) return false;
+        
+        const domain = email.split('@')[1];
+        if (BANNED_DOMAINS.includes(domain) || isDisposableEmail) return false;
+        if (isValidatingEmail || !emailTouched) return false;
+
+        // Validar Teléfono (parte numérica)
+        const numericPhone = contact.telefono.replace(/\D/g, '');
+        // El prefijo suele ser 2-3 dígitos, el número mínimo 7-8. Total mínimo 9-10.
+        if (numericPhone.length < 9) return false;
+
+        if (!aceptaTerminos) return false;
+
+        return true;
+    }, [contact, aceptaTerminos]);
 
     const CREDIT_COSTS = {
         quick: 1,
@@ -155,6 +207,45 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
     };
 
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    const validateEmailDomain = async (email: string) => {
+        if (!email || !email.includes('@')) return;
+        
+        const domain = email.split('@')[1];
+        
+        // Check de dominio sospechoso manual (si es corto y no es de los grandes)
+        if (domain.length < 5 && !MAJOR_DOMAINS.includes(domain)) {
+            setContactError('Ingresa un correo con un dominio válido.');
+            setIsDisposableEmail(true);
+            return;
+        }
+
+        if (BANNED_DOMAINS.includes(domain) || isKeyboardMash(domain)) {
+            setContactError('El dominio de este correo no parece real.');
+            setIsDisposableEmail(true);
+            return;
+        }
+
+        setIsValidatingEmail(true);
+        setEmailTouched(true);
+        try {
+            const response = await fetch(`https://disify.com/api/domain/${domain}`);
+            const data = await response.json();
+            
+            if (data.disposable) {
+                setContactError('Los correos temporales o desechables no están permitidos.');
+                setIsDisposableEmail(true);
+            } else {
+                setContactError(null);
+                setIsDisposableEmail(false);
+            }
+        } catch (error) {
+            console.warn("Error validando dominio:", error);
+            // Si la API falla, permitimos por defecto para no bloquear al usuario
+        } finally {
+            setIsValidatingEmail(false);
+        }
+    };
 
     /* --- Efectos --- */
     useEffect(() => {
@@ -180,7 +271,7 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                 {
                     id: '1',
                     role: 'assistant',
-                    content: `Encantado de saludarte ${userName}, soy Drop Assistant y estaré encantado de ayudarte el día de hoy.`,
+                    content: `Encantado de saludarte ${userName}, soy Max del equipo de DropCost y estaré encantado de ayudarte el día de hoy.`,
                     timestamp: new Date()
                 }
             ]);
@@ -211,7 +302,7 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
             await supabase.from('users').update({ ai_learning_opt_in: newVal }).eq('id', user.id);
 
             // 2. Upsert en tabla de preferencias detallada
-            await supabase.from('user_sharing_preferences').upsert({
+            await (supabase as any).from('user_sharing_preferences').upsert({
                 usuario_id: user.id,
                 compartir_anonimo: newVal,
                 fecha_opt_in: newVal ? now : null,
@@ -280,23 +371,114 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                 return;
             }
 
-            setTimeout(() => {
-                setIsTyping(false);
-                const assistantMsg: Message = {
-                    id: (Date.now() + 1).toString(),
-                    role: 'assistant',
-                    content: data.reply || data.error || 'Lo siento, tuve un problema procesando tu consulta.',
-                    timestamp: new Date()
-                };
-                setMessages(prev => [...prev, assistantMsg]);
-                if (data.threadId) setCurrentThreadId(data.threadId);
-                if (selectedRole === 'mentoría') refreshCredits();
-            }, delay);
+            // Procesamos la respuesta (posibles múltiples mensajes ráfaga con separadores [SPLIT] o /)
+            const fullReply = data.reply || data.error || 'Lo siento, tuve un problema procesando tu consulta.';
+            
+            // Soportamos ambos: el técnico [SPLIT] y el sugerido '/' para separar respuestas de preguntas
+            // Usamos un regex que requiere espacios alrededor del slash para evitar romper URLs (http://)
+            const messageParts = fullReply
+                .split(/\[SPLIT\]|\s+\/\s+/)
+                .map((s: string) => s.trim())
+                .filter((s: string) => s !== '');
+
+            // Función recursiva para enviar mensajes secuencialmente con delay
+            const sendSequentially = (index: number) => {
+                if (index >= messageParts.length) {
+                    setIsTyping(false);
+                    if (data.threadId) setCurrentThreadId(data.threadId);
+                    if (selectedRole === 'mentoría') refreshCredits();
+                    return;
+                }
+
+                // Determinamos el delay para este mensaje
+                // El primero tiene el delay inicial largo, los siguientes son más cortos (ráfaga humana)
+                const currentDelay = index === 0 ? delay : Math.floor(Math.random() * 1500) + 1500;
+
+                setTimeout(() => {
+                    const assistantMsg: Message = {
+                        id: (Date.now() + index).toString(),
+                        role: 'assistant',
+                        content: messageParts[index],
+                        timestamp: new Date()
+                    };
+                    
+                    setMessages(prev => [...prev, assistantMsg]);
+                    
+                    // Si quedan más mensajes, activamos el typing de nuevo antes del siguiente
+                    if (index + 1 < messageParts.length) {
+                        setIsTyping(true);
+                        sendSequentially(index + 1);
+                    } else {
+                        setIsTyping(false);
+                        if (data.threadId) setCurrentThreadId(data.threadId);
+                        if (selectedRole === 'mentoría') refreshCredits();
+                    }
+                }, currentDelay);
+            };
+
+            sendSequentially(0);
 
         } catch (error) {
             setIsTyping(false);
             console.error("Chat Error:", error);
         }
+    };
+
+    const renderMessageContent = (content: string) => {
+        // Regex para detectar botones: [BOTON: Texto | URL]
+        const buttonRegex = /\[BOTON:\s*([^|]+)\|\s*([^\]]+)\]/g;
+
+        if (!content.includes('[BOTON:')) return content;
+
+        const parts = [];
+        let lastIndex = 0;
+        let match;
+
+        while ((match = buttonRegex.exec(content)) !== null) {
+            // Texto previo al botón
+            if (match.index > lastIndex) {
+                parts.push(content.substring(lastIndex, match.index));
+            }
+
+            const buttonText = match[1].trim();
+            const buttonUrl = match[2].trim();
+
+            parts.push(
+                <div key={match.index} style={{ margin: '12px 0' }}>
+                    <a
+                        href={buttonUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '12px 24px',
+                            backgroundColor: '#6366F1',
+                            color: 'white',
+                            borderRadius: '12px',
+                            textDecoration: 'none',
+                            fontWeight: 700,
+                            fontSize: '14px',
+                            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+                            transition: 'all 0.2s',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <ExternalLink size={16} />
+                        {buttonText}
+                    </a>
+                </div>
+            );
+            lastIndex = buttonRegex.lastIndex;
+        }
+
+        // Texto restante
+        if (lastIndex < content.length) {
+            parts.push(content.substring(lastIndex));
+        }
+
+        return parts;
     };
 
     const animations = `
@@ -379,7 +561,7 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                     </div>
                     <div>
                         <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700 }}>
-                            {selectedRole === 'mentoría' ? 'Drop Analyst' : 'Drop Assistant'}
+                            {selectedRole === 'mentoría' ? 'Max (Mentor)' : 'Max'}
                         </h4>
                         {!isMinimized && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -475,7 +657,7 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                                             backgroundColor: 'var(--card-bg)', borderRadius: '16px', border: '1px solid var(--border-color)',
                                             boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 100, padding: '8px', overflow: 'hidden'
                                         }}>
-                                            <p style={{ margin: '8px 12px', fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Drop Assistant</p>
+                                            <p style={{ margin: '8px 12px', fontSize: '11px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Max - Inteligencia Artificial</p>
                                             {(['quick', 'standard', 'deep'] as const).map((level) => (
                                                 <button
                                                     key={level}
@@ -552,7 +734,7 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                                             boxShadow: msg.role === 'assistant' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
                                             whiteSpace: 'pre-wrap'
                                         }}>
-                                            {msg.content}
+                                            {renderMessageContent(msg.content)}
                                         </div>
                                         <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                                             {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -584,8 +766,8 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                                     </h2>
                                     <p style={{ color: 'var(--text-tertiary)', fontSize: '13px', maxWidth: '300px', margin: 0, lineHeight: '1.4' }}>
                                         {selectedRole === 'mentoría'
-                                            ? 'Soy tu mentor experto. Analizaré la viabilidad de tu producto y optimizaré tu rentabilidad.'
-                                            : 'Tu asistente Drop assistant 24/7. Resuelvo tus dudas sobre la plataforma y logística en segundos.'}
+                                            ? 'Soy Max, tu mentor experto. Analizaré la viabilidad de tu producto y optimizaré tu rentabilidad.'
+                                            : 'Soy Max, del equipo de DropCost. Resuelvo tus dudas sobre la plataforma y logística en segundos.'}
                                     </p>
 
                                     {suggestions.length > 0 && (
@@ -662,20 +844,57 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                                 style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
                             >
                                 <input
-                                    type="text" placeholder="Nombre completo" required
-                                    value={contact.nombre} onChange={(e) => setContact({ ...contact, nombre: e.target.value })}
-                                    style={{ padding: '12px 16px', borderRadius: '12px', border: '1.5px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', outline: 'none', transition: 'border-color 0.2s' }}
+                                    type="text" placeholder="Nombre completo (Nombre y Apellido)" required
+                                    value={contact.nombre} 
+                                    onChange={(e) => {
+                                        setContact({ ...contact, nombre: e.target.value });
+                                        setContactError(null);
+                                    }}
+                                    onBlur={() => {
+                                        const trimmed = contact.nombre.trim();
+                                        if (trimmed && trimmed.split(/\s+/).length < 2) {
+                                            setContactError('Por favor ingresa tu nombre y apellido real.');
+                                        } else if (isKeyboardMash(trimmed)) {
+                                            setContactError('Parece que el nombre no es real. Por favor corrígelo.');
+                                        } else if (trimmed.length < 4) {
+                                            setContactError('Nombre demasiado corto.');
+                                        }
+                                    }}
+                                    style={{ padding: '12px 16px', borderRadius: '12px', border: '1.5px solid ' + (contactError?.includes('nombre') ? '#ef4444' : 'var(--border-color)'), backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', outline: 'none', transition: 'border-color 0.2s' }}
                                 />
                                 <input
-                                    type="email" placeholder="Correo electrónico" required
-                                    value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })}
-                                    style={{ padding: '12px 16px', borderRadius: '12px', border: '1.5px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', outline: 'none', transition: 'border-color 0.2s' }}
+                                    type="email" 
+                                    placeholder="Correo electrónico (ej: juan@gmail.com)" 
+                                    required
+                                    value={contact.email} 
+                                    onChange={(e) => {
+                                        setContact({ ...contact, email: e.target.value.toLowerCase().replace(/\s/g, '') });
+                                        setContactError(null);
+                                        setIsDisposableEmail(false);
+                                        setEmailTouched(false);
+                                    }}
+                                    onBlur={() => validateEmailDomain(contact.email)}
+                                    style={{ 
+                                        padding: '12px 16px', 
+                                        borderRadius: '12px', 
+                                        border: '1.5px solid ' + (isDisposableEmail ? '#ef4444' : 'var(--border-color)'), 
+                                        backgroundColor: 'var(--bg-primary)', 
+                                        color: 'var(--text-primary)', 
+                                        outline: 'none', 
+                                        transition: 'border-color 0.2s' 
+                                    }}
                                 />
                                 <div style={{ textAlign: 'left' }}>
                                     <SmartPhoneInput
                                         value={contact.telefono}
-                                        onChange={(fullValue, iso) => setContact({ ...contact, telefono: fullValue, pais: iso })}
+                                        onChange={(fullValue, iso) => {
+                                            setContact({ ...contact, telefono: fullValue, pais: iso });
+                                            setContactError(null);
+                                        }}
                                     />
+                                    <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '4px', marginLeft: '4px' }}>
+                                        Ingresa un número de WhatsApp válido para contacto directo.
+                                    </p>
                                 </div>
                                 <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', textAlign: 'left', marginTop: '4px' }}>
                                     <input
@@ -690,8 +909,38 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                                         Acepto los <a href="/terminos" target="_blank" style={{ color: '#6366F1', textDecoration: 'none' }}>Términos y Condiciones</a> y la <a href="/privacidad" target="_blank" style={{ color: '#6366F1', textDecoration: 'none' }}>Política de Privacidad</a> para la protección de mis datos.
                                     </label>
                                 </div>
-                                <button type="submit" style={{ marginTop: '12px', padding: '14px', borderRadius: '12px', backgroundColor: '#6366F1', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.2)' }}>
-                                    Empezar a Chatear
+                                {contactError && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '10px', color: '#ef4444', fontSize: '12px', textAlign: 'left' }}>
+                                        <AlertCircle size={14} /> {contactError}
+                                    </div>
+                                )}
+
+                                <button 
+                                    type="submit" 
+                                    disabled={!isContactValid || isValidatingEmail}
+                                    style={{ 
+                                        marginTop: '12px', 
+                                        padding: '14px', 
+                                        borderRadius: '12px', 
+                                        backgroundColor: (isContactValid && !isValidatingEmail) ? '#6366F1' : 'var(--border-color)', 
+                                        color: (isContactValid && !isValidatingEmail) ? 'white' : 'var(--text-tertiary)', 
+                                        border: 'none', 
+                                        fontWeight: 700, 
+                                        cursor: (isContactValid && !isValidatingEmail) ? 'pointer' : 'not-allowed', 
+                                        boxShadow: (isContactValid && !isValidatingEmail) ? '0 4px 12px rgba(99, 102, 241, 0.2)' : 'none',
+                                        transition: 'all 0.3s',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '8px'
+                                    }}
+                                >
+                                    {isValidatingEmail ? (
+                                        <>
+                                            <div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'assistantFadeIn 0.8s linear infinite' }} />
+                                            Validando...
+                                        </>
+                                    ) : 'Empezar a Chatear'}
                                 </button>
                             </form>
                         </div>
@@ -779,7 +1028,7 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                     {/* Footer Info */}
                     {view === 'chat' && (
                         <div style={{ padding: '8px 16px', backgroundColor: 'var(--bg-tertiary)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'center', gap: '8px', flexShrink: 0 }}>
-                            <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>Drop Assistant v2.0 • Powered by DropCost Master</span>
+                             <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>Max v2.0 • Powered by DropCost Master</span>
                         </div>
                     )}
                 </>

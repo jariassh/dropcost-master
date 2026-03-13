@@ -19,7 +19,7 @@ interface CreditTransaction {
     consultation_type: string | null;
     mercado_pago_transaction_id: string | null;
     notes: string | null;
-    created_at: string;
+    created_at: string | null;
 }
 
 interface CreditBalance {
@@ -447,7 +447,7 @@ export const DropCreditsPage: React.FC = () => {
                                                 whiteSpace: 'nowrap',
                                                 fontSize: '12px'
                                             }}>
-                                                {formatDisplayDate(txn.created_at)}
+                                                {txn.created_at ? formatDisplayDate(txn.created_at) : '—'}
                                             </td>
                                         </tr>
                                     );
