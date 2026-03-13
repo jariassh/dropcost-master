@@ -207,6 +207,14 @@ serve(async (req) => {
     const userName = isAnonymous ? (contactData?.nombre || 'Visitante') : userRegistradoNombre;
     const msgCount = history.length;
 
+    // Reglas específicas para el asistente de ventas (Leads)
+    const sellerSpecificRules = agentRole === 'SELLER' ? `
+### REGLAS DE VENTA (SELLER):
+1. PROHIBIDO: Ofrecer o decir que enviarás pantallazos, imágenes, fotos o capturas. Solo texto.
+2. OBJETIVO: No extiendas la charla. Tu único fin es que el usuario se registre en DropCost Master.
+3. CONVERSIÓN: Después de 2-3 mensajes, invita directamente al registro usando: "Regístrate gratis aquí: ${appUrl}/signup?ref=${referralCode}"
+4. BREVEDAD: Ve al grano. Responde la duda y llama a la acción.` : "";
+
     const SYSTEM_PROMPT = `### REGLA #1 (OBLIGATORIA, NO NEGOCIABLE):
 Responde en MÁXIMO 2-3 oraciones cortas. Estilo WhatsApp. Sin párrafos largos. Sin listas. Sin asteriscos ni bold. Sin emojis excesivos (máximo 1). UNA pregunta por mensaje.
 
@@ -215,6 +223,7 @@ ${agentConfig?.prompt_personalidad ?? "Eres un asistente experto en dropshipping
 ${agentConfig?.prompt_objetivo_flujo ?? ""}
 
 ${agentConfig?.prompt_reglas ?? ""}
+${sellerSpecificRules}
 
 ### CONTEXTO:
 - Rol activo: ${agentRole}

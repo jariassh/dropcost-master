@@ -107,20 +107,19 @@ export function AppLayout() {
     const location = useLocation();
     const [logos, setLogos] = useState<{ light: string | null; dark: string | null }>({ light: null, dark: null });
 
+    const { config, isLoading: isConfigLoading } = useGlobalConfig();
+
     useEffect(() => {
-        configService.getConfig().then(config => {
+        if (config) {
             setLogos({
                 light: config.logo_principal_url || null,
                 dark: config.logo_variante_url || null
             });
-        });
-    }, []);
+        }
+    }, [config]);
 
     // Enforce single session
     useSessionEnforcer();
-
-    // Apply global configuration (SEO, Colors, Tracking)
-    useGlobalConfig();
 
     useEffect(() => {
         fetchNotifications();

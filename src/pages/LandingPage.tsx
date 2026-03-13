@@ -373,7 +373,7 @@ export function LandingPage() {
             <section style={{ padding: '100px var(--main-padding)', backgroundColor: 'var(--bg-primary)' }} id="testimonials">
                 <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                     <div className="reveal" style={{ textAlign: 'center', marginBottom: '64px' }}>
-                        <h2 style={{ fontSize: '40px', fontWeight: 600, marginBottom: '16px' }}>Historias de Ã‰xito Real</h2>
+                        <h2 style={{ fontSize: '40px', fontWeight: 600, marginBottom: '16px' }}>Historias de Éxito Real</h2>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '18px' }}>Expertos que pasaron de adivinar a ganar con números.</p>
                     </div>
                     <div style={{ position: 'relative' }}>
@@ -550,61 +550,61 @@ export function LandingPage() {
                     <h2 className="reveal" style={{ fontSize: '36px', fontWeight: 600, textAlign: 'center', marginBottom: '48px' }}>Preguntas Frecuentes</h2>
                     <div className="reveal" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <FAQItem
-                            question="Â¿Qué es DropCost Master?"
+                            question="¿Qué es DropCost Master?"
                             answer="Es la herramienta definitiva para dropshippers en Latinoamérica. Te permite calcular la rentabilidad real de tu operación considerando costos de producto, fletes, publicidad y, lo más importante, el impacto de las devoluciones en tu flujo de caja."
                             isOpen={openFAQIndex === 0}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 0 ? null : 0)}
                         />
                         <FAQItem
-                            question="Â¿Cómo funciona el simulador de costes?"
+                            question="¿Cómo funciona el simulador de costes?"
                             answer="Solo debes ingresar tus costos operativos básicos y el simulador calculará automáticamente tu punto de equilibrio, margen de contribución y utilidad neta. Es la forma más rápida de saber si un producto vale la pena escalar o no."
                             isOpen={openFAQIndex === 1}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 1 ? null : 1)}
                         />
                         <FAQItem
-                            question="Â¿Qué son las 3 estrategias de ofertas?"
+                            question="¿Qué son las 3 estrategias de ofertas?"
                             answer="Nuestra plataforma te permite crear ofertas irresistibles (Bundles) basadas en 3 estrategias probadas de e-commerce. El sistema calcula el margen exacto para cada combo, asegurando que tus promociones siempre sean rentables."
                             isOpen={openFAQIndex === 2}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 2 ? null : 2)}
                         />
                         <FAQItem
-                            question="Â¿Cómo funciona el programa de referidos?"
+                            question="¿Cómo funciona el programa de referidos?"
                             answer="Contamos con un sistema robusto de 2 niveles: obtienes hasta un 15% de comisión mensual por tus referencias directas y un 5% adicional por las referencias indirectas (Nivel 2). Tus enlaces tienen 90 días de permanencia (cookies) y las comisiones duran hasta 6 meses por referido activo."
                             isOpen={openFAQIndex === 3}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 3 ? null : 3)}
                         />
                         <FAQItem
-                            question="Â¿Qué puedo hacer en mi Billetera virtual?"
+                            question="¿Qué puedo hacer en mi Billetera virtual?"
                             answer="Desde tu billetera puedes gestionar tus retiros y ver en tiempo real las ganancias acumuladas por tus comisiones de referidos en ambos niveles. Es un centro de control transparente para tu dinero extra."
                             isOpen={openFAQIndex === 4}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 4 ? null : 4)}
                         />
                         <FAQItem
-                            question="Â¿Puedo gestionar varias tiendas a la vez?"
+                            question="¿Puedo gestionar varias tiendas a la vez?"
                             answer="Sí, DropCost Master es multitienda. Puedes crear y gestionar diferentes perfiles de tienda, cada uno con su propia configuración y moneda local según el país donde operes."
                             isOpen={openFAQIndex === 5}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 5 ? null : 5)}
                         />
                         <FAQItem
-                            question="Â¿Qué monedas están disponibles?"
+                            question="¿Qué monedas están disponibles?"
                             answer="Soportamos las principales monedas de Latinoamérica (COP, MXN, USD, etc.). El sistema adapta los formatos y cálculos a la moneda que selecciones para tu tienda."
                             isOpen={openFAQIndex === 6}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 6 ? null : 6)}
                         />
                         <FAQItem
-                            question="Â¿Mi cuenta está segura?"
+                            question="¿Mi cuenta está segura?"
                             answer="Totalmente. Implementamos seguridad de autenticación en dos pasos (2FA) para proteger tu acceso y asegurar que solo tú puedas gestionar tus datos financieros y retiros."
                             isOpen={openFAQIndex === 7}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 7 ? null : 7)}
                         />
                         <FAQItem
-                            question="Â¿Puedo ver mis movimientos anteriores?"
+                            question="¿Puedo ver mis movimientos anteriores?"
                             answer="Sí, contamos con un Historial de Actividades detallado donde puedes auditar cada cambio, simulación o acción relevante realizada en tu cuenta para un control total."
                             isOpen={openFAQIndex === 8}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 8 ? null : 8)}
                         />
                         <FAQItem
-                            question="Â¿Existen contratos de permanencia en los planes?"
+                            question="¿Existen contratos de permanencia en los planes?"
                             answer="No. No tenemos contratos forzosos. Puedes cancelar tu suscripción en cualquier momento desde tu panel de configuración sin complicaciones."
                             isOpen={openFAQIndex === 9}
                             onToggle={() => setOpenFAQIndex(openFAQIndex === 9 ? null : 9)}
@@ -763,7 +763,7 @@ function ComparisonSection({ visible, setVisible }: { visible: boolean; setVisib
                 <div className="reveal" style={{ textAlign: 'center', marginBottom: '80px' }}>
                     <h2 style={{ fontSize: '40px', fontWeight: 600, marginBottom: '24px' }}>Excel vs DropCost Master</h2>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '18px', maxWidth: '600px', margin: '0 auto' }}>
-                        Â¿Sabías que el 80% de los dropshippers COD pierden dinero sin saberlo? Mira la diferencia real.
+                        ¿Sabías que el 80% de los dropshippers COD pierden dinero sin saberlo? Mira la diferencia real.
                     </p>
                 </div>
 
@@ -782,7 +782,7 @@ function ComparisonSection({ visible, setVisible }: { visible: boolean; setVisib
                                 <div style={{ borderTop: '1px dashed var(--border-color)', margin: '8px 0' }}></div>
                                 <ComparisonItem label="Utilidad APARENTE" value="+$13.900" color="#10B981" bold />
                                 <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '16px', borderRadius: '12px', marginTop: '16px' }}>
-                                    <p style={{ fontSize: '14px', color: '#EF4444', fontWeight: 600 }}>Â¡Peligro! Ignoras el 30% de devoluciones.</p>
+                                    <p style={{ fontSize: '14px', color: '#EF4444', fontWeight: 600 }}>¡Peligro! Ignoras el 30% de devoluciones.</p>
                                     <p style={{ fontSize: '18px', color: '#EF4444', fontWeight: 600, marginTop: '4px' }}>Resultado Real: -$3.180</p>
                                 </div>
                             </ul>

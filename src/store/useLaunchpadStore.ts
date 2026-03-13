@@ -26,84 +26,76 @@ export const useLaunchpadStore = create<LaunchpadState>((set) => ({
         set((state) => ({ 
             isLoading: true,
             tiendaId: targetTiendaId,
-            // Si cambiamos de tienda, reseteamos progreso para evitar ver el 100% de la anterior
             progress: targetTiendaId !== state.tiendaId ? 0 : state.progress,
             isComplete: targetTiendaId !== state.tiendaId ? false : state.isComplete
         }));
 
         try {
-            // 1. Check explicit progress record for this user + tienda
-            let progressQuery = supabase
-                .from('onboarding_progress' as any)
-                .select('*')
-                .eq('user_id', userId);
-            
-            if (targetTiendaId) {
-                progressQuery = progressQuery.eq('tienda_id', targetTiendaId);
-            } else {
-                progressQuery = progressQuery.is('tienda_id', null);
-            }
+            // 1. Ejecutar consultas independientes en paralelo
+            const [
+                progressRes,
+                userRes,
+                storesRes,
+                metaIntegrationsRes
+            ] = await Promise.all([
+                // Progress data
+                supabase.from('onboarding_progress' as any)
+                    .select('*')
+                    .eq('user_id', userId)
+                    .eq('tienda_id', targetTiendaId as any) // handling null logic below or in query
+                    .maybeSingle(),
+                
+                // User plan data
+                supabase.from('users' as any)
+                    .select('estado_suscripcion, plan_id')
+                    .eq('id', userId)
+                    .single(),
+                
+                // Stores data
+                supabase.from('tiendas' as any)
+                    .select('id')
+                    .eq('usuario_id', userId)
+                    .eq('active', true),
+                
+                // Meta Integration (user global)
+                supabase.from('integraciones' as any)
+                    .select('id')
+                    .eq('tipo', 'meta_ads')
+                    .eq('usuario_id', userId)
+                    .eq('estado', 'conectado')
+            ]);
 
-            const { data: progressData } = await progressQuery.maybeSingle();
-
-            // 2. Technical Checks (Ground Truth)
-            const { data: userData } = await supabase
-                .from('users' as any)
-                .select('estado_suscripcion, plan_id')
-                .eq('id', userId)
-                .single();
+            const progressData = progressRes.data;
+            const userData = userRes.data;
+            const stores = (storesRes.data as any[]) || [];
             
-            // Check Store
-            let storeCheckQuery = supabase
-                .from('tiendas' as any)
-                .select('id')
-                .eq('usuario_id', userId)
-                .eq('active', true);
-            
-            if (targetTiendaId) {
-                storeCheckQuery = storeCheckQuery.eq('id', targetTiendaId);
-            }
-
-            const { data: storesData } = await storeCheckQuery;
-            const stores = (storesData as any[]) || [];
             const hasStore = stores.length > 0;
             const activeTiendaId = targetTiendaId || (stores[0] as any)?.id || null;
+            const hasMeta = (metaIntegrationsRes.data?.length || 0) > 0;
 
-            // Check Meta via Integraciones (Global)
-            const { data: metaIntegrations } = await supabase
-                .from('integraciones' as any)
-                .select('id')
-                .eq('tipo', 'meta_ads')
-                .eq('usuario_id', userId)
-                .eq('estado', 'conectado');
-            
-            const hasMeta = (metaIntegrations?.length || 0) > 0;
-
-            // Check Ad Accounts (Store Specific)
+            // 2. Ejecutar consultas dependientes de la tienda en paralelo
             let hasAdAccounts = false;
-            if (activeTiendaId) {
-                const { count } = await supabase
-                    .from('tiendas_meta_ads' as any)
-                    .select('*', { count: 'exact', head: true })
-                    .eq('tienda_id', activeTiendaId);
-                hasAdAccounts = (count || 0) > 0;
-            }
-
-            // Check Shopify (Store Specific)
             let hasShopify = false;
+
             if (activeTiendaId) {
-                const { data } = await supabase
-                    .from('integraciones' as any)
-                    .select('id')
-                    .eq('tipo', 'shopify')
-                    .eq('tienda_id', activeTiendaId)
-                    .eq('estado', 'conectado');
-                hasShopify = (data?.length || 0) > 0;
+                const [adAccountsRes, shopifyRes] = await Promise.all([
+                    supabase.from('tiendas_meta_ads' as any)
+                        .select('*', { count: 'exact', head: true })
+                        .eq('tienda_id', activeTiendaId),
+                    
+                    supabase.from('integraciones' as any)
+                        .select('id')
+                        .eq('tipo', 'shopify')
+                        .eq('tienda_id', activeTiendaId)
+                        .eq('estado', 'conectado')
+                ]);
+
+                hasAdAccounts = (adAccountsRes.count || 0) > 0;
+                hasShopify = (shopifyRes.data?.length || 0) > 0;
             }
 
-            // Logic (NEW ORDER: 0:Plan, 1:Tienda, 2:Meta, 3:Cuentas, 4:Shopify)
+            // Logic (ORDEN: 0:Plan, 1:Tienda, 2:Meta, 3:Cuentas, 4:Shopify)
             const hasPlan = !!(userData && (userData as any).plan_id !== 'plan_free');
-
             let techProgress = 0;
             let techStep = 0;
 
@@ -113,7 +105,6 @@ export const useLaunchpadStore = create<LaunchpadState>((set) => ({
                     techProgress = 40; techStep = 2; 
                     if (hasMeta) { 
                         techProgress = 60; techStep = 3; 
-                        // These two require a specific store context
                         if (targetTiendaId && hasAdAccounts) { 
                             techProgress = 80; techStep = 4; 
                             if (hasShopify) { 

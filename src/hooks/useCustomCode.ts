@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { customCodeService, CustomCodeSnippet } from '@/services/customCodeService';
@@ -16,6 +16,9 @@ export function useCustomCode() {
         queryFn: () => customCodeService.getActiveSnippets(),
         staleTime: 1000 * 60 * 10, // 10 minutos
     });
+
+    // Guardar el estado de lo que ya se inyectó para evitar reinicializar GTM/Pixels innecesariamente
+    const lastInjectedRef = useRef<string>('');
 
     useEffect(() => {
         if (!snippets.length) return;
@@ -36,16 +39,23 @@ export function useCustomCode() {
             return false;
         });
 
+        // Crear un hash simple o string identificador de los snippets actuales
+        const currentHash = filteredSnippets.map(s => s.id).sort().join(',');
+        
+        // SI los snippets para esta ruta son los mismos que ya tenemos inyectados, NO hacer nada
+        // Esto evita que GTM se recargue en cada clic del menú
+        if (lastInjectedRef.current === currentHash) return;
+
         // Inyectar fragmentos
-        const containers = {
-            head: injectGroup(filteredSnippets.filter(s => s.location === 'head'), 'dc-custom-head', document.head),
-            body_start: injectGroup(filteredSnippets.filter(s => s.location === 'body_start'), 'dc-custom-body-start', document.body, true),
-            body_end: injectGroup(filteredSnippets.filter(s => s.location === 'body_end'), 'dc-custom-body-end', document.body, false)
-        };
+        const headContainer = injectGroup(filteredSnippets.filter(s => s.location === 'head'), 'dc-custom-head', document.head);
+        const bodyStartContainer = injectGroup(filteredSnippets.filter(s => s.location === 'body_start'), 'dc-custom-body-start', document.body, true);
+        const bodyEndContainer = injectGroup(filteredSnippets.filter(s => s.location === 'body_end'), 'dc-custom-body-end', document.body, false);
+
+        lastInjectedRef.current = currentHash;
 
         return () => {
-            // Limpiar al desmontar o cambiar de ruta
-            Object.values(containers).forEach(container => container?.remove());
+            // No eliminamos los scripts al desmontar si vamos a navegar a otra ruta que usa los mismos scripts
+            // Sin embargo, si la siguiente ruta requiere snippets DIFERENTES, injectGroup se encarga de limpiar.
         };
     }, [snippets, location.pathname]);
 }
@@ -54,13 +64,16 @@ export function useCustomCode() {
  * Inyecta un grupo de fragmentos en un contenedor específico
  */
 function injectGroup(snippets: CustomCodeSnippet[], containerId: string, parent: HTMLElement, atStart: boolean = false): HTMLElement | null {
+    // Si no hay snippets, simplemente eliminamos el contenedor anterior si existe
+    const existing = document.getElementById(containerId);
+    
     if (!snippets.length) {
-        document.getElementById(containerId)?.remove();
+        existing?.remove();
         return null;
     }
 
-    // Limpieza previa
-    document.getElementById(containerId)?.remove();
+    // Limpieza previa (solo si existen y son diferentes, handleado arriba por el hash)
+    existing?.remove();
 
     const container = document.createElement('div');
     container.id = containerId;
