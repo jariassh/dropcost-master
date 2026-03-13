@@ -27,7 +27,7 @@ import {
     RotateCcw
 } from 'lucide-react';
 import { SmartPhoneInput } from '../common/SmartPhoneInput';
-import { Button } from '../common/Button';
+import { Button, Spinner } from '../common';
 import { AssignPlanModal } from './AssignPlanModal';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 import { obtenerPaisPorCodigo, Pais } from '../../services/paisesService';
@@ -450,7 +450,11 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                                         </h5>
                                         <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Siguiente cobro: N/A</p>
                                     </div>
-                                    <UserStatusBadge status={user.estado_suscripcion || 'inactiva'} />
+                                    <UserStatusBadge 
+                                        status={user.estado_suscripcion || 'inactiva'} 
+                                        planId={user.plan_id}
+                                        email_verificado={user.email_verificado}
+                                    />
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                     <div style={{ height: '8px', width: '100%', backgroundColor: 'var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
@@ -546,7 +550,9 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
                                         onChange={(e) => setEditForm({ ...editForm, rol: e.target.value as any })}
                                         style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', fontSize: '14px', fontWeight: 600 }}
                                     >
-                                        <option value="cliente">Cliente</option>
+                                        <option value="suscriptor">Suscriptor (No Verificado)</option>
+                                        <option value="usuario">Usuario (Free)</option>
+                                        <option value="cliente">Cliente (Premium)</option>
                                         <option value="lider">Líder</option>
                                         <option value="admin">Administrador</option>
                                         <option value="superadmin">Super Admin</option>
@@ -600,7 +606,9 @@ export const UserDetailSlideOver: React.FC<UserDetailSlideOverProps> = ({ user, 
 
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                                 {loadingActivity ? (
-                                    <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '13px' }}>Cargando actividad...</div>
+                                    <div style={{ padding: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                                        <Spinner />
+                                    </div>
                                 ) : activity.length === 0 ? (
                                     <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '13px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
                                         Sin actividad registrada recientemente.

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Plus, ChevronRight, User as UserIcon, Globe } from 'lucide-react';
+import { Search, Filter, Plus, ChevronRight, User as UserIcon, Globe, Trash2 } from 'lucide-react';
 import { userService } from '../../services/userService';
 import { plansService } from '../../services/plansService';
 import { User, UserFilters, SubscriptionStatus } from '../../types/user.types';
@@ -8,7 +8,7 @@ import { Plan } from '../../types/plans.types';
 import { UserStatusBadge } from './UserStatusBadge';
 import { UserPlanBadge } from './UserPlanBadge';
 import { UserDetailSlideOver } from './UserDetailSlideOver';
-import { Button, Spinner, Card } from '../common';
+import { Button, Spinner, Card, ConfirmDialog, useToast } from '../common';
 import { cargarPaises, Pais } from '../../services/paisesService';
 
 export const UserList: React.FC = () => {
@@ -26,6 +26,9 @@ export const UserList: React.FC = () => {
     const [totalCount, setTotalCount] = useState(0);
     const [plans, setPlans] = useState<Plan[]>([]);
     const [allCountries, setAllCountries] = useState<Pais[]>([]);
+    const [userToDelete, setUserToDelete] = useState<User | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const toast = useToast();
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -71,6 +74,30 @@ export const UserList: React.FC = () => {
     const handleUserClick = (user: User) => {
         setSelectedUser(user);
         setIsSlideOverOpen(true);
+    };
+
+    const handleDeleteClick = (e: React.MouseEvent, user: User) => {
+        e.stopPropagation();
+        setUserToDelete(user);
+    };
+
+    const executeDelete = async () => {
+        if (!userToDelete) return;
+        setIsDeleting(true);
+        try {
+            const result = await userService.deleteUnverifiedUser(userToDelete.id);
+            if (result.success) {
+                toast.success('Usuario eliminado', 'El usuario sin verificar ha sido eliminado correctamente.');
+                fetchUsers();
+            } else {
+                toast.error('Error', result.error || 'No se pudo eliminar el usuario.');
+            }
+        } catch (error) {
+            toast.error('Error', 'Error de conexión.');
+        } finally {
+            setIsDeleting(false);
+            setUserToDelete(null);
+        }
     };
 
     const formatLastActivity = (date?: string) => {
@@ -139,7 +166,9 @@ export const UserList: React.FC = () => {
                         onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value as any }))}
                     >
                         <option value="all">Todos los Estados</option>
-                        <option value="activa">Activos</option>
+                        <option value="activa">Clientes Premium</option>
+                        <option value="usuario">Usuarios Free</option>
+                        <option value="sin_verificar">Sin verificar</option>
                         <option value="suspendida">Suspendidos</option>
                         <option value="pendiente">Pendientes</option>
                     </select>
@@ -234,14 +263,16 @@ export const UserList: React.FC = () => {
                                 <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plan</th>
                                 <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Estado</th>
                                 <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actividad</th>
-                                <th style={{ padding: '16px 24px' }}></th>
+                                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Acciones</th>
                             </tr>
                         </thead>
                         <tbody style={{ backgroundColor: 'var(--card-bg)' }}>
                             {loading ? (
                                 <tr>
-                                    <td colSpan={6} style={{ padding: '60px', textAlign: 'center' }}>
-                                        <Spinner size="lg" />
+                                    <td colSpan={6} style={{ padding: '100px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                                            <Spinner size="lg" />
+                                        </div>
                                     </td>
                                 </tr>
                             ) : users.length === 0 ? (
@@ -323,8 +354,34 @@ export const UserList: React.FC = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '16px 24px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500, textTransform: 'capitalize' }}>
-                                                <UserIcon size={14} style={{ color: 'var(--color-primary)' }} />
+                                            <div style={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                gap: '8px', 
+                                                fontSize: '13px', 
+                                                color: user.rol === 'superadmin' ? '#A855F7' : 
+                                                       user.rol === 'admin' ? '#EF4444' :
+                                                       user.rol === 'lider' ? '#3B82F6' :
+                                                       user.rol === 'cliente' ? '#3B82F6' : 
+                                                       user.rol === 'usuario' ? 'var(--color-primary)' :
+                                                       'var(--text-tertiary)',
+                                                fontWeight: 600, 
+                                                textTransform: 'capitalize',
+                                                backgroundColor: user.rol === 'superadmin' ? 'rgba(168, 85, 247, 0.1)' : 
+                                                                user.rol === 'admin' ? 'rgba(239, 68, 68, 0.1)' :
+                                                                'transparent',
+                                                padding: user.rol === 'superadmin' || user.rol === 'admin' ? '4px 10px' : '0',
+                                                borderRadius: '20px',
+                                                width: 'fit-content'
+                                            }}>
+                                                <UserIcon size={14} style={{ 
+                                                    color: user.rol === 'superadmin' ? '#A855F7' : 
+                                                           user.rol === 'admin' ? '#EF4444' :
+                                                           user.rol === 'lider' ? '#3B82F6' :
+                                                           user.rol === 'cliente' ? '#3B82F6' : 
+                                                           user.rol === 'usuario' ? 'var(--color-primary)' :
+                                                           'var(--text-tertiary)'
+                                                }} />
                                                 {user.rol}
                                             </div>
                                         </td>
@@ -332,13 +389,38 @@ export const UserList: React.FC = () => {
                                             <UserPlanBadge planId={user.plan_id || ''} plans={plans} />
                                         </td>
                                         <td style={{ padding: '16px 24px' }}>
-                                            <UserStatusBadge status={user.estado_suscripcion || 'pendiente'} planId={user.plan_id} />
+                                            <UserStatusBadge 
+                                                status={user.estado_suscripcion || 'pendiente'} 
+                                                planId={user.plan_id} 
+                                                email_verificado={user.email_verificado}
+                                            />
                                         </td>
                                         <td style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                                             {formatLastActivity(user.ultima_actividad)}
                                         </td>
                                         <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                                            <ChevronRight size={18} style={{ color: 'var(--text-tertiary)' }} />
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                                                {!user.email_verificado && (
+                                                    <button
+                                                        onClick={(e) => handleDeleteClick(e, user)}
+                                                        style={{
+                                                            padding: '6px',
+                                                            borderRadius: '8px',
+                                                            color: '#EF4444',
+                                                            background: 'transparent',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            transition: 'background-color 0.2s'
+                                                        }}
+                                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#EF444415'}
+                                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                        title="Eliminar usuario sin verificar"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                )}
+                                                <ChevronRight size={18} style={{ color: 'var(--text-tertiary)' }} />
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -354,6 +436,18 @@ export const UserList: React.FC = () => {
                 onClose={() => setIsSlideOverOpen(false)}
                 onUserUpdate={fetchUsers}
                 plans={plans}
+            />
+
+            <ConfirmDialog
+                isOpen={!!userToDelete}
+                onCancel={() => setUserToDelete(null)}
+                onConfirm={executeDelete}
+                title="Eliminar Usuario"
+                description={`¿Estás seguro de que deseas eliminar a ${userToDelete?.nombres}? Esta acción limpiará los registros basura y no se puede deshacer.`}
+                confirmLabel="Eliminar permanentemente"
+                cancelLabel="Cancelar"
+                variant="danger"
+                isLoading={isDeleting}
             />
         </div>
     );
