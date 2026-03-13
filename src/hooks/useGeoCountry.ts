@@ -17,10 +17,11 @@ async function detectGeoCountry(): Promise<Pais | null> {
     if (!geoCountryPromise) {
         geoCountryPromise = (async () => {
             try {
-                const response = await fetch('https://ipapi.co/json/');
+                // Usamos ip-api.com como solicitó el usuario
+                const response = await fetch('http://ip-api.com/json/');
                 const data = await response.json();
-                if (data.country_code) {
-                    const pais = await obtenerPaisPorCodigo(data.country_code);
+                if (data.status === 'success' && data.countryCode) {
+                    const pais = await obtenerPaisPorCodigo(data.countryCode);
                     if (pais) {
                         geoCountryCache = pais;
                         // Emitir evento global para que LandingLayout y otros componentes legacy se enteren

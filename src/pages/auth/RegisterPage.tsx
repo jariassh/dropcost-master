@@ -74,17 +74,36 @@ export function RegisterPage() {
 
     const validateEmailDomain = async (email: string) => {
         if (!email || !email.includes('@')) return;
-        const domain = email.split('@')[1];
+        const [username, domain] = email.toLowerCase().split('@');
+        
+        // Checklist local rápida (Basado en ChatWidget)
+        const BANNED_DOMAINS = [
+            'mail.com', 'test.com', 'example.com', 'tempmail.com', 'junk.com', 'demo.com', 
+            'asdf.com', 'qwerty.com', 'bigonla.com', '1secmail.com', 'guerrillamail.com',
+            'sharklasers.com', 'getnada.com', 'dispostable.com', 'yopmail.com'
+        ];
+
+        // Bloqueo si el username es keyboard mash o el dominio está baneado
+        const isKeyboardMash = (str: string) => {
+            const patterns = [/asdf/i, /sdsd/i, /qwerty/i, /1234/i, /zxcv/i, /(.)\1{3,}/];
+            return patterns.some(p => p.test(str));
+        };
+
+        if (BANNED_DOMAINS.includes(domain) || isKeyboardMash(username)) {
+            setIsDisposableEmail(true);
+            setEmailTouched(true);
+            return;
+        }
+
         setIsValidatingEmail(true);
         try {
-            const { data: resData, error: resError } = await supabase.functions.invoke('utils-check-email', {
-                body: { domain }
-            });
-            if (!resError && resData) {
-                setIsDisposableEmail(resData.isDisposable);
-            }
+            // Reforzamos con Disify directamente desde el cliente para mayor rapidez (como en el Chat)
+            const response = await fetch(`https://www.disify.com/api/email/${email}`);
+            const data = await response.json();
+            setIsDisposableEmail(data.disposable || data.format === false);
         } catch (e) {
             console.error('[Register] Error validando dominio:', e);
+            // Si la API falla, confiamos en el check local
         } finally {
             setIsValidatingEmail(false);
             setEmailTouched(true);
@@ -97,7 +116,7 @@ export function RegisterPage() {
         watch,
         setValue,
         control,
-        formState: { errors },
+        formState: { errors, isValid },
     } = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema),
         mode: 'onChange',
@@ -140,13 +159,15 @@ export function RegisterPage() {
     const email = watch('email', '');
 
     useEffect(() => {
-        if (email && email.includes('@')) {
+        if (email && email.includes('@') && email.includes('.')) {
+            setIsValidatingEmail(true); // Bloqueamos preventivamente mientras el usuario termina de escribir
             const timer = setTimeout(() => {
                 validateEmailDomain(email);
             }, 800);
             return () => clearTimeout(timer);
         } else {
             setIsDisposableEmail(false);
+            setIsValidatingEmail(false);
             setEmailTouched(false);
         }
     }, [email]);
@@ -555,7 +576,13 @@ export function RegisterPage() {
                     </p>
                 )}
 
-                <Button type="submit" fullWidth isLoading={isLoading} size="lg">
+                <Button 
+                    type="submit" 
+                    fullWidth 
+                    isLoading={isLoading} 
+                    size="lg"
+                    disabled={!isValid || isDisposableEmail || isValidatingEmail}
+                >
                     Crear cuenta
                 </Button>
             </form>

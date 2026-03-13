@@ -40,12 +40,19 @@ export function SmartPhoneInput({ value, onChange, error, label }: SmartPhoneInp
                 }
             }
 
-            // Si no hay valor inicial, usar país detectado por IP o fallback a CO
-            const defaultCountry = geoCountry
-                ? data.find(p => p.codigo_iso_2 === geoCountry.codigo_iso_2)
-                : data.find(p => p.codigo_iso_2 === 'CO');
-            setSelectedCountry(defaultCountry || data[0]);
-        });
+                // Si no hay valor inicial, usar país detectado por IP o fallback a CO
+                const defaultCountry = geoCountry
+                    ? data.find(p => p.codigo_iso_2 === geoCountry.codigo_iso_2)
+                    : data.find(p => p.codigo_iso_2 === 'CO');
+                
+                const finalCountry = defaultCountry || data[0];
+                setSelectedCountry(finalCountry);
+
+                // IMPORTANTE: Informar al padre del país auto-seleccionado si no hay valor previo
+                if (!value && finalCountry) {
+                    onChange(finalCountry.codigo_telefonico, finalCountry.codigo_iso_2);
+                }
+            });
     }, [geoCountry]);
 
     const filteredCountries = useMemo(() => {

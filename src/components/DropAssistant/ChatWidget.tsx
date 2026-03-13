@@ -211,29 +211,30 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
     const validateEmailDomain = async (email: string) => {
         if (!email || !email.includes('@')) return;
         
-        const domain = email.split('@')[1];
+        const [username, domain] = email.toLowerCase().trim().split('@');
         
-        // Check de dominio sospechoso manual (si es corto y no es de los grandes)
-        if (domain.length < 5 && !MAJOR_DOMAINS.includes(domain)) {
-            setContactError('Ingresa un correo con un dominio válido.');
-            setIsDisposableEmail(true);
-            return;
-        }
+        // Checklist local rápida (Basado en la lógica mejorada)
+        const isMash = isKeyboardMash(username) || isKeyboardMash(domain);
 
-        if (BANNED_DOMAINS.includes(domain) || isKeyboardMash(domain)) {
-            setContactError('El dominio de este correo no parece real.');
+        if (BANNED_DOMAINS.includes(domain) || isMash) {
+            setContactError('Este correo o dominio no parece válido.');
             setIsDisposableEmail(true);
+            setIsValidatingEmail(false);
             return;
         }
 
         setIsValidatingEmail(true);
         setEmailTouched(true);
         try {
-            const response = await fetch(`https://disify.com/api/domain/${domain}`);
+            // Usamos la API de Disify completa
+            const response = await fetch(`https://www.disify.com/api/email/${email}`);
             const data = await response.json();
             
             if (data.disposable) {
                 setContactError('Los correos temporales o desechables no están permitidos.');
+                setIsDisposableEmail(true);
+            } else if (data.format === false) {
+                setContactError('El formato del correo es inválido.');
                 setIsDisposableEmail(true);
             } else {
                 setContactError(null);
@@ -241,7 +242,9 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
             }
         } catch (error) {
             console.warn("Error validando dominio:", error);
-            // Si la API falla, permitimos por defecto para no bloquear al usuario
+            // Si la API falla, confiamos en el check local que ya pasó
+            setContactError(null);
+            setIsDisposableEmail(false);
         } finally {
             setIsValidatingEmail(false);
         }
@@ -263,6 +266,20 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
             setView('contact');
         }
     }, [user]);
+
+    // Validación proactiva del correo en el chat
+    useEffect(() => {
+        if (contact.email && contact.email.includes('@') && contact.email.includes('.')) {
+            setIsValidatingEmail(true);
+            const timer = setTimeout(() => {
+                validateEmailDomain(contact.email);
+            }, 1000);
+            return () => clearTimeout(timer);
+        } else {
+            setIsDisposableEmail(false);
+            setEmailTouched(false);
+        }
+    }, [contact.email]);
 
     // Personalizar saludo inicial cuando el nombre esté disponible
     useEffect(() => {
