@@ -9,10 +9,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, User, Phone, Globe, ChevronDown, Sparkles, RefreshCw, CheckCircle2, UserPlus } from 'lucide-react';
-import { Button, Input, Alert, SmartPhoneInput } from '@/components/common';
+import { Button, Input, Alert, SmartPhoneInput, useToast } from '@/components/common';
 import { useAuthStore } from '@/store/authStore';
 import { getReferrerNameByCode } from '@/services/referralService';
 import { affiliateService } from '@/services/affiliateService';
+import { supabase } from '@/lib/supabase';
 
 const registerSchema = z
     .object({
@@ -27,7 +28,7 @@ const registerSchema = z
             .regex(/[0-9]/, 'Debe incluir al menos un número')
             .regex(/[^A-Za-z0-9]/, 'Debe incluir al menos un carácter especial'),
         confirmPassword: z.string().min(1, 'Confirma tu contraseña'),
-        telefono: z.string().optional(),
+        telefono: z.string().min(7, 'El teléfono debe tener al menos 7 dígitos').max(20, 'Teléfono demasiado largo'),
         pais: z.string().min(1, 'Selecciona un país'),
         acceptTerms: z.boolean().refine((val) => val === true, {
             message: 'Debes aceptar los términos y condiciones',
@@ -53,6 +54,7 @@ export function RegisterPage() {
 
     const [referrerName, setReferrerName] = useState<string | null>(null);
     const { register: registerUser, isLoading, error, clearError } = useAuthStore();
+    const toast = useToast();
 
     useEffect(() => {
         if (referralCode) {
@@ -65,6 +67,29 @@ export function RegisterPage() {
     useEffect(() => {
         clearError();
     }, [clearError]);
+
+    const [isValidatingEmail, setIsValidatingEmail] = useState(false);
+    const [isDisposableEmail, setIsDisposableEmail] = useState(false);
+    const [emailTouched, setEmailTouched] = useState(false);
+
+    const validateEmailDomain = async (email: string) => {
+        if (!email || !email.includes('@')) return;
+        const domain = email.split('@')[1];
+        setIsValidatingEmail(true);
+        try {
+            const { data: resData, error: resError } = await supabase.functions.invoke('utils-check-email', {
+                body: { domain }
+            });
+            if (!resError && resData) {
+                setIsDisposableEmail(resData.isDisposable);
+            }
+        } catch (e) {
+            console.error('[Register] Error validando dominio:', e);
+        } finally {
+            setIsValidatingEmail(false);
+            setEmailTouched(true);
+        }
+    };
 
     const {
         register,
@@ -112,6 +137,19 @@ export function RegisterPage() {
     };
 
     const password = watch('password', '');
+    const email = watch('email', '');
+
+    useEffect(() => {
+        if (email && email.includes('@')) {
+            const timer = setTimeout(() => {
+                validateEmailDomain(email);
+            }, 800);
+            return () => clearTimeout(timer);
+        } else {
+            setIsDisposableEmail(false);
+            setEmailTouched(false);
+        }
+    }, [email]);
 
     function getPasswordStrength(pwd: string): { level: number; label: string; color: string } {
         let score = 0;
@@ -130,6 +168,10 @@ export function RegisterPage() {
     const strength = getPasswordStrength(password);
 
     async function onSubmit(data: RegisterFormData) {
+        if (isDisposableEmail) {
+            toast.error('Correo Inválido', 'El uso de correos temporales no está permitido.');
+            return;
+        }
         clearError();
         const success = await registerUser({
             email: data.email,
@@ -284,6 +326,21 @@ export function RegisterPage() {
                     autoComplete="email"
                     {...register('email')}
                 />
+
+                {isDisposableEmail && (
+                    <div style={{ marginTop: '-12px', marginBottom: '4px', animation: 'shake 0.5s' }}>
+                        <Alert type="warning">
+                            El uso de correos temporales no está permitido. Por favor usa un correo real.
+                        </Alert>
+                    </div>
+                )}
+
+                {isValidatingEmail && (
+                    <div style={{ marginTop: '-12px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                        <RefreshCw size={10} className="animate-spin" />
+                        Validando correo...
+                    </div>
+                )}
 
                 <div style={{ position: 'relative' }}>
                     <Input

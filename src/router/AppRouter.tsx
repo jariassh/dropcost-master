@@ -77,7 +77,7 @@ const AdminKnowledgeBase = lazy(() => import('@/pages/admin/AdminKnowledgeBase')
 
 function ChargingPage() {
     return (
-        <div className="flex items-center justify-center min-h-[50vh] w-full">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', width: '100%' }}>
             <Spinner size="lg" />
         </div>
     );
