@@ -1,0 +1,51 @@
+{
+  "deno.path": "C:\\Users\\user\\.deno\\bin\\deno.exe",
+  "deno.enablePaths": [
+    "supabase/functions"
+  ],
+  "deno.lint": true,
+  "deno.unstable": [
+    "bare-node-builtins",
+    "byonm",
+    "sloppy-imports",
+    "unsafe-proto",
+    "webgpu",
+    "broadcast-channel",
+    "worker-options",
+    "cron",
+    "kv",
+    "ffi",
+    "fs",
+    "http",
+    "net"
+  ],
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": {
+      "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-NonInteractive"
+      ],
+      "icon": "terminal-powershell"
+    },
+    "Command Prompt": {
+      "path": "C:\\Windows\\System32\\cmd.exe",
+      "args": [],
+      "icon": "terminal-cmd"
+    }
+  },
+  "terminal.explorerKind": "integrated",
+  "terminal.integrated.automationProfile.windows": {
+    "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "args": [
+      "-NoProfile",
+      "-NonInteractive"
+    ]
+  },
+  "terminal.integrated.enablePersistentSessions": true,
+  "terminal.integrated.copyOnSelection": true
+}
