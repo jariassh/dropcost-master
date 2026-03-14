@@ -1,10 +1,10 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const OLLAMA_API_URL = Deno.env.get("OLLAMA_API_URL");
+const OLLAMA_API_URL = Deno.env.get("OLLAMA_API_URL") || "https://ollama.com/v1";
 const OLLAMA_API_KEY = Deno.env.get("OLLAMA_API_KEY");
-// Usamos 'mistral' como modelo por defecto para la resumación en la nube
-const OLLAMA_MODEL = "mistral"; 
+// Usamos el modelo configurado en ENV, con fallback a mistral:7b
+const OLLAMA_MODEL = Deno.env.get("OLLAMA_MODEL") || "ministral-3:3b"; 
 
 interface UsageLog {
   usuario_id?: string;
@@ -41,10 +41,12 @@ export async function summarizeThread(
   try {
     const historyText = messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join("\n");
     
-    const systemPrompt = `Eres un asistente de resumación para DropCost Master.
-Identifica puntos clave, decisiones del usuario y datos financieros mencionados (CPA, Márgenes, Devoluciones).
-Genera un resumen ejecutivo de máximo 300 tokens para que el siguiente agente tenga contexto claro.
-Idioma: Español.`;
+    const systemPrompt = `Eres un sintetizador de datos. Tu único objetivo es comprimir el historial.
+REGLAS:
+- Usa estilo telegrama (frases cortas, sin conectores innecesarios).
+- Captura SOLO: Intención del usuario, datos financieros (CPA, presupuesto) y dudas técnicas.
+- Máximo 80 palabras.
+- Idioma: Español.`;
 
     const response = await fetch(`${OLLAMA_API_URL}/chat/completions`, {
       method: 'POST',
@@ -65,7 +67,10 @@ Idioma: Español.`;
     const data = await response.json();
     const duration = Date.now() - startTime;
 
-    if (!response.ok) throw new Error(data.error?.message || "Error en Ollama API");
+    if (!response.ok) {
+      const errorMsg = data.error?.message || data.message || `Error ${response.status} calling Ollama`;
+      throw new Error(errorMsg);
+    }
 
     const summary = data.choices[0].message.content;
     
