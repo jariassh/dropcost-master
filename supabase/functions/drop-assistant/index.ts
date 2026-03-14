@@ -326,10 +326,7 @@ RECUERDA: Sé breve y directo.`;
     }
 
     const apiBody: any = {
-      contents: apiHistory.map(m => ({
-        role: m.role === 'assistant' ? 'model' : 'user', 
-        parts: [{ text: m.content }]
-      })),
+      contents: [], // Se llenará según si hay caché o no
       generationConfig: {
         maxOutputTokens: 2500,
         temperature: 0.1
@@ -339,22 +336,26 @@ RECUERDA: Sé breve y directo.`;
     if (cacheName) {
       console.log(`[DropAssistant] ⚡ Usando Context Caching: ${cacheName}`);
       apiBody.cachedContent = cacheName;
-      // Cuando hay cache, el sistema inyecta la Biblia y las reglas base.
-      // Inyectamos un mensaje inicial de "estado" para que Max sepa con quién habla.
-      apiBody.contents.unshift({
-        role: 'user',
-        parts: [{ text: `### ACTUALIZACIÓN DE CONTEXTO\nChateando con: ${userName}\nTotal mensajes: ${msgCount}\nFase: ${msgCount >= 6 ? 'CIERRE' : 'DIAGNÓSTICO'}\nIMPORTANTE: Si el usuario te pregunta por precios, rentabilidad, o pide iniciar, DEBES incluir este enlace EXACTO al final de tu respuesta: "[BOTON: Empieza Ahora | ${appUrl}/registro?ref=${referralCode}]"` }]
-      }, {
-        role: 'model',
-        parts: [{ text: `Entendido. Hola ${userName}, soy Max. Estoy listo para ayudarte siguiendo la Biblia DropCost y mis reglas de chat corto y limpio. Si el usuario pregunta por precios o estamos en Cierre incluiré exactamente: "[BOTON: Empieza Ahora | ${appUrl}/registro?ref=${referralCode}]" & ¿En qué puedo apoyarte hoy?` }]
-      });
+      
+      // OPTIMIZACIÓN CRÍTICA: Cuando hay caché, NO enviamos el historial completo (los 57k tokens).
+      // Solo enviamos la "novedad": la síntesis de Ollama + el último mensaje.
+      // Esto fuerza a Google a usar la caché para la Biblia y solo cobrarnos los tokens nuevos.
+      apiBody.contents = [
+        {
+          role: 'user',
+          parts: [{ text: `### ACTUALIZACIÓN DE CONTEXTO\nChateando con: ${userName}\nFase: ${msgCount >= 6 ? 'CIERRE' : 'DIAGNÓSTICO'}\n\n${ollamaSummary ? `RESUMEN CONVERSACIÓN: ${ollamaSummary}` : ''}\n\nMENSAJE ACTUAL: ${message}` }]
+        }
+      ];
     } else {
-      // Fallback: System Instruction normal
+      // Fallback: System Instruction normal + Historial Completo
       apiBody.system_instruction = {
         parts: [{ text: systemPrompt }]
       };
+      apiBody.contents = apiHistory.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user', 
+        parts: [{ text: m.content }]
+      }));
     }
-
     let aiData: any = null;
 
     try {
