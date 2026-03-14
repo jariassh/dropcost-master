@@ -64,6 +64,47 @@ export const LeadDetailsSlideOver: React.FC<LeadDetailsSlideOverProps> = ({ lead
 
     const sessions = getSessions(lead.conversacion);
 
+    const renderAdminMessageContent = (content: string) => {
+        const buttonRegex = /\[BOTON:\s*([^|]+)\|\s*([^\]]+)\]/;
+        const match = content.match(buttonRegex);
+
+        if (match) {
+            const textBefore = content.substring(0, match.index);
+            const buttonText = match[1].trim();
+            const buttonUrl = match[2].trim();
+
+            return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <span dangerouslySetInnerHTML={{ __html: textBefore.replace(/\n/g, '<br/>') }} />
+                    <a 
+                        href={buttonUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                            alignSelf: 'flex-start',
+                            backgroundColor: 'var(--bg-primary)',
+                            color: 'var(--text-primary)',
+                            padding: '10px 18px',
+                            borderRadius: '12px',
+                            textDecoration: 'none',
+                            fontWeight: 600,
+                            fontSize: '13px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                            border: '1px solid var(--border-color)'
+                        }}
+                    >
+                        {buttonText} <ChevronRight size={14} />
+                    </a>
+                </div>
+            );
+        }
+
+        return <span dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br/>') }} />;
+    };
+
     return (
         <SlideOver
             isOpen={isOpen}
@@ -174,51 +215,63 @@ export const LeadDetailsSlideOver: React.FC<LeadDetailsSlideOverProps> = ({ lead
                                 flexDirection: 'column',
                                 gap: '20px'
                             }} className="dc-scrollbar">
-                                {selectedSession.messages.map((msg, idx) => (
-                                    <div
-                                        key={idx}
-                                        style={{
-                                            alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                                            maxWidth: '85%',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: '6px'
-                                        }}
-                                    >
-                                        <div style={{
-                                            display: 'flex', gap: '8px',
-                                            flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
-                                            fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600
-                                        }}>
-                                            {msg.role === 'user' ? <User size={12} /> : <Bot size={12} />}
-                                            {msg.role === 'user' ? (lead.nombre || 'Visitante') : 'Drop Assistant'}
+                                {selectedSession.messages.map((msg, idx) => {
+                                    const contentParts = msg.role === 'assistant' 
+                                        ? msg.content.split(/\[SPLIT\]|\s+\/\s+|&/).map((s: string) => s.trim()).filter((s: string) => s !== '')
+                                        : [msg.content];
+
+                                    return (
+                                        <div
+                                            key={idx}
+                                            style={{
+                                                alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                                                maxWidth: '85%',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '6px'
+                                            }}
+                                        >
+                                            <div style={{
+                                                display: 'flex', gap: '8px',
+                                                flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
+                                                fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600
+                                            }}>
+                                                {msg.role === 'user' ? <User size={12} /> : <Bot size={12} />}
+                                                {msg.role === 'user' ? (lead.nombre || 'Visitante') : 'Drop Assistant'}
+                                            </div>
+                                            
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                {contentParts.map((part: string, partIdx: number) => (
+                                                    <div key={`${idx}-${partIdx}`} style={{
+                                                        padding: '12px 16px',
+                                                        borderRadius: msg.role === 'user' 
+                                                            ? '18px 18px 2px 18px' 
+                                                            : (msg.ai_stats && partIdx === contentParts.length - 1 ? '18px 18px 0 0' : '18px 18px 18px 2px'),
+                                                        backgroundColor: msg.role === 'user' ? 'rgba(99, 102, 241, 0.1)' : 'var(--card-bg)',
+                                                        color: 'var(--text-primary)',
+                                                        border: '1px solid ' + (msg.role === 'user' ? 'rgba(99, 102, 241, 0.2)' : 'var(--border-color)'),
+                                                        borderBottom: (msg.ai_stats && partIdx === contentParts.length - 1) ? 'none' : undefined,
+                                                        fontSize: '14px',
+                                                        lineHeight: '1.5'
+                                                    }}>
+                                                        {renderAdminMessageContent(part)}
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {msg.ai_stats ? (
+                                                <AIStatsDropdown stats={msg.ai_stats} />
+                                            ) : (
+                                                msg.role === 'assistant' && <div style={{fontSize: '9px', opacity: 0.5}}>(Sin datos de consumo)</div>
+                                            )}
+                                            {msg.timestamp && (
+                                                <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textAlign: msg.role === 'user' ? 'right' : 'left' }}>
+                                                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            )}
                                         </div>
-                                        <div style={{
-                                            padding: '12px 16px',
-                                            borderRadius: msg.role === 'user' 
-                                                ? '18px 18px 2px 18px' 
-                                                : (msg.ai_stats ? '18px 18px 0 0' : '18px 18px 18px 2px'),
-                                            backgroundColor: msg.role === 'user' ? 'rgba(99, 102, 241, 0.1)' : 'var(--card-bg)',
-                                            color: 'var(--text-primary)',
-                                            border: '1px solid ' + (msg.role === 'user' ? 'rgba(99, 102, 241, 0.2)' : 'var(--border-color)'),
-                                            borderBottom: msg.ai_stats ? 'none' : undefined,
-                                            fontSize: '14px',
-                                            lineHeight: '1.5'
-                                        }}>
-                                            {msg.content}
-                                        </div>
-                                        {msg.ai_stats ? (
-                                            <AIStatsDropdown stats={msg.ai_stats} />
-                                        ) : (
-                                            msg.role === 'assistant' && <div style={{fontSize: '9px', opacity: 0.5}}>(Sin datos de consumo)</div>
-                                        )}
-                                        {msg.timestamp && (
-                                            <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textAlign: msg.role === 'user' ? 'right' : 'left' }}>
-                                                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                        )}
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     ) : (

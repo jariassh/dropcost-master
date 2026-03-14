@@ -388,13 +388,12 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                 return;
             }
 
-            // Procesamos la respuesta (posibles múltiples mensajes ráfaga con separadores [SPLIT] o /)
+            // Procesamos la respuesta (posibles múltiples mensajes ráfaga con separadores [SPLIT], /, o &)
             const fullReply = data.reply || data.error || 'Lo siento, tuve un problema procesando tu consulta.';
             
-            // Soportamos ambos: el técnico [SPLIT] y el sugerido '/' para separar respuestas de preguntas
-            // Usamos un regex que requiere espacios alrededor del slash para evitar romper URLs (http://)
+            // Soportamos: [SPLIT], / (con espacios), y el nuevo ampersand &
             const messageParts = fullReply
-                .split(/\[SPLIT\]|\s+\/\s+/)
+                .split(/\[SPLIT\]|\s+\/\s+|&/)
                 .map((s: string) => s.trim())
                 .filter((s: string) => s !== '');
 
@@ -408,8 +407,8 @@ export function ChatWidget({ initialRole = 'soporte' }: ChatWidgetProps) {
                 }
 
                 // Determinamos el delay para este mensaje
-                // El primero tiene el delay inicial largo, los siguientes son más cortos (ráfaga humana)
-                const currentDelay = index === 0 ? delay : Math.floor(Math.random() * 1500) + 1500;
+                // El primero tiene el delay inicial largo (espera API), los siguientes son ráfaga humana (4-10s)
+                const currentDelay = index === 0 ? delay : Math.floor(Math.random() * 6000) + 4000;
 
                 setTimeout(() => {
                     const assistantMsg: Message = {
