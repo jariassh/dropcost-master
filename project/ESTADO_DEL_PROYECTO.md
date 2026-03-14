@@ -1,5 +1,5 @@
 # ESTADO DEL PROYECTO: DropCost Master
-**Fecha de actualización:** 7 de marzo de 2026
+**Fecha de actualización:** 13 de marzo de 2026
 **Estado:** Optimización Core y Estandarización Visual - EN CURSO 🔄
 
 ---
@@ -8,11 +8,18 @@
 DropCost Master es una plataforma integral diseñada para la optimización financiera de negocios de Dropshipping en LATAM. Soporta multitenancy, simulaciones financieras avanzadas e integraciones con Shopify y Meta Ads.
 
 ## 2. Últimas Actualizaciones (PM Focus)
+- **AI Assistant (Max) v2.5:** Migración exitosa a Gemini 2.5 Flash con fallback automático. Implementación de sistema de caching de contexto para optimizar tokens y latencia.
+- **Botones CTA Dinámicos:** El agente ahora inyecta enlaces de registro dinámicos basados en la configuración global de la app (`app_url`) y el código de referido del usuario, garantizando escalabilidad total.
 - **Administrador de Código Personalizado (GTM/Meta):** Implementación de sistema de inyección de scripts dinámicos con editor de código avanzado, resaltado de sintaxis y rediseño de tarjetas premium.
 - **Modularización de Ajustes:** Reestructuración completa de las páginas de ajustes (Branding, SEO, Tracking) en componentes independientes para mejorar mantenibilidad.
-- **Optimización de UI/UX:** Ajustes de espaciado, tipografía y modo oscuro en toda la sección de administración para una experiencia más profesional.
 
 ## 3. Funcionalidades Implementadas ✅
+
+### ✅ AI Assistant (Max)
+- Integración con Google Gemini (2.5 Flash).
+- Sistema de caché de contexto para la "Biblia DropCost".
+- Lógica de renderizado de burbujas múltiples separadas por `&`.
+- Botones de acción (CTA) con validación por Regex en frontend.
 
 ### ✅ Gestión de Email & Templates
 - Nuevo sistema de previsualización en vivo (PC/Tablet/Mobile).
@@ -41,4 +48,4 @@ DropCost Master es una plataforma integral diseñada para la optimización finan
 
 
 ---
-> **Audit status:** Estructura de Git limpia y rama push estable.
+> **Audit status:** Estructura de Git limpia, commits atómicos realizados. Rama `feat/ciclo-marzo-dashboard` actualizada.
