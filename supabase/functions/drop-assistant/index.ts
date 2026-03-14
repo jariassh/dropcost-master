@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { summarizeThread, getCollectiveInsights } from "./ollama-service.ts";
+import { getOrCreateCache } from "./cache-manager.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,12 +11,13 @@ const corsHeaders = {
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 
-// Modelos según rol
+// Modelos según rol (Principal)
 const MODELS = {
-  SELLER: "gemma-3-27b-it",
-  SUPPORT: "gemma-3-27b-it",
+  SELLER: "gemini-2.5-flash", 
+  SUPPORT: "gemini-2.5-flash",
   MENTOR: "gemini-2.5-flash" 
 };
+const FALLBACK_MODEL = "gemini-2.5-flash-lite";
 
 /**
  * Fetch con reintento para manejo de cuota (429)
@@ -163,6 +165,14 @@ serve(async (req) => {
     }
 
     // 5. Config & Context
+    const { data: globalConfig } = await supabaseAdmin
+      .from('configuracion_global')
+      .select('email_contacto, telefono')
+      .single();
+
+    const supportEmail = globalConfig?.email_contacto || 'soporte@dropcost.jariash.com';
+    const supportWhatsapp = globalConfig?.telefono || '+573160972107';
+
     const { data: agentConfig } = await supabaseAdmin
       .from('drop_assistant_agents')
       .select('*')
@@ -210,53 +220,52 @@ serve(async (req) => {
 
     if (agentRole === 'SELLER') {
       const isAdvancedConversation = msgCount >= 6;
+      const ollamaContext = ollamaSummary ? `- HISTORIAL RESUMIDO: ${ollamaSummary}` : "";
       
       systemPrompt = `### IDENTIDAD
-Eres Max, del equipo de DropCost Master. No eres un bot.
-Si preguntan directamente si eres IA responde que eres 
-Max del equipo de DropCost, sin confirmar ni negar.
+Eres Max, el asistente inteligente de DropCost Master. Confirma con orgullo que eres una IA entrenada para ayudar a dropshippers a dejar de perder dinero y escalar sus negocios con datos reales.
 
-### CONTEXTO DEL PRODUCTO
-${kbContext || "Herramienta premium para control de rentabilidad en dropshipping."}
-Planes disponibles: ${plansContext || "Plan PRO (Recomendado), Scale y Lite."}
-URL de registro: ${appUrl}/registro?ref=${referralCode}
-Registro gratuito. Operar y conectar tiendas requiere plan pagado.
+### CONOCIMIENTO MAESTRO (BIBLIA DROPCOST)
+DropCost Master es un SaaS financiero y operativo para dropshippers COD en Latinoamérica. Resolvemos el problema de facturar alto pero perder dinero por falta de control en márgenes, fletes, CPA, devoluciones y cancelaciones.
 
-### PERSONALIDAD
-- Tono latinoamericano neutro, cálido, directo.
-- Máximo 3-4 oraciones por respuesta completa.
-- OBLIGATORIO: Separa siempre tu respuesta de la pregunta final usando el signo de barra diagonal con espacios / . Ejemplo: Esto te va a servir mucho / ¿Qué te parece?
-- PROHIBIDO el uso de asteriscos (*), guiones (-), o cualquier símbolo de formato Markdown. No uses negritas ni itálicas.
-- Escribe como una persona real en WhatsApp: limpio y sin ruidos visuales.
-- BOTONES: Si el usuario muestra interés real o la conversación está avanzada, usa este formato: [BOTON: Regístrate aquí | ${appUrl}/registro?ref=${referralCode}] .
-- REGLA CRÍTICA DE BOTONES: Prohibido enviar el botón en el primer mensaje de respuesta. Max debe ser un consultor, no un vendedor desesperado. El botón siempre va al final, después del slash / .
+MODULOS CORE:
+1. Costeos Inteligentes: Crea costeos ilimitados vinculados a productos de Shopify. Incluye seguimiento por ID de campaña de Meta. Calcula: sourcing, fletes, devoluciones, comisiones de transportadora, gastos administrativos, cancelaciones previas al envio y CPA maximo recomendado.
+2. Creador de Ofertas: Proyecta rentabilidad de bundles (Lleva 2, Lleva 3) usando 3 estrategias probadas del ecommerce.
+3. Dashboard en Tiempo Real: Muestra Ganancia Neta, ROAS Real (incluyendo gastos logisticos), CPA promedio y Ticket de venta. Sincroniza pedidos de Shopify y gastos de Meta Ads.
+4. Sincronizador de Envios: Permite subir Excel de Dropi para tener el mapa de operacion 100% actualizado sin integracion directa.
+5. Sistema de Referidos: 2 niveles de comision. Gana hasta un 20% (15% nivel 1, 5% nivel 2) por 12 meses. Cookie de 90 dias.
+6. Wallet: Retira desde 50 usd. Pagos los viernes. Requiere 2FA (codigo al correo).
+7. Agentes: Soporte tecnico gratuito 24/7 y Mentor IA (Mentoría financiera avanzada basada en IA de aprendizaje colectivo, usa DropCredits a 0.05 usd cada uno).
 
-### FLUJO DE VENTAS (ESTRICTO)
-1. ABRIR (Mensajes 1-2): Responde la duda, empatiza y haz una PREGUNTA DE DOLOR (ej. ¿cómo controlas hoy tus márgenes?). NUNCA envíes el botón aquí.
-2. DESCUBRIR Y EMPATIZAR (Mensajes 3-4): Una vez que el usuario hable de su problema (Excel, fletes, tiempo), valida su frustración y explica brevemente cómo DropCost lo soluciona.
-3. SOLUCIÓN Y CIERRE (Mensaje 5+): Aquí es donde invitas al registro con el botón y recomiendas un plan.
+DOLORES QUE SOLUCIONAS:
+- Vender mucho sin saber la ganancia real.
+- Devoluciones y cancelaciones que destruyen el margen.
+- No saber cuanto invertir en publicidad sin perder.
+- Caos al manejar varias tiendas o usar Excels desactualizados.
+- Crear ofertas a ojo o perder el control de las campañas de Meta.
 
-### ESTADO DEL CHAT
-- Mensajes previos: ${msgCount}
-${msgCount <= 1 ? "- FASE ACTUAL: APERTURA. Prohibido enviar botones de registro. Enfócate en descubrir el dolor." : ""}
-${isAdvancedConversation ? "- FASE ACTUAL: CIERRE. Puedes usar el botón de registro si el usuario está listo." : "- FASE ACTUAL: DIAGNÓSTICO. No presiones el registro aún."}
-${ollamaSummary ? `- HISTORIAL RESUMIDO: ${ollamaSummary}` : ""}
+REGLAS DE OPERACION:
+- UBICACION: Operamos desde Colombia para todo Latam. Atencion 100% virtual.
+- INTEGRACIONES: Solo Meta (Facebook) y Shopify. Nada mas.
+- PAGOS: Todo via Mercado Pago (PSE, tarjetas). No guardamos datos sensibles.
+- PLANES: Registro gratis. Operar requiere plan mensual (Lite, PRO o Scale). Mantenemos precio de por vida.
 
-- Usa el historial para no repetir preguntas.
-- SIEMPRE usa el separador: /
+### PERSONALIDAD Y REGLAS DE CHAT
+- Tono latino neutro, calido y profesional. Maximo 3 oraciones.
+- Escribe limpio: PROHIBIDO usar asteriscos, negritas, guiones o Markdown. Estilo WhatsApp.
+- SEPARADOR OBLIGATORIO: Usa siempre el signo ampersand & para separar tu respuesta de la pregunta final. Ejemplo: Esto te ayudara a ver tu ROAS real & ¿Como mides tu rentabilidad hoy?
+- PARA ENVIAR PLANES/PRECIOS O CIERRE: Cuando el usuario pregunte por precios, o pide iniciar, ESTÁS OBLIGADO A RESPONDER CON ESTE TEXTO EXACTO AL FINAL: "[BOTON: Empieza Ahora | ${appUrl}/registro?ref=${referralCode}]"
 
-### EJEMPLOS DE RESPUESTA
-User: ¿Qué es DropCost Master?
-Max: DropCost es la herramienta que te saca de la ceguera financiera en tu tienda de dropshipping. Básicamente te dice cuánto dinero estás ganando de verdad por cada venta, quitando fletes, devoluciones y CPA. / ¿Cómo estás llevando ese control ahora mismo, en un Excel? (Nota: Sin botón)
+### FLUJO DE VENTAS
+1. APERTURA: Identifica si el usuario sufre por devoluciones, Excel o falta de claridad en Meta.
+2. DIAGNOSTICO: Explica como el modulo especifico (Costeos, Dashboard o Ofertas) resuelve su dolor.
+3. CIERRE: En cuanto el usuario pregunte por "precios", "planes", "rentabilidad" o similares, o lleves 5 o más mensajes, obligatoriamente CORTAS EL MENSAJE y pasas EXACTAMENTE este texto como un botón real (no lo modifiques bajo ningun concepto): [BOTON: Empieza Ahora | https://app.dropcostmaster.com/registro?ref=${referralCode}]
 
-User: ¿Qué precio tiene?
-Max: Tenemos planes que se ajustan a tu nivel, desde el Lite para los que arrancan hasta el PRO que es nuestro favorito. / ¿Te gustaría que te cuente qué incluye cada uno? (Nota: Sin botón en la primera duda)
+### ESTADO
+- Mensajes: ${msgCount}. ${isAdvancedConversation ? "FASE: CIERRE." : "FASE: DIAGNOSTICO."}
+${ollamaContext}
 
-### REGLAS DE ORO
-- NUNCA uses asteriscos.
-- NUNCA uses negritas.
-- SIEMPRE usa el slash / para separar el mensaje de la pregunta final.
-
+- SIEMPRE usa el separador: &
 Chateando con: ${userName}`;
     } else {
       // Prompt para Soporte y Mentoría (Mantiene la base actual)
@@ -303,47 +312,80 @@ RECUERDA: Sé breve y directo.`;
       ? [{ role: 'user', content: "Summarized context: " + ollamaSummary }, { role: 'assistant', content: "Understood." }, ...history.slice(-3), { role: 'user', content: message }]
       : [...greetingContext, ...history, { role: 'user', content: message }];
 
-    // 5. Configurar llamada a la API
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
+    // 5. Configurar llamada a la API optimizada (System Instructions)
+    let geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
     
-    // Preparar contenido para la API
-    // IMPORTANTE: Gemma no soporta 'system_instruction' como campo separado en v1beta todavía.
-    // Inyectamos el prompt del sistema como el primer mensaje del historial.
-    const apiContents = [
-      {
-        role: 'user',
-        parts: [{ text: `SYSTEM INSTRUCTION: ${SYSTEM_PROMPT}` }]
-      },
-      {
-        role: 'model',
-        parts: [{ text: 'Understood. I will follow those instructions precisely.' }]
-      },
-      ...apiHistory.map(m => ({
-        role: m.role === 'assistant' ? 'model' : m.role === 'system' ? 'user' : 'user', // Mapeo seguro
+    // INTENTO DE CACHE PARA SELLER
+    let cacheName = null;
+    if (agentRole === 'SELLER') {
+      try {
+        cacheName = await getOrCreateCache(`seller_${modelName}`, `models/${modelName}`);
+      } catch (cacheErr) {
+        console.warn("[DropAssistant] No se pudo obtener/crear el cache, procediendo sin cache:", cacheErr.message);
+      }
+    }
+
+    const apiBody: any = {
+      contents: apiHistory.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user', 
         parts: [{ text: m.content }]
-      }))
-    ];
+      })),
+      generationConfig: {
+        maxOutputTokens: 2500,
+        temperature: 0.1
+      }
+    };
+
+    if (cacheName) {
+      console.log(`[DropAssistant] ⚡ Usando Context Caching: ${cacheName}`);
+      apiBody.cachedContent = cacheName;
+      // Cuando hay cache, el sistema inyecta la Biblia y las reglas base.
+      // Inyectamos un mensaje inicial de "estado" para que Max sepa con quién habla.
+      apiBody.contents.unshift({
+        role: 'user',
+        parts: [{ text: `### ACTUALIZACIÓN DE CONTEXTO\nChateando con: ${userName}\nTotal mensajes: ${msgCount}\nFase: ${msgCount >= 6 ? 'CIERRE' : 'DIAGNÓSTICO'}\nIMPORTANTE: Si el usuario te pregunta por precios, rentabilidad, o pide iniciar, DEBES incluir este enlace EXACTO al final de tu respuesta: "[BOTON: Empieza Ahora | ${appUrl}/registro?ref=${referralCode}]"` }]
+      }, {
+        role: 'model',
+        parts: [{ text: `Entendido. Hola ${userName}, soy Max. Estoy listo para ayudarte siguiendo la Biblia DropCost y mis reglas de chat corto y limpio. Si el usuario pregunta por precios o estamos en Cierre incluiré exactamente: "[BOTON: Empieza Ahora | ${appUrl}/registro?ref=${referralCode}]" & ¿En qué puedo apoyarte hoy?` }]
+      });
+    } else {
+      // Fallback: System Instruction normal
+      apiBody.system_instruction = {
+        parts: [{ text: systemPrompt }]
+      };
+    }
 
     let aiData: any = null;
 
     try {
-      console.log(`[DropAssistant] Sending request to Google API for model: ${modelName}`);
+      console.log(`[DropAssistant] Sending ${cacheName ? 'CACHED' : 'STANDARD'} request to Google API (${modelName})`);
       const fetchResult = await fetchWithRetry(geminiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: apiContents,
-          generationConfig: {
-            maxOutputTokens: 150,
-            temperature: 0.7
-          }
-        })
+        body: JSON.stringify(apiBody)
       });
       aiData = fetchResult.data;
     } catch (apiErr) {
       console.error(`[DropAssistant] Google API Error for ${modelName}:`, apiErr.message);
-      // No hacemos fallback automático para ver el error real del modelo solicitado
-      throw new Error(`Error en el modelo ${modelName}: ${apiErr.message}`);
+      
+      console.log(`[DropAssistant] Volviendo a intentar con modelo de respaldo (${FALLBACK_MODEL})...`);
+      try {
+        if (apiBody.cachedContent) {
+           delete apiBody.cachedContent;
+           apiBody.system_instruction = { parts: [{ text: systemPrompt }] };
+           apiBody.contents = apiBody.contents.slice(2);
+        }
+        const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/${FALLBACK_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+        const fallbackResult = await fetchWithRetry(fallbackUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(apiBody)
+        }, 1);
+        aiData = fallbackResult.data;
+        modelName = FALLBACK_MODEL; // Actualizamos para stats
+      } catch(fallbackErr) {
+        throw new Error(`Error en el modelo principal (${modelName}) y de respaldo (${FALLBACK_MODEL}): ${fallbackErr.message}`);
+      }
     }
 
     if (!aiData || !aiData.candidates || aiData.candidates.length === 0) {
@@ -357,8 +399,8 @@ RECUERDA: Sé breve y directo.`;
     // LIMPIEZA DRÁSTICA: El código es la última línea de defensa
     assistantContent = assistantContent.replace(/\*/g, '').trim();
     
-    // Si el modelo olvidó el slash pero detectamos una pregunta, forzamos la división
-    if (!assistantContent.includes('/') && assistantContent.includes('?')) {
+    // Si el modelo olvidó el separador pero detectamos una pregunta, forzamos la división
+    if (!assistantContent.includes('&') && assistantContent.includes('?')) {
       // 1. Intentar por el signo de apertura (estándar)
       let splitIndex = assistantContent.lastIndexOf('¿');
       
@@ -377,9 +419,9 @@ RECUERDA: Sé breve y directo.`;
         }
       }
 
-      // Inyectar el slash si encontramos un punto de corte razonable
+      // Inyectar el ampersand si encontramos un punto de corte razonable
       if (splitIndex > 10 && splitIndex < assistantContent.length - 5) {
-        assistantContent = assistantContent.slice(0, splitIndex).trim() + ' / ' + assistantContent.slice(splitIndex).trim();
+        assistantContent = assistantContent.slice(0, splitIndex).trim() + ' & ' + assistantContent.slice(splitIndex).trim();
       }
     }
 
@@ -390,18 +432,21 @@ RECUERDA: Sé breve y directo.`;
     }
 
     // TERCERA MEDIDA (HUMANIDAD): Asegurar que el botón esté al final de la última burbuja
-    const buttonRegex = /\[BOTON:\s*[^|]+\|\s*[^\]]+\]/;
-    const buttonMatch = assistantContent.match(buttonRegex);
-    if (buttonMatch) {
-      // Hard guard: Si es el primer mensaje del lead, prohibimos el botón programáticamente
-      if (msgCount <= 1 && !message.toLowerCase().includes('registro') && !message.toLowerCase().includes('empezar')) {
-        assistantContent = assistantContent.replace(buttonRegex, '').trim();
-      } else {
-        const buttonTag = buttonMatch[0];
-        // Lo quitamos de donde esté y lo pegamos al final
-        assistantContent = assistantContent.replace(buttonTag, '').replace(/\s+/g, ' ').trim();
-        assistantContent = assistantContent + " " + buttonTag;
+    const buttonRegex = /\[BOTON:\s*[^|]+\|\s*[^\]]+\]/g;
+    const buttonsFound = [...assistantContent.matchAll(buttonRegex)];
+    
+    if (buttonsFound.length > 0) {
+      // Tomamos el último botón (Gemini a veces repite si se confunde)
+      const lastButton = buttonsFound[buttonsFound.length - 1][0];
+      
+      // Limpiamos todo rastro de botones del texto original
+      assistantContent = assistantContent.replace(buttonRegex, '').trim();
+      
+      // Si la respuesta no termina en &, se lo ponemos, y le concatenamos el botón al final
+      if (!assistantContent.includes('&')) {
+        assistantContent += " & ";
       }
+      assistantContent += " " + lastButton;
     }
     const rawUsage = aiData.usageMetadata || {};
     const promptTokens = rawUsage.promptTokenCount || 0;
