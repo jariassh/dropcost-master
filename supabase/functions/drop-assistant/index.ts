@@ -1,8 +1,8 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { summarizeThread, getCollectiveInsights } from "./ollama-service.ts";
-import { getOrCreateCache } from "./cache-manager.ts";
+import { FULL_KNOWLEDGE_BASE } from './knowledge-base.ts';
+import { getOrCreateCache } from './cache-manager.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -193,7 +193,25 @@ serve(async (req) => {
     }
 
     // 6. History & Ollama
-    let history = [];
+    interface ChatMessage {
+      role: string;
+      content: string;
+      timestamp?: string;
+    }
+
+    interface GeminiRequestBody {
+      contents: {
+        role: string;
+        parts: { text: string }[];
+      }[];
+      cachedContent?: string;
+      system_instruction?: { parts: { text: string }[] };
+      generationConfig?: {
+        maxOutputTokens?: number;
+        temperature?: number;
+      };
+    }
+    let history: ChatMessage[] = [];
     let ollamaSummary = "";
     let ollamaIn = 0, ollamaOut = 0, ollamaTotal = 0;
 
@@ -212,61 +230,40 @@ serve(async (req) => {
       ollamaOut = summaryResult.tokensOut;
       ollamaTotal = summaryResult.tokensTotal;
     }
-
-    // 7. System Prompt - Inyección de lógica de Claude (Max)
+    // 7. System Prompt & Knowledge Base (GUARDIÁN)
     const userName = isAnonymous ? (contactData?.nombre || 'Visitante') : userRegistradoNombre;
     const msgCount = history.length;
+
+    let leadHistory = history;
+    if (isAnonymous && contactData?.email) {
+      const newUserMsg = { role: 'user', content: message, timestamp: new Date().toISOString() };
+      leadHistory = [...history, newUserMsg];
+    }
+    
+    // Inyectamos la Biblia estática + Planes frescos de la DB + Configuración Global
+    const dynamicKnowledgeBase = `
+${FULL_KNOWLEDGE_BASE}
+
+## INFORMACIÓN ACTUALIZADA DE PLANES (DINÁMICO)
+${plansContext || 'No hay planes configurados actualmente.'}
+
+## CONTACTO Y SOPORTE
+- Email: ${supportEmail}
+- WhatsApp: ${supportWhatsapp}
+- App URL: ${appUrl}
+`;
+
     let systemPrompt = "";
-
     if (agentRole === 'SELLER') {
-      const isAdvancedConversation = msgCount >= 6;
-      const ollamaContext = ollamaSummary ? `- HISTORIAL RESUMIDO: ${ollamaSummary}` : "";
-      
-      systemPrompt = `### IDENTIDAD
-Eres Max, el asistente inteligente de DropCost Master. Confirma con orgullo que eres una IA entrenada para ayudar a dropshippers a dejar de perder dinero y escalar sus negocios con datos reales.
+      systemPrompt = `
+      ${dynamicKnowledgeBase}
 
-### CONOCIMIENTO MAESTRO (BIBLIA DROPCOST)
-DropCost Master es un SaaS financiero y operativo para dropshippers COD en Latinoamérica. Resolvemos el problema de facturar alto pero perder dinero por falta de control en márgenes, fletes, CPA, devoluciones y cancelaciones.
-
-MODULOS CORE:
-1. Costeos Inteligentes: Crea costeos ilimitados vinculados a productos de Shopify. Incluye seguimiento por ID de campaña de Meta. Calcula: sourcing, fletes, devoluciones, comisiones de transportadora, gastos administrativos, cancelaciones previas al envio y CPA maximo recomendado.
-2. Creador de Ofertas: Proyecta rentabilidad de bundles (Lleva 2, Lleva 3) usando 3 estrategias probadas del ecommerce.
-3. Dashboard en Tiempo Real: Muestra Ganancia Neta, ROAS Real (incluyendo gastos logisticos), CPA promedio y Ticket de venta. Sincroniza pedidos de Shopify y gastos de Meta Ads.
-4. Sincronizador de Envios: Permite subir Excel de Dropi para tener el mapa de operacion 100% actualizado sin integracion directa.
-5. Sistema de Referidos: 2 niveles de comision. Gana hasta un 20% (15% nivel 1, 5% nivel 2) por 12 meses. Cookie de 90 dias.
-6. Wallet: Retira desde 50 usd. Pagos los viernes. Requiere 2FA (codigo al correo).
-7. Agentes: Soporte tecnico gratuito 24/7 y Mentor IA (Mentoría financiera avanzada basada en IA de aprendizaje colectivo, usa DropCredits a 0.05 usd cada uno).
-
-DOLORES QUE SOLUCIONAS:
-- Vender mucho sin saber la ganancia real.
-- Devoluciones y cancelaciones que destruyen el margen.
-- No saber cuanto invertir en publicidad sin perder.
-- Caos al manejar varias tiendas o usar Excels desactualizados.
-- Crear ofertas a ojo o perder el control de las campañas de Meta.
-
-REGLAS DE OPERACION:
-- UBICACION: Operamos desde Colombia para todo Latam. Atencion 100% virtual.
-- INTEGRACIONES: Solo Meta (Facebook) y Shopify. Nada mas.
-- PAGOS: Todo via Mercado Pago (PSE, tarjetas). No guardamos datos sensibles.
-- PLANES: Registro gratis. Operar requiere plan mensual (Lite, PRO o Scale). Mantenemos precio de por vida.
-
-### PERSONALIDAD Y REGLAS DE CHAT
-- Tono latino neutro, calido y profesional. Maximo 3 oraciones.
-- Escribe limpio: PROHIBIDO usar asteriscos, negritas, guiones o Markdown. Estilo WhatsApp.
-- SEPARADOR OBLIGATORIO: Usa siempre el signo ampersand & para separar tu respuesta de la pregunta final. Ejemplo: Esto te ayudara a ver tu ROAS real & ¿Como mides tu rentabilidad hoy?
-- PARA ENVIAR PLANES/PRECIOS O CIERRE: Cuando el usuario pregunte por precios, o pide iniciar, ESTÁS OBLIGADO A RESPONDER CON ESTE TEXTO EXACTO AL FINAL: "[BOTON: Empieza Ahora | ${appUrl}/registro?ref=${referralCode}]"
-
-### FLUJO DE VENTAS
-1. APERTURA: Identifica si el usuario sufre por devoluciones, Excel o falta de claridad en Meta.
-2. DIAGNOSTICO: Explica como el modulo especifico (Costeos, Dashboard o Ofertas) resuelve su dolor.
-3. CIERRE: En cuanto el usuario pregunte por "precios", "planes", "rentabilidad" o similares, o lleves 5 o más mensajes, obligatoriamente CORTAS EL MENSAJE y pasas EXACTAMENTE este texto como un botón real (no lo modifiques bajo ningun concepto): [BOTON: Empieza Ahora | https://app.dropcostmaster.com/registro?ref=${referralCode}]
-
-### ESTADO
-- Mensajes: ${msgCount}. ${isAdvancedConversation ? "FASE: CIERRE." : "FASE: DIAGNOSTICO."}
-${ollamaContext}
-
-- SIEMPRE usa el separador: &
-Chateando con: ${userName}`;
+      ### REGLAS ESPECÍFICAS DE MAX (${agentRole}):
+      - Eres Max, tu objetivo es ayudar y vender (si aplica).
+      - REGLA DE PLANES: Si te preguntan por precios, DEBES usar EXACTAMENTE la información de la sección "INFORMACIÓN ACTUALIZADA DE PLANES" de arriba. No inventes precios.
+      - REGLA DE CIERRE: En el mensaje 5 o 6, o si el usuario pregunta "cómo empiezo" o "precios", recomienda el Plan adecuado y envía el botón de registro.
+      ${agentConfig?.system_instruction || ""}
+    `;
     } else {
       // Prompt para Soporte y Mentoría (Mantiene la base actual)
       systemPrompt = `### REGLA #1 (OBLIGATORIA):
@@ -287,23 +284,7 @@ ${costeoData ? `\n### DATOS SIMULACIÓN:\n${JSON.stringify(costeoData)}` : ""}
 RECUERDA: Sé breve y directo.`;
     }
 
-    const SYSTEM_PROMPT = systemPrompt;
-
-    // 8. Preparar historial con el nuevo mensaje del usuario (NO guardar aún, se guarda en paso 9 con la respuesta)
-    let leadHistory = history;
-    if (isAnonymous && contactData?.email) {
-      const newUserMsg = { role: 'user', content: message, timestamp: new Date().toISOString() };
-      leadHistory = [...history, newUserMsg];
-      // NO hacemos upsert aquí. Se guarda todo junto en el paso 9 para que incluya la respuesta del asistente.
-    }
-
-    // Determinar modelo según rol
-    let modelName = (MODELS as any)[agentRole] || "gemini-2.5-flash";
-    console.log(`[DropAssistant] Role: ${agentRole}, Target Model: ${modelName}`);
-
-    // Preparar historial para Gemini (apiHistory)
-    // Si no hay historial previo, inyectamos el saludo del frontend como contexto
-    // para que la IA sepa que ya se presentó y no repita el saludo
+    // 8. Preparar historial para Gemini (apiHistory - Usado como Fallback sin caché)
     const greetingContext = history.length === 0 
       ? [{ role: 'assistant', content: `Encantado de saludarte ${userName}, soy Max del equipo de DropCost y estaré encantado de ayudarte el día de hoy.` }]
       : [];
@@ -312,21 +293,34 @@ RECUERDA: Sé breve y directo.`;
       ? [{ role: 'user', content: "Summarized context: " + ollamaSummary }, { role: 'assistant', content: "Understood." }, ...history.slice(-3), { role: 'user', content: message }]
       : [...greetingContext, ...history, { role: 'user', content: message }];
 
-    // 5. Configurar llamada a la API optimizada (System Instructions)
+    // 9. Configurar llamada a la API optimizada (System Instructions + Cache)
+    let modelName = (MODELS as Record<string, string>)[agentRole] || "gemini-1.5-flash-001";
+    const cacheModel = "models/gemini-1.5-flash-001";
     let geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
     
-    // INTENTO DE CACHE PARA SELLER
+    // GENERAR HASH DEL KNOWLEDGE PARA EL GUARDIÁN
+    const kbHash = btoa(systemPrompt.substring(0, 500) + systemPrompt.length).replace(/[^a-zA-Z0-9]/g, '');
+    const cacheKey = `seller_${kbHash}`;
+
     let cacheName = null;
     if (agentRole === 'SELLER') {
       try {
-        cacheName = await getOrCreateCache(`seller_${modelName}`, `models/${modelName}`);
+        cacheName = await getOrCreateCache(cacheKey, systemPrompt, cacheModel);
+        
+        // Si el modelo principal no es el de la caché, forzamos el de la caché para evitar leaks
+        if (cacheName && !modelName.includes('1.5-flash')) {
+           console.warn(`[DropAssistant] ⚠️ Model Mismatch: Cache es ${cacheModel} pero usas ${modelName}. Cambiando.`);
+           modelName = "gemini-1.5-flash-001";
+           geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
+        }
       } catch (cacheErr) {
-        console.warn("[DropAssistant] No se pudo obtener/crear el cache, procediendo sin cache:", cacheErr.message);
+        const errorMsg = cacheErr instanceof Error ? cacheErr.message : String(cacheErr);
+        console.warn("[DropAssistant] No se pudo obtener/crear el cache:", errorMsg);
       }
     }
 
-    const apiBody: any = {
-      contents: [], // Se llenará según si hay caché o no
+    const apiBody: GeminiRequestBody = {
+      contents: [],
       generationConfig: {
         maxOutputTokens: 2500,
         temperature: 0.1
@@ -336,21 +330,19 @@ RECUERDA: Sé breve y directo.`;
     if (cacheName) {
       console.log(`[DropAssistant] ⚡ Usando Context Caching: ${cacheName}`);
       apiBody.cachedContent = cacheName;
-      
-      // OPTIMIZACIÓN CRÍTICA: Cuando hay caché, NO enviamos el historial completo (los 57k tokens).
-      // Solo enviamos la "novedad": la síntesis de Ollama + el último mensaje.
-      // Esto fuerza a Google a usar la caché para la Biblia y solo cobrarnos los tokens nuevos.
+      const sessionData = `### ACTUALIZACIÓN DE SESIÓN\nUsuario: ${userName}\nReferido: ${referralCode}\nFase: ${msgCount >= 6 ? 'CIERRE' : 'DIAGNÓSTICO'}\n\n${ollamaSummary ? `RESUMEN PREVIO: ${ollamaSummary}` : ''}`;
+
       apiBody.contents = [
-        {
-          role: 'user',
-          parts: [{ text: `### ACTUALIZACIÓN DE CONTEXTO\nChateando con: ${userName}\nFase: ${msgCount >= 6 ? 'CIERRE' : 'DIAGNÓSTICO'}\n\n${ollamaSummary ? `RESUMEN CONVERSACIÓN: ${ollamaSummary}` : ''}\n\nMENSAJE ACTUAL: ${message}` }]
-        }
+        { role: 'user', parts: [{ text: sessionData }] },
+        { role: 'model', parts: [{ text: "Entendido. Mantengo el hilo con los datos actualizados y la Biblia en caché." }] },
+        ...history.slice(-3).map(m => ({
+          role: m.role === 'assistant' ? 'model' : 'user', 
+          parts: [{ text: m.content }]
+        })),
+        { role: 'user', parts: [{ text: message }] }
       ];
     } else {
-      // Fallback: System Instruction normal + Historial Completo
-      apiBody.system_instruction = {
-        parts: [{ text: systemPrompt }]
-      };
+      apiBody.system_instruction = { parts: [{ text: systemPrompt }] };
       apiBody.contents = apiHistory.map(m => ({
         role: m.role === 'assistant' ? 'model' : 'user', 
         parts: [{ text: m.content }]
@@ -449,14 +441,31 @@ RECUERDA: Sé breve y directo.`;
       }
       assistantContent += " " + lastButton;
     }
-    const rawUsage = aiData.usageMetadata || {};
-    const promptTokens = rawUsage.promptTokenCount || 0;
-    // Gemma no devuelve candidatesTokenCount, estimamos desde el texto (~4.5 chars/token en español)
-    const estimatedOutTokens = Math.ceil(assistantContent.length / 4.5);
-    const outputTokens = rawUsage.candidatesTokenCount || estimatedOutTokens;
-    const totalTokens = rawUsage.totalTokenCount || (promptTokens + outputTokens);
-    const usage = { promptTokenCount: promptTokens, candidatesTokenCount: outputTokens, totalTokenCount: promptTokens + outputTokens };
-    console.log(`[DropAssistant] Tokens - In: ${promptTokens}, Out: ${outputTokens}${!rawUsage.candidatesTokenCount ? ' (est)' : ''}, Total: ${promptTokens + outputTokens}`);
+    const usageMetadata = aiData.usageMetadata || {};
+    
+    // CORRECCIÓN DE LÓGICA DE VISUALIZACIÓN:
+    // Google reporta promptTokenCount como el TOTAL (Caché + Nuevo).
+    // Para saber cuánto se envió realmente en esta vuelta: promptTokenCount - cachedContentTokenCount
+    const totalPromptTokens = usageMetadata.promptTokenCount || 0;
+    const cachedTokens = usageMetadata.cachedContentTokenCount || 0;
+    const promptTokens = totalPromptTokens - cachedTokens; // Lo realmente NUEVO y facturable
+    const candidatesTokens = usageMetadata.candidatesTokenCount || 0;
+    const thoughtsTokens = usageMetadata.thoughtsTokenCount || 0;
+    const totalTokens = usageMetadata.totalTokenCount || (totalPromptTokens + candidatesTokens);
+
+    console.log(`[DropAssistant] 📊 AUDITORÍA DE TOKENS (Gemini)`);
+    console.log(`[DropAssistant] 🟢 NUEVOS (Facturables): ${promptTokens}`);
+    console.log(`[DropAssistant] ⚡ CACHEADOS (Gratis): ${cachedTokens}`);
+    console.log(`[DropAssistant] 📤 SALIDA (Respuesta): ${candidatesTokens}`);
+    if (thoughtsTokens > 0) console.log(`[DropAssistant] 🧠 PENSAMIENTO (Thinking): ${thoughtsTokens}`);
+    console.log(`[DropAssistant] 💎 TOTAL PROCESADO: ${totalTokens}`);
+
+    const usage = { 
+       promptTokenCount: promptTokens, 
+       cachedTokenCount: cachedTokens,
+       candidatesTokenCount: candidatesTokens, 
+       totalTokenCount: totalTokens 
+    };
 
     // 9. Final Persistence
     try {
@@ -469,8 +478,12 @@ RECUERDA: Sé breve y directo.`;
           timestamp: new Date().toISOString(),
           ai_stats: {
             model: modelName,
-            estimated: !rawUsage.candidatesTokenCount,
-            gemini: { in: usage.promptTokenCount, out: usage.candidatesTokenCount, total: usage.totalTokenCount },
+            gemini: { 
+              in: promptTokens, 
+              cached: cachedTokens,
+              out: candidatesTokens, 
+              total: totalTokens 
+            },
             ollama: { in: ollamaIn, out: ollamaOut, total: ollamaTotal }
           }
         }];

@@ -1,16 +1,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { FULL_KNOWLEDGE_BASE } from './knowledge-base.ts';
-
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
-
-export async function getOrCreateCache(cacheKey: string, model: string = "models/gemini-1.5-flash-001") {
+export async function getOrCreateCache(cacheKey: string, systemInstructionText: string, model: string = "models/gemini-1.5-flash-001") {
   try {
     // 1. Buscar en DB
-    const { data: existingCache, error: dbError } = await supabase
+    const { data: existingCache, error: _dbError } = await supabase
       .from('ai_caches')
       .select('*')
       .eq('cache_key', cacheKey)
@@ -28,17 +25,16 @@ export async function getOrCreateCache(cacheKey: string, model: string = "models
     console.log(`[CacheManager] Creando nuevo cache para: ${cacheKey}`);
 
     // 2. Crear en Google Gemini
-    // TTL de 24 horas (86400 segundos)
-    const ttlSeconds = 86400; 
+    const ttlSeconds = 86400; // 24 horas
     
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/cachedContents?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model,
-        displayName: cacheKey,
+        displayName: cacheKey.substring(0, 40), // Limitar longitud
         systemInstruction: {
-          parts: [{ text: FULL_KNOWLEDGE_BASE }]
+          parts: [{ text: systemInstructionText }]
         },
         ttl: `${ttlSeconds}s`
       })
